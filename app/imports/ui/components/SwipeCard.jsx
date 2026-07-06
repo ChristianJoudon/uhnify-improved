@@ -1,0 +1,205 @@
+import React, { useRef } from 'react';
+import PropTypes from 'prop-types';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { CalendarEvent, GeoAlt, People, PersonBadge } from 'react-bootstrap-icons';
+import { DEFAULT_EVENT_IMAGE, formatEventDate, formatShortDate, imagePath } from '../utilities/helpers';
+
+const SWIPE_DISTANCE = 130;
+const SWIPE_VELOCITY = 650;
+const DOUBLE_TAP_WINDOW_MS = 320;
+
+const flyDistance = () => (typeof window !== 'undefined' ? window.innerWidth + 200 : 1200);
+
+const startOfDay = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+const daysUntilLabel = value => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  // Calendar-day difference, so a 8pm event still reads "Today!" at 2pm.
+  const days = Math.round((startOfDay(date).getTime() - startOfDay(new Date()).getTime()) / (24 * 60 * 60 * 1000));
+  if (days < 0) {
+    return 'Already started';
+  }
+  if (days === 0) {
+    return 'Today!';
+  }
+  if (days === 1) {
+    return 'Tomorrow';
+  }
+  return `In ${days} days`;
+};
+
+/**
+ * One card in the Discover deck. The top card can be dragged left/right to decide,
+ * double-tapped to flip over for full details, and flies off screen when a decision lands.
+ */
+const SwipeCard = ({ event, hostName, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const rotate = useTransform(x, [-340, 340], [-17, 17]);
+  const likeOpacity = useTransform(x, [36, SWIPE_DISTANCE], [0, 1]);
+  const passOpacity = useTransform(x, [-SWIPE_DISTANCE, -36], [1, 0]);
+  const lastTapAt = useRef(0);
+  const dragging = useRef(false);
+  // The fly-off target is captured once per exit so mid-flight re-renders
+  // (e.g. the swipe record landing in minimongo) cannot retarget the animation.
+  const exitTarget = useRef(null);
+
+  const isTop = stackIndex === 0 && !exitDirection;
+  const exitSign = exitDirection === 'right' ? 1 : -1;
+  if (exitDirection && !exitTarget.current) {
+    exitTarget.current = { x: exitSign * flyDistance(), y: y.get() * 1.4 };
+  } else if (!exitDirection && exitTarget.current) {
+    exitTarget.current = null;
+  }
+  // A tiny deterministic tilt so the resting deck looks like a hand-stacked pile.
+  const restingTilt = stackIndex === 0 ? 0 : (event._id.charCodeAt(0) % 2 === 0 ? 1 : -1) * 1.4 * stackIndex;
+
+  const handleDragStart = () => {
+    dragging.current = true;
+    lastTapAt.current = 0;
+  };
+
+  const handleDragEnd = (domEvent, info) => {
+    // onTap fires right after this when the pointer is still over the card
+    // (it usually is, since the card follows the finger), so clear the flag a tick later.
+    setTimeout(() => {
+      dragging.current = false;
+    }, 0);
+    if (info.offset.x > SWIPE_DISTANCE || info.velocity.x > SWIPE_VELOCITY) {
+      onSwipe('right');
+    } else if (info.offset.x < -SWIPE_DISTANCE || info.velocity.x < -SWIPE_VELOCITY) {
+      onSwipe('left');
+    }
+  };
+
+  const handleTap = () => {
+    if (!isTop || dragging.current) {
+      return;
+    }
+    const now = performance.now();
+    if (now - lastTapAt.current < DOUBLE_TAP_WINDOW_MS) {
+      lastTapAt.current = 0;
+      onFlip();
+    } else {
+      lastTapAt.current = now;
+    }
+  };
+
+  return (
+    <motion.div
+      className="swipe-card-slot"
+      style={{ zIndex: exitDirection ? 30 : 20 - stackIndex }}
+      initial={{ y: 30 + stackIndex * 16, scale: 0.86, opacity: 0 }}
+      animate={exitDirection
+        ? { y: 0, scale: 1, rotate: 0, opacity: 1 }
+        : { y: stackIndex * 16, scale: 1 - stackIndex * 0.055, rotate: restingTilt, opacity: stackIndex > 2 ? 0 : 1 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+    >
+      <motion.div
+        className={`swipe-card${isTop ? ' is-top' : ''}`}
+        style={{ x, y, rotate, pointerEvents: isTop ? 'auto' : 'none' }}
+        drag={isTop}
+        dragMomentum={false}
+        dragSnapToOrigin
+        dragTransition={{ bounceStiffness: 480, bounceDamping: 32 }}
+        whileTap={isTop ? { scale: 0.985 } : undefined}
+        whileDrag={{ scale: 1.045 }}
+        onDragStart={isTop ? handleDragStart : undefined}
+        onDragEnd={isTop ? handleDragEnd : undefined}
+        onTap={handleTap}
+        animate={exitDirection ? exitTarget.current : { x: 0, y: 0 }}
+        transition={exitDirection
+          ? { type: 'spring', stiffness: 170, damping: 26 }
+          : { type: 'spring', stiffness: 480, damping: 32 }}
+        onAnimationComplete={definition => {
+          // Fires for every animation on this element, including the whileTap/whileDrag
+          // scale reset after a drag release — only the fly-off (a large x target) counts
+          // as "exited". Structural check, because framer may merge or clone the target
+          // object when a gesture reset batches with the exit animation.
+          if (exitDirection && definition && typeof definition === 'object' && Math.abs(definition.x || 0) > 200) {
+            onExited(event._id, exitDirection);
+          }
+        }}
+      >
+        <motion.div
+          className="swipe-card-inner"
+          animate={{ rotateY: flipped && isTop ? 180 : 0 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+        >
+          <div className="swipe-card-face swipe-card-front">
+            <div className="swipe-card-media">
+              <img src={imagePath(event.image, DEFAULT_EVENT_IMAGE)} alt={event.title} draggable={false} />
+              <span className="swipe-pill swipe-pill-date">{formatShortDate(event.date)}</span>
+              <span className="swipe-pill swipe-pill-countdown">{daysUntilLabel(event.date)}</span>
+              <div className="swipe-card-headline">
+                {hostName && <span className="swipe-host-chip"><People size={13} /> {hostName}</span>}
+                <h3>{event.title}</h3>
+              </div>
+            </div>
+            <div className="swipe-card-body">
+              <div className="meta-line"><CalendarEvent size={15} /> {formatEventDate(event.date)}</div>
+              <div className="meta-line"><GeoAlt size={15} /> {event.location}</div>
+            </div>
+          </div>
+          <div className="swipe-card-face swipe-card-back">
+            <h3>{event.title}</h3>
+            <div className="swipe-detail-row">
+              <CalendarEvent size={16} />
+              <div><strong>When</strong><span>{formatEventDate(event.date)}</span></div>
+            </div>
+            <div className="swipe-detail-row">
+              <GeoAlt size={16} />
+              <div><strong>Where</strong><span>{event.location}</span></div>
+            </div>
+            <div className="swipe-detail-row">
+              <People size={16} />
+              <div><strong>Host</strong><span>{hostName || `Club #${event.eventID}`}</span></div>
+            </div>
+            <div className="swipe-detail-row">
+              <PersonBadge size={16} />
+              <div><strong>Posted by</strong><span>{event.createdBy || 'Unknown'}</span></div>
+            </div>
+            <p className="swipe-card-description">{event.description || 'No description yet.'}</p>
+          </div>
+        </motion.div>
+        <motion.div className="swipe-stamp swipe-stamp-like" style={{ opacity: exitDirection === 'right' ? 1 : likeOpacity }}>
+          Interested
+        </motion.div>
+        <motion.div className="swipe-stamp swipe-stamp-pass" style={{ opacity: exitDirection === 'left' ? 1 : passOpacity }}>
+          Pass
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+SwipeCard.propTypes = {
+  event: PropTypes.shape({
+    _id: PropTypes.string,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    date: PropTypes.instanceOf(Date),
+    location: PropTypes.string,
+    createdBy: PropTypes.string,
+    eventID: PropTypes.number,
+    image: PropTypes.string,
+  }).isRequired,
+  hostName: PropTypes.string,
+  stackIndex: PropTypes.number.isRequired,
+  exitDirection: PropTypes.oneOf(['left', 'right']),
+  flipped: PropTypes.bool,
+  onSwipe: PropTypes.func.isRequired,
+  onFlip: PropTypes.func.isRequired,
+  onExited: PropTypes.func.isRequired,
+};
+
+SwipeCard.defaultProps = {
+  hostName: '',
+  exitDirection: null,
+  flipped: false,
+};
+
+export default SwipeCard;

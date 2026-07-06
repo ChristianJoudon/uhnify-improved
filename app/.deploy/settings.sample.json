@@ -1,0 +1,594 @@
+{
+  "monti": {
+    "appId": "changeme",
+    "appSecret": "changeme"
+  },
+  "defaultAccounts": [
+    {
+      "email": "admin@foo.com",
+      "password": "changeme",
+      "role": "admin"
+    },
+    {
+      "email": "john@foo.com",
+      "password": "changeme"
+    }
+  ],
+  "defaultInterests": [
+    {
+      "interestID": 1,
+      "name": "Academic / Professional"
+    },
+    {
+      "interestID": 2,
+      "name": "Political"
+    },
+    {
+      "interestID": 3,
+      "name": "Sports / Leisure"
+    },
+    {
+      "interestID": 4,
+      "name": "Religious/Spiritual"
+    },
+    {
+      "interestID": 5,
+      "name": "Fraternity / Sorority"
+    },
+    {
+      "interestID": 6,
+      "name": "Service"
+    },
+    {
+      "interestID": 7,
+      "name": "Leisure / Recreational"
+    },
+    {
+      "interestID": 8,
+      "name": "Ethnic / Cultural"
+    },
+    {
+      "interestID": 9,
+      "name": "Honorary Society"
+    },
+    {
+      "interestID": 10,
+      "name": "Student Affairs"
+    }
+  ],
+  "defaultProfiles": [
+    {
+      "UH_ID": 22400001,
+      "email": "john@foo.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "bio": "Enthusiastic software developer and tech enthusiast.",
+      "title": "Senior Developer",
+      "picture": "images/John.png"
+    },
+    {
+      "UH_ID": 22400002,
+      "email": "admin@foo.com",
+      "firstName": "Admin",
+      "lastName": "User",
+      "bio": "Administrator of the platform.",
+      "title": "System Administrator",
+      "picture": "images/CampusFromADistance.png"
+    }
+  ],
+  "defaultClub": [
+    {
+      "clubID": 1,
+      "name": "Basketball Club",
+      "owner": "john@foo.com",
+      "description": "A club for basketball enthusiasts looking to play and improve their skills.",
+      "location": "Campus Sports Center",
+      "image": "images/ChessClub.png",
+      "meetingTime": "Every Wednesday 4:00 pm - 6:00 pm",
+      "contactInfo": "contact@basketballclub.com",
+      "categories": ["Sports", "Team Sports", "Basketball"]
+    },
+    {
+      "clubID": 2,
+      "name": "Volleyball Club",
+      "owner": "admin@foo.com",
+      "description": "Join our volleyball club to enjoy friendly matches and tournaments.",
+      "location": "Campus Gymnasium",
+      "image": "images/ChemistryClub.png",
+      "meetingTime": "Every Tuesday and Thursday 5:00 pm - 7:00 pm",
+      "contactInfo": "volleyball@clubexample.com",
+      "categories": ["Sports", "Team Sports", "Volleyball"]
+    },
+    {
+      "clubID": 3,
+      "name": "Addiction Medicine & Harm Reduction Interest Group",
+      "owner": "admin@foo.com",
+      "description": "\"The Addiction Medicine & Harm Reduction Interest Group aims to increase student understanding of harm reduction principles and practices in the context of addiction medicine and public health, with a particular focus on Hawai'i-specific challenges and resources.\"",
+      "location": "Downtown Community Center",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Monday at 4 PM",
+      "contactInfo": "jayokoya@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 4,
+      "name": "AECT- Hawaii at Manoa (AECT-HI)",
+      "owner": "admin@foo.com",
+      "description": "The AECT-HI Chapter is organized to provide a campus-based focal point for individuals interested in using technology in training and education in association with the University of Hawaii at Manoa Department of Learning Design and Technology (LTEC). The purpose of the Chapter is to provide professional development activities, leadership opportunities, and social interaction for its Members. The mission of AECT-HI is to build a network among LTEC students, faculty, and alumni. Further AECT-HI aims to foster interaction and partnerships with AECT Chapters at other universities and the global AECT community.",
+      "location": "Library Conference Room",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Friday at 2 PM",
+      "contactInfo": "cartermd@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 5,
+      "name": "Aikido at UHM",
+      "owner": "admin@foo.com",
+      "description": "We practice Aikido.",
+      "location": "East Campus Auditorium",
+      "image": "images/InterestSportLeisure2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "halliday@hawaii.edu",
+      "categories": [
+        "Sports/Leisure"
+      ]
+    },
+    {
+      "clubID": 6,
+      "name": "Alpha Omega Hawaii",
+      "owner": "admin@foo.com",
+      "description": "A.The primary function of Alpha Omega Hawaii will be to provide students with the opportunity for spiritual growth by interacting with other students who are Christians at UH and B. To encourage academic excellence C. Alpha Omega Hawaii aims to encourage members to uphold the standards held and established by the University policies.",
+      "location": "East Campus Auditorium",
+      "image": "images/InterestReligiousSpiritual2.png",
+      "meetingTime": "Every Sunday at 1 PM",
+      "contactInfo": "mmorrell@hawaii.edu",
+      "categories": [
+        "Religious/Spiritual"
+      ]
+    },
+    {
+      "clubID": 7,
+      "name": "Alpha Sigma Phi",
+      "owner": "admin@foo.com",
+      "description": "Alpha Sigma Phi strives to becomes the fraternity of choice among undergraduate men coming to the University of Hawaii at Manoa. Alpha Sigma Phi's overall mission is focused on producing academic accomplished, socially acceptable, and physically active leaders consisting of undergraduate men of all backgrounds and beliefs. Our goal every year is to not only improve our organization, but better UHM's Greek Life as a whole through our actions of service and collaboration with philanthropic organizations and other Greek RIOs. ",
+      "location": "Library Conference Room",
+      "image": "images/InterestFraternitySorority2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "senverso@hawaii.edu",
+      "categories": [
+        "Fraternity/Sorority"
+      ]
+    },
+    {
+      "clubID": 8,
+      "name": "Alpha Gamma Delta Delta Sigma",
+      "owner": "admin@foo.com",
+      "description": "Alpha Gamma Delta is an international women's organization committed to providing opportunities for personal development, service to others and a space for members to forge their own paths\u2014all through a lifelong spirit of sisterhood. Inspired by the vision and values defined by our Founders, Alpha Gamma Delta challenges members to lead lives of significance that positively impact their communities. Together, we continually work to: Inspire the Woman. Impact the World.",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestFraternitySorority2.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "cbarreca@hawaii.edu",
+      "categories": [
+        "Fraternity/Sorority"
+      ]
+    },
+    {
+      "clubID": 9,
+      "name": "Alohathon",
+      "owner": "admin@foo.com",
+      "description": "Dance marathon to raise money for Kapiolani women's and children's hospital",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestService2.png",
+      "meetingTime": "Every Tuesday at 5 PM",
+      "contactInfo": "lynchsf@hawaii.edu",
+      "categories": [
+        "Service"
+      ]
+    },
+    {
+      "clubID": 10,
+      "name": "American Association of University Women at the University of Hawai\u02bbi at M\u0101noa",
+      "owner": "admin@foo.com",
+      "description": "The mission of our RIO is to promote the values of AAUW on the UHM campus and in the community. We are working towards equity in society by providing the tools necessary for women to gain economic security, to pursue their education, and advocate for women's rights.",
+      "location": "East Campus Auditorium",
+      "image": "images/InterestPolitical1.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "sulee@hawaii.edu",
+      "categories": [
+        "Political"
+      ]
+    },
+    {
+      "clubID": 11,
+      "name": "American Hotel & Lodging Association [AHLA]",
+      "owner": "admin@foo.com",
+      "description": "To develop student advocates for America's hospitality and lodging industry through education, valuable experiences and available resources.",
+      "location": "Campus Main Hall",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Monday at 4 PM",
+      "contactInfo": "weiqihu@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 12,
+      "name": "American Institute of Aeronautics and Astronautics Student Branch at the University of Hawai'i at Manoa",
+      "owner": "admin@foo.com",
+      "description": "Establish a community for aerospace-related student projects and programs at the UHM and further the purposes and programs of AIAA.",
+      "location": "Library Conference Room",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "mhm69@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 13,
+      "name": "American Institute of Graphic Arts at the University of Hawai'i at Manoa (AIGA UHM)",
+      "owner": "admin@foo.com",
+      "description": "The purpose of this organization is to give aspiring students interested in graphic design the opportunity to participate in design related events, get to know their peers, and connect with the larger design community and professionals.",
+      "location": "East Campus Auditorium",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Sunday at 1 PM",
+      "contactInfo": "yanruluo@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 14,
+      "name": "American Marketing Association at the University of Hawaii at Manoa",
+      "owner": "admin@foo.com",
+      "description": "Our club's purpose is to provide our members with the opportunities to grow socially, philanthropically, and professionally to prepare our members for the work environment after college.",
+      "location": "Campus Main Hall",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Monday at 4 PM",
+      "contactInfo": "tj46@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 15,
+      "name": "American Medical Association/Hawaii Medical Association Branch at JABSOM",
+      "owner": "admin@foo.com",
+      "description": "The purpose of the organization shall be to: a) Provide a platform for medical students interested in health-related public policy or medical education standards to interact with peers who share similar interests and goals. b) Provide opportunities for medical students to expand their knowledge of health-related policy or medical education standards by means of workshops, presentations, and online modules. c) Aid medical students in their search for public policy or medical education standards related research or conferences.",
+      "location": "Library Conference Room",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Monday at 4 PM",
+      "contactInfo": "dwc432@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 16,
+      "name": "American Society of Civil Engineers",
+      "owner": "admin@foo.com",
+      "description": "The mission of the University of Hawai'i at Manoa ASCE student chapter is to expand the knowledge of aspiring civil engineers through networking, monthly meetings, socials, fundraisers and community service. In addition, it is our goal to give our members the opportunity to participate, as well as compete, in the PSWS for a once-in-a-lifetime engineering experience they will never forget.",
+      "location": "Campus Main Hall",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "kobyk@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 17,
+      "name": "American Institute of Architects Hawaii Chapter",
+      "owner": "admin@foo.com",
+      "description": "01. We promote excellence in architecture education, and training.  02. We foster an appreciation of architecture, design, and related disciplines.  03. We enrich communities in a spirit of collaboration.  04. We organize students and combine their efforts to advance the art and policy of architecture.",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Thursday at 6 PM",
+      "contactInfo": "ajct7@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 18,
+      "name": "American Library Association Student Chapter",
+      "owner": "admin@foo.com",
+      "description": "The purposes and aims of the organization are:  A. To facilitate and encourage participation in the American Library Association.   B. To acquaint members with the goals, objectives, and resources of the American Library Association.   C. To encourage professional contacts within the field of librarianship.   D. To provide the members of the Student Chapter with official representation to the American Library Association and other relevant organizations.   E. To actively promote leadership skills and involvement in professional activities beyond the classroom.   F. To provide a local forum for the exchange of ideas and information about trends, issues, and opportunities in the profession.   G. To develop skills and relationships that will enable students to have a creative impact on the profession.   H. To increase awareness of national issues in librarianship.",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Tuesday at 5 PM",
+      "contactInfo": "kjmunro@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 19,
+      "name": "Anthropology Undergraduate Student Association",
+      "owner": "admin@foo.com",
+      "description": "The Anthropology Undergraduate Student Association at the University of Hawai'i at Manoa is an organization of students who are passionate about anthropology and want to take their knowledge and involvement to the next step.   Objectives of AUSA - The creation of an accessible means for all students interested in anthropology to gain experience and familiarity with the resources that are available to them through the University of Hawai'i at Manoa, the College of Social Sciences, and the Department of Anthropology.  - A forum for students to discuss current topics & debates relevant to anthropology and related disciplines.  - Provide interested students with guidance, support and practical experience to adequately prepare them for a career and/or graduate/post-baccalaureate studies in anthropology.  - Offer opportunities for students to practice their kuleana within the community and learn invaluable skills through a variety of volunteer and learning opportunities.",
+      "location": "East Campus Auditorium",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "paris6@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 20,
+      "name": "Anime Manga Society of Hawai`i @ UH Manoa",
+      "owner": "admin@foo.com",
+      "description": "AMS is a leisure club and a gathering place for people to discuss and enjoy anime and anime related things.  We are also hooked up with a few other club that we do combined club related activities.  ",
+      "location": "Campus Main Hall",
+      "image": "images/InterestLeisureRecreational1.png",
+      "meetingTime": "Every Tuesday at 5 PM",
+      "contactInfo": "ams@hawaii.edu",
+      "categories": [
+        "Leisure/Recreational"
+      ]
+    },
+    {
+      "clubID": 21,
+      "name": "Asian-Pacific Law & Policy Journal",
+      "owner": "admin@foo.com",
+      "description": "The Asian-Pacific Law and Policy Journal (APLPJ) is a web-based, American legal journal covering issues in Asia and the Pacific Rim. Our objectives are to disseminate legal research by law professors, legal practitioners, social scientists, economists, and students; to increase awareness of legal issues impacting the region and to provide a forum to discuss legal topics that fall within the Journal's geographic scope. In addition to the web format, the journal is available through the legal databases LexisNexis. APLPJ publishes articles, translations, book reviews, essays, case notes, and comments on current topics in comparative and transnational law focused on one or more of the following countries or geographic entities: Australia, Brunei, Burma, Cambodia, China (including Hong Kong Special Administrative Region and Macau Special Administrative Region), East Timor, Fiji, Hawai'i, Indonesia, Japan, Kiribati, Laos, Malaysia, Marshall Islands, Micronesia, Mongolia, Nauru, New Zealand, North Korea, Palau, Papua New Guinea, Philippines, Samoa, Singapore, Solomon Islands, South Korea, Taiwan, Thailand, Tonga, Tuvalu, Vanuatu, Vietnam.",
+      "location": "Outdoor Sports Field",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "elyselan@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 22,
+      "name": "Associated Students of the John A. Burns School of Medicine",
+      "owner": "admin@foo.com",
+      "description": "The purpose of Associated Students of JABSOM (ASJABSOM) and the JABSOM Classes is to serve as the official body representing the medical students of JABSOM. To that end, purposes include, but are not limited to: (1) advocating on behalf of the medical students of JABSOM; (2) promoting the welfare of JABSOM and its students; (3) fostering student morale; (4) providing a forum for the expression of student interests and concerns to the faculty, administration, and staff; (5) promoting collaboration between the JABSOM Classes; (6) supporting academic and social interaction among the students, faculty, administration, and the greater community; (7) encouraging service in JABSOM and the community; (8) providing services and activities beneficial to ASJABSOM members, JABSOM, and the community; (9) selecting student delegates to JABSOM committees and other bodies with campus-wide representation; and (10) directing and regulating the activities of ASJABSOM and the JABSOM Classes. Notwithstanding any provision of this Constitution, the purposes of ASJABSOM and the JABSOM Classes are limited exclusively to non-profit purposes.",
+      "location": "Library Conference Room",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Thursday at 6 PM",
+      "contactInfo": "ddre@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 23,
+      "name": "Association for Computing Machinery at the University of Hawaii at Manoa",
+      "owner": "admin@foo.com",
+      "description": "ACM is a global scientific and educational organization dedicated to advancing the art, science, engineering, and application of computing, serving both professional and public interests by fostering the open exchange of information and by promoting the highest professional and ethical standards. The main goals of the organization is to promote professional and technical development, facilitate networking, and enrich the lives of the organization members.",
+      "location": "Campus Main Hall",
+      "image": "images/InterestService2.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "kgooding@hawaii.edu",
+      "categories": [
+        "Service"
+      ]
+    },
+    {
+      "clubID": 24,
+      "name": "Atherton YMCA ",
+      "owner": "admin@foo.com",
+      "description": "The YMCA is a fellowship dedicated to implementing principles through programs that build a healthy spirit, mind, and body for all. Atherton YMCA focuses on programs and volunteer opportunities that allow individuals to give back to their community and develop skills needed for the workplace. ",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestService2.png",
+      "meetingTime": "Every Friday at 2 PM",
+      "contactInfo": "malanacn@hawaii.edu",
+      "categories": [
+        "Service"
+      ]
+    },
+    {
+      "clubID": 25,
+      "name": "Bachelor of Social Work Organizations",
+      "owner": "admin@foo.com",
+      "description": "The BSWO was established to create a body responsive to the needs and desires of its constituents, provide for administrative continuity, and develop a responsible as well as critical awareness of prevalent attitude and actions through participation in co-curricular activities.",
+      "location": "Outdoor Sports Field",
+      "image": "images/InterestService2.png",
+      "meetingTime": "Every Friday at 2 PM",
+      "contactInfo": "stonumai@hawaii.edu",
+      "categories": [
+        "Service"
+      ]
+    },
+    {
+      "clubID": 26,
+      "name": "Ballroom Dance Club @UH",
+      "owner": "admin@foo.com",
+      "description": "Promote social and competitive ballroom dance within the UH community",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestSportLeisure2.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "rnarayan@hawaii.edu",
+      "categories": [
+        "Sports/Leisure"
+      ]
+    },
+    {
+      "clubID": 27,
+      "name": "Black Student Association ",
+      "owner": "admin@foo.com",
+      "description": "The Black Student Association (BSA) was established in 2016 in response to the lack of representation for Black students, faculty, and staff at the University of Hawai'i at Manoa (UHM). Since its inception, the BSA has successfully advocated for the return of the African American specialist position in Ethnic Studies, hosted the first Black graduation celebration in over twenty years, hosted Black History month events, and more. The goals of the student-led organization are to: increase awareness and understanding of African American issues, history and culture, promote unity among African American students, engage and connect with topics surrounding Blackness in Hawai'i, and promote and preserve Black studies at the University of Hawai'i at Manoa",
+      "location": "Campus Main Hall",
+      "image": "images/InterestEthnicCultural1.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "breenajt@hawaii.edu",
+      "categories": [
+        "Ethnic/Cultural"
+      ]
+    },
+    {
+      "clubID": 28,
+      "name": "Be the Match",
+      "owner": "admin@foo.com",
+      "description": "Be The Match\u00ae, operated by the National Marrow Donor Program\u00ae (NMDP), is a nonprofit organization dedicated to helping every patient get the life-saving transplant they need. As trusted leaders in advancing treatments for those facing life-threatening blood cancers, we provide ground-breaking research, innovative technologies, patient support, and education that save lives. Through this club on campus, we will be able to spread awareness of our cause and hopefully find someone's match.",
+      "location": "Downtown Community Center",
+      "image": "images/InterestService2.png",
+      "meetingTime": "Every Tuesday at 5 PM",
+      "contactInfo": "sas@hawaii.edu",
+      "categories": [
+        "Service"
+      ]
+    },
+    {
+      "clubID": 29,
+      "name": "Best Buddies Chapter at UHM",
+      "owner": "admin@foo.com",
+      "description": "Best Buddies International is a nonprofit 501(c)(3) organization dedicated to establishing a global volunteer movement that creates opportunities for one-to-one friendships, integrated employment, leadership development, and inclusive living for individuals with intellectual and developmental disabilities (IDD). As a Best Buddies chapter, we are committed to providing activities and outings to create inclusive friendships between UHM college students and persons with disabilities.",
+      "location": "Virtual Meeting Room",
+      "image": "images/InterestService2.png",
+      "meetingTime": "Every Thursday at 6 PM",
+      "contactInfo": "rdazzeo@hawaii.edu",
+      "categories": [
+        "Service"
+      ]
+    },
+    {
+      "clubID": 30,
+      "name": "Beta Alpha Psi - Delta Theta Chapter",
+      "owner": "admin@foo.com",
+      "description": "Beta Alpha Psi is the international honor organization for financial information students and professionals. The purpose of this organization shall be to:  - Instill in its members a desire for self-improvement.  - Foster high moral and ethical standards in its members.  - Encourage and give recognition to scholastic and professional excellence.  - Cultivate a sense of responsibility and services in its members.  - Promote the collegiate study of accounting.  - Provide opportunities for association among its members. ",
+      "location": "Campus Main Hall",
+      "image": "images/InterestHonorarySociety1.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "jmjaf@hawaii.edu",
+      "categories": [
+        "Honorary Society"
+      ]
+    },
+    {
+      "clubID": 31,
+      "name": "Beta Beta Gamma",
+      "owner": "admin@foo.com",
+      "description": "To bring together a group of strong, caring women to create a sisterhood of leadership, community, and diversity. To give back to our community and raise a group of strong intelligent women ",
+      "location": "Downtown Community Center",
+      "image": "images/InterestFraternitySorority2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "changv21@hawaii.edu",
+      "categories": [
+        "Fraternity/Sorority"
+      ]
+    },
+    {
+      "clubID": 32,
+      "name": "Botanical Society of America Hawaii Chapter at Univeristy of Hawaii at Manoa",
+      "owner": "admin@foo.com",
+      "description": "The Botanical Society of America (\"BSA\") Student Chapter at University of Hawaii at Manoa (\"Chapter\") shall be operated for scientific and educational purposes.  Its mission is to promote botany, the field of basic science dealing with the study and inquiry into the form, function, development, diversity, reproduction, evolution, and uses of plants and their interactions within the biosphere.  To accomplish this mission, the objectives of the Chapter are to: sustain and provide improved formal and informal education about plants; encourage basic plant research; provide expertise, direction, and position statements concerning plants and ecosystems; and foster communication within the professional botanical community, and between botanists and the rest of the local community through meetings, activities, and community outreach.",
+      "location": "East Campus Auditorium",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Biweekly on Wednesdays at 7 PM",
+      "contactInfo": "nitz@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 33,
+      "name": "Business Executive Society of Tomorrow",
+      "owner": "admin@foo.com",
+      "description": "The Business Executive Society of Tomorrow is a general business club at the University of Hawaii at Manoa's Shidler College of Business. Founded by students in 1998, BEST has a proud history of maintaining and perpetuating excellence in its members. Through the years, we have developed a culture of diligence and dedication to personal and professional growth. Through a combination of tours, workshops, networking events, alumni events, community services, and socials, we strive to mold our members into well-rounded individuals. We pride ourselves in producing the business leaders of tomorrow, and we provide our members with ample opportunities to continually advance toward that goal.",
+      "location": "Outdoor Sports Field",
+      "image": "images/InterestAcademicProfessional2.png",
+      "meetingTime": "Every Saturday at 10 AM",
+      "contactInfo": "agcaball@hawaii.edu",
+      "categories": [
+        "Academic/Professional"
+      ]
+    },
+    {
+      "clubID": 34,
+      "name": "Capoeira Senzala Hawaii",
+      "owner": "admin@foo.com",
+      "description": "To expose students to Brazilian culture through many aspects of capoeira, such as martial art, fitness, music, rhythm, and samba. To build a healthy community around training capoeira and to contribute to this community by bringing guest teachers for workshops and events. ",
+      "location": "Campus Main Hall",
+      "image": "images/InterestEthnicCultural1.png",
+      "meetingTime": "Every Sunday at 1 PM",
+      "contactInfo": "andru78@hawaii.edu",
+      "categories": [
+        "Ethnic/Cultural"
+      ]
+    },
+    {
+      "clubID": 35,
+      "name": "Campus Chinese Christian Ministry",
+      "owner": "admin@foo.com",
+      "description": "The purpose of the organization is to offer a space for Chinese students and scholars at the University of Hawaii to find support, companionship, and spiritual fulfillment. Our focus is not only on academic and professional excellence but also on understanding the deeper meaning of life through family, kinship, love, and faith.",
+      "location": "West Wing Meeting Room",
+      "image": "images/InterestReligiousSpiritual2.png",
+      "meetingTime": "Every Wednesday at 3 PM",
+      "contactInfo": "zhaos@hawaii.edu",
+      "categories": [
+        "Religious/Spiritual"
+      ]
+    }
+  ],
+  "defaultEvent": [
+    {
+      "clubID": 1,
+      "eventID": 1,
+      "title": "Outdoor Yoga Session",
+      "description": "A relaxing yoga session in the park. Suitable for all levels.",
+      "date": "2023-11-15T07:00:00Z",
+      "location": "Central Park",
+      "createdBy": "john@foo.com",
+      "image": "images/codingWorkshop.png"
+    },
+    {
+      "club": 2,
+      "eventID": 2,
+      "title": "Art Exhibition Opening",
+      "description": "Opening night for our community art exhibition, featuring local artists.",
+      "date": "2023-11-20T19:00:00Z",
+      "location": "Downtown Art Gallery",
+      "createdBy": "admin@foo.com",
+      "image": "images/codingWorkshop.png"
+    },
+    {
+      "clubID": 3,
+      "eventID": 3,
+      "title": "Live Concert: Indie Bands",
+      "description": "An evening of live music from up-and-coming indie bands.",
+      "date": "2023-12-05T20:00:00Z",
+      "location": "Riverfront Amphitheater",
+      "createdBy": "john@foo.com",
+      "image": "images/codingWorkshop.png"
+    }
+  ],
+  "defaultProfilesClubs": [
+    {
+      "profileID": 22400001,
+      "clubID": 1
+    },
+    {
+      "profileID": 22400002,
+      "clubID": 2
+    }
+  ],
+  "defaultProfilesEvents": [
+    {
+      "profileID": 22400001,
+      "eventID": 101
+    },
+    {
+      "profileID": 22400002,
+      "eventID": 102
+    }
+  ],
+  "defaultClubEvents": [
+    {
+      "clubID": 1,
+      "eventID": 103
+    },
+    {
+      "clubID": 2,
+      "eventID": 102
+    }
+  ]
+}
