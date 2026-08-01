@@ -1,45 +1,58 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
+import { Link } from 'react-router-dom';
 import { Alert, Button, Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
-import { Search } from 'react-bootstrap-icons';
+import { GeoAlt, Search } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
 import { Friends } from '../../api/friends/Friends';
 import Club from '../components/Club';
 import ClubDetailsModal from '../components/ClubDetailsModal';
+import TopicMotif from '../components/TopicMotif';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
+import { TOPICS, TOPIC_KEYS, topicFor } from '../utilities/topics';
 
 const PAGE_STEP = 12;
+const RADII = [2, 5, 10, 25];
+
+// Placeholder geography until real coordinates land — deterministic per club.
+const distanceFor = (id = '') => {
+  let value = 0;
+  for (let i = 0; i < id.length; i++) {
+    value = (value * 31 + id.charCodeAt(i)) % 997;
+  }
+  return 0.3 + (value % 45) / 10;
+};
 
 const rise = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 200, damping: 24 } },
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.2, 0.8, 0.2, 1] } },
 };
 
 const ClubFinder = () => {
+  const [selectedTopics, setSelectedTopics] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
   const [selectedClub, setSelectedClub] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('foryou');
+  const [radius, setRadius] = useState(5);
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
 
-  const { ready, clubs, joinedClubIds, interests, friendClubIds } = useTracker(() => {
+  const { ready, clubs, joinedClubIds, interests, friendClubIds, place } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
     const membershipSubscription = Meteor.userId() ? Meteor.subscribe(ProfileClubs.membershipPublicationName) : { ready: () => true };
     Meteor.subscribe(Profiles.userPublicationName);
     Meteor.subscribe(Friends.userPublicationName);
     Meteor.subscribe('Friends.publication.activity');
     const profile = Profiles.collection.findOne({ userId: Meteor.userId() });
-    // Friend boost only counts CURRENT accepted friends, never stale session data.
     const acceptedIds = Friends.collection.find({ status: 'accepted' }).fetch()
       .map(edge => (edge.requesterId === Meteor.userId() ? edge.receiverId : edge.requesterId));
     return {
@@ -47,6 +60,7 @@ const ClubFinder = () => {
       joinedClubIds: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch().map(membership => membership.clubId),
       interests: normalizeCategories(profile?.interests),
       friendClubIds: new Set(ProfileClubs.collection.find({ userId: { $in: acceptedIds } }).fetch().map(membership => membership.clubId)),
+      place: profile?.location || 'Honolulu, HI',
       ready: clubsSubscription.ready() && membershipSubscription.ready(),
     };
   }, []);
@@ -57,48 +71,52 @@ const ClubFinder = () => {
     return [...unique].sort();
   }, [clubs]);
 
-  // Most-used member tags across all clubs power the tag filter cloud.
-  const popularTags = useMemo(() => {
-    const counts = new Map();
-    clubs.forEach(club => (club.tags || []).forEach(tag => counts.set(tag, (counts.get(tag) || 0) + 1)));
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 14).map(([tag]) => tag);
-  }, [clubs]);
-
   const scored = useMemo(() => {
     const context = { interests, friendClubIds };
     return clubs.map(club => {
       const score = scoreClub(club, context);
-      const matchedInterest = interests.find(interest => normalizeCategories(club.categories)
-        .concat(club.tags || [])
-        .some(value => value.toLowerCase().includes(interest.toLowerCase()) || interest.toLowerCase().includes(value.toLowerCase())));
-      return { club, score, tier: sizeTier(score), matchLabel: matchedInterest ? `For your ${matchedInterest} side` : '' };
+      return {
+        club,
+        score,
+        tier: sizeTier(score),
+        topic: topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description),
+        distance: distanceFor(club._id),
+      };
     });
   }, [clubs, interests, friendClubIds]);
 
+  // Only topics actually present in the directory become chips.
+  const availableTopics = useMemo(() => {
+    const present = new Set(scored.map(item => item.topic.key));
+    return TOPIC_KEYS.filter(key => present.has(key));
+  }, [scored]);
+
   const filtered = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    const list = scored.filter(({ club }) => {
+    const list = scored.filter(({ club, topic, distance }) => {
       const clubCategories = normalizeCategories(club.categories);
       const clubTags = club.tags || [];
-      const matchesSearch = query === '' || [club.name, club.description, club.location, ...clubTags].some(value => (value || '').toLowerCase().includes(query));
+      const matchesSearch = query === '' || [club.name, club.description, club.location, ...clubTags]
+        .some(value => (value || '').toLowerCase().includes(query));
+      const matchesTopics = selectedTopics.length === 0 || selectedTopics.includes(topic.key);
       const matchesCategories = selectedCategories.length === 0 || clubCategories.some(category => selectedCategories.includes(category));
-      const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => clubTags.some(clubTag => clubTag.toLowerCase() === tag.toLowerCase()));
-      return matchesSearch && matchesCategories && matchesTags;
+      return matchesSearch && matchesTopics && matchesCategories && distance <= radius;
     });
     if (sortMode === 'az') {
       return [...list].sort((a, b) => (a.club.name || '').localeCompare(b.club.name || ''));
     }
+    if (sortMode === 'near') {
+      return [...list].sort((a, b) => a.distance - b.distance);
+    }
     return [...list].sort((a, b) => b.score - a.score);
-  }, [scored, searchTerm, selectedCategories, selectedTags, sortMode]);
+  }, [scored, searchTerm, selectedTopics, selectedCategories, sortMode, radius]);
 
   useEffect(() => {
     setVisibleCount(PAGE_STEP + 6);
-  }, [searchTerm, selectedCategories, selectedTags, sortMode]);
+  }, [searchTerm, selectedTopics, selectedCategories, sortMode, radius]);
 
-  // Lazy waterfall: grow the rendered window whenever the sentinel scrolls into view.
-  // Re-observing after every growth matters: observe() always reports the current
-  // intersection state, so loading continues even when new tiles didn't push the
-  // sentinel out of the preload margin (otherwise no crossing event ever fires again).
+  // Re-observe after each growth so loading continues even when the sentinel
+  // stays inside the preload margin.
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel || typeof IntersectionObserver === 'undefined') {
@@ -113,7 +131,7 @@ const ClubFinder = () => {
     return () => observer.disconnect();
   }, [filtered.length, visibleCount]);
 
-  const addClubToProfile = clubId => {
+  const join = clubId => {
     Meteor.call('profileClubs.add', clubId, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
@@ -121,16 +139,16 @@ const ClubFinder = () => {
     });
   };
 
-  const toggleIn = (setter) => value => {
+  const toggleIn = setter => value => {
     setter(previous => (previous.includes(value) ? previous.filter(item => item !== value) : [...previous, value]));
   };
+  const toggleTopic = toggleIn(setSelectedTopics);
   const toggleCategory = toggleIn(setSelectedCategories);
-  const toggleTag = toggleIn(setSelectedTags);
 
   const clearFilters = () => {
     setSearchTerm('');
+    setSelectedTopics([]);
     setSelectedCategories([]);
-    setSelectedTags([]);
   };
 
   if (!ready) {
@@ -138,22 +156,55 @@ const ClubFinder = () => {
   }
 
   const visible = filtered.slice(0, visibleCount);
-  const hasFilters = searchTerm || selectedCategories.length > 0 || selectedTags.length > 0;
+  const hasFilters = searchTerm || selectedTopics.length > 0 || selectedCategories.length > 0;
 
   return (
     <Container id="browse-clubs-page" className="page-shell py-4" fluid="xl">
       <div className="page-intro">
-        <h1>Clubs</h1>
+        <h1>Good matches for you</h1>
+        <p>Groups near you, matched to what you actually care about.</p>
       </div>
 
       <div className="finder-layout">
         <aside className="filter-rail">
-          <div className="filter-group">
-            <div className="search-box" style={{ border: '1px solid var(--line)', borderRadius: 999 }}>
+          <div className="rail-block">
+            <div className="rail-title">You&apos;re matching for</div>
+            <div className="rail-line"><GeoAlt size={15} /> {place}</div>
+            <div className="rail-line">
+              <GeoAlt size={15} />
+              <select value={radius} onChange={event => setRadius(Number(event.target.value))} aria-label="Search radius">
+                {RADII.map(miles => <option key={miles} value={miles}>Within {miles} miles</option>)}
+              </select>
+            </div>
+          </div>
+
+          {interests.length > 0 && (
+            <div className="rail-block">
+              <div className="rail-title">
+                Your active interests
+                <Link to="/settings">Edit</Link>
+              </div>
+              {interests.slice(0, 7).map(interest => {
+                const topic = topicFor(interest);
+                return (
+                  <div className="rail-interest" key={interest}>
+                    <span className="rail-dot" style={{ background: topic.chip, color: topic.chipInk }}>
+                      <TopicMotif name={topic.motif} className="" />
+                    </span>
+                    {interest}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="rail-block">
+            <div className="rail-title">Search</div>
+            <div className="search-box" style={{ border: '1px solid var(--mb-line-soft)', borderRadius: 999 }}>
               <Search />
               <Form.Control
                 type="text"
-                placeholder="Search…"
+                placeholder="Search groups…"
                 value={searchTerm}
                 onChange={event => setSearchTerm(event.target.value)}
                 className="search-input"
@@ -161,34 +212,8 @@ const ClubFinder = () => {
             </div>
           </div>
 
-          <div className="filter-group">
-            <h4>Sort</h4>
-            <div className="mode-toggle">
-              <button type="button" className={sortMode === 'foryou' ? 'active' : ''} onClick={() => setSortMode('foryou')}>For you</button>
-              <button type="button" className={sortMode === 'az' ? 'active' : ''} onClick={() => setSortMode('az')}>A–Z</button>
-            </div>
-          </div>
-
-          {popularTags.length > 0 && (
-            <div className="filter-group">
-              <h4>Tags</h4>
-              <div className="tag-cloud">
-                {popularTags.map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className={`window-chip${selectedTags.includes(tag) ? ' active' : ''}`}
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="filter-group">
-            <h4>Categories</h4>
+          <div className="rail-block">
+            <div className="rail-title">Categories</div>
             {categories.map(category => (
               <Form.Check
                 key={category}
@@ -199,31 +224,66 @@ const ClubFinder = () => {
                 label={category}
               />
             ))}
+            {hasFilters && (
+              <Button type="button" className="btn-soft-primary mt-2" onClick={clearFilters}>Clear all</Button>
+            )}
           </div>
 
-          {hasFilters && (
-            <Button type="button" className="btn-soft-primary" onClick={clearFilters}>Clear all</Button>
-          )}
+          <div className="rail-block">
+            <div className="rail-title">How matches work</div>
+            <p className="rail-note">
+              We compare your interests, location, and the groups your friends joined to surface
+              ones you&apos;ll like.
+            </p>
+            <div className="rail-legend">
+              <i /><i /><i /><span>Best fits appear larger</span>
+            </div>
+          </div>
         </aside>
 
         <div>
-          <div className="finder-count">{filtered.length} clubs{sortMode === 'foryou' && interests.length > 0 ? ' · sized to your interests' : ''}</div>
+          <div className="finder-toolbar">
+            <div className="finder-count">
+              {filtered.length} {filtered.length === 1 ? 'group' : 'groups'} within {radius} miles
+            </div>
+            <label className="mb-sort" htmlFor="mb-sort-select">
+              Sort:
+              <select id="mb-sort-select" value={sortMode} onChange={event => setSortMode(event.target.value)}>
+                <option value="foryou">Recommended</option>
+                <option value="near">Nearest</option>
+                <option value="az">A–Z</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="chip-row">
+            {availableTopics.map(key => (
+              <button
+                key={key}
+                type="button"
+                className={`chip${selectedTopics.includes(key) ? ' is-on' : ''}`}
+                onClick={() => toggleTopic(key)}
+              >
+                {TOPICS[key].label}
+              </button>
+            ))}
+          </div>
 
           {visible.length === 0 ? (
             <Alert className="empty-state-card">
-              <h2>No matches.</h2>
+              <h2>Nothing within {radius} miles.</h2>
               <Button type="button" onClick={clearFilters} className="btn-solid-primary">Reset</Button>
             </Alert>
           ) : (
             <div className="masonry">
-              {visible.map(({ club, tier, matchLabel }) => (
+              {visible.map(({ club, tier, distance }) => (
                 <motion.div key={club._id} className="masonry-item" variants={rise} initial="hidden" animate="show">
                   <Club
                     club={club}
                     tier={tier}
-                    matchLabel={matchLabel}
+                    distance={`${distance.toFixed(1)} mi`}
                     isMember={joinedClubIds.includes(club._id)}
-                    onAddToProfile={addClubToProfile}
+                    onAddToProfile={join}
                     onViewDetails={() => {
                       setSelectedClub(club);
                       setShowDetailsModal(true);

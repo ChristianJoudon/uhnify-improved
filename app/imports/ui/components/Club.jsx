@@ -1,44 +1,55 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Badge, Button, Card, Image } from 'react-bootstrap';
-import { CheckCircleFill, PlusCircle, Stars } from 'react-bootstrap-icons';
+import { GeoAlt } from 'react-bootstrap-icons';
+import TopicMotif from './TopicMotif';
 import { imagePath, normalizeCategories } from '../utilities/helpers';
+import { topicFor } from '../utilities/topics';
+import { scheduleLabel } from '../../api/club/schedule';
 
 /**
- * A club tile for the finder waterfall. `tier` sets the masonry footprint:
- * lg (tall image, tags, match reason) > md (standard) > sm (compact, no image).
+ * A club as a printed poster: the artwork IS the card. The topic decides the
+ * field colour and motif; the footer carries the practical line — where, how
+ * far, and the one action. `tier` sets the poster's footprint in the masonry.
  */
-const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, matchLabel }) => {
+const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance }) => {
   const categories = normalizeCategories(club.categories);
-  const tags = (club.tags || []).slice(0, tier === 'lg' ? 3 : 2);
+  // Categories and tags describe the club; its name is only a weak hint.
+  const topic = topicFor(categories, club.tags, club.name, club.description);
+  const when = scheduleLabel(club.schedule) || club.meetingTime;
+
   return (
-    <Card className={`club-card2 discovery-card club-tile-${tier}`}>
-      <div className="club-card-media">
-        <Image src={imagePath(club.image)} alt={club.name} loading="lazy" />
-        {categories[0] && <span className="club-card-badge">{categories[0]}</span>}
+    <article className={`mb-poster mb-poster-${tier}`}>
+      <button
+        type="button"
+        className="mb-poster-art"
+        style={{ background: topic.field, color: topic.ink }}
+        onClick={() => onViewDetails(club)}
+        aria-label={`View ${club.name}`}
+      >
+        {when && <span className="mb-poster-eyebrow">{when}</span>}
+        <h3 className="mb-poster-title">{club.name}</h3>
+        {tier === 'lg' && club.description && (
+          <p className="mb-poster-tagline">{club.description}</p>
+        )}
+        <TopicMotif name={topic.motif} />
+      </button>
+
+      <div className="mb-poster-foot">
+        <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />
+        <span className="mb-poster-meta">
+          {distance && <><GeoAlt size={12} /> {distance}</>}
+          <em>{topic.label}</em>
+        </span>
+        <button
+          type="button"
+          className={`btn ${isMember ? 'btn-soft-primary' : 'btn-match'} mb-poster-cta`}
+          onClick={() => onAddToProfile(club._id)}
+          disabled={isMember}
+        >
+          {isMember ? "You're in" : "I'm in"}
+        </button>
       </div>
-      <Card.Body className="d-flex flex-column">
-        {tier === 'lg' && matchLabel && (
-          <span className="match-pill"><Stars size={12} /> {matchLabel}</span>
-        )}
-        <Card.Title className="club-card-title">{club.name}</Card.Title>
-        <div className="meta-line">{club.meetingTime} · {club.location}</div>
-        {tags.length > 0 && tier !== 'sm' && (
-          <div className="club-card-categories mt-2">
-            {tags.map(tag => <Badge key={tag} className="club-category-tag">{tag}</Badge>)}
-          </div>
-        )}
-        <div className="club-card-actions mt-3">
-          <Button type="button" onClick={() => onViewDetails(club)} className="btn-soft-primary">
-            Details
-          </Button>
-          <Button type="button" onClick={() => onAddToProfile(club._id)} className="btn-solid-primary" disabled={isMember}>
-            {isMember ? <CheckCircleFill size={15} /> : <PlusCircle size={15} />}
-            {isMember ? 'Joined' : 'Join'}
-          </Button>
-        </div>
-      </Card.Body>
-    </Card>
+    </article>
   );
 };
 
@@ -47,27 +58,30 @@ Club.propTypes = {
     _id: PropTypes.string,
     clubID: PropTypes.number,
     name: PropTypes.string,
-    owner: PropTypes.string,
     description: PropTypes.string,
     location: PropTypes.string,
     image: PropTypes.string,
     meetingTime: PropTypes.string,
-    contactInfo: PropTypes.string,
     categories: PropTypes.arrayOf(PropTypes.string),
     tags: PropTypes.arrayOf(PropTypes.string),
+    schedule: PropTypes.shape({
+      days: PropTypes.arrayOf(PropTypes.number),
+      time: PropTypes.string,
+      cadence: PropTypes.string,
+    }),
   }).isRequired,
   onAddToProfile: PropTypes.func,
   onViewDetails: PropTypes.func.isRequired,
   isMember: PropTypes.bool,
   tier: PropTypes.oneOf(['lg', 'md', 'sm']),
-  matchLabel: PropTypes.string,
+  distance: PropTypes.string,
 };
 
 Club.defaultProps = {
   onAddToProfile: () => {},
   isMember: false,
   tier: 'md',
-  matchLabel: '',
+  distance: '',
 };
 
 export default Club;

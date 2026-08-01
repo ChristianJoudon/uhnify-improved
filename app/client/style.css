@@ -128,7 +128,10 @@ html {
 
 body {
   margin: 0;
-  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* !important because Meteor's bundle can order bootstrap.min.css after this
+     file, and Bootstrap sets body font-family from its own variable. Without
+     it the whole interface silently falls back to system-ui. */
+  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   background-color: var(--mb-paper) !important;
   color: var(--mb-ink);
   min-height: 100vh;
@@ -152,7 +155,7 @@ p {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif !important;
   color: var(--mb-ink);
   font-weight: 650;
   letter-spacing: -0.015em;
@@ -2902,6 +2905,367 @@ textarea.form-control {
   .mb-public-nav a:not(.mb-public-cta) {
     display: none;
   }
+}
+
+/* ==========================================================================
+   Poster cards — the artwork is the card
+   ========================================================================== */
+
+.mb-poster {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  overflow: hidden;
+  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
+}
+
+.mb-poster:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mb-shadow-feature);
+}
+
+/* The art panel is a button so the whole poster opens the details sheet.
+   font: inherit is required — a bare <button> otherwise falls back to the UA
+   system font and the eyebrow/tagline drop out of the type system. */
+.mb-poster-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  border: none;
+  text-align: left;
+  font: inherit;
+  padding: 1rem 1.05rem 1.15rem;
+  overflow: hidden;
+  min-height: 168px;
+  cursor: pointer;
+}
+
+.mb-poster-eyebrow {
+  position: relative;
+  z-index: 1;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 0.5rem;
+}
+
+.mb-poster-title {
+  position: relative;
+  z-index: 1;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+  margin: 0;
+  color: inherit;
+  font-size: 1.3rem;
+  text-wrap: balance;
+}
+
+.mb-poster-tagline {
+  position: relative;
+  z-index: 1;
+  margin: 0.55rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: inherit;
+  opacity: 0.8;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Motif sits behind the type, bleeding off the lower-right corner. */
+.mb-motif {
+  position: absolute;
+  right: -14%;
+  bottom: -18%;
+  width: 68%;
+  height: auto;
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.mb-poster-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--mb-paper-bright);
+}
+
+.mb-poster-mark {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid var(--mb-line-soft);
+  background: var(--mb-wood);
+}
+
+.mb-poster-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: var(--mb-ink-soft);
+  white-space: nowrap;
+}
+
+.mb-poster-meta svg {
+  flex: 0 0 auto;
+}
+
+/* The topic label yields first when the footer is tight. */
+.mb-poster-meta em {
+  font-style: normal;
+  color: var(--mb-ink-faint);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mb-poster-meta em::before {
+  content: "·";
+  margin: 0 0.28rem;
+}
+
+/* Only the large poster has room for the topic label; the others drop it
+   rather than show a truncated stub. Distance is the line that must survive. */
+.mb-poster-md .mb-poster-meta em,
+.mb-poster-sm .mb-poster-meta em {
+  display: none;
+}
+
+.mb-poster-cta {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 0.34rem 0.7rem !important;
+  font-size: 0.8rem !important;
+  border-width: 1.5px !important;
+}
+
+/* Size tiers — the match score decides how much room a poster gets. */
+.mb-poster-lg .mb-poster-art {
+  min-height: 300px;
+  padding: 1.3rem 1.35rem 1.5rem;
+}
+
+.mb-poster-lg .mb-poster-title {
+  font-size: 1.95rem;
+}
+
+.mb-poster-lg .mb-motif {
+  width: 78%;
+  opacity: 0.26;
+}
+
+.mb-poster-md .mb-poster-art {
+  min-height: 192px;
+}
+
+.mb-poster-sm .mb-poster-art {
+  min-height: 128px;
+  padding: 0.85rem 0.9rem 1rem;
+}
+
+.mb-poster-sm .mb-poster-title {
+  font-size: 1.06rem;
+}
+
+.mb-poster-sm .mb-motif {
+  width: 56%;
+  opacity: 0.18;
+}
+
+/* ==========================================================================
+   Clubs page: matching rail
+   ========================================================================== */
+
+.rail-block {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.rail-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+  margin-bottom: 0.65rem;
+}
+
+.rail-title a {
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 650;
+  color: var(--mb-match-deep);
+  text-decoration: none;
+}
+
+.rail-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 650;
+  font-size: 0.92rem;
+  color: var(--mb-ink);
+  padding: 0.15rem 0;
+}
+
+.rail-line svg {
+  color: var(--mb-match);
+  flex: 0 0 auto;
+}
+
+.rail-line select {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  outline: none;
+  cursor: pointer;
+}
+
+.rail-interest {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.28rem 0;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--mb-ink);
+}
+
+.rail-dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.rail-dot svg {
+  width: 15px;
+  height: auto;
+  opacity: 0.95;
+  position: static;
+}
+
+.rail-note {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--mb-ink-soft);
+  margin: 0 0 0.7rem;
+}
+
+.rail-legend {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.rail-legend i {
+  display: block;
+  background: var(--mb-match);
+  border-radius: 4px;
+  opacity: 0.75;
+}
+
+.rail-legend i:nth-child(1) { width: 15px; height: 15px; opacity: 0.4; }
+.rail-legend i:nth-child(2) { width: 21px; height: 21px; opacity: 0.6; }
+.rail-legend i:nth-child(3) { width: 28px; height: 28px; opacity: 0.85; }
+
+.rail-legend span {
+  margin-left: 0.2rem;
+  font-size: 0.74rem;
+  color: var(--mb-ink-faint);
+  font-weight: 600;
+}
+
+/* Chip row + sort ---------------------------------------------------------- */
+
+.finder-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.mb-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  white-space: nowrap;
+}
+
+.mb-sort select {
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+.chip-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
+
+.chip {
+  border: 1px solid var(--mb-line-strong);
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  border-radius: 999px;
+  padding: 0.42rem 0.9rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease);
+}
+
+.chip:hover {
+  background: var(--mb-wood);
+}
+
+.chip.is-on {
+  background: var(--mb-match);
+  border-color: var(--mb-match);
+  color: #1a1614;
+  font-weight: 700;
 }
 
 /* --------------------------------------------------------------------------
