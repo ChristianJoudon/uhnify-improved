@@ -1,45 +1,89 @@
 /* ==========================================================================
-   UHnify design system — "breeze"
-   Cream paper, pastel sage & mint, muted gold, dark charcoal ink.
-   Rounded, quiet, minimal. Motion is soft and playful, never busy.
+   MatchBook design system — "pocket-sized local editorial"
+   Paper white, ink charcoal, one significant orange. Print-offset depth,
+   modest radii, restrained motion. The metaphor appears once per surface.
    ========================================================================== */
 
 :root {
-  --paper: #f7f3e8;
-  --paper-2: #f1ecdf;
-  --card: #fffef9;
-  --charcoal: #333935;
-  --stone: #82897f;
-  --forest: #33604a;
-  --forest-deep: #274b3a;
-  --sage: #9db892;
-  --mint: #e7efe3;
-  --mint-2: #f0f5ec;
-  --gold: #c9a24b;
-  --gold-soft: #f0e3c0;
-  --blush: #f3e4dc;
-  --rose: #c98a7d;
-  --sky: #dbe7e4;
-  --line: rgba(51, 57, 53, 0.08);
-  --line-strong: rgba(51, 57, 53, 0.14);
-  --shadow: 0 20px 50px rgba(51, 57, 53, 0.08);
-  --shadow-soft: 0 10px 30px rgba(51, 57, 53, 0.06);
-  --radius-sm: 14px;
-  --radius-md: 22px;
-  --radius-lg: 30px;
-  --radius-xl: 40px;
+  /* Paper */
+  --mb-paper: #f8f1e7;
+  --mb-paper-bright: #fff9f0;
+  --mb-paper-edge: #e5d6c2;
+  --mb-wood: #f0d8b8;
 
-  /* Legacy aliases (older markup still references these) */
-  --uh-green: #33604a;
-  --uh-green-2: #46795f;
-  --leaf: #9db892;
-  --cream: #f7f3e8;
-  --sand: #f0e3c0;
-  --ink: #333935;
-  --muted: #82897f;
-  --white: #fffef9;
-  --danger: #c98a7d;
-  --mint-legacy: #e7efe3;
+  /* Ink */
+  --mb-ink: #303234;
+  --mb-ink-soft: #62625e;
+  --mb-ink-faint: #8b8982;
+
+  /* Brand */
+  --mb-match: #df5834;
+  --mb-match-deep: #a94329;
+
+  /* Editorial inks */
+  --mb-pink: #e96d76;
+  --mb-yellow: #e6ae35;
+  --mb-teal: #4c8177;
+  --mb-blue: #657d8c;
+
+  /* States */
+  --mb-success: #2e665b;
+  --mb-danger: #a33b32;
+
+  /* Lines */
+  --mb-line-soft: rgba(48, 50, 52, 0.14);
+  --mb-line-strong: rgba(48, 50, 52, 0.34);
+
+  /* Shape */
+  --mb-radius-control: 12px;
+  --mb-radius-card: 16px;
+  --mb-radius-feature: 20px;
+  --mb-radius-sheet: 24px;
+
+  /* Depth — print offsets, never diffuse glass */
+  --mb-shadow-small: 3px 4px 0 rgba(48, 50, 52, 0.12);
+  --mb-shadow-feature: 6px 7px 0 rgba(48, 50, 52, 0.10);
+
+  /* Motion */
+  --mb-fast: 140ms;
+  --mb-standard: 200ms;
+  --mb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Legacy aliases — map the retired "breeze" names onto MatchBook tokens so
+     pages not yet migrated inherit the new system instead of UH green. */
+  --paper: var(--mb-paper);
+  --paper-2: var(--mb-paper-edge);
+  --card: var(--mb-paper-bright);
+  --charcoal: var(--mb-ink);
+  --stone: var(--mb-ink-soft);
+  --forest: var(--mb-ink);
+  --forest-deep: #1f2123;
+  --sage: var(--mb-match);
+  --mint: var(--mb-wood);
+  --mint-2: var(--mb-paper-bright);
+  --gold: var(--mb-yellow);
+  --gold-soft: var(--mb-wood);
+  --blush: #f6e0d8;
+  --rose: var(--mb-danger);
+  --sky: #e3e9ec;
+  --line: var(--mb-line-soft);
+  --line-strong: var(--mb-line-strong);
+  --shadow: var(--mb-shadow-feature);
+  --shadow-soft: var(--mb-shadow-small);
+  --radius-sm: 10px;
+  --radius-md: var(--mb-radius-card);
+  --radius-lg: var(--mb-radius-feature);
+  --radius-xl: var(--mb-radius-sheet);
+  --uh-green: var(--mb-ink);
+  --uh-green-2: #1f2123;
+  --leaf: var(--mb-match);
+  --cream: var(--mb-paper);
+  --sand: var(--mb-wood);
+  --ink: var(--mb-ink);
+  --muted: var(--mb-ink-soft);
+  --white: var(--mb-paper-bright);
+  --danger: var(--mb-danger);
+  --mint-legacy: var(--mb-wood);
 }
 
 * {
@@ -50,13 +94,26 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Bootstrap sets body background from its own variables and loads after this
+   file in the bundle — retarget the variables so paper wins everywhere. */
+:root,
+[data-bs-theme="light"] {
+  --bs-body-bg: #f8f1e7;
+  --bs-body-color: #303234;
+  --bs-body-font-family: "DM Sans", system-ui, sans-serif;
+  --bs-border-radius: 12px;
+}
+
 body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--paper);
-  color: var(--charcoal);
+  font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background-color: var(--mb-paper) !important;
+  color: var(--mb-ink);
   min-height: 100vh;
   overflow-x: clip;
+  /* Almost imperceptible paper grain (2%), never behind small body text. */
+  background-image: radial-gradient(rgba(48, 50, 52, 0.02) 1px, transparent 1px);
+  background-size: 3px 3px;
 }
 
 body, #root, .app-shell {
@@ -68,75 +125,85 @@ a {
 }
 
 p {
-  color: var(--stone);
-  line-height: 1.65;
+  color: var(--mb-ink-soft);
+  line-height: 1.6;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: var(--charcoal);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  color: var(--mb-ink);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+h1 {
+  font-weight: 750;
 }
 
 ::selection {
-  background: var(--gold-soft);
+  background: var(--mb-wood);
 }
 
 /* --------------------------------------------------------------------------
    Forms & buttons
    -------------------------------------------------------------------------- */
 
-.btn,
-.form-control,
-.form-select {
-  border-radius: 999px !important;
-}
-
 .btn {
-  transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, color 0.16s ease;
+  border-radius: var(--mb-radius-control) !important;
+  transition: transform var(--mb-fast) var(--mb-ease), box-shadow var(--mb-fast) var(--mb-ease),
+    background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease);
 }
 
 .btn:active {
-  transform: scale(0.96);
+  transform: translateY(1px);
+  box-shadow: 1px 2px 0 rgba(48, 50, 52, 0.12);
 }
 
 .form-control,
 .form-select {
-  border: 1px solid var(--line) !important;
-  background: var(--card);
-  min-height: 48px;
+  border-radius: var(--mb-radius-control) !important;
+  border: 1px solid var(--mb-line-soft) !important;
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  min-height: 46px;
   box-shadow: none !important;
 }
 
 textarea.form-control {
-  border-radius: 20px !important;
+  border-radius: var(--mb-radius-card) !important;
   min-height: 130px;
 }
 
 .form-control:focus,
 .form-select:focus {
-  border-color: rgba(51, 96, 74, 0.4) !important;
-  box-shadow: 0 0 0 0.22rem rgba(51, 96, 74, 0.1) !important;
+  border-color: var(--mb-match) !important;
+  box-shadow: inset 0 0 0 1px var(--mb-match) !important;
 }
 
+.form-control::placeholder {
+  color: var(--mb-ink-faint);
+}
+
+/* Primary = ink button on paper, with a print offset. */
 .btn-solid-primary,
 .form-controlsubmit {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: none !important;
-  background: var(--forest) !important;
-  color: var(--card) !important;
+  background: var(--mb-ink) !important;
+  color: var(--mb-paper-bright) !important;
+  border: 2px solid var(--mb-ink) !important;
   font-weight: 650 !important;
-  padding: 0.72rem 1.35rem !important;
-  box-shadow: 0 8px 20px rgba(51, 96, 74, 0.18);
+  padding: 0.62rem 1.2rem !important;
+  box-shadow: var(--mb-shadow-small);
 }
 
 .btn-solid-primary:hover,
 .form-controlsubmit:hover {
-  background: var(--forest-deep) !important;
-  transform: translateY(-1px);
+  background: #1f2123 !important;
+  transform: translateY(-2px);
+  box-shadow: 4px 6px 0 rgba(48, 50, 52, 0.14);
 }
 
 .btn-soft-primary {
@@ -144,15 +211,39 @@ textarea.form-control {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: none !important;
-  background: var(--mint) !important;
-  color: var(--forest) !important;
+  background: var(--mb-paper-bright) !important;
+  color: var(--mb-ink) !important;
+  border: 1px solid var(--mb-line-strong) !important;
   font-weight: 650 !important;
-  padding: 0.72rem 1.2rem !important;
+  padding: 0.62rem 1.1rem !important;
 }
 
 .btn-soft-primary:hover {
-  background: #dcE8d6 !important;
+  background: var(--mb-wood) !important;
+  transform: translateY(-2px);
+}
+
+/* Match accent button — used sparingly, for the one primary discovery action. */
+.btn-match {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--mb-match) !important;
+  color: var(--mb-paper-bright) !important;
+  border: 2px solid var(--mb-match) !important;
+  border-radius: var(--mb-radius-control) !important;
+  font-weight: 700 !important;
+  padding: 0.62rem 1.3rem !important;
+  box-shadow: var(--mb-shadow-small);
+}
+
+.btn-match:hover {
+  background: var(--mb-match-deep) !important;
+  border-color: var(--mb-match-deep) !important;
+  color: var(--mb-paper-bright) !important;
+  transform: translateY(-2px);
+  box-shadow: 4px 6px 0 rgba(48, 50, 52, 0.14);
 }
 
 .btn-outline-danger-soft {
@@ -160,22 +251,22 @@ textarea.form-control {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: none !important;
-  background: var(--blush) !important;
-  color: #a96a5d !important;
+  background: var(--mb-paper-bright) !important;
+  border: 1px solid var(--mb-line-strong) !important;
+  color: var(--mb-danger) !important;
   font-weight: 650 !important;
-  padding: 0.72rem 1.2rem !important;
+  padding: 0.62rem 1.1rem !important;
 }
 
 .btn-outline-danger-soft:hover {
-  background: #ecd6cb !important;
+  background: #f6e0d8 !important;
 }
 
 .link-button {
   padding: 0;
   border: none !important;
   background: transparent !important;
-  color: var(--forest) !important;
+  color: var(--mb-match-deep) !important;
   font-weight: 650;
 }
 
@@ -250,44 +341,48 @@ textarea.form-control {
    -------------------------------------------------------------------------- */
 
 .site-navbar {
-  background: var(--paper) !important;
-  border-bottom: 1px solid var(--line);
+  background: var(--mb-paper) !important;
+  border-bottom: 1px solid var(--mb-line-soft);
   box-shadow: none !important;
-  padding: 0.55rem 0;
+  padding: 0.5rem 0;
   z-index: 1050;
 }
 
 .brand-lockup {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  font-weight: 750;
-  letter-spacing: -0.03em;
-  color: var(--charcoal) !important;
-  font-size: 1.25rem !important;
+  gap: 0.55rem;
+  color: var(--mb-ink) !important;
+  text-decoration: none;
 }
 
-.brand-mark {
-  display: inline-grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
-  color: var(--card);
-  background: var(--forest);
+/* Wordmark: charcoal letters, the "t" replaced by an upright match. */
+.mb-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
   font-weight: 750;
+  font-size: 1.32rem;
+  letter-spacing: -0.03em;
+  color: var(--mb-ink);
+  line-height: 1;
+}
+
+.mb-wordmark svg {
+  margin: 0 0.02em;
+  transform: translateY(0.06em);
 }
 
 .nav-pill-group .nav-link,
 .site-navbar .dropdown-toggle {
   display: inline-flex !important;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.95rem !important;
-  border-radius: 999px;
-  color: var(--charcoal) !important;
-  font-weight: 600;
-  transition: background 0.16s ease;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: var(--mb-radius-control);
+  color: var(--mb-ink) !important;
+  font-weight: 500;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease);
 }
 
 .site-navbar .dropdown-toggle::after {
@@ -295,9 +390,16 @@ textarea.form-control {
 }
 
 .site-navbar .nav-link:hover,
-.site-navbar .dropdown-toggle:hover,
+.site-navbar .dropdown-toggle:hover {
+  background: var(--mb-wood);
+}
+
 .site-navbar .nav-link.active {
-  background: var(--mint);
+  background: transparent;
+  color: var(--mb-match-deep) !important;
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--mb-match);
+  border-radius: 0;
 }
 
 .site-navbar .dropdown-menu {
@@ -442,8 +544,8 @@ textarea.form-control {
    -------------------------------------------------------------------------- */
 
 .card {
-  border: 1px solid var(--line) !important;
-  border-radius: var(--radius-md) !important;
+  border: 1px solid var(--mb-line-soft) !important;
+  border-radius: var(--mb-radius-card) !important;
   box-shadow: none;
   overflow: hidden;
 }
@@ -459,10 +561,10 @@ textarea.form-control {
 .value-card,
 .profile-info-card,
 .profile-bio-card {
-  background: var(--card) !important;
-  border: 1px solid var(--line) !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-soft);
+  background: var(--mb-paper-bright) !important;
+  border: 1px solid var(--mb-line-soft) !important;
+  border-radius: var(--mb-radius-card) !important;
+  box-shadow: var(--mb-shadow-small);
   overflow: hidden;
 }
 
@@ -470,15 +572,16 @@ textarea.form-control {
 .saved-card,
 .event-card,
 .admin-card {
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
 }
 
+/* Paper lift: a short move with a deeper offset, never a floating blur. */
 .discovery-card:hover,
 .saved-card:hover,
 .event-card:hover,
 .admin-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+  box-shadow: var(--mb-shadow-feature);
 }
 
 /* Inset media: image floats inside the card with cream margin all around */
@@ -1968,6 +2071,562 @@ textarea.form-control {
 .activity-sub {
   color: var(--stone);
   font-size: 0.78rem;
+}
+
+/* ==========================================================================
+   MatchBook — landing + discover system
+   ========================================================================== */
+
+/* Page furniture ---------------------------------------------------------- */
+
+.mb-shell {
+  width: min(100%, 1200px);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.mb-section {
+  margin: 3.25rem 0;
+}
+
+.mb-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.mb-section-head h2 {
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  margin: 0;
+}
+
+.mb-section-link {
+  color: var(--mb-match-deep);
+  font-weight: 650;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mb-section-link:hover {
+  color: var(--mb-match-deep);
+  text-decoration: underline;
+}
+
+.mb-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mb-ink-soft);
+  margin-bottom: 0.6rem;
+}
+
+/* Public header ----------------------------------------------------------- */
+
+.mb-public-header {
+  background: var(--mb-paper);
+  border-bottom: 1px solid var(--mb-line-soft);
+  padding: 0.9rem 0;
+}
+
+.mb-public-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.mb-public-nav {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-left: auto;
+}
+
+.mb-public-nav a {
+  color: var(--mb-ink);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.94rem;
+}
+
+.mb-public-nav a:hover {
+  color: var(--mb-match-deep);
+}
+
+/* Hero -------------------------------------------------------------------- */
+
+.mb-hero {
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 1rem;
+}
+
+.mb-hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+}
+
+.mb-hero h1 {
+  font-size: clamp(2.4rem, 5.2vw, 3.9rem);
+  line-height: 1.02;
+  margin: 0 0 0.9rem;
+  max-width: 15ch;
+}
+
+.mb-hero p {
+  font-size: 1.08rem;
+  max-width: 46ch;
+  margin: 0;
+}
+
+.mb-hero-art {
+  border-radius: var(--mb-radius-feature);
+  overflow: hidden;
+  border: 1px solid var(--mb-line-soft);
+  box-shadow: var(--mb-shadow-feature);
+  background: var(--mb-paper-bright);
+}
+
+.mb-hero-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Discovery control ------------------------------------------------------- */
+
+.mb-finder {
+  display: grid;
+  grid-template-columns: 1.5fr 1.05fr 0.95fr auto;
+  gap: 0.35rem;
+  background: var(--mb-paper-bright);
+  border: 2px solid var(--mb-ink);
+  border-radius: var(--mb-radius-feature);
+  box-shadow: var(--mb-shadow-feature);
+  padding: 0.55rem;
+  margin-top: 1.75rem;
+}
+
+.mb-finder-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: var(--mb-radius-control);
+  min-width: 0;
+}
+
+.mb-finder-field + .mb-finder-field {
+  border-left: 1px solid var(--mb-line-soft);
+}
+
+.mb-finder-field label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mb-finder-field input,
+.mb-finder-field select {
+  border: none;
+  background: transparent;
+  color: var(--mb-ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0;
+  min-height: 26px;
+  outline: none;
+  width: 100%;
+}
+
+.mb-finder .btn-match {
+  align-self: stretch;
+  padding-inline: 1.5rem !important;
+}
+
+/* Event card -------------------------------------------------------------- */
+
+.mb-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
+}
+
+.mb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mb-shadow-feature);
+  color: inherit;
+}
+
+.mb-card-poster {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--mb-wood);
+  overflow: hidden;
+}
+
+.mb-card-poster img,
+.mb-card-poster svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mb-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.85rem 0.9rem 0.9rem;
+  flex: 1;
+}
+
+.mb-card-topline {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+/* Big date block — the most scannable thing on the card. */
+.mb-date {
+  flex: 0 0 auto;
+  text-align: center;
+  line-height: 1;
+  min-width: 2.6rem;
+}
+
+.mb-date-dow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mb-match-deep);
+}
+
+.mb-date-day {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 750;
+  color: var(--mb-ink);
+  letter-spacing: -0.03em;
+}
+
+.mb-place {
+  min-width: 0;
+  font-size: 0.84rem;
+  color: var(--mb-ink-soft);
+  line-height: 1.35;
+}
+
+.mb-place strong {
+  display: block;
+  color: var(--mb-ink);
+  font-weight: 650;
+}
+
+.mb-card-title {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.2;
+  color: var(--mb-ink);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mb-card-host {
+  font-size: 0.82rem;
+  color: var(--mb-ink-soft);
+  margin: 0;
+}
+
+.mb-card-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: auto;
+  padding-top: 0.3rem;
+}
+
+.mb-card-actions .btn {
+  padding: 0.42rem 0.85rem !important;
+  font-size: 0.86rem;
+}
+
+/* Category tag — one supporting ink per card. */
+.mb-tag {
+  position: absolute;
+  left: 0.6rem;
+  bottom: 0.6rem;
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  border-radius: 999px;
+  padding: 0.24rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  border: 1px solid var(--mb-line-soft);
+}
+
+/* Save control: outline match head that fills orange when saved. */
+.mb-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-strong);
+  border-radius: var(--mb-radius-control);
+  color: var(--mb-ink);
+  font-weight: 650;
+  font-size: 0.86rem;
+  padding: 0.42rem 0.8rem;
+  transition: background var(--mb-fast) var(--mb-ease), border-color var(--mb-fast) var(--mb-ease);
+}
+
+.mb-save:hover {
+  background: var(--mb-wood);
+}
+
+.mb-save.is-saved {
+  border-color: var(--mb-match);
+  color: var(--mb-match-deep);
+}
+
+.mb-save-head {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: 1.6px solid currentColor;
+  transition: background var(--mb-fast) var(--mb-ease);
+}
+
+.mb-save.is-saved .mb-save-head {
+  background: var(--mb-match);
+  border-color: var(--mb-match);
+}
+
+/* Horizontal rail --------------------------------------------------------- */
+
+.mb-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(255px, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.mb-rail > * {
+  scroll-snap-align: start;
+}
+
+.mb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 1rem;
+}
+
+/* Group card -------------------------------------------------------------- */
+
+.mb-group {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  padding: 0.85rem;
+  height: 100%;
+  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
+}
+
+.mb-group:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mb-shadow-feature);
+}
+
+.mb-group-mark {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--mb-radius-control);
+  overflow: hidden;
+  border: 1px solid var(--mb-line-soft);
+  background: var(--mb-wood);
+}
+
+.mb-group-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mb-group-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.mb-group-name {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 650;
+  font-size: 1rem;
+  line-height: 1.2;
+  margin: 0 0 0.15rem;
+  color: var(--mb-ink);
+}
+
+.mb-group-meta {
+  font-size: 0.8rem;
+  color: var(--mb-ink-soft);
+  margin: 0;
+}
+
+/* The group's next real-world opportunity — never a static directory row. */
+.mb-group-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--mb-ink);
+  background: var(--mb-wood);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+}
+
+.mb-group-next i {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--mb-match);
+  display: inline-block;
+}
+
+/* Map strip --------------------------------------------------------------- */
+
+.mb-map-strip {
+  position: relative;
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-feature);
+  box-shadow: var(--mb-shadow-small);
+  overflow: hidden;
+  background: var(--mb-paper-bright);
+}
+
+.mb-map-strip svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mb-map-overlay {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-strong);
+  border-radius: var(--mb-radius-control);
+  padding: 0.6rem 0.85rem;
+  box-shadow: var(--mb-shadow-small);
+}
+
+.mb-map-overlay span {
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+
+/* Empty + utility --------------------------------------------------------- */
+
+.mb-empty {
+  border: 1px dashed var(--mb-line-strong);
+  border-radius: var(--mb-radius-card);
+  background: var(--mb-paper-bright);
+  padding: 2rem;
+  text-align: center;
+  color: var(--mb-ink-soft);
+}
+
+.mb-empty h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.35rem;
+}
+
+.mb-chip-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.mb-chip {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-strong);
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--mb-ink);
+  transition: background var(--mb-fast) var(--mb-ease), border-color var(--mb-fast) var(--mb-ease);
+}
+
+.mb-chip:hover {
+  background: var(--mb-wood);
+}
+
+.mb-chip.is-selected {
+  border-color: var(--mb-match);
+  box-shadow: inset 0 0 0 1px var(--mb-match);
+  color: var(--mb-match-deep);
+  font-weight: 650;
+}
+
+@media (max-width: 900px) {
+  .mb-hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mb-finder {
+    grid-template-columns: 1fr;
+  }
+
+  .mb-finder-field + .mb-finder-field {
+    border-left: none;
+    border-top: 1px solid var(--mb-line-soft);
+  }
+
+  .mb-public-nav {
+    gap: 0.9rem;
+  }
+
+  .mb-public-nav a:not(.mb-public-cta) {
+    display: none;
+  }
 }
 
 /* --------------------------------------------------------------------------

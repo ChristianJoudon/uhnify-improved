@@ -16,6 +16,7 @@ import ClubDetail from '../pages/ClubDetail';
 import ListClubs from '../pages/ListClubs';
 import ListEvents from '../pages/ListEvents';
 import DiscoverEvents from '../pages/DiscoverEvents';
+import Discover from '../pages/Discover';
 import Agenda from '../pages/Agenda';
 import ListClubAdmin from '../pages/ListClubAdmin';
 import ClubFinder from '../pages/ClubFinder';
@@ -58,8 +59,10 @@ const App = () => {
           <Route path="/signout" element={<SignOut />} />
           <Route path="/home" element={<ProtectedRoute><Landing /></ProtectedRoute>} />
           <Route path="/upcoming-events" element={<ListEvents />} />
+          <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
           <Route path="/discover-events" element={<ProtectedRoute><DiscoverEvents /></ProtectedRoute>} />
           <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
+          <Route path="/saved" element={<ProtectedRoute><ListClubs /></ProtectedRoute>} />
           <Route path="/my-clubs" element={<ProtectedRoute><ListClubs /></ProtectedRoute>} />
           <Route path="/search-clubs" element={<ProtectedRoute><ClubFinder /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

@@ -4,8 +4,10 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Roles } from 'meteor/alanning:roles';
 import { Meteor } from 'meteor/meteor';
 import { Container, Image, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import { CalendarEvent, CalendarWeek, Compass, Gear, Grid3x3Gap, PersonCircle, PlusCircle, Stars } from 'react-bootstrap-icons';
+import { Gear, PersonCircle } from 'react-bootstrap-icons';
 import { Profiles } from '../../api/profiles/Profiles';
+import MatchMark from './brand/MatchMark';
+import Wordmark from './brand/Wordmark';
 import { profileImagePath } from '../utilities/helpers';
 
 const NavBar = () => {
@@ -29,38 +31,43 @@ const NavBar = () => {
     <Navbar expand="lg" className="site-navbar" sticky="top">
       <Container>
         <Navbar.Brand as={NavLink} to="/" className="brand-lockup">
-          <span>UHnify</span>
+          <MatchMark size={26} title="MatchBook" />
+          <Wordmark />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto nav-pill-group">
+            {currentUser && <Nav.Link id="nav-discover" as={NavLink} to="/discover">Discover</Nav.Link>}
+            {currentUser && <Nav.Link id="browse-clubs" as={NavLink} to="/search-clubs">Nearby</Nav.Link>}
+            {currentUser && <Nav.Link id="nav-agenda" as={NavLink} to="/agenda">Calendar</Nav.Link>}
+            {currentUser && <Nav.Link id="my-clubs" as={NavLink} to="/saved">Saved</Nav.Link>}
+
             {currentUser && (
-              <Nav.Link id="nav-discover" as={NavLink} to="/discover-events"><Stars /> Discover</Nav.Link>
-            )}
-            {currentUser && (
-              <NavDropdown id="club-drop" title={<span><Compass /> Clubs</span>}>
-                <NavDropdown.Item id="browse-clubs" as={NavLink} to="/search-clubs">Club Finder</NavDropdown.Item>
-                <NavDropdown.Item id="my-clubs" as={NavLink} to="/my-clubs">My Clubs</NavDropdown.Item>
-                <NavDropdown.Item id="add-clubs" as={NavLink} to="/create-club"><PlusCircle /> Start Club</NavDropdown.Item>
+              <NavDropdown id="club-drop" title="Start something">
+                <NavDropdown.Item id="add-clubs" as={NavLink} to="/create-club">Start a group</NavDropdown.Item>
+                <NavDropdown.Item id="create-event" as={NavLink} to="/create-event">Start an event</NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item id="event-finder" as={NavLink} to="/upcoming-events">All events</NavDropdown.Item>
+                <NavDropdown.Item id="my-events" as={NavLink} to="/user-events">My events</NavDropdown.Item>
               </NavDropdown>
             )}
 
-            {currentUser && (
-              <NavDropdown title={<span><CalendarEvent /> Events</span>} id="nav-dropdown-events">
-                <NavDropdown.Item id="event-finder" as={NavLink} to="/upcoming-events">Event Finder</NavDropdown.Item>
-                <NavDropdown.Item id="my-events" as={NavLink} to="/user-events">My Events</NavDropdown.Item>
-                <NavDropdown.Item id="create-event" as={NavLink} to="/create-event"><PlusCircle /> Start Event</NavDropdown.Item>
-              </NavDropdown>
-            )}
+            {isAdmin && <Nav.Link as={NavLink} to="/admin">Organize</Nav.Link>}
 
-            {currentUser && (
-              <Nav.Link id="nav-agenda" as={NavLink} to="/agenda"><CalendarWeek /> Agenda</Nav.Link>
-            )}
-
-            {isAdmin && (
-              <Nav.Link as={NavLink} to="/admin"><Grid3x3Gap /> Dashboard</Nav.Link>
+            {!currentUser && (
+              <>
+                <Nav.Link as={NavLink} to="/upcoming-events">Discover</Nav.Link>
+                <Nav.Link as={NavLink} to="/search-clubs">Nearby</Nav.Link>
+                <Nav.Link as={NavLink} to="/create-club">For organizers</Nav.Link>
+              </>
             )}
           </Nav>
+
+          {!currentUser && (
+            <Nav className="align-items-lg-center me-lg-3">
+              <Nav.Link as={NavLink} to="/signin" className="btn btn-match">See what&apos;s nearby</Nav.Link>
+            </Nav>
+          )}
           <Nav className="align-items-lg-center">
             <NavDropdown
               title={currentUser ? (

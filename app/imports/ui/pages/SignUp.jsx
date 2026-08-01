@@ -62,7 +62,7 @@ const SignUp = ({ location }) => {
         </Col>
         <Col lg={7} className="auth-form-panel">
           <Form onSubmit={submit} className="auth-card">
-            <h1>Join UHnify</h1>
+            <h1>Join MatchBook</h1>
             <div className="stepper mb-4">
               {[1, 2, 3].map(step => <span key={step} className={step <= currentStep ? 'active' : ''}>{step}</span>)}
             </div>
