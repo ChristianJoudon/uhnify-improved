@@ -93,7 +93,7 @@ const Agenda = () => {
           events={calendarEvents}
           height="auto"
           // Cap entries per cell so a busy week stays a readable page, not a wall.
-          dayMaxEvents={3}
+          views={{ dayGridMonth: { dayMaxEvents: 3 } }}
           moreLinkText={count => `+${count} more`}
           fixedWeekCount={false}
           dayHeaderFormat={{ weekday: 'short' }}

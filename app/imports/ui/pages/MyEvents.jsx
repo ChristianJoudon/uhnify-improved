@@ -148,7 +148,7 @@ const MyEvents = () => {
           initialView="dayGridMonth"
           events={calendarEvents}
           height="auto"
-          dayMaxEvents={3}
+          views={{ dayGridMonth: { dayMaxEvents: 3 } }}
           moreLinkText={count => `+${count} more`}
           fixedWeekCount={false}
           dayHeaderFormat={{ weekday: 'short' }}

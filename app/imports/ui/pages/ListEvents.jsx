@@ -85,7 +85,7 @@ const ListEvents = () => {
           initialView="dayGridMonth"
           events={formattedEvents}
           height="auto"
-          dayMaxEvents={3}
+          views={{ dayGridMonth: { dayMaxEvents: 3 } }}
           moreLinkText={count => `+${count} more`}
           fixedWeekCount={false}
           dayHeaderFormat={{ weekday: 'short' }}

@@ -83,8 +83,10 @@
   --mint-2: var(--mb-paper-bright);
   --gold: var(--mb-yellow);
   --gold-soft: var(--mb-wood);
-  --blush: var(--mb-pink-tint);
-  --rose: var(--mb-pink-deep);
+  --blush: var(--mb-red-tint);
+  /* --rose is the codebase's destructive/error accent — it must stay in the red
+     family. Pink is reserved for the affection gestures (save, like). */
+  --rose: var(--mb-red-deep);
   --sky: #e3e9ec;
   --line: var(--mb-line-soft);
   --line-strong: var(--mb-line-strong);
@@ -299,11 +301,12 @@ textarea.form-control {
   width: min(100%, 1240px);
 }
 
+/* Small uppercase text — must use the deep orange, never the bright brand one. */
 .eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--sage);
+  color: var(--mb-match-deep);
   font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -705,7 +708,7 @@ textarea.form-control {
   background: var(--gold-soft) !important;
   background-color: var(--gold-soft) !important;
   border: none;
-  color: #8a6c25 !important;
+  color: #6b5117 !important;
   border-radius: 999px;
   padding: 0.35rem 0.65rem;
   font-weight: 600;
@@ -965,10 +968,19 @@ textarea.form-control {
   border-color: var(--mb-line-soft) !important;
 }
 
+/* No overflow:hidden here — it would clip the sticky day header that
+   height="auto" enables. Corners are rounded on the corner cells instead. */
 .fc-theme-standard .fc-scrollgrid {
   border-color: var(--mb-line-soft) !important;
   border-radius: var(--mb-radius-card);
-  overflow: hidden;
+}
+
+.fc-theme-standard .fc-scrollgrid thead tr:first-child th:first-child {
+  border-top-left-radius: var(--mb-radius-card);
+}
+
+.fc-theme-standard .fc-scrollgrid thead tr:first-child th:last-child {
+  border-top-right-radius: var(--mb-radius-card);
 }
 
 /* Day-of-week header: small caps on a warm band. */
@@ -987,19 +999,25 @@ textarea.form-control {
   padding: 0.1rem 0.4rem;
 }
 
+/* Keep FullCalendar's own 100% so the ring and hover fill span the whole row;
+   the row floor goes on the cell instead. */
 .fc .fc-daygrid-day-frame {
-  min-height: 104px;
+  min-height: 100%;
   padding: 0.25rem;
   transition: background var(--mb-fast) var(--mb-ease);
+}
+
+.fc .fc-daygrid-day {
+  height: 104px;
 }
 
 .fc .fc-daygrid-day:hover .fc-daygrid-day-frame {
   background: rgba(240, 216, 184, 0.28);
 }
 
-/* Weekends sit back a shade. */
-.fc .fc-day-sat,
-.fc .fc-day-sun {
+/* Weekends sit back a shade — day cells only, never the header band. */
+.fc .fc-daygrid-day.fc-day-sat,
+.fc .fc-daygrid-day.fc-day-sun {
   background: rgba(229, 214, 194, 0.16);
 }
 
@@ -1037,9 +1055,10 @@ textarea.form-control {
   padding: 0.15rem 0.35rem;
 }
 
+/* Ring only — a tint here would equal the default chip fill and swallow
+   today's own events. */
 .fc .fc-day-today .fc-daygrid-day-frame {
-  background: var(--mb-match-tint);
-  box-shadow: inset 0 0 0 1px var(--mb-match);
+  box-shadow: inset 0 0 0 1.5px var(--mb-match);
   border-radius: 6px;
 }
 
@@ -1115,6 +1134,14 @@ textarea.form-control {
   background: #f6d2d6 !important;
 }
 
+/* The hover fills are darker than the resting tints — deepen the time text
+   with them so it keeps clearing AA. */
+.calendar-event-pill-saved:hover .fc-event-time,
+.calendar-event-pill-club:hover .fc-event-time,
+.fc-daygrid-event:hover .fc-event-time {
+  color: #4d4d49;
+}
+
 .calendar-event-pill-club {
   background: var(--mb-teal-tint) !important;
 }
@@ -1136,6 +1163,7 @@ textarea.form-control {
 
 .fc .fc-daygrid-more-link:hover {
   background: var(--mb-wood);
+  color: #96300e;
   border-radius: 6px;
 }
 
@@ -1199,8 +1227,8 @@ textarea.form-control {
 }
 
 .auth-side-panel {
-  background: linear-gradient(160deg, rgba(51, 96, 74, 0.92), rgba(39, 75, 58, 0.94)),
-    url('/images/StudentsWalkingTogether.png') center/cover;
+  background: linear-gradient(160deg, rgba(48, 50, 52, 0.90), rgba(26, 22, 20, 0.94)),
+    url('/images/hero-perfect-match.webp') center/cover;
   color: white;
 }
 
@@ -1279,7 +1307,7 @@ textarea.form-control {
 
 .tag-label.selected,
 .tag-label:hover {
-  border-color: rgba(51, 96, 74, 0.3);
+  border-color: rgba(232, 80, 32, 0.35);
   background: var(--mint);
   color: var(--forest);
 }
@@ -1579,9 +1607,9 @@ textarea.form-control {
 }
 
 .mode-toggle button.active {
-  background: var(--forest);
-  color: var(--card);
-  box-shadow: 0 6px 16px rgba(51, 96, 74, 0.22);
+  background: var(--mb-ink);
+  color: var(--mb-paper-bright);
+  box-shadow: var(--mb-shadow-small);
 }
 
 .window-chip-row {
@@ -1613,7 +1641,7 @@ textarea.form-control {
 }
 
 .window-chip:hover {
-  border-color: rgba(51, 96, 74, 0.3);
+  border-color: rgba(232, 80, 32, 0.35);
   color: var(--forest);
   transform: translateY(-1px);
 }
@@ -1778,7 +1806,7 @@ textarea.form-control {
 .swipe-pill-countdown {
   right: 0.85rem;
   background: var(--gold-soft);
-  color: #8a6c25;
+  color: #6b5117;
 }
 
 .swipe-card-headline {
@@ -1896,11 +1924,12 @@ textarea.form-control {
   border-color: var(--mb-pink-deep);
 }
 
+/* Pass is neutral ink; pink is reserved for the yes. */
 .swipe-stamp-pass {
   right: 1.3rem;
   transform: rotate(13deg);
-  color: var(--rose);
-  border-color: var(--rose);
+  color: var(--mb-ink-soft);
+  border-color: var(--mb-ink-soft);
 }
 
 .swipe-actions {
@@ -1951,22 +1980,23 @@ textarea.form-control {
   font-size: 1.5rem;
 }
 
+/* The button row must agree with the stamps: ink = pass, pink = save. */
 .swipe-btn-pass {
-  color: var(--rose);
+  color: var(--mb-ink-soft);
 }
 
 .swipe-btn-pass:not(:disabled):hover {
-  background: var(--rose);
-  color: var(--card);
+  background: var(--mb-ink-soft);
+  color: var(--mb-paper-bright);
 }
 
 .swipe-btn-save {
-  color: var(--forest);
+  color: var(--mb-pink-deep);
 }
 
 .swipe-btn-save:not(:disabled):hover {
-  background: var(--forest);
-  color: var(--card);
+  background: var(--mb-pink-deep);
+  color: var(--mb-paper-bright);
 }
 
 .deck-empty-card {

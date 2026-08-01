@@ -166,7 +166,7 @@ const Discover = () => {
         <section className="mb-section">
           <div className="mb-section-head">
             <h2>Good matches</h2>
-            <Link className="mb-section-link" to="/discover-events">Try match mode</Link>
+            <Link className="btn btn-match" to="/discover-events">Start swiping</Link>
           </div>
           <div className="mb-rail">
             {goodMatches.map(({ event }, index) => renderEvent(event, index))}

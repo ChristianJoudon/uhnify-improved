@@ -38,6 +38,7 @@ const NavBar = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto nav-pill-group">
             {currentUser && <Nav.Link id="nav-discover" as={NavLink} to="/discover">Discover</Nav.Link>}
+            {currentUser && <Nav.Link id="nav-match" as={NavLink} to="/discover-events">Match</Nav.Link>}
             {currentUser && <Nav.Link id="browse-clubs" as={NavLink} to="/search-clubs">Nearby</Nav.Link>}
             {currentUser && <Nav.Link id="nav-agenda" as={NavLink} to="/agenda">Calendar</Nav.Link>}
             {currentUser && <Nav.Link id="my-clubs" as={NavLink} to="/saved">Saved</Nav.Link>}
