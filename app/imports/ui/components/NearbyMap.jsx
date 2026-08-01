@@ -30,7 +30,7 @@ const NearbyMap = ({ count }) => {
       {pins.map(pin => (
         <g key={`${pin.x}-${pin.y}`} transform={`translate(${pin.x} ${pin.y})`}>
           <rect x="-2" y="0" width="4" height="16" rx="2" fill="#f0d8b8" stroke="#303234" strokeWidth="1.2" />
-          <ellipse cx="0" cy="-3" rx="7" ry="9" fill="#df5834" stroke="#303234" strokeWidth="1.4" />
+          <ellipse cx="0" cy="-3" rx="7" ry="9" fill="#e85020" stroke="#303234" strokeWidth="1.4" />
         </g>
       ))}
 

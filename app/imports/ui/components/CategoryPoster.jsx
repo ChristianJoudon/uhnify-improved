@@ -7,7 +7,7 @@ const INKS = [
   { field: '#e6ae35', ink: '#303234' },
   { field: '#4c8177', ink: '#fff9f0' },
   { field: '#657d8c', ink: '#fff9f0' },
-  { field: '#df5834', ink: '#fff9f0' },
+  { field: '#e85020', ink: '#fff9f0' },
 ];
 
 const hash = seed => {
@@ -39,7 +39,7 @@ const CategoryPoster = ({ seed, label }) => {
         {[0, 1, 2].map(i => (
           <g key={i} transform={`translate(${118 + i * 30} 52)`}>
             <rect x="4" y="14" width="6" height="44" rx="3" fill="#f0d8b8" />
-            <ellipse cx="7" cy="12" rx="8" ry="10.5" fill={i === 1 ? '#df5834' : '#fff9f0'} />
+            <ellipse cx="7" cy="12" rx="8" ry="10.5" fill={i === 1 ? '#e85020' : '#fff9f0'} />
           </g>
         ))}
       </g>

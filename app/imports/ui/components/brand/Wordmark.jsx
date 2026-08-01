@@ -15,7 +15,7 @@ const Wordmark = ({ className }) => (
       {/* crossbar, charcoal like the surrounding letters */}
       <rect x="0.8" y="14.5" width="14.4" height="3.4" rx="1.7" fill="#303234" />
       {/* head rising modestly above the x-height */}
-      <ellipse cx="7.7" cy="5.4" rx="5.4" ry="6" fill="#df5834" stroke="#303234" strokeWidth="1.4" />
+      <ellipse cx="7.7" cy="5.4" rx="5.4" ry="6" fill="#e85020" stroke="#303234" strokeWidth="1.4" />
     </svg>
     chBook
   </span>

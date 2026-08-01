@@ -5,7 +5,6 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
-import PeopleBoxArt from '../components/brand/PeopleBoxArt';
 import MatchEventCard from '../components/MatchEventCard';
 import GroupCard from '../components/GroupCard';
 import { scheduleLabel } from '../../api/club/schedule';
@@ -89,7 +88,7 @@ const Landing = () => {
             </motion.div>
 
             <motion.div className="mb-hero-art" variants={rise} initial="hidden" animate="show" custom={1}>
-              <PeopleBoxArt />
+              <img src="/images/hero-perfect-match.webp" alt="A matchbox of people, labelled Perfect Match" />
             </motion.div>
           </div>
         </div>

@@ -147,6 +147,12 @@ const MyEvents = () => {
           plugins={[dayGridPlugin]}
           initialView="dayGridMonth"
           events={calendarEvents}
+          height="auto"
+          dayMaxEvents={3}
+          moreLinkText={count => `+${count} more`}
+          fixedWeekCount={false}
+          dayHeaderFormat={{ weekday: 'short' }}
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
           headerToolbar={{
             start: 'today prev,next',
             center: 'title',

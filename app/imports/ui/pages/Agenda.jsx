@@ -80,9 +80,9 @@ const Agenda = () => {
           <button type="button" className={mode === 'clubs' ? 'active' : ''} onClick={() => setMode('clubs')}>Club meetings</button>
         </div>
         <div className="agenda-legend">
-          <span><i style={{ background: 'var(--forest)' }} /> Events</span>
-          <span><i style={{ background: 'var(--gold)' }} /> Saved</span>
-          <span><i style={{ background: 'var(--sage)' }} /> Clubs</span>
+          <span><i style={{ background: 'var(--mb-match)' }} /> Events</span>
+          <span><i style={{ background: 'var(--mb-pink-deep)' }} /> Saved</span>
+          <span><i style={{ background: 'var(--mb-teal)' }} /> Clubs</span>
         </div>
       </div>
 
@@ -91,6 +91,13 @@ const Agenda = () => {
           plugins={[dayGridPlugin]}
           initialView="dayGridMonth"
           events={calendarEvents}
+          height="auto"
+          // Cap entries per cell so a busy week stays a readable page, not a wall.
+          dayMaxEvents={3}
+          moreLinkText={count => `+${count} more`}
+          fixedWeekCount={false}
+          dayHeaderFormat={{ weekday: 'short' }}
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
           headerToolbar={{
             start: 'today prev,next',
             center: 'title',

@@ -21,9 +21,9 @@ const MatchMark = ({ size, title }) => (
     {/* stem */}
     <rect x="21" y="16" width="6" height="21" rx="3" fill="#f0d8b8" />
     {/* head */}
-    <rect x="19.5" y="9" width="9" height="12" rx="4.5" fill="#df5834" />
+    <rect x="19.5" y="9" width="9" height="12" rx="4.5" fill="#e85020" />
     {/* fold at the base */}
-    <rect x="12" y="37" width="24" height="3.4" rx="1.7" fill="#df5834" />
+    <rect x="12" y="37" width="24" height="3.4" rx="1.7" fill="#e85020" />
   </svg>
 );
 
