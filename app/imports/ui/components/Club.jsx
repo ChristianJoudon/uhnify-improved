@@ -19,20 +19,21 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
 
   return (
     <article className={`mb-poster mb-poster-${tier}`}>
-      <button
-        type="button"
-        className="mb-poster-art"
-        style={{ background: topic.field, color: topic.ink }}
-        onClick={() => onViewDetails(club)}
-        aria-label={`View ${club.name}`}
-      >
+      {/* The panel stays inert: a stretched button inside the heading opens the
+          sheet, so the name remains a real heading and the schedule and tagline
+          stay readable text instead of being swallowed by a button's label. */}
+      <div className="mb-poster-art" style={{ background: topic.field, color: topic.ink }}>
         {when && <span className="mb-poster-eyebrow">{when}</span>}
-        <h3 className="mb-poster-title">{club.name}</h3>
+        <h3 className="mb-poster-title">
+          <button type="button" className="mb-poster-open" onClick={() => onViewDetails(club)}>
+            {club.name}
+          </button>
+        </h3>
         {tier === 'lg' && club.description && (
           <p className="mb-poster-tagline">{club.description}</p>
         )}
         <TopicMotif name={topic.motif} />
-      </button>
+      </div>
 
       <div className="mb-poster-foot">
         <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />

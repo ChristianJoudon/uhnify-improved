@@ -2083,16 +2083,14 @@ textarea.form-control {
 .filter-rail {
   position: sticky;
   top: 78px;
-  display: flex;
-  flex-direction: column;
-  gap: 1.1rem;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-soft);
-  padding: 1.1rem;
+  display: block;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
   max-height: calc(100vh - 96px);
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .filter-group h4 {
@@ -2114,9 +2112,25 @@ textarea.form-control {
   color: var(--charcoal);
 }
 
-.filter-group .form-check-input:checked {
-  background-color: var(--forest);
-  border-color: var(--forest);
+.filter-group .form-check-input:checked,
+.rail-block .form-check-input:checked {
+  background-color: var(--mb-ink);
+  border-color: var(--mb-ink);
+}
+
+.rail-block .form-check {
+  margin-bottom: 0.15rem;
+}
+
+.rail-block .form-check-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--mb-ink);
+}
+
+.rail-block .form-check-input:focus {
+  border-color: var(--mb-match);
+  box-shadow: 0 0 0 0.2rem rgba(232, 80, 32, 0.2);
 }
 
 .tag-cloud {
@@ -2126,7 +2140,7 @@ textarea.form-control {
 }
 
 .masonry {
-  column-count: 3;
+  column-width: 290px;
   column-gap: 1.1rem;
 }
 
@@ -2207,10 +2221,9 @@ textarea.form-control {
 }
 
 .finder-count {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 0.9rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -2928,37 +2941,50 @@ textarea.form-control {
   box-shadow: var(--mb-shadow-feature);
 }
 
-/* The art panel is a button so the whole poster opens the details sheet.
-   font: inherit is required — a bare <button> otherwise falls back to the UA
-   system font and the eyebrow/tagline drop out of the type system. */
+/* Inert panel — the stretched button inside the title carries the interaction. */
 .mb-poster-art {
   position: relative;
+  isolation: isolate;
   display: block;
   width: 100%;
-  border: none;
-  text-align: left;
-  font: inherit;
   padding: 1rem 1.05rem 1.15rem;
   overflow: hidden;
   min-height: 168px;
+}
+
+.mb-poster-open {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
 }
 
-.mb-poster-eyebrow {
-  position: relative;
+/* The hit area is the whole panel, not just the words. */
+.mb-poster-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   z-index: 1;
+}
+
+.mb-poster-open:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 3px;
+}
+
+.mb-poster-eyebrow {
   display: block;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  opacity: 0.75;
   margin-bottom: 0.5rem;
 }
 
 .mb-poster-title {
-  position: relative;
-  z-index: 1;
   font-family: "Bricolage Grotesque", sans-serif;
   font-weight: 750;
   letter-spacing: -0.025em;
@@ -2967,16 +2993,18 @@ textarea.form-control {
   color: inherit;
   font-size: 1.3rem;
   text-wrap: balance;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .mb-poster-tagline {
-  position: relative;
-  z-index: 1;
   margin: 0.55rem 0 0;
   font-size: 0.9rem;
   line-height: 1.4;
   color: inherit;
-  opacity: 0.8;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -2986,6 +3014,7 @@ textarea.form-control {
 /* Motif sits behind the type, bleeding off the lower-right corner. */
 .mb-motif {
   position: absolute;
+  z-index: -1;
   right: -14%;
   bottom: -18%;
   width: 68%;
@@ -3170,10 +3199,11 @@ textarea.form-control {
 }
 
 .rail-dot svg {
+  position: static;
   width: 15px;
   height: auto;
   opacity: 0.95;
-  position: static;
+  z-index: auto;
 }
 
 .rail-note {
@@ -3282,7 +3312,11 @@ textarea.form-control {
   .discovery-card,
   .saved-card,
   .admin-card,
-  .feature-card {
+  .feature-card,
+  .mb-poster,
+  .chip,
+  .mb-card,
+  .mb-group {
     transition: none !important;
   }
 
@@ -3292,7 +3326,10 @@ textarea.form-control {
   .event-card:hover,
   .discovery-card:hover,
   .saved-card:hover,
-  .admin-card:hover {
+  .admin-card:hover,
+  .mb-poster:hover,
+  .mb-card:hover,
+  .mb-group:hover {
     transform: none;
   }
 }
@@ -3328,9 +3365,6 @@ textarea.form-control {
     max-height: none;
   }
 
-  .masonry {
-    column-count: 2;
-  }
 
   .profile-hero-content {
     flex-direction: column;
@@ -3383,13 +3417,5 @@ textarea.form-control {
     align-items: flex-start;
   }
 
-  .masonry {
-    column-count: 1;
-  }
 }
 
-@media (min-width: 1400px) {
-  .masonry {
-    column-count: 4;
-  }
-}

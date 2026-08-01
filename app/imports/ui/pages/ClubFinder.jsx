@@ -22,13 +22,16 @@ const PAGE_STEP = 12;
 const RADII = [2, 5, 10, 25];
 
 // Placeholder geography until real coordinates land — deterministic per club.
+// The spread has to exceed the largest radius, or the radius control is inert.
 const distanceFor = (id = '') => {
   let value = 0;
   for (let i = 0; i < id.length; i++) {
     value = (value * 31 + id.charCodeAt(i)) % 997;
   }
-  return 0.3 + (value % 45) / 10;
+  return Math.round((0.2 + (value % 280) / 10) * 10) / 10;
 };
+
+const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 const rise = {
   hidden: { opacity: 0, y: 14 },
@@ -42,7 +45,7 @@ const ClubFinder = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('foryou');
-  const [radius, setRadius] = useState(5);
+  const [radius, setRadius] = useState(10);
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
 
@@ -151,6 +154,13 @@ const ClubFinder = () => {
     setSelectedCategories([]);
   };
 
+  // The empty state's escape hatch: clearing filters alone cannot help when the
+  // radius is what excluded everything, so widen that too.
+  const resetAll = () => {
+    clearFilters();
+    setRadius(RADII[RADII.length - 1]);
+  };
+
   if (!ready) {
     return <LoadingSpinner />;
   }
@@ -218,7 +228,7 @@ const ClubFinder = () => {
               <Form.Check
                 key={category}
                 type="checkbox"
-                id={`filter-${category}`}
+                id={`filter-${slug(category)}`}
                 checked={selectedCategories.includes(category)}
                 onChange={() => toggleCategory(category)}
                 label={category}
@@ -262,6 +272,7 @@ const ClubFinder = () => {
                 key={key}
                 type="button"
                 className={`chip${selectedTopics.includes(key) ? ' is-on' : ''}`}
+                aria-pressed={selectedTopics.includes(key)}
                 onClick={() => toggleTopic(key)}
               >
                 {TOPICS[key].label}
@@ -271,8 +282,12 @@ const ClubFinder = () => {
 
           {visible.length === 0 ? (
             <Alert className="empty-state-card">
-              <h2>Nothing within {radius} miles.</h2>
-              <Button type="button" onClick={clearFilters} className="btn-solid-primary">Reset</Button>
+              {/* Name the filter that actually excluded everything, and let the
+                  reset clear the radius too — otherwise it cannot recover. */}
+              <h2>{hasFilters ? 'Nothing matches those filters.' : `Nothing within ${radius} miles.`}</h2>
+              <Button type="button" onClick={resetAll} className="btn-solid-primary">
+                {hasFilters ? 'Clear filters' : 'Widen the search'}
+              </Button>
             </Alert>
           ) : (
             <div className="masonry">
