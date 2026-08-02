@@ -55,6 +55,12 @@
 
   /* Lines */
   --mb-line-soft: rgba(48, 50, 52, 0.11);
+  /* Index ornament. The dotted leader and the double rule sit below 3:1 on
+     purpose — the numeral always carries the value, so they are decoration.
+     --mb-tick is the one informational hairline and clears 1.4.11 at 3.28:1. */
+  --mb-rule-dot: rgba(48, 50, 52, 0.34);
+  --mb-rule-double: rgba(48, 50, 52, 0.30);
+  --mb-tick: rgba(48, 50, 52, 0.55);
   --mb-line-strong: rgba(48, 50, 52, 0.24);
 
   /* Shape */
@@ -3396,6 +3402,441 @@ div.btn-solid-primary button[type="submit"]:hover {
   font-weight: 600;
 }
 
+/* ==========================================================================
+   Clubs rail: The Index — a contents page for the directory
+   ========================================================================== */
+
+.rail-index {
+  padding-bottom: 0.8rem;
+}
+
+.idx-total {
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--mb-ink-faint);
+}
+
+/* The block's one piece of print ornament. */
+.idx-rule {
+  height: 3px;
+  margin: 0 0 0.2rem;
+  border-top: 1px solid var(--mb-rule-double);
+  border-bottom: 1px solid var(--mb-rule-double);
+}
+
+.idx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.idx-dept {
+  padding: 0.15rem 0 0.3rem;
+}
+
+.idx-dept + .idx-dept {
+  border-top: 1px solid var(--mb-line-soft);
+}
+
+/* Grid rather than flex: folios and counts align down the column, which is the
+   whole reason a contents page reads as edited rather than dumped. */
+.idx-entry {
+  display: grid;
+  grid-template-columns: 1.55rem minmax(0, auto) minmax(8px, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.4rem;
+  width: 100%;
+  padding: 0.45rem 0.3rem 0.3rem;
+  border: 0;
+  background: none;
+  border-radius: 7px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease);
+}
+
+/* A pastel square with a numeral — deliberately not a pastel circle with a
+   motif, because .rail-interest owns that mark two inches above and repeating
+   it would flatten both. Same family, different shape. */
+.idx-folio {
+  justify-self: start;
+  align-self: center;
+  display: inline-grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.15rem;
+  border-radius: 4px;
+  background: var(--idx-wash);
+  color: var(--mb-ink);
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-size: 0.64rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--mb-fast) var(--mb-ease);
+}
+
+.idx-name {
+  min-width: 0;
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-size: 0.94rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--mb-ink);
+  transition: transform var(--mb-fast) var(--mb-ease);
+}
+
+.idx-leader {
+  align-self: center;
+  height: 0.55em;
+  border-bottom: 1.5px dotted var(--mb-rule-dot);
+  opacity: 0.85;
+  transition: opacity var(--mb-fast) var(--mb-ease), border-color var(--mb-fast) var(--mb-ease);
+}
+
+/* Always printed, never hover-gated: without it the bar is a ratio to an
+   unlabelled maximum. */
+.idx-count {
+  font-size: 0.8rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--mb-ink-soft);
+  min-width: 1.6ch;
+  text-align: right;
+}
+
+/* Normalised to the whole directory, so it drains rather than re-filling. */
+.idx-weight {
+  display: block;
+  height: 3px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0.1rem 0.3rem 0 1.95rem;
+  background: var(--mb-line-soft);
+}
+
+.idx-weight i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  width: max(4px, calc(var(--idx-w, 0) * 1%));
+  background: var(--idx-rule);
+  transition: width 260ms var(--mb-ease);
+}
+
+.idx-dept.is-dead .idx-weight i {
+  width: 0;
+}
+
+/* Stacked below the filter and full width, rather than a second target squeezed
+   beside it in a 216px rail. */
+.idx-peek {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 26px;
+  padding: 0.25rem 0.3rem 0.15rem 1.95rem;
+  border: 0;
+  background: none;
+  border-radius: 6px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--mb-ink-faint);
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--mb-fast) var(--mb-ease), background var(--mb-fast) var(--mb-ease);
+}
+
+.idx-peek svg {
+  transition: transform var(--mb-standard) var(--mb-ease);
+}
+
+.idx-peek:hover {
+  color: var(--mb-ink);
+  background: var(--mb-wood);
+}
+
+.idx-dept.is-open .idx-peek svg {
+  transform: rotate(180deg);
+}
+
+.idx-entry:hover {
+  background: var(--mb-wood);
+}
+
+.idx-entry:hover .idx-leader {
+  opacity: 1;
+  border-bottom-color: var(--mb-ink-soft);
+}
+
+.idx-entry:hover .idx-name {
+  transform: translateX(1px);
+}
+
+/* Two-layer ring so it reads on white and on the selected ink row alike. Ink,
+   not orange — the orange stays on primary actions. */
+.idx-entry:focus-visible,
+.idx-peek:focus-visible,
+.idx-kind:focus-visible,
+.idx-stub:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper-bright), 0 0 0 4px var(--mb-ink);
+}
+
+/* Selected inverts to ink, but the folio keeps its pastel so the department's
+   colour survives on black. */
+.idx-dept.is-on .idx-entry {
+  background: var(--mb-ink);
+}
+
+.idx-dept.is-on .idx-name,
+.idx-dept.is-on .idx-count {
+  color: var(--mb-paper-bright);
+}
+
+.idx-dept.is-on .idx-leader {
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+}
+
+.idx-dept.is-on .idx-weight {
+  background: rgba(48, 50, 52, 0.12);
+}
+
+.idx-dept.is-on .idx-weight i {
+  background: var(--idx-wash);
+}
+
+/* Refined — some leaves picked. Outline rather than fill, so "all of it" and
+   "part of it" are never confusable. */
+.idx-dept.is-refined .idx-entry {
+  box-shadow: inset 0 0 0 1.5px var(--mb-ink);
+}
+
+.idx-dept.is-refined .idx-folio {
+  background: var(--mb-ink);
+  color: var(--mb-paper-bright);
+}
+
+/* Emptied by search, radius, or the pre-pro toggle. The row holds its slot so
+   nothing reflows while you type, and it is never dimmed below AA. */
+.idx-dept.is-dead .idx-entry {
+  cursor: default;
+}
+
+.idx-dept.is-dead .idx-name,
+.idx-dept.is-dead .idx-count {
+  color: var(--mb-ink-soft);
+}
+
+.idx-dept.is-dead .idx-folio {
+  background: var(--mb-line-soft);
+}
+
+.idx-dept.is-dead .idx-entry:hover {
+  background: none;
+}
+
+.idx-dept.is-dead .idx-entry:hover .idx-name {
+  transform: none;
+}
+
+.idx-drawer {
+  overflow: hidden;
+}
+
+.idx-note {
+  margin: 0.35rem 0.3rem 0.4rem 1.95rem;
+  font-size: 0.77rem;
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--mb-ink-soft);
+}
+
+.idx-kinds {
+  list-style: none;
+  margin: 0 0 0.4rem 1.95rem;
+  padding-left: 0.65rem;
+  border-left: 1px solid var(--mb-line-strong);
+}
+
+.idx-kind {
+  display: grid;
+  grid-template-columns: 6px minmax(0, auto) minmax(8px, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.35rem;
+  width: 100%;
+  padding: 0.24rem 0.25rem;
+  border: 0;
+  background: none;
+  border-radius: 5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease);
+}
+
+/* A card-catalogue tick rather than a Bootstrap checkbox. Always present, so
+   nothing shifts on select. */
+.idx-tick {
+  width: 6px;
+  height: 6px;
+  align-self: center;
+  background: transparent;
+  border: 1px solid var(--mb-tick);
+}
+
+.idx-kind.is-on .idx-tick {
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+}
+
+/* Display face for departments, text face for entries. The change of voice is
+   the hierarchy device — not indentation, not size alone. */
+.idx-kind .idx-name {
+  font-family: "DM Sans", sans-serif;
+  font-size: 0.83rem;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.idx-kind .idx-count {
+  font-size: 0.75rem;
+}
+
+.idx-kind:hover {
+  background: var(--mb-wood);
+}
+
+.idx-kind.is-on {
+  background: var(--mb-ink);
+}
+
+.idx-kind.is-on .idx-name,
+.idx-kind.is-on .idx-count {
+  color: var(--mb-paper-bright);
+}
+
+.idx-kind.is-on .idx-leader {
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+}
+
+.idx-kind.is-on .idx-tick {
+  background: var(--mb-paper-bright);
+  border-color: var(--mb-paper-bright);
+}
+
+.idx-kind.is-dead {
+  cursor: default;
+}
+
+.idx-kind.is-dead .idx-name,
+.idx-kind.is-dead .idx-count {
+  color: var(--mb-ink-soft);
+}
+
+.idx-kind.is-dead .idx-leader {
+  border-bottom-style: none;
+}
+
+.idx-kind.is-dead:hover {
+  background: none;
+}
+
+/* The orthogonal axis. */
+.idx-aside {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.55rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--mb-line-soft);
+  font-size: 0.81rem;
+  font-weight: 550;
+  line-height: 1.3;
+  color: var(--mb-ink-soft);
+  cursor: pointer;
+}
+
+.idx-aside input {
+  accent-color: var(--mb-ink);
+  width: 15px;
+  height: 15px;
+  margin: 0;
+}
+
+.idx-aside input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper-bright), 0 0 0 4px var(--mb-ink);
+}
+
+.idx-aside em {
+  font-style: normal;
+  font-size: 0.75rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--mb-ink-faint);
+}
+
+/* The receipt, where the chip row used to sit. Renders only when a filter is on,
+   so the resting page above the grid is quieter than it was. */
+.idx-receipt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.idx-stub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+  border: 1px solid var(--mb-ink);
+  border-radius: 999px;
+  background: var(--mb-ink);
+  color: var(--mb-paper-bright);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease);
+}
+
+.idx-stub.is-kind {
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+}
+
+.idx-stub:hover {
+  background: var(--mb-wood);
+  color: var(--mb-ink);
+  border-color: var(--mb-ink);
+}
+
+.idx-stub svg {
+  opacity: 0.75;
+  flex: 0 0 auto;
+}
+
+.idx-receipt-clear {
+  border: 0;
+  background: none;
+  padding: 0.3rem 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--mb-match-deep);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+
 /* Chip row + sort ---------------------------------------------------------- */
 
 .finder-toolbar {
@@ -3424,37 +3865,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: inherit;
   cursor: pointer;
   outline: none;
-}
-
-.chip-row {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.2rem;
-}
-
-.chip {
-  border: 1px solid var(--mb-line-strong);
-  background: var(--mb-paper-bright);
-  color: var(--mb-ink);
-  border-radius: 999px;
-  padding: 0.42rem 0.9rem;
-  font-size: 0.86rem;
-  font-weight: 600;
-  white-space: nowrap;
-  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease),
-    border-color var(--mb-fast) var(--mb-ease);
-}
-
-.chip:hover {
-  background: var(--mb-wood);
-}
-
-.chip.is-on {
-  background: var(--mb-match);
-  border-color: var(--mb-match);
-  color: #1a1614;
-  font-weight: 700;
 }
 
 /* ==========================================================================
@@ -4126,9 +4536,17 @@ div.btn-solid-primary button[type="submit"]:hover {
   .admin-card,
   .feature-card,
   .mb-poster,
-  .chip,
   .mb-card,
-  .mb-group {
+  .mb-group,
+  .idx-entry,
+  .idx-peek,
+  .idx-kind,
+  .idx-folio,
+  .idx-leader,
+  .idx-stub,
+  .idx-name,
+  .idx-weight i,
+  .idx-peek svg {
     transition: none !important;
   }
 
@@ -4141,7 +4559,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   .admin-card:hover,
   .mb-poster:hover,
   .mb-card:hover,
-  .mb-group:hover {
+  .mb-group:hover,
+  .idx-entry:hover .idx-name {
     transform: none;
   }
 }
@@ -4175,8 +4594,27 @@ div.btn-solid-primary button[type="submit"]:hover {
   .filter-rail {
     position: static;
     max-height: none;
+    display: flex;
+    flex-direction: column;
   }
 
+  /* The rail stacks above the grid here, so the index leads it and runs two-up.
+     Cells grow independently — no full-width promotion — so opening one drawer
+     never yanks its neighbour across the row. */
+  .rail-index {
+    order: -1;
+  }
+
+  .idx-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.6rem;
+    align-items: start;
+  }
+
+  .idx-dept + .idx-dept {
+    border-top: 1px solid var(--mb-line-soft);
+  }
 
   .profile-hero-content {
     flex-direction: column;
@@ -4227,6 +4665,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   .footer-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .idx-list {
+    grid-template-columns: 1fr;
   }
 
 }
@@ -4447,4 +4889,21 @@ div.btn-solid-primary button[type="submit"]:hover {
 .btn-outline-danger-soft:focus-visible {
   outline: 2px solid var(--mb-ink) !important;
   outline-offset: 2px;
+}
+
+/* Touch: the index's rows are type-sized, so give them real target height. */
+@media (pointer: coarse) {
+  .idx-entry {
+    padding-top: 0.6rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .idx-peek {
+    min-height: 32px;
+  }
+
+  .idx-kind {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
 }

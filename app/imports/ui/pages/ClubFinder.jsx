@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { Alert, Button, Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useTracker } from 'meteor/react-meteor-data';
-import { motion } from 'framer-motion';
-import { GeoAlt, Search } from 'react-bootstrap-icons';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { ChevronDown, GeoAlt, Search, X } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
@@ -16,7 +16,10 @@ import TopicMotif from '../components/TopicMotif';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
-import { TOPICS, TOPIC_KEYS, topicFor } from '../utilities/topics';
+import { TOPICS, topicFor } from '../utilities/topics';
+import {
+  CATEGORY_DEPT, DEPARTMENTS, DEPT_BY_KEY, KIND_LABEL, PRE_PROFESSIONAL, departmentsFor,
+} from '../utilities/departments';
 
 const PAGE_STEP = 12;
 const RADII = [2, 5, 10, 25];
@@ -39,8 +42,10 @@ const rise = {
 };
 
 const ClubFinder = () => {
-  const [selectedTopics, setSelectedTopics] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedDepts, setSelectedDepts] = useState([]);   // department keys
+  const [selectedKinds, setSelectedKinds] = useState([]);   // lowercased category keys
+  const [openDepts, setOpenDepts] = useState([]);           // disclosure only, never a filter
+  const [hidePrePro, setHidePrePro] = useState(false);
   const [selectedClub, setSelectedClub] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,6 +53,7 @@ const ClubFinder = () => {
   const [radius, setRadius] = useState(10);
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
+  const reduceMotion = useReducedMotion();
 
   const { ready, clubs, joinedClubIds, interests, friendClubIds, place } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
@@ -68,40 +74,96 @@ const ClubFinder = () => {
     };
   }, []);
 
-  const categories = useMemo(() => {
-    const unique = new Set();
-    clubs.forEach(club => normalizeCategories(club.categories).forEach(category => unique.add(category)));
-    return [...unique].sort();
-  }, [clubs]);
-
   const scored = useMemo(() => {
     // The user's interests are topics, so resolve them to topic keys and let a
     // topic match be the dominant signal.
     const interestTopics = new Set(interests.map(interest => topicFor(interest).key));
     return clubs.map(club => {
-      const topic = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description);
+      const categories = normalizeCategories(club.categories);
+      const categoryKeys = categories.map(category => category.toLowerCase());
+      const topic = topicFor(categories, club.tags, club.name, club.description);
       const score = scoreClub(club, { interests, friendClubIds, interestTopics, topicKey: topic.matched ? topic.key : null });
-      return { club, score, tier: sizeTier(score), topic, distance: distanceFor(club._id) };
+      return {
+        club,
+        score,
+        tier: sizeTier(score),
+        topic,
+        distance: distanceFor(club._id),
+        categoryKeys,
+        depts: departmentsFor(categories, topic.matched ? topic.key : null),
+        isPrePro: categoryKeys.some(key => PRE_PROFESSIONAL.has(key)),
+      };
     });
   }, [clubs, interests, friendClubIds]);
 
-  // Only topics actually present in the directory become chips.
-  const availableTopics = useMemo(() => {
-    const present = new Set(scored.map(item => item.topic.key));
-    return TOPIC_KEYS.filter(key => present.has(key));
+  /**
+   * Directory-wide totals. `max` is the bar's denominator and it is deliberately
+   * the UNFILTERED maximum: normalising against the filtered max would peg the
+   * top bar at 100% forever and quietly destroy the drain, which is the whole
+   * reason the bars are there.
+   */
+  const directory = useMemo(() => {
+    const depts = {};
+    const kinds = {};
+    scored.forEach(item => {
+      item.depts.forEach(key => { depts[key] = (depts[key] || 0) + 1; });
+      item.categoryKeys.forEach(key => { kinds[key] = (kinds[key] || 0) + 1; });
+    });
+    return { depts, kinds, max: Math.max(1, ...Object.values(depts)) };
   }, [scored]);
 
-  const filtered = useMemo(() => {
+  // Every filter EXCEPT the index's own selections, so a printed count is a
+  // promise the grid keeps and picking one department never zeroes the others.
+  const inScope = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    const list = scored.filter(({ club, topic, distance }) => {
-      const clubCategories = normalizeCategories(club.categories);
-      const clubTags = club.tags || [];
-      const matchesSearch = query === '' || [club.name, club.description, club.location, ...clubTags]
-        .some(value => (value || '').toLowerCase().includes(query));
-      const matchesTopics = selectedTopics.length === 0 || selectedTopics.includes(topic.key);
-      const matchesCategories = selectedCategories.length === 0 || clubCategories.some(category => selectedCategories.includes(category));
-      return matchesSearch && matchesTopics && matchesCategories && distance <= radius;
-    });
+    return scored.filter(({ club, distance, isPrePro }) => distance <= radius
+      && !(hidePrePro && isPrePro)
+      && (query === '' || [club.name, club.description, club.location, ...(club.tags || [])]
+        .some(value => (value || '').toLowerCase().includes(query))));
+  }, [scored, searchTerm, radius, hidePrePro]);
+
+  const index = useMemo(() => DEPARTMENTS
+    .filter(dept => (directory.depts[dept.key] || 0) > 0)
+    .map(dept => {
+      const live = inScope.filter(item => item.depts.includes(dept.key));
+      let state = 'off';
+      if (selectedDepts.includes(dept.key)) {
+        state = selectedKinds.some(key => CATEGORY_DEPT.get(key) === dept.key) ? 'refined' : 'on';
+      }
+      return {
+        ...dept,
+        state,
+        count: live.length,
+        share: Math.round((live.length / directory.max) * 100),
+        kinds: dept.categories
+          .map(category => category.toLowerCase())
+          .filter(key => (directory.kinds[key] || 0) > 0 || selectedKinds.includes(key))
+          .map(key => ({
+            key,
+            label: KIND_LABEL.get(key),
+            count: live.filter(item => item.categoryKeys.includes(key)).length,
+          }))
+          // Count-descending, not alphabetical. Alphabetical is the order of a
+          // list nobody edited, which was the original complaint.
+          .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
+      };
+    }), [inScope, directory, selectedDepts, selectedKinds]);
+
+  const preProCount = useMemo(
+    () => scored.filter(item => item.isPrePro && item.distance <= radius).length,
+    [scored, radius],
+  );
+
+  // OR across departments; AND within one that has been refined to leaves.
+  const filtered = useMemo(() => {
+    const list = selectedDepts.length === 0 ? inScope : inScope.filter(item => selectedDepts
+      .some(key => {
+        if (!item.depts.includes(key)) {
+          return false;
+        }
+        const refine = selectedKinds.filter(kind => CATEGORY_DEPT.get(kind) === key);
+        return refine.length === 0 || item.categoryKeys.some(kind => refine.includes(kind));
+      }));
     if (sortMode === 'az') {
       return [...list].sort((a, b) => (a.club.name || '').localeCompare(b.club.name || ''));
     }
@@ -109,11 +171,11 @@ const ClubFinder = () => {
       return [...list].sort((a, b) => a.distance - b.distance);
     }
     return [...list].sort((a, b) => b.score - a.score);
-  }, [scored, searchTerm, selectedTopics, selectedCategories, sortMode, radius]);
+  }, [inScope, selectedDepts, selectedKinds, sortMode]);
 
   useEffect(() => {
     setVisibleCount(PAGE_STEP + 6);
-  }, [searchTerm, selectedTopics, selectedCategories, sortMode, radius]);
+  }, [searchTerm, selectedDepts, selectedKinds, hidePrePro, sortMode, radius]);
 
   // Re-observe after each growth so loading continues even when the sentinel
   // stays inside the preload margin.
@@ -139,16 +201,40 @@ const ClubFinder = () => {
     });
   };
 
-  const toggleIn = setter => value => {
-    setter(previous => (previous.includes(value) ? previous.filter(item => item !== value) : [...previous, value]));
+  // Turning a department off releases every leaf it owns, so selection state
+  // can never disagree with itself.
+  const toggleDept = key => {
+    if (selectedDepts.includes(key)) {
+      setSelectedDepts(selectedDepts.filter(item => item !== key));
+      setSelectedKinds(selectedKinds.filter(kind => CATEGORY_DEPT.get(kind) !== key));
+    } else {
+      setSelectedDepts([...selectedDepts, key]);
+    }
   };
-  const toggleTopic = toggleIn(setSelectedTopics);
-  const toggleCategory = toggleIn(setSelectedCategories);
 
+  // Picking a leaf selects its department too — otherwise a refinement would
+  // sit under a filter that is not on.
+  const toggleKind = kindKey => {
+    if (selectedKinds.includes(kindKey)) {
+      setSelectedKinds(selectedKinds.filter(item => item !== kindKey));
+      return;
+    }
+    setSelectedKinds([...selectedKinds, kindKey]);
+    const parent = CATEGORY_DEPT.get(kindKey);
+    if (!selectedDepts.includes(parent)) {
+      setSelectedDepts([...selectedDepts, parent]);
+    }
+  };
+
+  const toggleOpen = key => setOpenDepts(previous => (
+    previous.includes(key) ? previous.filter(item => item !== key) : [...previous, key]));
+
+  // openDepts is untouched — reading what is inside a department is not a filter.
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedTopics([]);
-    setSelectedCategories([]);
+    setSelectedDepts([]);
+    setSelectedKinds([]);
+    setHidePrePro(false);
   };
 
   // The empty state's escape hatch: clearing filters alone cannot help when the
@@ -163,7 +249,7 @@ const ClubFinder = () => {
   }
 
   const visible = filtered.slice(0, visibleCount);
-  const hasFilters = searchTerm || selectedTopics.length > 0 || selectedCategories.length > 0;
+  const hasFilters = Boolean(searchTerm) || selectedDepts.length > 0 || hidePrePro;
 
   return (
     <Container id="browse-clubs-page" className="page-shell py-4" fluid="xl">
@@ -219,20 +305,123 @@ const ClubFinder = () => {
             </div>
           </div>
 
-          <div className="rail-block">
-            <div className="rail-title">Categories</div>
-            {categories.map(category => (
-              <Form.Check
-                key={category}
-                type="checkbox"
-                id={`filter-${slug(category)}`}
-                checked={selectedCategories.includes(category)}
-                onChange={() => toggleCategory(category)}
-                label={category}
-              />
-            ))}
-            {hasFilters && (
-              <Button type="button" className="btn-soft-primary mt-2" onClick={clearFilters}>Clear all</Button>
+          <div className="rail-block rail-index">
+            <div className="rail-title">
+              The Index
+              <span className="idx-total">{scored.length}</span>
+            </div>
+            <div className="idx-rule" aria-hidden="true" />
+
+            <ol className="idx-list">
+              {index.map(dept => {
+                const open = openDepts.includes(dept.key);
+                // A department you have selected is never dead, so the filter
+                // that emptied the page can always be switched back off.
+                const dead = dept.count === 0 && dept.state === 'off';
+                const wash = TOPICS[dept.topic];
+                return (
+                  <li
+                    key={dept.key}
+                    className={`idx-dept is-${dept.state}${dead ? ' is-dead' : ''}${open ? ' is-open' : ''}`}
+                    style={{ '--idx-wash': wash.chip, '--idx-rule': wash.chipInk, '--idx-w': dept.share }}
+                  >
+                    {/* The filter. Full width — nothing sits beside it. */}
+                    <button
+                      type="button"
+                      className="idx-entry"
+                      aria-pressed={dept.state === 'refined' ? 'mixed' : dept.state === 'on'}
+                      aria-disabled={dead}
+                      onClick={() => { if (!dead) { toggleDept(dept.key); } }}
+                    >
+                      <span className="idx-folio" aria-hidden="true">{dept.folio}</span>
+                      <span className="idx-name">{dept.label}</span>
+                      <span className="idx-leader" aria-hidden="true" />
+                      <span className="idx-count">{dept.count}</span>
+                      <span className="visually-hidden">
+                        {` ${dept.count === 1 ? 'group' : 'groups'}`}
+                        {dept.state === 'refined' ? ', narrowed' : ''}
+                        {dead ? ', none here right now' : ''}
+                      </span>
+                    </button>
+
+                    {/* The weight. Drains as you filter. Not a control. */}
+                    <span className="idx-weight" aria-hidden="true"><i /></span>
+
+                    {/* The disclosure, stacked below — reading what is filed in
+                        a department must not apply its filter. */}
+                    {dept.kinds.length > 1 && (
+                      <button
+                        type="button"
+                        className="idx-peek"
+                        aria-expanded={open}
+                        aria-controls={`idx-drawer-${slug(dept.key)}`}
+                        onClick={() => toggleOpen(dept.key)}
+                      >
+                        {`${dept.kinds.length} filed here`}
+                        <ChevronDown size={11} aria-hidden="true" />
+                        <span className="visually-hidden">{` in ${dept.label}`}</span>
+                      </button>
+                    )}
+
+                    <AnimatePresence initial={false}>
+                      {open && (
+                        <motion.div
+                          key="drawer"
+                          id={`idx-drawer-${slug(dept.key)}`}
+                          className="idx-drawer"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+                        >
+                          <p className="idx-note">{dept.note}</p>
+                          <ul className="idx-kinds">
+                            {dept.kinds.map(kind => {
+                              const on = selectedKinds.includes(kind.key);
+                              const kindDead = kind.count === 0 && !on;
+                              return (
+                                <li key={kind.key}>
+                                  <button
+                                    type="button"
+                                    className={`idx-kind${on ? ' is-on' : ''}${kindDead ? ' is-dead' : ''}`}
+                                    aria-pressed={on}
+                                    aria-disabled={kindDead}
+                                    onClick={() => { if (!kindDead) { toggleKind(kind.key); } }}
+                                  >
+                                    <span className="idx-tick" aria-hidden="true" />
+                                    <span className="idx-name">{kind.label}</span>
+                                    <span className="idx-leader" aria-hidden="true" />
+                                    <span className="idx-count">{kind.count}</span>
+                                    <span className="visually-hidden">
+                                      {` ${kind.count === 1 ? 'group' : 'groups'}`}
+                                    </span>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </li>
+                );
+              })}
+            </ol>
+
+            {/* The 39% bucket is an attribute, not a subject, so it gets its own
+                axis rather than another row. ANDs with everything above. */}
+            {preProCount > 0 && (
+              <label className="idx-aside" htmlFor="idx-hide-prepro">
+                <input
+                  id="idx-hide-prepro"
+                  type="checkbox"
+                  checked={hidePrePro}
+                  onChange={() => setHidePrePro(value => !value)}
+                />
+                <span>Hide pre-professional chapters</span>
+                <em aria-hidden="true">{preProCount}</em>
+                <span className="visually-hidden">{` — hides ${preProCount} groups`}</span>
+              </label>
             )}
           </div>
 
@@ -263,19 +452,35 @@ const ClubFinder = () => {
             </label>
           </div>
 
-          <div className="chip-row">
-            {availableTopics.map(key => (
-              <button
-                key={key}
-                type="button"
-                className={`chip${selectedTopics.includes(key) ? ' is-on' : ''}`}
-                aria-pressed={selectedTopics.includes(key)}
-                onClick={() => toggleTopic(key)}
-              >
-                {TOPICS[key].label}
-              </button>
-            ))}
-          </div>
+          {hasFilters && (
+            <div className="idx-receipt" aria-label="Active filters" aria-live="polite">
+              {searchTerm && (
+                <button type="button" className="idx-stub" onClick={() => setSearchTerm('')}>
+                  {`“${searchTerm}”`}<X size={13} aria-hidden="true" />
+                  <span className="visually-hidden">Remove search</span>
+                </button>
+              )}
+              {selectedDepts.map(key => (
+                <button key={key} type="button" className="idx-stub" onClick={() => toggleDept(key)}>
+                  {DEPT_BY_KEY[key].label}<X size={13} aria-hidden="true" />
+                  <span className="visually-hidden">Remove filter</span>
+                </button>
+              ))}
+              {selectedKinds.map(key => (
+                <button key={key} type="button" className="idx-stub is-kind" onClick={() => toggleKind(key)}>
+                  {KIND_LABEL.get(key)}<X size={13} aria-hidden="true" />
+                  <span className="visually-hidden">Remove filter</span>
+                </button>
+              ))}
+              {hidePrePro && (
+                <button type="button" className="idx-stub is-kind" onClick={() => setHidePrePro(false)}>
+                  Pre-professional hidden<X size={13} aria-hidden="true" />
+                  <span className="visually-hidden">Show them again</span>
+                </button>
+              )}
+              <button type="button" className="idx-receipt-clear" onClick={clearFilters}>Clear all</button>
+            </div>
+          )}
 
           {visible.length === 0 ? (
             <Alert className="empty-state-card">
