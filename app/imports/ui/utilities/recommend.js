@@ -35,10 +35,16 @@ const jitter = clubId => {
  * Score a club for the signed-in user.
  * interests: profile interest strings; friendClubIds: Set of club _ids friends joined.
  */
-export const scoreClub = (club, { interests = [], friendClubIds = new Set() } = {}) => {
+export const scoreClub = (club, { interests = [], friendClubIds = new Set(), interestTopics = new Set(), topicKey = null } = {}) => {
   const categories = club.categories || [];
   const tags = club.tags || [];
   let score = 0;
+  // The strongest signal: the user picked this club's topic as an interest.
+  // Free-text overlap alone missed it, because "Outdoors" shares no words with
+  // a category like "Sports/Leisure".
+  if (topicKey && interestTopics.has(topicKey)) {
+    score += 4;
+  }
   score += 2 * overlap(interests, categories);
   score += 3 * fuzzyOverlap(interests, tags);
   if (friendClubIds.has(club._id)) {

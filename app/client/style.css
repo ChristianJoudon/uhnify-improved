@@ -296,6 +296,39 @@ textarea.form-control {
   font-weight: 650;
 }
 
+/* uniforms puts a field's className on the WRAPPER, not the control — so
+   `className="btn-solid-primary"` painted a dark box around a submit input
+   that kept Bootstrap's default blue. Make the wrapper inert and hand the
+   styling to the real control. */
+div.btn-solid-primary {
+  display: block !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+div.btn-solid-primary input[type="submit"],
+div.btn-solid-primary button[type="submit"] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  background: var(--mb-ink) !important;
+  color: var(--mb-paper-bright) !important;
+  border: 2px solid var(--mb-ink) !important;
+  border-radius: var(--mb-radius-control) !important;
+  font-weight: 650 !important;
+  padding: 0.62rem 1.4rem !important;
+  box-shadow: var(--mb-shadow-small);
+  transition: transform var(--mb-fast) var(--mb-ease), background var(--mb-fast) var(--mb-ease);
+}
+
+div.btn-solid-primary input[type="submit"]:hover,
+div.btn-solid-primary button[type="submit"]:hover {
+  background: #1f2123 !important;
+  transform: translateY(-2px);
+}
+
 /* --------------------------------------------------------------------------
    Shell, intros, section titles
    -------------------------------------------------------------------------- */
@@ -3410,6 +3443,398 @@ textarea.form-control {
   border-color: var(--mb-match);
   color: #1a1614;
   font-weight: 700;
+}
+
+/* ==========================================================================
+   Profile + Customize
+   ========================================================================== */
+
+.topic-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+}
+
+.preview-empty,
+.panel-empty {
+  color: var(--mb-ink-faint);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.panel-empty a {
+  color: var(--mb-match-deep);
+  font-weight: 650;
+}
+
+/* Profile header ---------------------------------------------------------- */
+
+.profile-head {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-feature);
+  box-shadow: var(--mb-shadow-feature);
+  overflow: hidden;
+}
+
+/* A band coloured by what this person is actually into, not stock scenery. */
+.profile-head-band {
+  position: relative;
+  isolation: isolate;
+  height: 116px;
+  overflow: hidden;
+}
+
+.profile-head-band .mb-motif {
+  right: 2%;
+  bottom: -46%;
+  width: 210px;
+  opacity: 0.3;
+}
+
+.profile-head-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  padding: 0.9rem 1.4rem 1.3rem;
+}
+
+.profile-head-avatar {
+  margin-top: -62px;
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 5px solid var(--mb-paper-bright);
+  background: var(--mb-wood);
+  flex: 0 0 auto;
+}
+
+.profile-head-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-bottom: 0.2rem;
+}
+
+.profile-head-text h1 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  margin: 0 0 0.15rem;
+}
+
+.profile-head-text p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.profile-head-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 1.3rem;
+}
+
+.profile-stats div {
+  text-align: center;
+}
+
+.profile-stats strong {
+  display: block;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 750;
+  line-height: 1;
+  color: var(--mb-ink);
+}
+
+.profile-stats span {
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+}
+
+.profile-bio-line {
+  max-width: 70ch;
+  margin: 1.1rem 0.2rem 0;
+  font-size: 1rem;
+  color: var(--mb-ink-soft);
+}
+
+/* Panels ------------------------------------------------------------------ */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  margin-top: 1.4rem;
+}
+
+.profile-panel {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.profile-panel h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.75rem;
+}
+
+.panel-subhead {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+}
+
+.panel-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--mb-line-soft);
+}
+
+.panel-row:last-child {
+  border-bottom: none;
+}
+
+.panel-row.is-past {
+  opacity: 0.62;
+}
+
+.panel-mark {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-top: 0.35rem;
+  background: var(--mb-paper-edge);
+}
+
+.panel-row strong {
+  display: block;
+  font-size: 0.94rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  line-height: 1.25;
+}
+
+.panel-row span {
+  font-size: 0.82rem;
+  color: var(--mb-ink-soft);
+}
+
+/* Customize --------------------------------------------------------------- */
+
+.customize-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1.4rem;
+  align-items: start;
+}
+
+.customize-preview {
+  position: sticky;
+  top: 82px;
+}
+
+.preview-card {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-feature);
+  box-shadow: var(--mb-shadow-feature);
+  overflow: hidden;
+}
+
+.preview-banner {
+  position: relative;
+  isolation: isolate;
+  height: 84px;
+  overflow: hidden;
+}
+
+.preview-banner .mb-motif {
+  right: 4%;
+  bottom: -50%;
+  width: 150px;
+  opacity: 0.3;
+}
+
+.preview-body {
+  position: relative;
+  z-index: 1;
+  padding: 0 1.1rem 1.2rem;
+  margin-top: -38px;
+}
+
+.preview-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 4px solid var(--mb-paper-bright);
+  background: var(--mb-wood);
+}
+
+.preview-body h2 {
+  font-size: 1.2rem;
+  margin: 0.6rem 0 0.1rem;
+}
+
+.preview-title {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--mb-ink-soft);
+}
+
+.preview-bio {
+  margin: 0.55rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--mb-ink-soft);
+}
+
+.customize-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-block {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.form-block h3 {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+  margin: 0 0 0.85rem;
+}
+
+.form-note {
+  margin: -0.5rem 0 0.8rem;
+  font-size: 0.85rem;
+  color: var(--mb-ink-soft);
+}
+
+.customize-form label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  margin-bottom: 0.8rem;
+}
+
+.customize-form input,
+.customize-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  font: inherit;
+  font-weight: 400;
+  color: var(--mb-ink);
+  background: var(--mb-paper);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-control);
+  padding: 0.6rem 0.8rem;
+  outline: none;
+}
+
+.customize-form input:focus,
+.customize-form textarea:focus {
+  border-color: var(--mb-match);
+  box-shadow: inset 0 0 0 1px var(--mb-match);
+}
+
+.customize-form textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.topic-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.topic-pick {
+  border: 1.5px solid var(--mb-line-strong);
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  border-radius: 999px;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background var(--mb-fast) var(--mb-ease), border-color var(--mb-fast) var(--mb-ease),
+    color var(--mb-fast) var(--mb-ease);
+}
+
+.topic-pick:hover {
+  background: var(--mb-wood);
+}
+
+.topic-pick.is-on {
+  font-weight: 700;
+}
+
+.customize-form > .btn {
+  align-self: flex-start;
+}
+
+@media (max-width: 900px) {
+  .customize-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .customize-preview {
+    position: static;
+  }
+
+  .profile-head-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .profile-head-side {
+    align-items: flex-start;
+    width: 100%;
+  }
 }
 
 /* --------------------------------------------------------------------------

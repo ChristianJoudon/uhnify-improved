@@ -75,16 +75,13 @@ const ClubFinder = () => {
   }, [clubs]);
 
   const scored = useMemo(() => {
-    const context = { interests, friendClubIds };
+    // The user's interests are topics, so resolve them to topic keys and let a
+    // topic match be the dominant signal.
+    const interestTopics = new Set(interests.map(interest => topicFor(interest).key));
     return clubs.map(club => {
-      const score = scoreClub(club, context);
-      return {
-        club,
-        score,
-        tier: sizeTier(score),
-        topic: topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description),
-        distance: distanceFor(club._id),
-      };
+      const topic = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description);
+      const score = scoreClub(club, { interests, friendClubIds, interestTopics, topicKey: topic.matched ? topic.key : null });
+      return { club, score, tier: sizeTier(score), topic, distance: distanceFor(club._id) };
     });
   }, [clubs, interests, friendClubIds]);
 
