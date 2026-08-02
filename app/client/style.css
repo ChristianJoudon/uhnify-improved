@@ -4816,3 +4816,343 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink-faint);
   margin-bottom: 0.2rem;
 }
+
+/* ==========================================================================
+   PAGE-LOCAL RULES
+   Everything the primitives do not cover, grouped by the page that needs it.
+   If a rule here starts appearing on a second page, it belongs upstairs.
+   ========================================================================== */
+
+/* ---- from auth ---- */
+/* --------------------------------------------------------------------------
+   Auth — the three doorway pages
+   --------------------------------------------------------------------------
+   Sign in, sign up and sign out are built from the same primitives as every
+   other page now — PageHead, .mb-panel, .mb-field, .mb-chip — so all that is
+   left to say here is the measure: a form run to the app's full 1240px reads
+   as a settings screen rather than as a way in.
+
+   Supersedes the earlier Auth block (.auth-page, .auth-card, .auth-form-panel,
+   .auth-side-panel, .input-with-icon, .stepper, .tag-container, .tag-label,
+   .form-controlsignup), which no longer has a caller.
+   -------------------------------------------------------------------------- */
+
+.auth-shell {
+  width: min(100%, 31rem);
+  margin-inline: auto;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1.05rem;
+}
+
+/* Each label wraps its own control, so it has to be a block or the field lands
+   beside its name instead of under it. */
+.auth-form label {
+  display: block;
+  margin-bottom: 0;
+}
+
+.auth-steps {
+  margin-bottom: 1rem;
+}
+
+.auth-note {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--mb-ink-soft);
+}
+
+/* One row closes each step: alone the control fills the panel, paired with
+   Back the two share the width and Back stays the smaller of them. */
+.auth-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.25rem;
+}
+
+.auth-actions .btn {
+  flex: 0 0 auto;
+}
+
+.auth-actions .btn:last-child {
+  flex: 1 1 auto;
+}
+
+/* Sits directly above the button the user is about to press again, not at the
+   top of a page they have already scrolled past. */
+.auth-error {
+  margin: 0;
+  color: var(--mb-red-deep);
+  font-weight: 650;
+  font-size: 0.9rem;
+}
+
+/* The line under the panel that leads to the other door. */
+.auth-alt {
+  margin: 1.1rem 0 0;
+  text-align: center;
+  font-size: 0.93rem;
+  color: var(--mb-ink-soft);
+}
+
+.auth-alt a {
+  color: var(--mb-ink);
+  font-weight: 650;
+}
+
+/* Signed out is a confirmation, so it centres on its one way back in. */
+.auth-done {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.auth-done p {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--mb-ink-soft);
+}
+
+.auth-done-glyph {
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+/* ---- from saved-clubs ---- */
+/* --------------------------------------------------------------------------
+   Saved clubs
+   -------------------------------------------------------------------------- */
+
+/* Every poster on /my-clubs is a club you already belong to, so the poster's
+   join CTA is an inert control. It keeps its place in the footer flow as an
+   invisible spacer — that is what holds the right-hand slot open and bounds the
+   meta line's ellipsis — and Leave is laid into that slot on top of it. */
+.saved-poster {
+  position: relative;
+  transition: transform var(--mb-standard) var(--mb-ease);
+}
+
+.saved-poster .mb-poster-foot .mb-poster-cta {
+  visibility: hidden;
+}
+
+.saved-leave {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.6rem;
+}
+
+/* Leave rides outside the poster element, so the hover lift moves up to the
+   wrapper — otherwise the button stays put while its poster rises. */
+.saved-poster:hover .mb-poster {
+  transform: none;
+}
+
+.saved-poster:hover {
+  transform: translateY(-2px);
+}
+
+
+/* ---- from events-lists ---- */
+/* --- Toolbar fields ------------------------------------------------------
+   A field is full-width because it normally sits in a stacked form; inside a
+   toolbar the row does the sizing and the search box takes up the slack. */
+.mb-toolbar .mb-field {
+  width: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.mb-toolbar .mb-field--search {
+  flex: 1 1 15rem;
+  max-width: 24rem;
+}
+
+@media (max-width: 520px) {
+  .mb-toolbar .mb-field--search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+}
+
+/* --- Poster grid ---------------------------------------------------------
+   A dated list has to read left to right, so these walls are a grid rather
+   than the masonry Discover ranks into. Row-mates share a height so their
+   feet line up, which the motion wrapper each poster sits in has to pass on. */
+.mb-grid--posters > *,
+.mb-grid--posters > * > .mb-poster {
+  height: 100%;
+}
+
+/* ---- from admin ---- */
+/* --------------------------------------------------------------------------
+   Admin dashboard
+   The dashboard is three lists of things the app already knows how to draw, so
+   it owns almost no CSS of its own: posters and panels do the work. What is
+   left is the stat row, the section headings, and the one person card.
+   -------------------------------------------------------------------------- */
+
+.admin-stats {
+  display: grid;
+  /* auto-fit, not auto-fill: three stats share the row evenly instead of
+     leaving a phantom fourth column of empty paper on a wide screen. */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.admin-stat {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.85rem;
+}
+
+.admin-stat-glyph {
+  grid-row: 1 / span 2;
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--mb-wood);
+  color: var(--mb-match-deep);
+}
+
+.admin-stat-value {
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-size: 1.6rem;
+  font-weight: 750;
+  line-height: 1.05;
+  color: var(--mb-ink);
+}
+
+.admin-stat-label {
+  font-size: 0.76rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mb-ink-soft);
+}
+
+.admin-section-title {
+  font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+  margin: 0 0 1rem;
+}
+
+/* The poster foot's action slot when the reader is an admin: edit and delete
+   land exactly where a member's join CTA does, so the object keeps its shape.
+   Mirrors .mb-poster-cta's margin-left: auto. */
+.mb-poster-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+/* A person has no artwork, so they are a panel rather than a poster — which
+   also keeps them quieter than the clubs and events above them. */
+.admin-person {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  height: 100%;
+}
+
+.admin-person-avatar {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--mb-line-soft);
+  background: var(--mb-wood);
+}
+
+.admin-person-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Both lines truncate: one address like a.very.long.name@hawaii.edu must not
+   set the column width for every card in the grid. */
+.admin-person-name,
+.admin-person-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-person-name {
+  font-size: 1rem;
+  font-weight: 650;
+  margin: 0;
+}
+
+.admin-person-email {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--mb-ink-soft);
+}
+
+.admin-person-role {
+  margin-top: 0.5rem;
+}
+
+/* ---- from errors ---- */
+/* --- NOTICE PAGE ---------------------------------------------------------
+   NotFound and NotAuthorized are whole pages whose only content is one empty
+   state, so the measure is the notice itself rather than the 1240px shell —
+   a dashed box stretched the full width of the page reads as a broken layout
+   rather than as a message. The intro centres to sit over it squarely. */
+.page-notice {
+  max-width: 34rem;
+  margin-inline: auto;
+}
+
+.page-notice .page-intro {
+  padding-bottom: 1.1rem;
+  text-align: center;
+}
+
+.page-notice .page-intro-row {
+  justify-content: center;
+}
+
+
+/* ---- from agenda ---- */
+/* Agenda legend swatches. These were three inline background strings on the
+   page — the calendar's own three dot colours belong with the rest of the
+   marks, not in JSX. Self-contained so the swatch survives independently of
+   the `.agenda-legend i` element selector above. */
+.agenda-legend-dot--event,
+.agenda-legend-dot--saved,
+.agenda-legend-dot--club {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.agenda-legend-dot--event {
+  background: var(--mb-match);
+}
+
+.agenda-legend-dot--saved {
+  background: var(--mb-pink-deep);
+}
+
+.agenda-legend-dot--club {
+  background: var(--mb-teal);
+}
+
+/* .mb-toolbar is a plain flex row with no justify-content, so the legend has
+   to claim the trailing edge itself. */
+.agenda-legend {
+  margin-left: auto;
+}

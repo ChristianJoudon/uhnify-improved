@@ -1,19 +1,32 @@
 import React, { useState } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import swal from 'sweetalert';
 import { motion } from 'framer-motion';
+import { Collection, DoorOpen } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
-import Club2 from '../components/Club2';
+import Club from '../components/Club';
 import ClubDetailsModal from '../components/ClubDetailsModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PageHead from '../components/PageHead';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
+import { scoreClub, sizeTier } from '../utilities/recommend';
+
+// Placeholder geography, identical to the finder's so a club is the same
+// distance away on both pages. Real coordinates replace both at once.
+const distanceFor = (id = '') => {
+  let value = 0;
+  for (let i = 0; i < id.length; i++) {
+    value = (value * 31 + id.charCodeAt(i)) % 997;
+  }
+  return Math.round((0.2 + (value % 280) / 10) * 10) / 10;
+};
 
 const rise = {
-  hidden: { opacity: 0, y: 18 },
-  show: index => ({ opacity: 1, y: 0, transition: { type: 'spring', stiffness: 180, damping: 22, delay: Math.min(index, 8) * 0.05 } }),
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.2, 0.8, 0.2, 1] } },
 };
 
 const ListClub = () => {
@@ -44,32 +57,60 @@ const ListClub = () => {
 
   return (
     <Container id="list-clubs" className="page-shell py-4">
-      <div className="page-intro">
-        <h1>My clubs</h1>
-      </div>
+      {/* Nothing sits beside the title when the page is empty — the empty state
+          owns the invitation, and two of them would compete. */}
+      <PageHead
+        title="My clubs"
+        action={clubs.length > 0 ? <Link to="/search-clubs" className="btn btn-soft-primary">Find more</Link> : null}
+      >
+        {clubs.length > 0 ? `${clubs.length} ${clubs.length === 1 ? 'club' : 'clubs'} you're in.` : null}
+      </PageHead>
 
       {clubs.length === 0 ? (
-        <Alert className="empty-state-card text-center">
-          <h2>No clubs yet.</h2>
-          <Button as={Link} to="/search-clubs" className="btn-solid-primary">Browse clubs</Button>
-        </Alert>
+        <div className="mb-empty">
+          <Collection className="mb-empty-glyph" aria-hidden="true" />
+          <h3>No clubs yet</h3>
+          <p>Groups you join land here, so the ones you care about stay one tap away.</p>
+          <Link to="/search-clubs" className="btn btn-match">Browse clubs</Link>
+        </div>
       ) : (
-        <Row xs={1} md={2} xl={3} className="g-4">
-          {clubs.map((club, index) => (
-            <Col key={club._id}>
-              <motion.div variants={rise} initial="hidden" animate="show" custom={index} className="h-100">
-                <Club2
+        <div className="masonry">
+          {clubs.map(club => (
+            <motion.div key={club._id} className="masonry-item" variants={rise} initial="hidden" animate="show">
+              {/* The entrance animation owns the motion element's transform, so
+                  the hover lift needs a wrapper of its own — and that wrapper is
+                  also what the Leave button is positioned against. */}
+              <div className="saved-poster">
+                {/* The same object the finder shows, so a club you joined is not
+                    a different species from the club you joined it from. With no
+                    interests subscribed here the score is pure jitter, which is
+                    exactly what sizeTier falls back on for variety. */}
+                <Club
                   club={club}
-                  onRemoveFromProfile={onRemoveFromProfile}
+                  tier={sizeTier(scoreClub(club))}
+                  distance={`${distanceFor(club._id).toFixed(1)} mi`}
+                  isMember
                   onViewDetails={() => {
                     setSelectedClub(club);
                     setShowModal(true);
                   }}
                 />
-              </motion.div>
-            </Col>
+                {/* Everything here is already joined, so the poster's join button
+                    is a dead control. It stays as an invisible spacer holding the
+                    footer's right-hand slot open, and Leave takes that slot. */}
+                <button
+                  type="button"
+                  className="btn btn-outline-danger-soft mb-poster-cta saved-leave"
+                  onClick={() => onRemoveFromProfile(club._id)}
+                >
+                  <DoorOpen size={14} aria-hidden="true" />
+                  Leave
+                  <span className="visually-hidden">{` ${club.name}`}</span>
+                </button>
+              </div>
+            </motion.div>
           ))}
-        </Row>
+        </div>
       )}
       <ClubDetailsModal show={showModal} handleClose={() => setShowModal(false)} club={selectedClub} />
     </Container>

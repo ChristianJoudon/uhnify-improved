@@ -1,18 +1,23 @@
 import React from 'react';
-import { Button, Col, Container, Row } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import { Compass } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
+import PageHead from '../components/PageHead';
 
+/**
+ * A 404 is still a page, so it opens the way every other page does. "Lost?" was
+ * an h2 under no h1 at all, which left the route with no name in the document
+ * outline or in a screen reader's heading list.
+ */
 const NotFound = () => (
-  <Container className="page-shell py-5">
-    <Row className="justify-content-center">
-      <Col md={6} className="text-center">
-        <div className="empty-state-card">
-          <span className="deck-empty-emoji" role="img" aria-label="compass">🧭</span>
-          <h2 className="mb-3">Lost?</h2>
-          <Button as={Link} to="/" className="btn-solid-primary">Home</Button>
-        </div>
-      </Col>
-    </Row>
+  <Container className="page-shell page-notice py-5">
+    <PageHead title="Lost?" />
+    <div className="mb-empty">
+      <Compass className="mb-empty-glyph" aria-hidden="true" />
+      <h3>This page isn&apos;t on the map.</h3>
+      <p>The link may be old, or off by a letter.</p>
+      <Link className="btn btn-solid-primary" to="/">Take me home</Link>
+    </div>
   </Container>
 );
 

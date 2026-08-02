@@ -1,20 +1,21 @@
 import React, { useMemo } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import swal from 'sweetalert';
-import { Stars, XLg } from 'react-bootstrap-icons';
+import { People, Stars } from 'react-bootstrap-icons';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PageHead from '../components/PageHead';
+import EventPoster from '../components/EventPoster';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
-import EventCard from '../components/Events';
 import { sortByDate } from '../utilities/helpers';
 
 const rise = {
@@ -40,16 +41,21 @@ const MyEvents = () => {
     };
   }, []);
 
-  const { clubEvents, savedEvents } = useMemo(() => {
+  const { clubEvents, savedEvents, savedIds } = useMemo(() => {
     const joinedClubIds = new Set(memberships.map(membership => membership.clubId));
     const joinedClubNumbers = new Set(clubs.filter(club => joinedClubIds.has(club._id)).map(club => club.clubID));
     const linkedEventIds = new Set(links.filter(link => joinedClubIds.has(link.clubId)).map(link => link.eventId));
-    const savedIds = new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId));
+    const saved = new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId));
     return {
       clubEvents: sortByDate(events.filter(event => linkedEventIds.has(event._id) || joinedClubNumbers.has(event.eventID))),
-      savedEvents: sortByDate(events.filter(event => savedIds.has(event._id))),
+      savedEvents: sortByDate(events.filter(event => saved.has(event._id))),
+      savedIds: saved,
     };
   }, [events, clubs, memberships, links, swipes]);
+
+  // The poster reads its host to colour itself when the event's own words are
+  // too thin to place it; events carry the club's number, not its id.
+  const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   const calendarEvents = useMemo(() => {
     const clubIds = new Set(clubEvents.map(event => event._id));
@@ -69,13 +75,34 @@ const MyEvents = () => {
     ];
   }, [clubEvents, savedEvents]);
 
-  const handleUnsave = eventId => {
-    Meteor.call('eventSwipes.remove', eventId, error => {
+  // The poster's own footer button is how an event is saved everywhere else in
+  // the app, so unsaving from here is the same gesture rather than a private
+  // remove control bolted onto the corner of the card.
+  const toggleGoing = event => {
+    const saved = savedIds.has(event._id);
+    const args = saved ? [event._id] : [event._id, 'interested'];
+    Meteor.call(saved ? 'eventSwipes.remove' : 'eventSwipes.record', ...args, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       }
     });
   };
+
+  const posterWall = list => (
+    <div className="mb-grid mb-grid--posters">
+      {list.map((event, index) => (
+        <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
+          <EventPoster
+            event={event}
+            host={clubByNumber.get(event.eventID)}
+            going={savedIds.has(event._id)}
+            onGoing={toggleGoing}
+            onOpen={toggleGoing}
+          />
+        </motion.div>
+      ))}
+    </div>
+  );
 
   if (!ready) {
     return <LoadingSpinner />;
@@ -83,83 +110,73 @@ const MyEvents = () => {
 
   return (
     <Container id="my-events" className="page-shell py-4">
-      <div className="page-intro">
-        <h1>My events</h1>
-      </div>
+      <PageHead
+        title="My events"
+        action={<Link className="btn btn-soft-primary" to="/discover-events"><Stars /> Keep swiping</Link>}
+      >
+        The ones you saved, and whatever your clubs have planned.
+      </PageHead>
 
-      <div className="section-heading-row">
-        <h2>Saved</h2>
-        <Button as={Link} to="/discover-events" className="btn-soft-primary"><Stars /> Keep swiping</Button>
-      </div>
+      <section className="mb-5">
+        <div className="mb-section-head">
+          <h2>Saved</h2>
+          {savedEvents.length > 0 && (
+            <span className="mb-toolbar-count">{savedEvents.length} {savedEvents.length === 1 ? 'event' : 'events'}</span>
+          )}
+        </div>
 
-      {savedEvents.length === 0 ? (
-        <Alert className="empty-state-card text-center">
-          <Stars size={36} />
-          <h2>Nothing saved yet.</h2>
-          <Button as={Link} to="/discover-events" className="btn-solid-primary">Start swiping</Button>
-        </Alert>
-      ) : (
-        <Row xs={1} md={2} xl={4} className="g-4 mb-5">
-          {savedEvents.map((event, index) => (
-            <Col key={event._id}>
-              <motion.div variants={rise} initial="hidden" animate="show" custom={index} className="h-100">
-                <div className="saved-event-tile">
-                  <EventCard event={event} />
-                  <button
-                    type="button"
-                    className="saved-remove-btn"
-                    onClick={() => handleUnsave(event._id)}
-                    aria-label={`Remove ${event.title} from saved events`}
-                    title="Remove from saved"
-                  >
-                    <XLg size={13} />
-                  </button>
-                </div>
-              </motion.div>
-            </Col>
-          ))}
-        </Row>
-      )}
+        {savedEvents.length === 0 ? (
+          <div className="mb-empty">
+            <Stars className="mb-empty-glyph" aria-hidden="true" />
+            <h3>Nothing saved yet.</h3>
+            <p>Swipe through what is on and the ones you keep land here.</p>
+            <Link className="btn btn-solid-primary" to="/discover-events">Start swiping</Link>
+          </div>
+        ) : posterWall(savedEvents)}
+      </section>
 
-      <div className="section-heading-row mt-5">
-        <h2>From your clubs</h2>
-      </div>
+      <section className="mb-5">
+        <div className="mb-section-head">
+          <h2>From your clubs</h2>
+          {clubEvents.length > 0 && (
+            <span className="mb-toolbar-count">{clubEvents.length} {clubEvents.length === 1 ? 'event' : 'events'}</span>
+          )}
+        </div>
 
-      {clubEvents.length === 0 ? (
-        <Alert className="empty-state-card text-center">
-          <h2>No club events yet.</h2>
-          <Button as={Link} to="/search-clubs" className="btn-solid-primary">Find clubs</Button>
-        </Alert>
-      ) : (
-        <Row xs={1} md={2} xl={4} className="g-4">
-          {clubEvents.map((event, index) => (
-            <Col key={event._id}>
-              <motion.div variants={rise} initial="hidden" animate="show" custom={index} className="h-100">
-                <EventCard event={event} />
-              </motion.div>
-            </Col>
-          ))}
-        </Row>
-      )}
+        {clubEvents.length === 0 ? (
+          <div className="mb-empty">
+            <People className="mb-empty-glyph" aria-hidden="true" />
+            <h3>No club events yet.</h3>
+            <p>Join a club and everything it puts on shows up here.</p>
+            <Link className="btn btn-solid-primary" to="/search-clubs">Find clubs</Link>
+          </div>
+        ) : posterWall(clubEvents)}
+      </section>
 
-      <Container id="event-calendar" className="calendar-container my-5">
-        <FullCalendar
-          plugins={[dayGridPlugin]}
-          initialView="dayGridMonth"
-          events={calendarEvents}
-          height="auto"
-          views={{ dayGridMonth: { dayMaxEvents: 3 } }}
-          moreLinkText={count => `+${count} more`}
-          fixedWeekCount={false}
-          dayHeaderFormat={{ weekday: 'short' }}
-          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
-          headerToolbar={{
-            start: 'today prev,next',
-            center: 'title',
-            end: 'dayGridMonth,dayGridWeek,dayGridDay',
-          }}
-        />
-      </Container>
+      <section className="mb-5">
+        <div className="mb-section-head">
+          <h2>Month view</h2>
+        </div>
+
+        <Container id="event-calendar" className="calendar-container">
+          <FullCalendar
+            plugins={[dayGridPlugin]}
+            initialView="dayGridMonth"
+            events={calendarEvents}
+            height="auto"
+            views={{ dayGridMonth: { dayMaxEvents: 3 } }}
+            moreLinkText={count => `+${count} more`}
+            fixedWeekCount={false}
+            dayHeaderFormat={{ weekday: 'short' }}
+            eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
+            headerToolbar={{
+              start: 'today prev,next',
+              center: 'title',
+              end: 'dayGridMonth,dayGridWeek,dayGridDay',
+            }}
+          />
+        </Container>
+      </section>
     </Container>
   );
 };

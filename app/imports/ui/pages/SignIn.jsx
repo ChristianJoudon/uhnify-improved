@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Meteor } from 'meteor/meteor';
-import { Button, Col, Container, Form, Row } from 'react-bootstrap';
-import { Lock, Mailbox } from 'react-bootstrap-icons';
+import { Container } from 'react-bootstrap';
+import PageHead from '../components/PageHead';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -26,38 +26,49 @@ const SignIn = () => {
   }
 
   return (
-    <Container id="sign-in" fluid className="auth-page">
-      <Row className="min-vh-100 g-0">
-        <Col lg={7} className="auth-form-panel">
-          <Form onSubmit={handleSubmit} className="auth-card">
-            <h1>Sign in</h1>
-            <Form.Group id="form-email" controlId="formBasicEmail">
-              <Form.Label>Email</Form.Label>
-              <div className="input-with-icon">
-                <Mailbox />
-                <Form.Control className="form-controltextbox" type="email" placeholder="Email" value={email} onChange={event => setEmail(event.target.value)} />
-              </div>
-            </Form.Group>
-            <Form.Group id="form-password" controlId="formBasicPassword">
-              <Form.Label>Password</Form.Label>
-              <div className="input-with-icon">
-                <Lock />
-                <Form.Control className="form-controltextbox" type="password" placeholder="Password" value={password} onChange={event => setPassword(event.target.value)} />
-              </div>
-            </Form.Group>
-            <Button variant="primary" type="submit" className="form-controlsubmit btn-solid-primary">
-              Sign in
-            </Button>
-            {error && <div className="auth-error">{error}</div>}
-          </Form>
-        </Col>
-        <Col lg={5} className="auth-side-panel">
-          <div>
-            <h2>New here?</h2>
-            <Button variant="outline-light" as={Link} to="/signup" className="form-controlsignup">Create account</Button>
+    <Container id="sign-in" className="page-shell py-4">
+      <div className="auth-shell">
+        <PageHead title="Sign in">Pick up where you left off.</PageHead>
+
+        <form className="mb-panel auth-form" onSubmit={handleSubmit}>
+          <label id="form-email" htmlFor="formBasicEmail">
+            <span className="mb-field-label">Email</span>
+            <input
+              id="formBasicEmail"
+              className="mb-field form-controltextbox"
+              type="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={event => setEmail(event.target.value)}
+            />
+          </label>
+
+          <label id="form-password" htmlFor="formBasicPassword">
+            <span className="mb-field-label">Password</span>
+            <input
+              id="formBasicPassword"
+              className="mb-field form-controltextbox"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={event => setPassword(event.target.value)}
+            />
+          </label>
+
+          {/* Announced next to the button the user is about to press again,
+              not at the top of a page they have already scrolled past. */}
+          {error && <p className="auth-error" role="alert">{error}</p>}
+
+          <div className="auth-actions">
+            <button type="submit" className="btn btn-solid-primary form-controlsubmit">Sign in</button>
           </div>
-        </Col>
-      </Row>
+        </form>
+
+        <p className="auth-alt">
+          New here? <Link to="/signup">Create an account</Link>
+        </p>
+      </div>
     </Container>
   );
 };

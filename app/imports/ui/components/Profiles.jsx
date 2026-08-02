@@ -1,13 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, Card, Image } from 'react-bootstrap';
 import { Trash } from 'react-bootstrap-icons';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import { profileImagePath } from '../utilities/helpers';
 
-/** Renders a profile card for the admin dashboard. */
+/**
+ * A person on the admin dashboard. A person is not a poster — there is no
+ * artwork to be the card — so this is a plain panel with a face on it, which
+ * also keeps it visually subordinate to the club and event posters above.
+ */
 const ProfileCard = ({ profile }) => {
+  const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email;
+
   const removeItem = () => {
     swal({
       title: 'Delete profile?',
@@ -29,15 +34,23 @@ const ProfileCard = ({ profile }) => {
   };
 
   return (
-    <Card className="profile-card admin-profile-card h-100">
-      <Card.Body className="text-center d-flex flex-column align-items-center">
-        <Image src={profileImagePath(profile.picture)} alt={`${profile.firstName || 'User'} profile`} className="profile-avatar-lg" />
-        <h4 className="mt-3 mb-1">{profile.firstName || ''} {profile.lastName || ''}</h4>
-        <div className="profile-title-pill my-2">{profile.title || 'Student'}</div>
-        <div className="meta-line">{profile.email}</div>
-        <Button type="button" onClick={removeItem} className="btn-outline-danger-soft mt-auto"><Trash /> Delete</Button>
-      </Card.Body>
-    </Card>
+    <article className="mb-panel admin-person">
+      {/* Decorative: the name it would announce is the very next element. */}
+      <img className="admin-person-avatar" src={profileImagePath(profile.picture)} alt="" loading="lazy" />
+      <div className="admin-person-body">
+        <h3 className="admin-person-name">{name}</h3>
+        <p className="admin-person-email">{profile.email}</p>
+        <span className="mb-chip mb-chip--static mb-chip--sm admin-person-role">{profile.title || 'Student'}</span>
+      </div>
+      <button
+        type="button"
+        className="mb-icon-btn mb-icon-btn--danger"
+        onClick={removeItem}
+        aria-label={`Delete the profile for ${name}`}
+      >
+        <Trash size={14} />
+      </button>
+    </article>
   );
 };
 

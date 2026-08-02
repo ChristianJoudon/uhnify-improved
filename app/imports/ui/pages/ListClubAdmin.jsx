@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
-import { Card, Col, Container, Row } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import { CalendarEvent, PeopleFill, Stars } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import ClubItemAdmin from '../components/ClubItemAdmin';
@@ -10,21 +10,19 @@ import { Events } from '../../api/events/Events';
 import { Profiles } from '../../api/profiles/Profiles';
 import EventCardAdmin from '../components/EventsAdmin';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PageHead from '../components/PageHead';
 import ProfileCard from '../components/Profiles';
 
-const StatCard = ({ icon, label, value }) => (
-  <Card className="stat-card h-100">
-    <Card.Body>
-      <div className="stat-icon">{icon}</div>
-      <div>
-        <strong>{value}</strong>
-        <span>{label}</span>
-      </div>
-    </Card.Body>
-  </Card>
+/** The count reads first and the noun second — the number is the whole point. */
+const Stat = ({ icon, label, value }) => (
+  <div className="mb-panel admin-stat">
+    <span className="admin-stat-glyph">{icon}</span>
+    <strong className="admin-stat-value">{value}</strong>
+    <span className="admin-stat-label">{label}</span>
+  </div>
 );
 
-StatCard.propTypes = {
+Stat.propTypes = {
   icon: PropTypes.node.isRequired,
   label: PropTypes.string.isRequired,
   value: PropTypes.number.isRequired,
@@ -49,41 +47,56 @@ const ListClubAdmin = () => {
 
   return (
     <Container id="admin-dashboard" className="page-shell py-5">
-      <div className="page-intro">
-        <h1>Dashboard</h1>
+      <PageHead title="Dashboard" eyebrow="Admin">
+        Every club, event and person on MatchBook.
+      </PageHead>
+
+      <div className="admin-stats">
+        <Stat icon={<Stars />} label="clubs" value={clubs.length} />
+        <Stat icon={<CalendarEvent />} label="events" value={events.length} />
+        <Stat icon={<PeopleFill />} label="profiles" value={profiles.length} />
       </div>
 
-      <Row className="g-4 mb-5">
-        <Col md={4}><StatCard icon={<Stars />} label="clubs" value={clubs.length} /></Col>
-        <Col md={4}><StatCard icon={<CalendarEvent />} label="events" value={events.length} /></Col>
-        <Col md={4}><StatCard icon={<PeopleFill />} label="profiles" value={profiles.length} /></Col>
-      </Row>
-
       <section className="admin-section">
-        <div className="section-heading-row">
-          <h2>Clubs</h2>
-        </div>
-        <Row xs={1} md={2} xl={3} className="g-4">
-          {clubs.map(club => <Col key={club._id}><ClubItemAdmin club={club} /></Col>)}
-        </Row>
+        <h2 className="admin-section-title">Clubs</h2>
+        {clubs.length === 0 ? (
+          <div className="mb-empty">
+            <h3>No clubs yet.</h3>
+            <p>Clubs appear here as members start them.</p>
+          </div>
+        ) : (
+          <div className="mb-grid">
+            {clubs.map(club => <ClubItemAdmin key={club._id} club={club} />)}
+          </div>
+        )}
       </section>
 
       <section className="admin-section">
-        <div className="section-heading-row">
-          <h2>Events</h2>
-        </div>
-        <Row xs={1} md={2} xl={3} className="g-4">
-          {events.map(event => <Col key={event._id}><EventCardAdmin event={event} /></Col>)}
-        </Row>
+        <h2 className="admin-section-title">Events</h2>
+        {events.length === 0 ? (
+          <div className="mb-empty">
+            <h3>No events yet.</h3>
+            <p>Every event anyone posts shows up here, past ones included.</p>
+          </div>
+        ) : (
+          <div className="mb-grid">
+            {events.map(event => <EventCardAdmin key={event._id} event={event} />)}
+          </div>
+        )}
       </section>
 
       <section className="admin-section">
-        <div className="section-heading-row">
-          <h2>Profiles</h2>
-        </div>
-        <Row xs={1} md={2} xl={4} className="g-4">
-          {profiles.map(profile => <Col key={profile._id}><ProfileCard profile={profile} /></Col>)}
-        </Row>
+        <h2 className="admin-section-title">People</h2>
+        {profiles.length === 0 ? (
+          <div className="mb-empty">
+            <h3>No profiles yet.</h3>
+            <p>Everyone who signs up gets one.</p>
+          </div>
+        ) : (
+          <div className="mb-grid">
+            {profiles.map(profile => <ProfileCard key={profile._id} profile={profile} />)}
+          </div>
+        )}
       </section>
     </Container>
   );
