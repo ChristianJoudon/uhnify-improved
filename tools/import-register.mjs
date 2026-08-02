@@ -10,7 +10,13 @@
  * configuration, a directory is data, and Meteor caps a settings file at 64k.
  * The server reads it with Assets.getText at startup.
  *
- * Run: node import-register.mjs <register.json> <out.json>
+ * Lives in tools/ at the repo root, deliberately OUTSIDE app/: Meteor bundles
+ * and executes every file under app/ except public/, private/ and tests/, so a
+ * build script parked there runs as server code at boot and takes the server
+ * down with it.
+ *
+ * Run from the repo root:
+ *   node tools/import-register.mjs <register.json> app/private/seed-kauai.json
  */
 import fs from 'fs';
 
