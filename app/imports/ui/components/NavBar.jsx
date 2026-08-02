@@ -29,7 +29,7 @@ const NavBar = () => {
 
   return (
     <Navbar expand="lg" className="site-navbar" sticky="top">
-      <Container>
+      <Container className="page-shell">
         <Navbar.Brand as={NavLink} to="/" className="brand-lockup">
           <MatchMark size={26} title="MatchBook" />
           <Wordmark />

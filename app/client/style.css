@@ -133,10 +133,10 @@ html {
    file in the bundle — retarget the variables so paper wins everywhere. */
 :root,
 [data-bs-theme="light"] {
-  --bs-body-bg: #f8f1e7;
-  --bs-body-color: #303234;
-  --bs-body-font-family: "DM Sans", system-ui, sans-serif;
-  --bs-border-radius: 12px;
+  --bs-body-bg: #fdfdfc !important;
+  --bs-body-color: #303234 !important;
+  --bs-body-font-family: "DM Sans", system-ui, sans-serif !important;
+  --bs-border-radius: 12px !important;
 }
 
 body {
@@ -349,8 +349,16 @@ div.btn-solid-primary button[type="submit"]:hover {
    Shell, intros, section titles
    -------------------------------------------------------------------------- */
 
-.page-shell {
-  width: min(100%, 1240px);
+/* The app's one measure. `!important` defeats Bootstrap's five breakpoint
+   max-widths on .container — without it the shell steps in and out and the
+   navbar, page body and footer no longer share a left edge. Any future
+   per-page width override must be authored as a modifier, not a plain rule. */
+.page-shell,
+.mb-shell {
+  width: min(100%, 1240px) !important;
+  max-width: min(100%, 1240px) !important;
+  margin-inline: auto;
+  padding-inline: 1.25rem !important;
 }
 
 /* Small uppercase text — must use the deep orange, never the bright brand one. */
@@ -2528,12 +2536,6 @@ div.btn-solid-primary button[type="submit"]:hover {
    ========================================================================== */
 
 /* Page furniture ---------------------------------------------------------- */
-
-.mb-shell {
-  width: min(100%, 1200px);
-  margin: 0 auto;
-  padding: 0 1.25rem;
-}
 
 .mb-section {
   margin: 3.25rem 0;
