@@ -1,5 +1,6 @@
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
+import { listingFields } from '../listing/listingFields';
 
 /** The EventsCollection. It encapsulates state and variable values for events. */
 class EventsCollection {
@@ -19,6 +20,13 @@ class EventsCollection {
       createdBy: String,
       owner: { type: String, optional: true },
       image: { type: String, optional: true },
+      /** The end of the window, when the source gave one. */
+      endDate: { type: Date, optional: true },
+      /** Printed on the card so a listing can name its organizer. */
+      hostName: { type: String, optional: true },
+      categories: { type: Array, optional: true },
+      'categories.$': String,
+      ...listingFields,
     });
     this.collection.attachSchema(this.schema);
     this.userPublicationName = `${this.name}.publication.user`;

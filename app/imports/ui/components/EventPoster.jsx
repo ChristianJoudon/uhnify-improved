@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { GeoAlt } from 'react-bootstrap-icons';
 import PosterArt from './PosterArt';
+import CardFields from './CardFields';
 import { normalizeCategories } from '../utilities/helpers';
+import { EVENT_FIELDS } from '../utilities/cardFields';
 import { topicFor } from '../utilities/topics';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -73,10 +74,13 @@ const EventPoster = ({ event, host, neighborhood, distance, going, onGoing, onOp
         )}
       />
 
+      {/* The schema decides what this listing can say; a record that published
+          only a date and a street shows two rows, not six with four blanks. */}
+      <CardFields record={event} schema={EVENT_FIELDS} limit={tier === 'lg' ? 5 : 3} className="mb-poster-facts" />
+
       <div className="mb-poster-foot">
         <span className="mb-poster-meta">
-          <GeoAlt size={12} /> {neighborhood || event.location || 'Nearby'}
-          <em>{distance || topic.label}</em>
+          {distance || topic.label}
         </span>
         <button
           type="button"

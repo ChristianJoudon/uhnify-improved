@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { GeoAlt } from 'react-bootstrap-icons';
 import PosterArt from './PosterArt';
+import CardFields from './CardFields';
 import { imagePath, normalizeCategories } from '../utilities/helpers';
+import { CLUB_FIELDS } from '../utilities/cardFields';
 import { topicFor } from '../utilities/topics';
 import { scheduleLabel } from '../../api/club/schedule';
 
@@ -38,11 +39,12 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
         )}
       />
 
+      <CardFields record={club} schema={CLUB_FIELDS} limit={tier === 'lg' ? 4 : 2} className="mb-poster-facts" />
+
       <div className="mb-poster-foot">
         <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />
         <span className="mb-poster-meta">
-          {distance && <><GeoAlt size={12} /> {distance}</>}
-          <em>{topic.label}</em>
+          {distance || topic.label}
         </span>
         <button
           type="button"

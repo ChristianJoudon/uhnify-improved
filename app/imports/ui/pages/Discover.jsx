@@ -10,7 +10,9 @@ import { EventSwipes } from '../../api/events/EventSwipes';
 import { Profiles } from '../../api/profiles/Profiles';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EventPoster from '../components/EventPoster';
+import TopicPosters from '../components/TopicPosters';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
+import { topicFor } from '../utilities/topics';
 import { scoreClub } from '../utilities/recommend';
 
 // Stand-in geography until real coordinates land — kept deterministic per item.
@@ -102,6 +104,7 @@ const Discover = () => {
   const [params, setParams] = useSearchParams();
   const query = (params.get('q') || '').trim();
   const requested = params.get('when');
+  const topicKey = params.get('topic');
   const when = WINDOWS.some(option => option.key === requested) ? requested : 'all';
 
   const setWhen = key => {
@@ -117,6 +120,16 @@ const Discover = () => {
   const clearQuery = () => {
     const updated = new URLSearchParams(params);
     updated.delete('q');
+    setParams(updated, { replace: true });
+  };
+
+  const setTopic = key => {
+    const updated = new URLSearchParams(params);
+    if (key) {
+      updated.set('topic', key);
+    } else {
+      updated.delete('topic');
+    }
     setParams(updated, { replace: true });
   };
 
@@ -165,10 +178,27 @@ const Discover = () => {
         .toLowerCase().includes(needle))
       .map(event => {
         const host = clubByNumber.get(event.eventID);
-        return { event, host, score: host ? scoreClub(host, context) : seedValue(event._id) / 997 };
+        const topic = topicFor(event.title, event.description, normalizeCategories(event.categories));
+        return { event, host, topic, score: host ? scoreClub(host, context) : seedValue(event._id) / 997 };
       })
+      .filter(item => !topicKey || item.topic.key === topicKey)
       .sort((a, b) => b.score - a.score);
-  }, [upcoming, clubByNumber, interests, when, query]);
+  }, [upcoming, clubByNumber, interests, when, query, topicKey]);
+
+  /**
+   * Counted before the category filter is applied, so a cover can say how much
+   * is behind it without the act of opening one emptying all the others.
+   */
+  const topicCounts = useMemo(() => {
+    const tally = {};
+    upcoming
+      .filter(event => inWindow(new Date(event.date), when))
+      .forEach(event => {
+        const key = topicFor(event.title, event.description, normalizeCategories(event.categories)).key;
+        tally[key] = (tally[key] || 0) + 1;
+      });
+    return tally;
+  }, [upcoming, when]);
 
   const toggleGoing = event => {
     const isGoing = goingIds.has(event._id);
@@ -214,6 +244,8 @@ const Discover = () => {
         </div>
         <Link className="btn btn-match discover-swipe" to="/discover-events">Swipe instead</Link>
       </div>
+
+      <TopicPosters selected={topicKey} onSelect={setTopic} counts={topicCounts} />
 
       {wall.length === 0 ? (
         <div className="mb-empty">

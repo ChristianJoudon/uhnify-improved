@@ -11,41 +11,49 @@ import { parseMeetingTime } from '../../api/club/schedule';
 
 const normalizeDate = value => (value instanceof Date ? value : new Date(value));
 
+/**
+ * The directory itself, generated from the Kauaʻi public register. It lives in
+ * private/ rather than in Meteor.settings because settings is configuration,
+ * this is data, and Meteor caps a settings file at 64k.
+ */
+const directory = (() => {
+  try {
+    // `Assets` is a server global in Meteor 2.x, not an importable package.
+    return JSON.parse(Assets.getText('seed-kauai.json'));
+  } catch (error) {
+    console.log('No seed directory found; starting empty.');
+    return { clubs: [], events: [] };
+  }
+})();
+
 const seedCollection = (collection, defaultData, label, addFunction) => {
   if (collection.find().count() === 0 && defaultData?.length) {
-    console.log(`Creating default data for ${label}.`);
     defaultData.forEach(data => addFunction(data));
+    console.log(`Seeded ${defaultData.length} ${label}.`);
   }
 };
 
-const addClub = data => {
-  console.log(`  Adding club: ${data.name}`);
-  Clubs.collection.insert({
-    clubID: data.clubID,
-    name: data.name,
-    owner: data.owner,
-    description: data.description,
-    location: data.location,
-    image: data.image,
-    meetingTime: data.meetingTime,
-    contactInfo: data.contactInfo || data.owner,
-    categories: data.categories || ['Other'],
-  });
+/**
+ * Seed records pass through as authored.
+ *
+ * The importer already writes exactly the schema's shape and — deliberately —
+ * omits any key the source never published, because the card schema treats a
+ * missing key as "draw no row" and a defaulted one as content. Enumerating
+ * fields here would silently reintroduce the defaults the import removed
+ * ('Other' categories, a stock image on every event) and would need editing
+ * every time a field is added. Only dates need help, since JSON has none.
+ */
+const withDates = data => {
+  const record = { ...data, date: data.date ? normalizeDate(data.date) : undefined };
+  if (data.endDate) {
+    record.endDate = normalizeDate(data.endDate);
+  }
+  return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
 };
 
-const addEvent = data => {
-  console.log(`  Adding event: ${data.title}`);
-  Events.collection.insert({
-    eventID: data.eventID,
-    title: data.title,
-    description: data.description || '',
-    date: normalizeDate(data.date),
-    location: data.location,
-    createdBy: data.createdBy,
-    owner: data.createdBy,
-    image: data.image || '/images/codingWorkshop.png',
-  });
-};
+const addClub = data => Clubs.collection.insert(withDates(data));
+
+const addEvent = data => Events.collection.insert(withDates(data));
 
 const addInterest = data => {
   console.log(`  Adding interest: ${data.name}`);
@@ -114,8 +122,8 @@ const migrateClubSchedules = () => {
   Clubs.collection.update({ tags: { $exists: false } }, { $set: { tags: [] } }, { multi: true });
 };
 
-seedCollection(Clubs.collection, Meteor.settings.defaultClub, 'clubs', addClub);
-seedCollection(Events.collection, Meteor.settings.defaultEvent, 'events', addEvent);
+seedCollection(Clubs.collection, directory.clubs, 'clubs', addClub);
+seedCollection(Events.collection, directory.events, 'events', addEvent);
 seedCollection(Interests.collection, Meteor.settings.defaultInterests, 'interests', addInterest);
 syncDefaultProfiles();
 seedProfileClubs();

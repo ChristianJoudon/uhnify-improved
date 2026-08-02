@@ -1,5 +1,6 @@
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
+import { listingFields } from '../listing/listingFields';
 
 /** The ClubsCollection. It encapsulates state and variable values for clubs. */
 class ClubsCollection {
@@ -10,7 +11,7 @@ class ClubsCollection {
       clubID: SimpleSchema.Integer,
       name: String,
       owner: String,
-      description: String,
+      description: { type: String, optional: true },
       location: String,
       image: { type: String, optional: true },
       meetingTime: String,
@@ -32,6 +33,9 @@ class ClubsCollection {
         optional: true,
         blackbox: true,
       },
+      /** How to join or attend, in the organizer's own words. */
+      membership: { type: String, optional: true },
+      ...listingFields,
     });
     this.collection.attachSchema(this.schema);
     this.userPublicationName = `${this.name}.publication.user`;

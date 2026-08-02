@@ -1,104 +1,123 @@
 /**
- * MatchBook topic system.
+ * MatchBook topics — the one place a subject is defined.
  *
- * Every event and group resolves to one topic, which decides its poster colour,
- * its motif, and the icon shown beside the user's interests. Matching is by
- * keyword so it works with the existing free-text categories and member tags
- * without a schema migration.
+ * A topic owns everything that follows from "what kind of thing is this":
+ * its name, its one-line promise, its cover art, the pastel field and motif a
+ * poster is drawn in, and the vocabulary that resolves a record to it. Adding a
+ * ninth topic means adding one entry here and one image; nothing downstream
+ * needs to know it happened, because no club or event carries its own artwork —
+ * it inherits the topic's.
+ *
+ * `match` is the register's own category vocabulary, not a guess. Every value
+ * that appears in the imported dataset resolves to exactly one topic.
  */
 
-/**
- * Fields are soft pastel washes rather than saturated blocks — a wall of
- * posters should read as light and inviting, not as shouting colour. Each is a
- * gradient so the surface has some air in it, and every topic keeps the same
- * charcoal ink, which is what gives the design its contrast and its bite.
- * Worst-case contrast across all sixteen stops is 8.95:1.
- */
 const wash = (from, to) => `linear-gradient(165deg, ${from} 0%, ${to} 100%)`;
+
+const ART = '/images/topics';
 
 export const TOPICS = {
   outdoors: {
-    label: 'Outdoors',
+    label: 'Move & Explore',
+    tagline: 'Fresh air. Good company.',
+    poster: `${ART}/move-explore.jpg`,
     fields: [wash('#e6f0e8', '#cfe3d6'), wash('#e2efe6', '#d3e6d9')],
     ink: '#303234',
     chip: '#e6f0e8',
     chipInk: '#2f5a51',
     motif: 'outdoors',
-    match: ['outdoor', 'outdoors', 'hike', 'hiking', 'nature', 'garden', 'gardening', 'botanical', 'beach',
-      'surf', 'surfing', 'climb', 'climbing', 'camping', 'sailing', 'environmental', 'conservation'],
+    match: ['outdoor', 'outdoors', 'hiking', 'hike', 'camping', 'beach', 'running', 'run',
+      'fitness', 'yoga', 'sports', 'sport', 'golf', 'watersports', 'stand_up_paddle',
+      'paddle', 'surf', 'surfing', 'environment', 'sustainability', 'nature'],
   },
   music: {
-    label: 'Music',
+    label: 'Music & Performance',
+    tagline: 'Hear it live. Join in.',
+    poster: `${ART}/music-performance.jpg`,
     fields: [wash('#fde3e7', '#f8ccd6'), wash('#fde7e9', '#f9d2d9')],
     ink: '#303234',
     chip: '#fde3e7',
     chipInk: '#a2434f',
     motif: 'music',
-    match: ['music', 'musical', 'concert', 'band', 'choir', 'chorus', 'singing', 'karaoke', 'orchestra',
-      'dance', 'dancing', 'ballroom', 'jazz', 'glee'],
+    match: ['music', 'performance', 'dance', 'hula', 'karaoke', 'open_mic', 'concert',
+      'band', 'choir', 'theater', 'theatre', 'comedy', 'fire_show', 'parade', 'ukulele'],
   },
   books: {
-    label: 'Books',
+    label: 'Books & Ideas',
+    tagline: 'Read. Talk. Learn.',
+    poster: `${ART}/books-ideas.jpg`,
     fields: [wash('#f9efe3', '#f0e0cc'), wash('#faf0e6', '#f2e3d0')],
     ink: '#303234',
     chip: '#f9efe3',
     chipInk: '#6b5117',
     motif: 'books',
-    // Deliberately no 'academic'/'professional': in this directory they are a
-    // filing bucket, not a subject, and matching them put half the wall in one
-    // colour while telling the user nothing.
-    match: ['book', 'books', 'reading', 'literature', 'literary', 'writing', 'poetry', 'library',
-      'scholarly', 'honorary', 'debate', 'language', 'linguistics', 'philosophy', 'history'],
+    match: ['books', 'book', 'reading', 'writing', 'poetry', 'learning', 'education',
+      'lecture', 'discussion', 'history', 'storytime', 'literacy', 'math', 'college',
+      'student', 'school', 'public_speaking', 'library'],
   },
   food: {
-    label: 'Food & Drink',
+    label: 'Food & Markets',
+    tagline: 'Local bites. Good wandering.',
+    poster: `${ART}/food-markets.jpg`,
     fields: [wash('#fdf0d8', '#f8e2b8'), wash('#fdf2dd', '#f9e6c2')],
     ink: '#303234',
     chip: '#fdf0d8',
     chipInk: '#6b5117',
     motif: 'food',
-    match: ['food', 'drink', 'drinks', 'coffee', 'dinner', 'potluck', 'cooking', 'baking', 'culinary', 'nutrition', 'dietetics'],
+    match: ['food', 'food_drink', 'market', 'farmers_market', 'craft_market', 'shopping',
+      'agriculture', 'beer', 'cooking', 'potluck', 'dinner', 'coffee'],
   },
   art: {
-    label: 'Art & Design',
+    label: 'Make & Create',
+    tagline: 'Hands-on. Curious. Expressive.',
+    poster: `${ART}/make-create.jpg`,
     fields: [wash('#fde6dd', '#fbd2c4'), wash('#fde9e1', '#fbd7ca')],
     ink: '#303234',
     chip: '#fde6dd',
     chipInk: '#a34b2c',
     motif: 'art',
-    match: ['art', 'arts', 'design', 'ceramics', 'studio', 'painting', 'drawing', 'craft', 'crafts',
-      'printmaking', 'photography', 'film', 'drama', 'theatre', 'theater', 'architects', 'architecture', 'graphic'],
+    match: ['art', 'arts_crafts', 'arts_culture', 'visual_art', 'craft', 'crafts',
+      'printmaking', 'quilting', 'exhibition', 'exhibitions', 'workshop', 'workshops',
+      'film', 'photography', 'fashion', 'design', 'culture', 'technology', 'robotics', 'lego'],
   },
   community: {
-    label: 'Community',
+    label: 'Community & Causes',
+    tagline: 'Show up. Pitch in.',
+    poster: `${ART}/community-causes.jpg`,
     fields: [wash('#fde7db', '#fbd4c0'), wash('#fdeae0', '#fbd9c8')],
     ink: '#303234',
     chip: '#fde7db',
     chipInk: '#a04d28',
     motif: 'community',
-    // 'community' must be here: a topic's own label is stored as the club's
-    // category, so it has to resolve back to the same topic on read.
-    match: ['community', 'volunteer', 'service', 'cleanup', 'outreach', 'charity', 'mentor', 'fraternity', 'sorority', 'alumni'],
+    match: ['community', 'volunteer', 'service', 'advocacy', 'fundraiser', 'donation',
+      'reuse', 'civic', 'veterans', 'lgbtq', 'women', 'youth', 'seniors', 'kupuna',
+      'networking', 'business', 'professional', 'leadership', 'conference', 'spirituality'],
   },
   wellness: {
-    label: 'Wellness',
+    label: 'Plants & Home',
+    tagline: 'Swap. Grow. Gather.',
+    poster: `${ART}/plants-home.jpg`,
     fields: [wash('#e8f1ef', '#d5e6e2'), wash('#eaf2f0', '#d9e9e5')],
     ink: '#303234',
     chip: '#e8f1ef',
     chipInk: '#2f5a51',
     motif: 'wellness',
-    match: ['wellness', 'yoga', 'running', 'fitness', 'health', 'meditation', 'sport', 'sports',
-      'basketball', 'volleyball', 'football', 'soccer', 'athletic', 'athletics', 'recreational',
-      'medical', 'medicine', 'nursing', 'therapy'],
+    match: ['garden', 'gardening', 'plants', 'plant', 'home', 'health', 'health_wellness',
+      'community_health', 'healthcare', 'wellness', 'mental_health', 'support_group',
+      'support', 'sound_bath', 'meditation', 'playgroup', 'early_childhood', 'family',
+      'safety'],
   },
   night: {
-    label: 'Nightlife',
+    label: 'Nights Out',
+    tagline: 'Good people. Great nights.',
+    poster: `${ART}/nights-out.jpg`,
     fields: [wash('#e8edf3', '#d4dde8'), wash('#eaeff4', '#d8e1ea')],
     ink: '#303234',
     chip: '#e8edf3',
     chipInk: '#42525f',
     motif: 'night',
-    match: ['night', 'nightlife', 'trivia', 'party', 'evening', 'game', 'games', 'gaming', 'chess', 'anime', 'manga', 'esports'],
+    match: ['night', 'nightlife', 'night_market', 'games', 'game', 'trivia', 'social',
+      'festival', 'holiday', 'party', 'bingo', 'mixer', 'club'],
   },
 };
 
@@ -144,7 +163,7 @@ export const topicFor = (...sources) => {
     // Unmatched items still get a varied field, but they must not claim a
     // subject they were never matched on.
     matched: Boolean(hit),
-    label: hit ? topic.label : 'Group',
+    label: hit ? topic.label : 'Community & Causes',
     // Two verified washes per topic: a directory where one category dominates
     // still reads with rhythm instead of as a wall of one colour.
     field: topic.fields[stableIndex(`${seed}~`, topic.fields.length)],
