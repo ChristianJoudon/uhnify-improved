@@ -5,9 +5,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
-import MatchEventCard from '../components/MatchEventCard';
-import GroupCard from '../components/GroupCard';
-import { scheduleLabel } from '../../api/club/schedule';
+import EventPoster from '../components/EventPoster';
 import { sortByDate } from '../utilities/helpers';
 
 // Stand-in geography until real coordinates land — kept deterministic per item.
@@ -31,7 +29,7 @@ const rise = {
 const Landing = () => {
   const navigate = useNavigate();
   const [interest, setInterest] = useState('');
-  const [when, setWhen] = useState('this-week');
+  const [when, setWhen] = useState('week');
 
   const { events, clubs } = useTracker(() => {
     Meteor.subscribe(Events.userPublicationName);
@@ -42,13 +40,30 @@ const Landing = () => {
     };
   }, []);
 
-  const upcoming = useMemo(() => sortByDate(events.filter(event => new Date(event.date) >= new Date())).slice(0, 4), [events]);
-  const groupsWithPlans = useMemo(() => clubs.filter(club => club.schedule).slice(0, 4), [clubs]);
+  // Three, deliberately. The homepage's job is to show what this is, then get
+  // out of the way — a second and third grid of previews only delayed that.
+  const upcoming = useMemo(
+    () => sortByDate(events.filter(event => new Date(event.date) >= new Date())).slice(0, 3),
+    [events],
+  );
+  const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
+  // The finder carries what was typed through to Discover. It used to discard
+  // it and navigate to an unfiltered page, which made the control a prop.
   const search = submitEvent => {
     submitEvent.preventDefault();
-    navigate(Meteor.userId() ? '/discover' : '/signin');
+    const query = new URLSearchParams();
+    if (interest.trim()) {
+      query.set('q', interest.trim());
+    }
+    if (when !== 'anytime') {
+      query.set('when', when);
+    }
+    const suffix = query.toString() ? `?${query}` : '';
+    navigate(Meteor.userId() ? `/discover${suffix}` : '/signin');
   };
+
+  const enter = () => navigate(Meteor.userId() ? '/discover' : '/signin');
 
   return (
     <main id="landing-page" className="landing-page">
@@ -57,11 +72,11 @@ const Landing = () => {
           <div className="mb-hero-grid">
             <motion.div variants={rise} initial="hidden" animate="show" custom={0}>
               <h1>Find something worth showing up for.</h1>
-              <p>Events, groups, and communities around you, matched to the things you actually care about.</p>
+              <p>Events and groups around you, matched to the things you actually care about.</p>
 
               <form className="mb-finder" onSubmit={search}>
                 <div className="mb-finder-field">
-                  <label htmlFor="mb-interest">What are you interested in?</label>
+                  <label htmlFor="mb-interest">Interested in</label>
                   <input
                     id="mb-interest"
                     type="text"
@@ -71,15 +86,11 @@ const Landing = () => {
                   />
                 </div>
                 <div className="mb-finder-field">
-                  <label htmlFor="mb-near">Near</label>
-                  <input id="mb-near" type="text" defaultValue="Current location" />
-                </div>
-                <div className="mb-finder-field">
                   <label htmlFor="mb-when">When</label>
                   <select id="mb-when" value={when} onChange={changeEvent => setWhen(changeEvent.target.value)}>
-                    <option value="tonight">Tonight</option>
-                    <option value="this-week">This week</option>
-                    <option value="this-weekend">This weekend</option>
+                    <option value="today">Tonight</option>
+                    <option value="week">This week</option>
+                    <option value="weekend">This weekend</option>
                     <option value="anytime">Anytime</option>
                   </select>
                 </div>
@@ -107,12 +118,26 @@ const Landing = () => {
               <h2>Happening nearby</h2>
               <a className="mb-section-link" href="/upcoming-events">See all</a>
             </div>
-            <div className="mb-grid">
+            <div className="landing-wall">
               {upcoming.map((event, index) => {
                 const place = placeFor(event._id);
                 return (
-                  <motion.div key={event._id} variants={rise} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} custom={index}>
-                    <MatchEventCard event={event} neighborhood={place.neighborhood} distance={place.distance} />
+                  <motion.div
+                    key={event._id}
+                    variants={rise}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: '-60px' }}
+                    custom={index}
+                  >
+                    <EventPoster
+                      event={event}
+                      host={clubByNumber.get(event.eventID)}
+                      neighborhood={place.neighborhood}
+                      distance={place.distance}
+                      onGoing={enter}
+                      onOpen={enter}
+                    />
                   </motion.div>
                 );
               })}
@@ -120,32 +145,10 @@ const Landing = () => {
           </section>
         )}
 
-        {groupsWithPlans.length > 0 && (
-          <section className="mb-section">
-            <div className="mb-section-head">
-              <h2>Groups with something coming up</h2>
-              <a className="mb-section-link" href="/search-clubs">Browse groups</a>
-            </div>
-            <div className="mb-grid">
-              {groupsWithPlans.map((club, index) => (
-                <motion.div key={club._id} variants={rise} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} custom={index}>
-                  <GroupCard
-                    club={club}
-                    neighborhood={placeFor(club._id).neighborhood}
-                    next={scheduleLabel(club.schedule)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </section>
-        )}
-
         <section className="mb-section">
-          <div className="mb-empty">
-            <h3>Start something of your own.</h3>
-            <p>Put it on the map and let people find it.</p>
-            <a className="btn btn-solid-primary" href="/create-club">Start something</a>
-          </div>
+          <p className="landing-outro">
+            Running something of your own? <a href="/create-event">Put it on the map.</a>
+          </p>
         </section>
       </div>
     </main>

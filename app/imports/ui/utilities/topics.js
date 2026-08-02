@@ -8,16 +8,20 @@
  */
 
 /**
- * Every field/ink pair below clears 4.5:1, so poster type stays legible at any
- * size. Dark ink wins on all the light and mid fields; only the two genuinely
- * dark fields carry cream.
+ * Fields are soft pastel washes rather than saturated blocks — a wall of
+ * posters should read as light and inviting, not as shouting colour. Each is a
+ * gradient so the surface has some air in it, and every topic keeps the same
+ * charcoal ink, which is what gives the design its contrast and its bite.
+ * Worst-case contrast across all sixteen stops is 8.95:1.
  */
+const wash = (from, to) => `linear-gradient(165deg, ${from} 0%, ${to} 100%)`;
+
 export const TOPICS = {
   outdoors: {
     label: 'Outdoors',
-    fields: ['#3d6b61', '#457567'],
-    ink: '#fff9f0',
-    chip: '#dfeae7',
+    fields: [wash('#e6f0e8', '#cfe3d6'), wash('#e2efe6', '#d3e6d9')],
+    ink: '#303234',
+    chip: '#e6f0e8',
     chipInk: '#2f5a51',
     motif: 'outdoors',
     match: ['outdoor', 'outdoors', 'hike', 'hiking', 'nature', 'garden', 'gardening', 'botanical', 'beach',
@@ -25,19 +29,19 @@ export const TOPICS = {
   },
   music: {
     label: 'Music',
-    fields: ['#e96d76', '#f0959a'],
-    ink: '#1a1614',
-    chip: '#f9dde0',
-    chipInk: '#b53845',
+    fields: [wash('#fde3e7', '#f8ccd6'), wash('#fde7e9', '#f9d2d9')],
+    ink: '#303234',
+    chip: '#fde3e7',
+    chipInk: '#a2434f',
     motif: 'music',
     match: ['music', 'musical', 'concert', 'band', 'choir', 'chorus', 'singing', 'karaoke', 'orchestra',
       'dance', 'dancing', 'ballroom', 'jazz', 'glee'],
   },
   books: {
     label: 'Books',
-    fields: ['#f0e4d2', '#e3d3b8'],
+    fields: [wash('#f9efe3', '#f0e0cc'), wash('#faf0e6', '#f2e3d0')],
     ink: '#303234',
-    chip: '#f3ece0',
+    chip: '#f9efe3',
     chipInk: '#6b5117',
     motif: 'books',
     // Deliberately no 'academic'/'professional': in this directory they are a
@@ -48,29 +52,29 @@ export const TOPICS = {
   },
   food: {
     label: 'Food & Drink',
-    fields: ['#e6ae35', '#f0c869'],
-    ink: '#1a1614',
-    chip: '#f9ecce',
+    fields: [wash('#fdf0d8', '#f8e2b8'), wash('#fdf2dd', '#f9e6c2')],
+    ink: '#303234',
+    chip: '#fdf0d8',
     chipInk: '#6b5117',
     motif: 'food',
     match: ['food', 'drink', 'drinks', 'coffee', 'dinner', 'potluck', 'cooking', 'baking', 'culinary', 'nutrition', 'dietetics'],
   },
   art: {
     label: 'Art & Design',
-    fields: ['#fcc0b4', '#f7a894'],
+    fields: [wash('#fde6dd', '#fbd2c4'), wash('#fde9e1', '#fbd7ca')],
     ink: '#303234',
-    chip: '#fdece7',
-    chipInk: '#a94329',
+    chip: '#fde6dd',
+    chipInk: '#a34b2c',
     motif: 'art',
     match: ['art', 'arts', 'design', 'ceramics', 'studio', 'painting', 'drawing', 'craft', 'crafts',
       'printmaking', 'photography', 'film', 'drama', 'theatre', 'theater', 'architects', 'architecture', 'graphic'],
   },
   community: {
     label: 'Community',
-    fields: ['#e85020', '#f2794f'],
-    ink: '#1a1614',
-    chip: '#fbe0d4',
-    chipInk: '#b83c14',
+    fields: [wash('#fde7db', '#fbd4c0'), wash('#fdeae0', '#fbd9c8')],
+    ink: '#303234',
+    chip: '#fde7db',
+    chipInk: '#a04d28',
     motif: 'community',
     // 'community' must be here: a topic's own label is stored as the club's
     // category, so it has to resolve back to the same topic on read.
@@ -78,9 +82,9 @@ export const TOPICS = {
   },
   wellness: {
     label: 'Wellness',
-    fields: ['#dfeae7', '#c9ddd6'],
+    fields: [wash('#e8f1ef', '#d5e6e2'), wash('#eaf2f0', '#d9e9e5')],
     ink: '#303234',
-    chip: '#dfeae7',
+    chip: '#e8f1ef',
     chipInk: '#2f5a51',
     motif: 'wellness',
     match: ['wellness', 'yoga', 'running', 'fitness', 'health', 'meditation', 'sport', 'sports',
@@ -89,9 +93,9 @@ export const TOPICS = {
   },
   night: {
     label: 'Nightlife',
-    fields: ['#2f3b47', '#44525f'],
-    ink: '#fff9f0',
-    chip: '#e2e9ed',
+    fields: [wash('#e8edf3', '#d4dde8'), wash('#eaeff4', '#d8e1ea')],
+    ink: '#303234',
+    chip: '#e8edf3',
     chipInk: '#42525f',
     motif: 'night',
     match: ['night', 'nightlife', 'trivia', 'party', 'evening', 'game', 'games', 'gaming', 'chess', 'anime', 'manga', 'esports'],
@@ -141,7 +145,7 @@ export const topicFor = (...sources) => {
     // subject they were never matched on.
     matched: Boolean(hit),
     label: hit ? topic.label : 'Group',
-    // Two verified shades per topic: a directory where one category dominates
+    // Two verified washes per topic: a directory where one category dominates
     // still reads with rhythm instead of as a wall of one colour.
     field: topic.fields[stableIndex(`${seed}~`, topic.fields.length)],
   };

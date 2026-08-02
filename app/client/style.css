@@ -5,29 +5,32 @@
    ========================================================================== */
 
 :root {
-  /* Paper */
-  --mb-paper: #f8f1e7;
-  --mb-paper-bright: #fff9f0;
-  --mb-paper-edge: #e5d6c2;
-  --mb-wood: #f0d8b8;
+  /* Paper — warm off-white rather than cream; the yellow read as harsh. */
+  --mb-paper: #fdf8f5;
+  --mb-paper-bright: #fffdfc;
+  --mb-paper-edge: #f2e6df;
+  --mb-wood: #fbe7dc;
+  /* Translucent surfaces let the page's soft gradient show through. */
+  --mb-surface: rgba(255, 253, 252, 0.74);
+  --mb-surface-solid: #fffdfc;
 
   /* Ink */
   --mb-ink: #303234;
-  --mb-ink-soft: #62625e;
-  --mb-ink-faint: #6e6c66;
+  --mb-ink-soft: #66625f;
+  --mb-ink-faint: #6e6a66;
 
   /* Brand — orange sampled from the Perfect Match matchbox (#e85020).
      Bright = shapes, marks, match heads, selected states.
      Deep  = anything small and read as text (AA 5.07 on paper). */
   --mb-match: #e85020;
   --mb-match-deep: #b83c14;
-  --mb-match-tint: #fbe0d4;
+  --mb-match-tint: #fde7dc;
 
   /* Poster pink — sampled from the hero illustration's background (#e86870).
      Deep passes AA for text; tint is for fills behind ink. */
   --mb-pink: #e96d76;
   --mb-pink-deep: #b53845;
-  --mb-pink-tint: #f9dde0;
+  --mb-pink-tint: #fde6e9;
 
   /* Valentine red, from the matchbook studies */
   --mb-red: #cc1824;
@@ -35,8 +38,8 @@
   --mb-red-tint: #f8d9db;
 
   /* Peach, from the Lone Palm study */
-  --mb-peach: #fcc0b4;
-  --mb-peach-tint: #fdece7;
+  --mb-peach: #fbd3c6;
+  --mb-peach-tint: #fdefea;
 
   /* Editorial inks */
   --mb-yellow: #e6ae35;
@@ -51,8 +54,8 @@
   --mb-danger: var(--mb-red-deep);
 
   /* Lines */
-  --mb-line-soft: rgba(48, 50, 52, 0.14);
-  --mb-line-strong: rgba(48, 50, 52, 0.34);
+  --mb-line-soft: rgba(48, 50, 52, 0.09);
+  --mb-line-strong: rgba(48, 50, 52, 0.24);
 
   /* Shape */
   --mb-radius-control: 12px;
@@ -61,8 +64,8 @@
   --mb-radius-sheet: 24px;
 
   /* Depth — print offsets, never diffuse glass */
-  --mb-shadow-small: 3px 4px 0 rgba(48, 50, 52, 0.12);
-  --mb-shadow-feature: 6px 7px 0 rgba(48, 50, 52, 0.10);
+  --mb-shadow-small: 2px 3px 0 rgba(48, 50, 52, 0.06), 0 2px 10px rgba(120, 80, 60, 0.05);
+  --mb-shadow-feature: 4px 5px 0 rgba(48, 50, 52, 0.05), 0 8px 26px rgba(120, 80, 60, 0.07);
 
   /* Motion */
   --mb-fast: 140ms;
@@ -136,9 +139,12 @@ body {
   color: var(--mb-ink);
   min-height: 100vh;
   overflow-x: clip;
-  /* Almost imperceptible paper grain (2%), never behind small body text. */
-  background-image: radial-gradient(rgba(48, 50, 52, 0.02) 1px, transparent 1px);
-  background-size: 3px 3px;
+  /* Two faint blooms of peach and pink so the page has light in it rather
+     than sitting as one flat field. */
+  background-image:
+    radial-gradient(60rem 40rem at 12% -10%, rgba(251, 211, 198, 0.42), transparent 70%),
+    radial-gradient(50rem 36rem at 92% 4%, rgba(253, 230, 233, 0.5), transparent 72%);
+  background-attachment: fixed;
 }
 
 body, #root, .app-shell {
@@ -2636,7 +2642,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .mb-finder {
   display: grid;
-  grid-template-columns: 1.5fr 1.05fr 0.95fr auto;
+  grid-template-columns: 1.7fr 1fr auto;
   gap: 0.35rem;
   background: var(--mb-paper-bright);
   border: 2px solid var(--mb-ink);
@@ -2650,7 +2656,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
-  padding: 0.4rem 0.7rem;
+  padding: 0.4rem 0.65rem;
   border-radius: var(--mb-radius-control);
   min-width: 0;
 }
@@ -3075,7 +3081,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: var(--mb-paper-bright);
+  background: var(--mb-surface);
   border: 1px solid var(--mb-line-soft);
   border-radius: var(--mb-radius-card);
   box-shadow: var(--mb-shadow-small);
@@ -3166,7 +3172,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   bottom: -18%;
   width: 68%;
   height: auto;
-  opacity: 0.22;
+  opacity: 0.12;
   pointer-events: none;
 }
 
@@ -3175,7 +3181,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 0.7rem;
-  background: var(--mb-paper-bright);
+  background: rgba(255, 253, 252, 0.6);
 }
 
 .mb-poster-mark {
@@ -3247,7 +3253,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .mb-poster-lg .mb-motif {
   width: 78%;
-  opacity: 0.26;
+  opacity: 0.14;
 }
 
 .mb-poster-md .mb-poster-art {
@@ -4221,3 +4227,180 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 }
 
+
+/* ==========================================================================
+   Discover — one events-only wall
+   ========================================================================== */
+
+.discover-page {
+  padding-bottom: 3rem;
+}
+
+.discover-head {
+  margin: 2.25rem 0 1.15rem;
+}
+
+.discover-head h1 {
+  font-size: clamp(1.9rem, 3.6vw, 2.7rem);
+  margin: 0 0 0.3rem;
+}
+
+.discover-head p {
+  margin: 0;
+  color: var(--mb-ink-soft);
+}
+
+/* Sticks to the top so the time window is always changeable mid-scroll. */
+.discover-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  padding: 0.7rem 0;
+  background: rgba(253, 248, 245, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--mb-line-soft);
+}
+
+.discover-windows {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.discover-windows::-webkit-scrollbar {
+  display: none;
+}
+
+.discover-window {
+  flex: 0 0 auto;
+  border: 1px solid var(--mb-line-soft);
+  border-radius: 999px;
+  background: rgba(255, 253, 252, 0.7);
+  color: var(--mb-ink-soft);
+  padding: 0.4rem 0.95rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease);
+}
+
+.discover-window:hover {
+  border-color: var(--mb-line-strong);
+  color: var(--mb-ink);
+}
+
+/* The one selected state is solid ink — the same strong black the buttons use. */
+.discover-window.is-on {
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+  color: var(--mb-paper-bright);
+}
+
+.discover-window:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+.discover-swipe {
+  flex: 0 0 auto;
+}
+
+.discover-wall {
+  column-width: 300px;
+}
+
+@media (max-width: 640px) {
+  .discover-bar {
+    flex-wrap: wrap;
+  }
+
+  .discover-swipe {
+    width: 100%;
+  }
+}
+
+/* Homepage: a single row of three, then the page ends. */
+.landing-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.15rem;
+}
+
+.landing-outro {
+  margin: 0;
+  padding: 1.5rem 0 0.5rem;
+  border-top: 1px solid var(--mb-line-soft);
+  text-align: center;
+  font-size: 1.02rem;
+  color: var(--mb-ink-soft);
+}
+
+.landing-outro a {
+  color: var(--mb-ink);
+  font-weight: 650;
+}
+
+/* The search carried over from the homepage finder, and how to drop it. */
+.discover-query {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--mb-line-strong);
+  border-radius: 999px;
+  background: var(--mb-surface);
+  color: var(--mb-ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.discover-query:hover {
+  background: var(--mb-match-tint);
+  border-color: var(--mb-match-deep);
+}
+
+.discover-query:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Swipe card without a photo — a drawn poster, not a scrimmed image
+   ========================================================================== */
+
+/* The dark scrim exists to lift white type off a photograph. On a pastel
+   field there is no photo to fight, so it goes and the type turns charcoal. */
+.swipe-card-media:not(.has-photo)::after {
+  display: none;
+}
+
+.swipe-card-media:not(.has-photo) .swipe-card-headline h3 {
+  color: inherit;
+  text-shadow: none;
+}
+
+.swipe-card-media:not(.has-photo) .swipe-host-chip {
+  background: rgba(48, 50, 52, 0.08);
+  color: inherit;
+  backdrop-filter: none;
+}
+
+/* The motif is the card's whole illustration here, so it is drawn larger and
+   sits low-right, clear of the headline block. */
+.swipe-card-media:not(.has-photo) .mb-motif {
+  z-index: 0;
+  right: -8%;
+  bottom: 4%;
+  width: 72%;
+  opacity: 0.16;
+}

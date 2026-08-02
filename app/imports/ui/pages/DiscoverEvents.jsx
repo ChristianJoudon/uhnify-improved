@@ -72,11 +72,9 @@ const DiscoverEvents = () => {
     };
   }, []);
 
-  const clubNames = useMemo(() => {
-    const names = new Map();
-    clubs.forEach(club => names.set(club.clubID, club.name));
-    return names;
-  }, [clubs]);
+  // The whole club, not just its name — the card needs its categories to fall
+  // back on when an event's own title says nothing about the subject.
+  const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   const swipedIds = useMemo(() => new Set(swipes.map(swipe => swipe.eventId)), [swipes]);
   const savedCount = useMemo(() => swipes.filter(swipe => swipe.decision === 'interested').length, [swipes]);
@@ -370,7 +368,8 @@ const DiscoverEvents = () => {
                 <SwipeCard
                   key={card.event._id}
                   event={card.event}
-                  hostName={clubNames.get(card.event.eventID) || ''}
+                  host={clubByNumber.get(card.event.eventID)}
+                  hostName={clubByNumber.get(card.event.eventID)?.name || ''}
                   stackIndex={card.stackIndex}
                   exitDirection={card.exitDirection}
                   flipped={flippedId === card.event._id}

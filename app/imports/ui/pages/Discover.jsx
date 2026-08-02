@@ -1,22 +1,19 @@
 import React, { useMemo } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import swal from 'sweetalert';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
-import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
 import LoadingSpinner from '../components/LoadingSpinner';
-import MatchEventCard from '../components/MatchEventCard';
-import GroupCard from '../components/GroupCard';
-import NearbyMap from '../components/NearbyMap';
-import { scheduleLabel } from '../../api/club/schedule';
+import EventPoster from '../components/EventPoster';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { scoreClub } from '../utilities/recommend';
 
+// Stand-in geography until real coordinates land — kept deterministic per item.
 const NEIGHBORHOODS = ['Mānoa', 'Kaimukī', 'Chinatown', 'Kakaʻako', 'Waikīkī', 'Kalihi'];
 
 const seedValue = (id = '') => {
@@ -37,20 +34,83 @@ const placeFor = id => {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** One row of filters, phrased as time rather than category. */
+const WINDOWS = [
+  { key: 'all', label: 'Anytime' },
+  { key: 'today', label: 'Today' },
+  { key: 'weekend', label: 'This weekend' },
+  { key: 'week', label: 'Next 7 days' },
+  { key: 'month', label: 'This month' },
+];
+
+const endOfToday = () => {
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  return end;
+};
+
+/**
+ * True when `date` falls in the chosen window. "This weekend" means the coming
+ * Saturday and Sunday specifically, not simply the next seven days — otherwise
+ * a Tuesday event answers a question nobody asked.
+ */
+const inWindow = (date, key) => {
+  if (key === 'all') {
+    return true;
+  }
+  if (key === 'today') {
+    return date <= endOfToday();
+  }
+  if (key === 'week') {
+    return date <= new Date(endOfToday().getTime() + 6 * DAY_MS);
+  }
+  if (key === 'month') {
+    return date <= new Date(endOfToday().getTime() + 30 * DAY_MS);
+  }
+  // Weekend: the next Sat/Sun to arrive, so on a Sunday it still means today.
+  return (date.getDay() === 0 || date.getDay() === 6)
+    && date <= new Date(endOfToday().getTime() + 7 * DAY_MS);
+};
+
 const rise = {
-  hidden: { opacity: 0, y: 16 },
-  show: index => ({ opacity: 1, y: 0, transition: { duration: 0.32, delay: Math.min(index, 5) * 0.05, ease: [0.2, 0.8, 0.2, 1] } }),
+  hidden: { opacity: 0, y: 14 },
+  show: index => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.34, delay: Math.min(index, 8) * 0.04, ease: [0.2, 0.8, 0.2, 1] },
+  }),
 };
 
 const Discover = () => {
   const userId = Meteor.userId();
+  // The homepage finder arrives here as ?q= and ?when=, so what someone typed
+  // on the front page is what they land on.
+  const [params, setParams] = useSearchParams();
+  const query = (params.get('q') || '').trim();
+  const requested = params.get('when');
+  const when = WINDOWS.some(option => option.key === requested) ? requested : 'all';
 
-  const { ready, events, clubs, swipes, memberships, interests, firstName } = useTracker(() => {
+  const setWhen = key => {
+    const updated = new URLSearchParams(params);
+    if (key === 'all') {
+      updated.delete('when');
+    } else {
+      updated.set('when', key);
+    }
+    setParams(updated, { replace: true });
+  };
+
+  const clearQuery = () => {
+    const updated = new URLSearchParams(params);
+    updated.delete('q');
+    setParams(updated, { replace: true });
+  };
+
+  const { ready, events, clubs, swipes, interests, firstName } = useTracker(() => {
     const subs = [
       Meteor.subscribe(Events.userPublicationName),
       Meteor.subscribe(Clubs.userPublicationName),
       Meteor.subscribe(EventSwipes.userPublicationName),
-      Meteor.subscribe(ProfileClubs.membershipPublicationName),
       Meteor.subscribe(Profiles.userPublicationName),
     ];
     const profile = Profiles.collection.findOne({ userId });
@@ -59,17 +119,15 @@ const Discover = () => {
       events: Events.collection.find({}).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
       swipes: EventSwipes.collection.find({ userId }).fetch(),
-      memberships: ProfileClubs.collection.find({ userId }).fetch(),
       interests: normalizeCategories(profile?.interests),
       firstName: profile?.firstName || '',
     };
   }, [userId]);
 
-  const savedIds = useMemo(
+  const goingIds = useMemo(
     () => new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId)),
     [swipes],
   );
-  const joinedIds = useMemo(() => new Set(memberships.map(membership => membership.clubId)), [memberships]);
   const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   const upcoming = useMemo(
@@ -77,53 +135,32 @@ const Discover = () => {
     [events],
   );
 
-  // Good matches: interest overlap with the host group's categories and tags.
-  const goodMatches = useMemo(() => {
+  /**
+   * Best matches first, and the strongest few are drawn larger. The wall is one
+   * ranked list rather than five competing shelves — the page's whole job is
+   * "what is worth going to", so it should answer that once.
+   */
+  const wall = useMemo(() => {
     const context = { interests, friendClubIds: new Set() };
-    return [...upcoming]
+
+    const needle = query.toLowerCase();
+
+    return upcoming
+      .filter(event => inWindow(new Date(event.date), when))
+      .filter(event => !needle || `${event.title} ${event.description || ''} ${event.location || ''}`
+        .toLowerCase().includes(needle))
       .map(event => {
         const host = clubByNumber.get(event.eventID);
         return { event, host, score: host ? scoreClub(host, context) : seedValue(event._id) / 997 };
       })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6);
-  }, [upcoming, clubByNumber, interests]);
+      .sort((a, b) => b.score - a.score);
+  }, [upcoming, clubByNumber, interests, when, query]);
 
-  const soon = useMemo(() => {
-    const now = new Date();
-    const horizon = new Date(now.getTime() + 8 * DAY_MS);
-    return upcoming.filter(event => new Date(event.date) <= horizon).slice(0, 4);
-  }, [upcoming]);
-
-  const newGroups = useMemo(() => clubs.filter(club => !joinedIds.has(club._id)).slice(0, 4), [clubs, joinedIds]);
-
-  // One deliberately broader recommendation, outside the user's usual categories.
-  const different = useMemo(() => {
-    if (upcoming.length === 0) {
-      return null;
-    }
-    const offInterest = upcoming.filter(event => {
-      const host = clubByNumber.get(event.eventID);
-      const categories = normalizeCategories(host?.categories);
-      return !categories.some(category => interests.some(interest => category.toLowerCase().includes(interest.toLowerCase())));
-    });
-    const pool = offInterest.length > 0 ? offInterest : upcoming;
-    return pool[seedValue(userId || 'x') % pool.length];
-  }, [upcoming, clubByNumber, interests, userId]);
-
-  const toggleSave = event => {
-    const isSaved = savedIds.has(event._id);
-    const method = isSaved ? 'eventSwipes.remove' : 'eventSwipes.record';
-    const args = isSaved ? [event._id] : [event._id, 'interested'];
+  const toggleGoing = event => {
+    const isGoing = goingIds.has(event._id);
+    const method = isGoing ? 'eventSwipes.remove' : 'eventSwipes.record';
+    const args = isGoing ? [event._id] : [event._id, 'interested'];
     Meteor.call(method, ...args, error => {
-      if (error) {
-        swal('Error', error.reason || error.message, 'error');
-      }
-    });
-  };
-
-  const joinGroup = clubId => {
-    Meteor.call('profileClubs.add', clubId, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       }
@@ -134,103 +171,72 @@ const Discover = () => {
     return <LoadingSpinner />;
   }
 
-  const renderEvent = (event, index) => {
-    const place = placeFor(event._id);
-    const host = clubByNumber.get(event.eventID);
-    return (
-      <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
-        <MatchEventCard
-          event={event}
-          hostName={host?.name || ''}
-          neighborhood={place.neighborhood}
-          distance={place.distance}
-          saved={savedIds.has(event._id)}
-          going={savedIds.has(event._id)}
-          onSave={() => toggleSave(event)}
-          onGoing={() => toggleSave(event)}
-        />
-      </motion.div>
-    );
-  };
-
   return (
-    <main id="discover-page" className="mb-shell" style={{ paddingBottom: '2rem' }}>
-      <section className="mb-section" style={{ marginTop: '2rem' }}>
-        <h1 style={{ fontSize: 'clamp(1.8rem, 3.4vw, 2.5rem)', marginBottom: '0.35rem' }}>
-          {firstName ? `Here's what's around you, ${firstName}.` : "Here's what's around you."}
-        </h1>
-        <p style={{ margin: 0 }}>A few things that fit your interests, schedule, and distance.</p>
-      </section>
+    <main id="discover-page" className="mb-shell discover-page">
+      <header className="discover-head">
+        <h1>{firstName ? `What's on, ${firstName}.` : "What's on."}</h1>
+        <p>Events near you, best matches first.</p>
+        {query && (
+          <button type="button" className="discover-query" onClick={clearQuery}>
+            matching “{query}” <span aria-hidden="true">×</span>
+            <span className="visually-hidden">Clear search</span>
+          </button>
+        )}
+      </header>
 
-      {goodMatches.length > 0 && (
-        <section className="mb-section">
-          <div className="mb-section-head">
-            <h2>Good matches</h2>
-            <Link className="btn btn-match" to="/discover-events">Start swiping</Link>
-          </div>
-          <div className="mb-rail">
-            {goodMatches.map(({ event }, index) => renderEvent(event, index))}
-          </div>
-        </section>
-      )}
-
-      {soon.length > 0 && (
-        <section className="mb-section">
-          <div className="mb-section-head">
-            <h2>Happening soon</h2>
-            <Link className="mb-section-link" to="/agenda">Open calendar</Link>
-          </div>
-          <div className="mb-grid">
-            {soon.map((event, index) => renderEvent(event, index))}
-          </div>
-        </section>
-      )}
-
-      <section className="mb-section">
-        <div className="mb-section-head">
-          <h2>Near you</h2>
-          <Link className="mb-section-link" to="/search-clubs">See the map</Link>
+      <div className="discover-bar">
+        <div className="discover-windows" role="group" aria-label="When">
+          {WINDOWS.map(option => (
+            <button
+              key={option.key}
+              type="button"
+              className={`discover-window${when === option.key ? ' is-on' : ''}`}
+              onClick={() => setWhen(option.key)}
+              aria-pressed={when === option.key}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
-        <div className="mb-map-strip">
-          <NearbyMap count={Math.min(upcoming.length, 7)} />
-          <div className="mb-map-overlay">
-            <span>{upcoming.length} things within 5 miles</span>
-            <Link className="btn btn-solid-primary" to="/search-clubs">Explore</Link>
-          </div>
-        </div>
-      </section>
+        <Link className="btn btn-match discover-swipe" to="/discover-events">Swipe instead</Link>
+      </div>
 
-      {newGroups.length > 0 && (
-        <section className="mb-section">
-          <div className="mb-section-head">
-            <h2>New groups</h2>
-            <Link className="mb-section-link" to="/search-clubs">Browse all</Link>
-          </div>
-          <div className="mb-grid">
-            {newGroups.map((club, index) => (
-              <motion.div key={club._id} variants={rise} initial="hidden" animate="show" custom={index}>
-                <GroupCard
-                  club={club}
-                  neighborhood={placeFor(club._id).neighborhood}
-                  next={scheduleLabel(club.schedule)}
-                  onJoin={() => joinGroup(club._id)}
-                  isMember={joinedIds.has(club._id)}
+      {wall.length === 0 ? (
+        <div className="mb-empty">
+          <h3>{query ? `Nothing matching “${query}”.` : 'Nothing in that window.'}</h3>
+          <p>Try a wider stretch of time, or start something yourself.</p>
+          <Link className="btn btn-solid-primary" to="/create-event">Start an event</Link>
+        </div>
+      ) : (
+        <div className="masonry discover-wall">
+          {wall.map(({ event, host }, index) => {
+            const place = placeFor(event._id);
+            return (
+              <motion.div
+                key={event._id}
+                className="masonry-item"
+                variants={rise}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-40px' }}
+                custom={index}
+              >
+                <EventPoster
+                  event={event}
+                  host={host}
+                  neighborhood={place.neighborhood}
+                  distance={place.distance}
+                  going={goingIds.has(event._id)}
+                  onGoing={toggleGoing}
+                  onOpen={() => toggleGoing(event)}
+                  // The top few are drawn large, so the wall has a focal point
+                  // instead of reading as a uniform grid.
+                  tier={index < 2 ? 'lg' : 'md'}
                 />
               </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {different && (
-        <section className="mb-section">
-          <div className="mb-section-head">
-            <h2>Try something different</h2>
-          </div>
-          <div style={{ maxWidth: 320 }}>
-            {renderEvent(different, 0)}
-          </div>
-        </section>
+            );
+          })}
+        </div>
       )}
     </main>
   );

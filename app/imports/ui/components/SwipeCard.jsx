@@ -2,7 +2,9 @@ import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { CalendarEvent, GeoAlt, People, PersonBadge } from 'react-bootstrap-icons';
-import { DEFAULT_EVENT_IMAGE, formatEventDate, formatShortDate, imagePath } from '../utilities/helpers';
+import TopicMotif from './TopicMotif';
+import { formatEventDate, formatShortDate, normalizeCategories } from '../utilities/helpers';
+import { topicFor } from '../utilities/topics';
 
 const SWIPE_DISTANCE = 130;
 const SWIPE_VELOCITY = 650;
@@ -35,7 +37,13 @@ const daysUntilLabel = value => {
  * One card in the Discover deck. The top card can be dragged left/right to decide,
  * double-tapped to flip over for full details, and flies off screen when a decision lands.
  */
-const SwipeCard = ({ event, hostName, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
+const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
+  // Same rule as every other card: the seeded stock art is not this app's
+  // design, so only a genuinely uploaded photo becomes the card face. The
+  // event's own words pick the topic — its host group is only a fallback.
+  const topic = topicFor(event.title, event.description, normalizeCategories(host?.categories), host?.tags);
+  const photo = event.image && event.image.startsWith('data:') ? event.image : '';
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-340, 340], [-17, 17]);
@@ -130,8 +138,13 @@ const SwipeCard = ({ event, hostName, stackIndex, exitDirection, flipped, onSwip
           transition={{ type: 'spring', stiffness: 280, damping: 26 }}
         >
           <div className="swipe-card-face swipe-card-front">
-            <div className="swipe-card-media">
-              <img src={imagePath(event.image, DEFAULT_EVENT_IMAGE)} alt={event.title} draggable={false} />
+            <div
+              className={`swipe-card-media${photo ? ' has-photo' : ''}`}
+              style={photo ? undefined : { background: topic.field, color: topic.ink }}
+            >
+              {photo
+                ? <img src={photo} alt={event.title} draggable={false} />
+                : <TopicMotif name={topic.motif} />}
               <span className="swipe-pill swipe-pill-date">{formatShortDate(event.date)}</span>
               <span className="swipe-pill swipe-pill-countdown">{daysUntilLabel(event.date)}</span>
               <div className="swipe-card-headline">
@@ -187,6 +200,10 @@ SwipeCard.propTypes = {
     eventID: PropTypes.number,
     image: PropTypes.string,
   }).isRequired,
+  host: PropTypes.shape({
+    categories: PropTypes.arrayOf(PropTypes.string),
+    tags: PropTypes.arrayOf(PropTypes.string),
+  }),
   hostName: PropTypes.string,
   stackIndex: PropTypes.number.isRequired,
   exitDirection: PropTypes.oneOf(['left', 'right']),
@@ -197,6 +214,7 @@ SwipeCard.propTypes = {
 };
 
 SwipeCard.defaultProps = {
+  host: null,
   hostName: '',
   exitDirection: null,
   flipped: false,
