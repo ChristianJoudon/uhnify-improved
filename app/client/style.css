@@ -3837,6 +3837,265 @@ div.btn-solid-primary button[type="submit"]:hover {
   }
 }
 
+/* ==========================================================================
+   Create forms
+   ========================================================================== */
+
+.create-layout {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.create-preview {
+  position: sticky;
+  top: 82px;
+}
+
+.create-preview-label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+  margin-bottom: 0.5rem;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Shared field styling for the hand-rolled create/customize forms. */
+.create-form label,
+.customize-form label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  margin-bottom: 0.9rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  margin-bottom: 0.3rem;
+}
+
+.create-form input[type="text"],
+.create-form input[type="time"],
+.create-form input[type="datetime-local"],
+.create-form textarea,
+.create-form select {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  font: inherit;
+  font-weight: 400;
+  color: var(--mb-ink);
+  background: var(--mb-paper);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-control);
+  padding: 0.6rem 0.8rem;
+  outline: none;
+  transition: border-color var(--mb-fast) var(--mb-ease), box-shadow var(--mb-fast) var(--mb-ease);
+}
+
+.create-form input:focus,
+.create-form textarea:focus,
+.create-form select:focus {
+  border-color: var(--mb-match);
+  box-shadow: inset 0 0 0 1px var(--mb-match);
+}
+
+.create-form textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--mb-ink-faint);
+}
+
+.create-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.create-actions .field-hint {
+  margin-top: 0;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.photo-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Chip input ------------------------------------------------------------- */
+
+.chip-input-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--mb-paper);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-control);
+  padding: 0.4rem 0.5rem;
+  cursor: text;
+}
+
+.chip-input-box:focus-within {
+  border-color: var(--mb-match);
+  box-shadow: inset 0 0 0 1px var(--mb-match);
+}
+
+.chip-input-box input {
+  flex: 1 1 8ch;
+  min-width: 8ch;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0.2rem 0.25rem !important;
+  font: inherit;
+  font-weight: 400;
+  outline: none;
+}
+
+.chip-input-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--mb-wood);
+  color: #6b5117;
+  border-radius: 999px;
+  padding: 0.24rem 0.3rem 0.24rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.chip-input-chip button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(48, 50, 52, 0.1);
+  color: inherit;
+}
+
+.chip-input-chip button:hover {
+  background: var(--mb-danger);
+  color: var(--mb-paper-bright);
+}
+
+/* Schedule picker -------------------------------------------------------- */
+
+.day-row {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.day-pill {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1.5px solid var(--mb-line-strong);
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease);
+}
+
+.day-pill:hover {
+  background: var(--mb-wood);
+}
+
+.day-pill.is-on {
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+  color: var(--mb-paper-bright);
+}
+
+.schedule-row {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+
+.schedule-row label {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.schedule-echo {
+  margin: 0.8rem 0 0;
+  font-size: 0.88rem;
+  color: var(--mb-ink-soft);
+}
+
+.schedule-echo strong {
+  color: var(--mb-ink);
+}
+
+/* Poster photo + copy layer ---------------------------------------------- */
+
+.mb-poster-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+.mb-poster-copy {
+  position: relative;
+}
+
+/* Over a photo the type needs its own scrim to stay readable. */
+.mb-poster-copy.on-photo {
+  color: #fff9f0;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.55);
+}
+
+.mb-poster-title.is-placeholder {
+  opacity: 0.55;
+}
+
+@media (max-width: 900px) {
+  .create-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .create-preview {
+    position: static;
+  }
+}
+
 /* --------------------------------------------------------------------------
    Motion preferences & responsive
    -------------------------------------------------------------------------- */

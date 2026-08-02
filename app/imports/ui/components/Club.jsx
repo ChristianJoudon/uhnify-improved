@@ -23,15 +23,17 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
           sheet, so the name remains a real heading and the schedule and tagline
           stay readable text instead of being swallowed by a button's label. */}
       <div className="mb-poster-art" style={{ background: topic.field, color: topic.ink }}>
-        {when && <span className="mb-poster-eyebrow">{when}</span>}
-        <h3 className="mb-poster-title">
-          <button type="button" className="mb-poster-open" onClick={() => onViewDetails(club)}>
-            {club.name}
-          </button>
-        </h3>
-        {tier === 'lg' && club.description && (
-          <p className="mb-poster-tagline">{club.description}</p>
-        )}
+        <div className="mb-poster-copy">
+          {when && <span className="mb-poster-eyebrow">{when}</span>}
+          <h3 className="mb-poster-title">
+            <button type="button" className="mb-poster-open" onClick={() => onViewDetails(club)}>
+              {club.name}
+            </button>
+          </h3>
+          {tier === 'lg' && club.description && (
+            <p className="mb-poster-tagline">{club.description}</p>
+          )}
+        </div>
         <TopicMotif name={topic.motif} />
       </div>
 

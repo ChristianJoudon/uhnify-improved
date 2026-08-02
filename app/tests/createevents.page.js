@@ -11,15 +11,21 @@ class CreateEventsPage {
     await testController.expect(this.pageSelector.exists).ok();
   }
 
+  /**
+   * The host is chosen from a list of real groups now, and the creator comes
+   * from the signed-in account rather than being typed in.
+   */
   async addEvent(testController) {
     await this.isDisplayed(testController);
     await testController.typeText('#title', 'Test Event');
-    await testController.typeText('#eventID', '1');
-    await testController.typeText('#image', '/images/codingWorkshop.png');
+    const host = Selector('#eventID');
+    await testController.click(host);
+    await testController.click(host.find('option').nth(1));
     await testController.typeText('#location', 'UH Mānoa');
     await testController.typeText('#description', 'An event created by the acceptance test.');
-    await testController.typeText('#date', '2026-11-15');
-    await testController.typeText('#createdBy', 'testcafe');
+    // datetime-local takes the date and time segments in sequence.
+    await testController.typeText('#date', '11/15/2026');
+    await testController.typeText('#date', '0600PM');
     await testController.click('#submit');
   }
 }
