@@ -22,12 +22,16 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import SwipeCard from '../components/SwipeCard';
 import { sortByDate } from '../utilities/helpers';
 
+// The row scrolls, so the timeline can run further ahead than a wrapping row
+// could afford.
 const TIME_WINDOWS = [
   { key: '3d', label: '3 days', days: 3 },
   { key: '1w', label: '1 week', days: 7 },
   { key: '2w', label: '2 weeks', days: 14 },
   { key: '1m', label: '1 month', days: 30 },
   { key: '3m', label: '3 months', days: 90 },
+  { key: '6m', label: '6 months', days: 182 },
+  { key: '1y', label: '1 year', days: 365 },
   { key: 'all', label: 'Anytime', days: null },
 ];
 
@@ -253,27 +257,32 @@ const DiscoverEvents = () => {
 
   return (
     <MotionConfig reducedMotion="user">
-      <Container id="discover-events-page" className="page-shell py-4">
+      <Container id="discover-events-page" className="page-shell py-3">
         <div className="discover-layout">
           <div className="discover-title">
-            <h1><Stars /> Discover</h1>
+            <h1><Stars /> Match</h1>
           </div>
           <div className="deck-toolbar">
-            <div className="mode-toggle" role="tablist" aria-label="Event timing">
-              <button
-                type="button"
-                className={mode === 'today' ? 'active' : ''}
-                onClick={() => setMode('today')}
-              >
-                <LightningChargeFill /> Happening today
-              </button>
-              <button
-                type="button"
-                className={mode === 'upcoming' ? 'active' : ''}
-                onClick={() => setMode('upcoming')}
-              >
-                <CalendarWeek /> Upcoming
-              </button>
+            <div className="deck-toolbar-row">
+              <div className="mode-toggle" role="tablist" aria-label="Event timing">
+                <button
+                  type="button"
+                  className={mode === 'today' ? 'active' : ''}
+                  onClick={() => setMode('today')}
+                >
+                  <LightningChargeFill /> Today
+                </button>
+                <button
+                  type="button"
+                  className={mode === 'upcoming' ? 'active' : ''}
+                  onClick={() => setMode('upcoming')}
+                >
+                  <CalendarWeek /> Upcoming
+                </button>
+              </div>
+              <Link to="/user-events" className="deck-saved-link">
+                <HeartFill size={13} /> {savedCount} saved
+              </Link>
             </div>
 
             <AnimatePresence initial={false}>
@@ -285,27 +294,24 @@ const DiscoverEvents = () => {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.25 }}
                 >
-                  <span className="window-chip-label">Look ahead:</span>
-                  {TIME_WINDOWS.map(timeWindow => (
-                    <button
-                      key={timeWindow.key}
-                      type="button"
-                      className={`window-chip${windowKey === timeWindow.key ? ' active' : ''}`}
-                      onClick={() => setWindowKey(timeWindow.key)}
-                    >
-                      {timeWindow.label}
-                    </button>
-                  ))}
+                  {/* One line that scrolls, so the timeline can run as far
+                      ahead as we like without stealing height from the card. */}
+                  <div className="window-chip-scroll">
+                    {TIME_WINDOWS.map(timeWindow => (
+                      <button
+                        key={timeWindow.key}
+                        type="button"
+                        className={`window-chip${windowKey === timeWindow.key ? ' active' : ''}`}
+                        aria-pressed={windowKey === timeWindow.key}
+                        onClick={() => setWindowKey(timeWindow.key)}
+                      >
+                        {timeWindow.label}
+                      </button>
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
-
-            <div className="deck-status-row">
-              <span className="deck-count-pill">{liveCount} in deck</span>
-              <Link to="/user-events" className="deck-saved-link">
-                <HeartFill size={13} /> {savedCount} saved
-              </Link>
-            </div>
           </div>
 
           <div className="swipe-deck-area">
