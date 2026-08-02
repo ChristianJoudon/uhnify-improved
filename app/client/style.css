@@ -16,6 +16,7 @@
 
   /* Ink */
   --mb-ink: #303234;
+  --mb-ink-deep: #1f2123;   /* the press/hover ink */
   --mb-ink-soft: #66625f;
   --mb-ink-faint: #6e6a66;
 
@@ -57,6 +58,10 @@
   --mb-danger: var(--mb-red-deep);
 
   /* Lines */
+  /* Control borders are non-text UI and need 3:1 (WCAG 1.4.11). --mb-line-soft
+     is 1.22:1 — correct for dividing a surface, far too faint to bound a
+     control. This is the same alpha already verified for the index ticks. */
+  --mb-line-control: rgba(48, 50, 52, 0.55);
   --mb-line-soft: rgba(48, 50, 52, 0.11);
   /* Index ornament. The dotted leader and the double rule sit below 3:1 on
      purpose — the numeral always carries the value, so they are decoration.
@@ -365,11 +370,25 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 0.2rem;
 }
 
+.page-intro-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-intro-row h1 {
+  margin-bottom: 0;
+}
+
 .page-intro p,
 .page-header-card p {
   font-size: 1rem;
   max-width: 560px;
   margin-bottom: 0;
+  margin-top: 0.35rem;
+  color: var(--mb-ink-soft);
 }
 
 .section-heading,
@@ -3011,16 +3030,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   flex-wrap: wrap;
 }
 
-.mb-chip {
-  background: var(--mb-paper-bright);
-  border: 1px solid var(--mb-line-strong);
-  border-radius: 999px;
-  padding: 0.35rem 0.8rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--mb-ink);
-  transition: background var(--mb-fast) var(--mb-ease), border-color var(--mb-fast) var(--mb-ease);
-}
+/* .mb-chip now lives in the primitives section at the end of this file. */
 
 .mb-chip:hover {
   background: var(--mb-wood);
@@ -4879,4 +4889,275 @@ div.btn-solid-primary button[type="submit"]:hover {
     padding-top: 0.4rem;
     padding-bottom: 0.4rem;
   }
+}
+
+
+/* ==========================================================================
+   PRIMITIVES
+   --------------------------------------------------------------------------
+   The whole system reduces to four sentences:
+
+     Paper is the ground. Ink is the voice. Orange is the one action.
+     Pastel fields carry every other colour, and they are fields — never type.
+
+   So: text is ink; a selected thing is solid ink; the single primary action on
+   a view is orange with --mb-ink-on-match type; a surface is paper-bright with
+   a soft edge and a print-offset shadow. Everything below is one of those.
+   ========================================================================== */
+
+/* --- FOCUS ---------------------------------------------------------------
+   One ring, everywhere. Two layers so it survives on a solid-ink selected
+   chip as well as on paper: a paper halo, then the ink ring outside it.
+   Authored as a box-shadow rather than an outline so it follows border-radius
+   on every control including the pill-shaped ones. */
+.mb-focus,
+.mb-chip:focus-visible,
+.mb-panel a:focus-visible,
+.mb-field:focus-visible,
+.mb-field:focus-within,
+.mb-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper-bright), 0 0 0 4px var(--mb-ink);
+}
+
+/* --- PANEL — the surface -------------------------------------------------
+   .mb-poster is the OBJECT (a club, an event: artwork is the card).
+   .mb-panel is the SURFACE that holds other things. They are two ideas and
+   the app kept inventing a new name for the second one. */
+.mb-panel {
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+  padding: 1.15rem 1.25rem;
+}
+
+.mb-panel--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.mb-panel--quiet {
+  box-shadow: none;
+  background: none;
+  border-color: var(--mb-line-soft);
+}
+
+.mb-panel-title {
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-size: 1.02rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.7rem;
+  color: var(--mb-ink);
+}
+
+/* --- CHIP ---------------------------------------------------------------
+   One pill for every "pick this" in the app. Selected is solid ink — the app
+   previously spoke that state in five different visual languages. */
+.mb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--mb-line-control);
+  border-radius: 999px;
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease);
+}
+
+.mb-chip:hover {
+  background: var(--mb-wood);
+  border-color: var(--mb-ink-soft);
+}
+
+.mb-chip.is-on,
+.mb-chip[aria-pressed="true"] {
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+  color: var(--mb-paper-bright);
+}
+
+.mb-chip.is-on:hover,
+.mb-chip[aria-pressed="true"]:hover {
+  background: var(--mb-ink-deep);
+  border-color: var(--mb-ink-deep);
+  color: var(--mb-paper-bright);
+}
+
+/* Not a control — a label that happens to be pill-shaped. */
+.mb-chip--static {
+  cursor: default;
+  background: var(--mb-wood);
+  border-color: transparent;
+  font-weight: 550;
+}
+
+.mb-chip--static:hover {
+  background: var(--mb-wood);
+  border-color: transparent;
+}
+
+.mb-chip--sm {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.76rem;
+}
+
+.mb-chip:disabled,
+.mb-chip[aria-disabled="true"] {
+  cursor: default;
+  color: var(--mb-ink-soft);
+  background: var(--mb-paper-bright);
+  border-color: var(--mb-line-soft);
+}
+
+.mb-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.mb-chip-row--scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: 4px;
+  margin-block: -4px;
+}
+
+.mb-chip-row--scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- ICON BUTTON --------------------------------------------------------- */
+.mb-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid var(--mb-line-control);
+  border-radius: 50%;
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  cursor: pointer;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease);
+}
+
+.mb-icon-btn:hover {
+  background: var(--mb-wood);
+  border-color: var(--mb-ink-soft);
+}
+
+.mb-icon-btn--danger:hover {
+  background: var(--mb-red-tint);
+  border-color: var(--mb-red-deep);
+  color: var(--mb-red-deep);
+}
+
+.mb-icon-btn--xs {
+  width: 24px;
+  height: 24px;
+}
+
+/* --- FIELD ---------------------------------------------------------------
+   One text-input treatment. The focus ring is ink, not orange: orange is
+   reserved for the primary action and a focus ring is not one. */
+.mb-field {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--mb-line-control);
+  border-radius: var(--mb-radius-control);
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.6rem 0.8rem;
+  transition: border-color var(--mb-fast) var(--mb-ease);
+}
+
+.mb-field::placeholder {
+  color: var(--mb-ink-faint);
+}
+
+.mb-field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mb-ink-soft);
+  margin-bottom: 0.3rem;
+}
+
+.mb-field-hint {
+  display: block;
+  font-size: 0.79rem;
+  color: var(--mb-ink-soft);
+  margin-top: 0.3rem;
+}
+
+/* --- TOOLBAR -------------------------------------------------------------
+   A toolbar is not a card, so it has no surface of its own. There were five
+   of these, two of which sat in bordered boxes and three of which did not. */
+.mb-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.2rem;
+}
+
+.mb-toolbar-count {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--mb-ink-soft);
+  margin-right: auto;
+}
+
+/* --- EMPTY STATE --------------------------------------------------------- */
+.mb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px dashed var(--mb-line-strong);
+  border-radius: var(--mb-radius-card);
+  background: none;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--mb-ink-soft);
+}
+
+.mb-empty h2,
+.mb-empty h3 {
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  margin: 0;
+}
+
+.mb-empty p {
+  margin: 0;
+  max-width: 42ch;
+}
+
+.mb-empty .btn {
+  margin-top: 0.7rem;
+}
+
+.mb-empty-glyph {
+  width: 34px;
+  height: 34px;
+  color: var(--mb-ink-faint);
+  margin-bottom: 0.2rem;
 }
