@@ -322,7 +322,7 @@ const DiscoverEvents = () => {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                   >
-                    <span className="deck-empty-emoji" role="img" aria-label="telescope">🔭</span>
+                    <span className="mb-empty-glyph" role="img" aria-label="telescope">🔭</span>
                     <h2>Nothing {windowLabel}.</h2>
                     <p>Try a wider window.</p>
                     <div className="deck-empty-actions">
@@ -348,7 +348,7 @@ const DiscoverEvents = () => {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                   >
-                    <span className="deck-empty-emoji" role="img" aria-label="party popper">🎉</span>
+                    <span className="mb-empty-glyph" role="img" aria-label="party popper">🎉</span>
                     <h2>Deck cleared!</h2>
                     <p>That&apos;s everything {windowLabel}.</p>
                     <div className="deck-empty-actions">

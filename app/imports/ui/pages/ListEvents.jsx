@@ -146,7 +146,7 @@ const ListEvents = () => {
           <h2>Month view</h2>
         </div>
 
-        <Container id="event-calendar" className="calendar-container">
+        <div id="event-calendar" className="calendar-container">
           <FullCalendar
             plugins={[dayGridPlugin]}
             initialView="dayGridMonth"
@@ -163,7 +163,7 @@ const ListEvents = () => {
               end: 'dayGridMonth,dayGridWeek,dayGridDay',
             }}
           />
-        </Container>
+        </div>
       </section>
     </Container>
   );

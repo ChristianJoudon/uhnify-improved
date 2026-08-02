@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Link } from 'react-router-dom';
-import { Alert, Button, Container, Form } from 'react-bootstrap';
+import { Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useTracker } from 'meteor/react-meteor-data';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -483,14 +483,14 @@ const ClubFinder = () => {
           )}
 
           {visible.length === 0 ? (
-            <Alert className="empty-state-card">
+            <div className="mb-empty">
               {/* Name the filter that actually excluded everything, and let the
                   reset clear the radius too — otherwise it cannot recover. */}
-              <h2>{hasFilters ? 'Nothing matches those filters.' : `Nothing within ${radius} miles.`}</h2>
-              <Button type="button" onClick={resetAll} className="btn-solid-primary">
+              <h3>{hasFilters ? 'Nothing matches those filters.' : `Nothing within ${radius} miles.`}</h3>
+              <button type="button" onClick={resetAll} className="btn btn-solid-primary">
                 {hasFilters ? 'Clear filters' : 'Widen the search'}
-              </Button>
-            </Alert>
+              </button>
+            </div>
           ) : (
             <div className="masonry">
               {visible.map(({ club, tier, distance }) => (

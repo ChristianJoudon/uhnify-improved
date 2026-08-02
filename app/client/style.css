@@ -501,11 +501,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   overflow: hidden;
 }
 
-/* Paper lift: a short move with a deeper offset {
-  transform: translateY(-2px);
-  box-shadow: var(--mb-shadow-feature);
-}
-
 .club-card {
   padding: 0.55rem;
 }
@@ -4433,10 +4428,15 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .mb-empty-glyph {
-  width: 34px;
-  height: 34px;
+  font-size: 2rem;
+  line-height: 1;
   color: var(--mb-ink-faint);
   margin-bottom: 0.2rem;
+}
+
+svg.mb-empty-glyph {
+  width: 34px;
+  height: 34px;
 }
 
 /* ==========================================================================
@@ -4730,8 +4730,10 @@ which no longer has a caller.
    state, so the measure is the notice itself rather than the 1240px shell —
    a dashed box stretched the full width of the page reads as a broken layout
    rather than as a message. The intro centres to sit over it squarely. */
+/* Marked because .page-shell's own width is marked (it has to beat Bootstrap's
+   .container breakpoints), and these two classes sit on the same element. */
 .page-notice {
-  max-width: 34rem;
+  max-width: 34rem !important;
   margin-inline: auto;
 }
 
