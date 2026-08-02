@@ -1127,19 +1127,30 @@ div.btn-solid-primary button[type="submit"]:hover {
   box-shadow: var(--mb-shadow-small);
 }
 
+/* Three modes plus the saved link no longer fit on one line at deck width, so
+   the row wraps and the link takes its own line rather than overlapping the
+   last tab. */
 .deck-toolbar-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
 }
 
 .deck-toolbar-row .mode-toggle {
   flex: 1 1 auto;
   min-width: 0;
+  justify-content: space-between;
+}
+
+.deck-toolbar-row .mode-toggle button {
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .deck-toolbar-row .deck-saved-link {
   flex: 0 0 auto;
+  margin-inline: auto;
 }
 
 .mode-toggle {
@@ -4826,13 +4837,41 @@ which no longer has a caller.
    Category covers — the eight posters, as the way in
    ========================================================================== */
 
+/* A rail, not a grid. Eight covers stacked two rows deep pushed the actual
+   listings below the fold; side by side they read as one shelf you browse. */
 .topic-posters {
   list-style: none;
   margin: 0 0 2rem;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  padding: 4px 0 12px;
+  display: flex;
   gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mb-line-strong) transparent;
+  /* Fades the cut-off cover at the trailing edge so the rail reads as
+     continuing rather than as ending in a sliced card. */
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.5rem), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.5rem), transparent 100%);
+}
+
+.topic-posters > li {
+  flex: 0 0 auto;
+  width: 190px;
+  scroll-snap-align: start;
+}
+
+.topic-posters::-webkit-scrollbar {
+  height: 8px;
+}
+
+.topic-posters::-webkit-scrollbar-thumb {
+  background: var(--mb-line-strong);
+  border-radius: 999px;
+}
+
+.topic-posters::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .topic-poster {
@@ -4921,8 +4960,11 @@ which no longer has a caller.
 
 @media (max-width: 575.98px) {
   .topic-posters {
-    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
+  }
+
+  .topic-posters > li {
+    width: 150px;
   }
 }
 
@@ -4976,4 +5018,35 @@ which no longer has a caller.
 
 .swipe-card-facts .card-field svg {
   margin-top: 0.2em;
+}
+
+/* Opt in to precise distance. Quiet, because the default already works. */
+.rail-locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--mb-line-control);
+  border-radius: 999px;
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--mb-fast) var(--mb-ease);
+}
+
+.rail-locate:hover {
+  background: var(--mb-wood);
+}
+
+.rail-locate:disabled {
+  cursor: default;
+  color: var(--mb-ink-soft);
+}
+
+.rail-locate:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper-bright), 0 0 0 4px var(--mb-ink);
 }

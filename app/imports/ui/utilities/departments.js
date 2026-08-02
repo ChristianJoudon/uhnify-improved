@@ -1,121 +1,54 @@
-import { Meteor } from 'meteor/meteor';
+import { TOPICS, TOPIC_KEYS, topicFor } from './topics';
 
 /**
- * MatchBook departments — an edited contents page for a directory that cannot
- * edit itself.
+ * The Index's departments are the topics.
  *
- * `categories` is fifteen free-text values: one of them is 39% of the whole
- * directory, nine resolve to one or two groups, and the sports family is split
- * across six near-duplicates. We do not migrate the data; we file each raw
- * label under a department the way a contents page files pieces, and the raw
- * label survives one click deeper.
+ * This used to be its own five-bucket taxonomy — Study & Career, Service &
+ * Greek, Play & Outdoors — invented for a University-of-Hawaii club directory
+ * and left behind when the app moved to Kauaʻi and to the eight categories the
+ * covers name. Two vocabularies for one idea meant a group could file under
+ * "Play & Outdoors" in the rail while its poster said "Move & Explore".
  *
- * Three vocabularies have to be covered or a club falls off the index:
- *   1. the fifteen values living in the collection today
- *   2. CLUB_CATEGORY_OPTIONS in helpers.js — the admin/legacy list
- *   3. the eight TOPICS labels — AddClub stores TOPICS[key].label as the club's
- *      category, so those strings really are category values in production
- *
- * `topic` names a TOPICS key used for COLOUR ONLY — the folio wash and the
- * weight rule. No department resolves a club's topic.
+ * So there is one vocabulary now. A department IS a topic: same label, same
+ * tagline, same colour, same matching. Adding a ninth category adds a ninth
+ * department for free.
  */
-export const DEPARTMENTS = [
-  {
-    folio: '01',
-    key: 'study',
-    label: 'Study & Career',
-    topic: 'books',
-    note: 'Majors, chapters, honours, and the pre-professional societies.',
-    categories: ['Academic/Professional', 'Honorary Society', 'Technology', 'Books'],
-  },
-  {
-    folio: '02',
-    key: 'service',
-    label: 'Service & Greek',
-    topic: 'community',
-    note: 'Volunteering, mutual aid, houses, and student government.',
-    categories: ['Service', 'Fraternity/Sorority', 'Community', 'Student Affairs'],
-  },
-  {
-    folio: '03',
-    key: 'play',
-    label: 'Play & Outdoors',
-    topic: 'wellness',
-    note: 'Courts, mats, pick-up games, and time outside.',
-    categories: ['Sports', 'Sports/Leisure', 'Team Sports', 'Basketball', 'Volleyball',
-      'Leisure/Recreational', 'Outdoors', 'Wellness'],
-  },
-  {
-    folio: '04',
-    key: 'culture',
-    label: 'Culture & Belief',
-    topic: 'music',
-    note: 'Heritage, language, worship, and politics.',
-    categories: ['Ethnic/Cultural', 'Cultural', 'Religious/Spiritual', 'Political'],
-  },
-  {
-    // No clubs today, so it does not render. It is reachable rather than dead:
-    // the create form writes 'Art & Design', 'Music', 'Food & Drink' and
-    // 'Nightlife' verbatim, so this department appears the first time someone
-    // starts a group on one of those topics.
-    folio: '05',
-    key: 'arts',
-    label: 'Art & Evenings',
-    topic: 'night',
-    note: 'Making, playing, eating, and things after dark.',
-    categories: ['Arts', 'Art & Design', 'Music', 'Food & Drink', 'Nightlife'],
-  },
-];
+export const DEPARTMENTS = TOPIC_KEYS.map((key, index) => ({
+  folio: String(index + 1).padStart(2, '0'),
+  key,
+  label: TOPICS[key].label,
+  /** Colour comes from the topic it is. */
+  topic: key,
+  note: TOPICS[key].tagline,
+  /** The register's own category words that file into this topic. */
+  categories: TOPICS[key].match,
+}));
 
 export const DEPT_BY_KEY = Object.fromEntries(DEPARTMENTS.map(dept => [dept.key, dept]));
 
-/** Lowercased category → department key, so stored capitalisation drift still files. */
+/** Category word -> topic key. */
 export const CATEGORY_DEPT = new Map(
   DEPARTMENTS.flatMap(dept => dept.categories.map(category => [category.toLowerCase(), dept.key])),
 );
 
-/** Lowercased category → the string to print. Selection state holds the keys. */
+/**
+ * How a raw category word is printed. The register writes machine words —
+ * `farmers_market`, `health_wellness` — which are fine as data and wrong on a
+ * page.
+ */
+const titleCase = word => word.charAt(0).toUpperCase() + word.slice(1);
 export const KIND_LABEL = new Map(
-  DEPARTMENTS.flatMap(dept => dept.categories.map(category => [category.toLowerCase(), category])),
+  DEPARTMENTS.flatMap(dept => dept.categories.map(category => [
+    category.toLowerCase(),
+    titleCase(category.replace(/_/g, ' ')),
+  ])),
 );
 
 /**
- * The 39% bucket, named once. This is an attribute — "is a pre-professional
- * chapter" — rather than a subject. topics.js already made that call by
- * refusing to match 'academic'/'professional' as a topic; the rail never
- * honoured it. So it gets its own axis instead of another row.
+ * File a record. One line now, because the topic system already does this and
+ * doing it twice was the whole problem: whatever the poster says, the rail says.
  */
-export const PRE_PROFESSIONAL = new Set(['academic/professional', 'honorary society']);
-
-/** Only consulted when nothing else claims a club. */
-const TOPIC_RESCUE = {
-  books: 'study',
-  community: 'service',
-  wellness: 'play',
-  outdoors: 'play',
-  art: 'arts',
-  music: 'arts',
-  food: 'arts',
-  night: 'arts',
-};
-
-/**
- * File a club. Literal categories win; the derived topic is a rescue used only
- * when no department claims any of them — an empty field, 'Other', or novel
- * free text. Callers must pass `topic.matched ? topic.key : null`, because an
- * unmatched topic is a hash of the club's name and would file at random.
- * Returns [] for a genuinely unfilable club: it stays on the wall and stays
- * findable by search, it just has no department.
- */
-export const departmentsFor = (categories = [], matchedTopicKey = null) => {
-  const keys = categories.map(category => category.toLowerCase());
-  const claimed = keys.filter(key => CATEGORY_DEPT.has(key));
-  if (claimed.length > 0) {
-    return [...new Set(claimed.map(key => CATEGORY_DEPT.get(key)))];
-  }
-  const rescued = matchedTopicKey ? TOPIC_RESCUE[matchedTopicKey] : null;
-  if (!rescued && Meteor.isDevelopment && categories.length > 0) {
-    console.warn('[departments] unfiled categories:', categories); // eslint-disable-line no-console
-  }
-  return rescued ? [rescued] : [];
+export const departmentsFor = (categories = [], ...rest) => {
+  const topic = topicFor(categories, ...rest);
+  return topic.matched ? [topic.key] : [];
 };

@@ -4,7 +4,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, CalendarEvent, GeoAlt, InfoCircle, People } from 'react-bootstrap-icons';
 import TopicMotif from './TopicMotif';
 import CardFields from './CardFields';
-import { EVENT_FIELDS } from '../utilities/cardFields';
+import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
 import { formatEventDate, formatShortDate, normalizeCategories } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
 
@@ -38,7 +38,10 @@ const daysUntilLabel = value => {
  * One card in the Discover deck. The top card can be dragged left/right to decide,
  * double-tapped to flip over for full details, and flies off screen when a decision lands.
  */
-const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
+const SwipeCard = ({ event, host, hostName, kind, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
+  // A group and an event are the same object to this card — a thing with a
+  // topic, a place and a time — so only the field schema differs.
+  const fields = kind === 'club' ? CLUB_FIELDS : EVENT_FIELDS;
   // Same rule as every other card: the seeded stock art is not this app's
   // design, so only a genuinely uploaded photo becomes the card face. The
   // event's own words pick the topic — its host group is only a fallback.
@@ -144,16 +147,22 @@ const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, 
               {photo
                 ? <img src={photo} alt={event.title} draggable={false} />
                 : <TopicMotif name={topic.motif} />}
-              <span className="swipe-pill swipe-pill-date">{formatShortDate(event.date)}</span>
-              <span className="swipe-pill swipe-pill-countdown">{daysUntilLabel(event.date)}</span>
+              {/* A group has no single date, so its card carries neither pill —
+                  the same rule as everywhere else: no data, no element. */}
+              {event.date && <span className="swipe-pill swipe-pill-date">{formatShortDate(event.date)}</span>}
+              {event.date && <span className="swipe-pill swipe-pill-countdown">{daysUntilLabel(event.date)}</span>}
               <div className="swipe-card-headline">
                 {hostName && <span className="swipe-host-chip"><People size={13} /> {hostName}</span>}
                 <h3>{event.title}</h3>
               </div>
             </div>
             <div className="swipe-card-body">
-              <div className="meta-line"><CalendarEvent size={15} /> {formatEventDate(event.date)}</div>
-              <div className="meta-line"><GeoAlt size={15} /> {event.location}</div>
+              {(event.date || event.meetingTime) && (
+                <div className="meta-line">
+                  <CalendarEvent size={15} /> {event.date ? formatEventDate(event.date) : event.meetingTime}
+                </div>
+              )}
+              {event.location && <div className="meta-line"><GeoAlt size={15} /> {event.location}</div>}
             </div>
             {/* Says what turning the card over gets you — details — rather than
                 naming the mechanism. The whole card is the real hit area; this
@@ -169,7 +178,7 @@ const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, 
                 now: a row exists only when the listing published it. This is
                 also the surface with room for cost, audience and registration,
                 which the front has to leave out. */}
-            <CardFields record={{ ...event, hostName }} schema={EVENT_FIELDS} className="swipe-card-facts" />
+            <CardFields record={{ ...event, hostName }} schema={fields} className="swipe-card-facts" />
             {event.description && <p className="swipe-card-description">{event.description}</p>}
           </div>
         </motion.div>
@@ -200,6 +209,8 @@ SwipeCard.propTypes = {
     tags: PropTypes.arrayOf(PropTypes.string),
   }),
   hostName: PropTypes.string,
+  /** 'event' or 'club' — decides which field schema the back reads. */
+  kind: PropTypes.oneOf(['event', 'club']),
   stackIndex: PropTypes.number.isRequired,
   exitDirection: PropTypes.oneOf(['left', 'right']),
   flipped: PropTypes.bool,
@@ -211,6 +222,7 @@ SwipeCard.propTypes = {
 SwipeCard.defaultProps = {
   host: null,
   hostName: '',
+  kind: 'event',
   exitDirection: null,
   flipped: false,
 };

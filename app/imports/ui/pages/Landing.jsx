@@ -7,19 +7,7 @@ import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import EventPoster from '../components/EventPoster';
 import { sortByDate } from '../utilities/helpers';
-
-// Stand-in geography until real coordinates land — kept deterministic per item.
-const NEIGHBORHOODS = ['Mānoa', 'Kaimukī', 'Chinatown', 'Kakaʻako', 'Waikīkī', 'Kalihi'];
-const placeFor = (id = '') => {
-  let value = 0;
-  for (let i = 0; i < id.length; i++) {
-    value = (value * 31 + id.charCodeAt(i)) % 997;
-  }
-  return {
-    neighborhood: NEIGHBORHOODS[value % NEIGHBORHOODS.length],
-    distance: `${(0.3 + (value % 45) / 10).toFixed(1)} mi`,
-  };
-};
+import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
 
 const rise = {
   hidden: { opacity: 0, y: 18 },
@@ -120,7 +108,9 @@ const Landing = () => {
             </div>
             <div className="landing-wall">
               {upcoming.map((event, index) => {
-                const place = placeFor(event._id);
+                // The public page has no permission to ask for a position, so
+                // it measures from the island rather than from the reader.
+                const miles = milesTo(event, KAUAI);
                 return (
                   <motion.div
                     key={event._id}
@@ -133,8 +123,8 @@ const Landing = () => {
                     <EventPoster
                       event={event}
                       host={clubByNumber.get(event.eventID)}
-                      neighborhood={place.neighborhood}
-                      distance={place.distance}
+                      neighborhood={event.region}
+                      distance={milesLabel(miles)}
                       onGoing={enter}
                       onOpen={enter}
                     />

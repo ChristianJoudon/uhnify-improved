@@ -367,24 +367,31 @@ Meteor.methods({
     EventClubs.collection.remove({ eventId });
   },
 
-  'eventSwipes.record'(eventId, decision) {
+  'eventSwipes.record'(eventId, decision, kind = 'event') {
     check(eventId, String);
     check(decision, String);
+    check(kind, String);
     requireLoggedIn(this.userId);
 
     if (!['interested', 'passed'].includes(decision)) {
       throw new Meteor.Error('invalid-decision', 'A swipe decision must be either "interested" or "passed".');
     }
+    if (!['event', 'club'].includes(kind)) {
+      throw new Meteor.Error('invalid-kind', 'A swipe is on either an event or a club.');
+    }
 
     // Only the server can authoritatively check existence; a client stub may
-    // simply not have the event cached, which should not block the call.
-    if (Meteor.isServer && !Events.collection.findOne(eventId)) {
-      throw new Meteor.Error('event-not-found', 'That event could not be found.');
+    // simply not have the record cached, which should not block the call.
+    if (Meteor.isServer) {
+      const collection = kind === 'club' ? Clubs.collection : Events.collection;
+      if (!collection.findOne(eventId)) {
+        throw new Meteor.Error('not-found', 'That listing could not be found.');
+      }
     }
 
     const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
     if (existing) {
-      EventSwipes.collection.update(existing._id, { $set: { decision, createdAt: new Date() } });
+      EventSwipes.collection.update(existing._id, { $set: { decision, kind, createdAt: new Date() } });
       return existing._id;
     }
 
@@ -392,6 +399,7 @@ Meteor.methods({
       userId: this.userId,
       eventId,
       decision,
+      kind,
       createdAt: new Date(),
     });
   },

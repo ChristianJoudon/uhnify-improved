@@ -13,25 +13,20 @@ import EventPoster from '../components/EventPoster';
 import TopicPosters from '../components/TopicPosters';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
+import { milesLabel, milesTo } from '../utilities/geo';
+import { useOrigin } from '../utilities/useOrigin';
 import { scoreClub } from '../utilities/recommend';
 
-// Stand-in geography until real coordinates land — kept deterministic per item.
-const NEIGHBORHOODS = ['Mānoa', 'Kaimukī', 'Chinatown', 'Kakaʻako', 'Waikīkī', 'Kalihi'];
-
+/**
+ * A stable per-record jitter, so events with no host — and therefore no real
+ * score — still hold a consistent order instead of reshuffling on every render.
+ */
 const seedValue = (id = '') => {
   let value = 0;
   for (let i = 0; i < id.length; i++) {
     value = (value * 31 + id.charCodeAt(i)) % 997;
   }
   return value;
-};
-
-const placeFor = id => {
-  const value = seedValue(id);
-  return {
-    neighborhood: NEIGHBORHOODS[value % NEIGHBORHOODS.length],
-    distance: `${(0.3 + (value % 45) / 10).toFixed(1)} mi`,
-  };
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -102,6 +97,7 @@ const Discover = () => {
   // The homepage finder arrives here as ?q= and ?when=, so what someone typed
   // on the front page is what they land on.
   const [params, setParams] = useSearchParams();
+  const { origin } = useOrigin();
   const query = (params.get('q') || '').trim();
   const requested = params.get('when');
   const topicKey = params.get('topic');
@@ -256,7 +252,7 @@ const Discover = () => {
       ) : (
         <div className="masonry discover-wall">
           {wall.map(({ event, host }, index) => {
-            const place = placeFor(event._id);
+            const miles = milesTo(event, origin);
             return (
               <motion.div
                 key={event._id}
@@ -270,8 +266,8 @@ const Discover = () => {
                 <EventPoster
                   event={event}
                   host={host}
-                  neighborhood={place.neighborhood}
-                  distance={place.distance}
+                  neighborhood={event.region}
+                  distance={milesLabel(miles)}
                   going={goingIds.has(event._id)}
                   onGoing={toggleGoing}
                   onOpen={() => toggleGoing(event)}

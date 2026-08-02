@@ -13,16 +13,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { scoreClub, sizeTier } from '../utilities/recommend';
-
-// Placeholder geography, identical to the finder's so a club is the same
-// distance away on both pages. Real coordinates replace both at once.
-const distanceFor = (id = '') => {
-  let value = 0;
-  for (let i = 0; i < id.length; i++) {
-    value = (value * 31 + id.charCodeAt(i)) % 997;
-  }
-  return Math.round((0.2 + (value % 280) / 10) * 10) / 10;
-};
+import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
 
 const rise = {
   hidden: { opacity: 0, y: 14 },
@@ -88,7 +79,7 @@ const ListClub = () => {
                 <Club
                   club={club}
                   tier={sizeTier(scoreClub(club))}
-                  distance={`${distanceFor(club._id).toFixed(1)} mi`}
+                  distance={milesLabel(milesTo(club, KAUAI))}
                   isMember
                   onViewDetails={() => {
                     setSelectedClub(club);

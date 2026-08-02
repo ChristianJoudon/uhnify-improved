@@ -5,7 +5,7 @@ import { Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useTracker } from 'meteor/react-meteor-data';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, GeoAlt, Search, X } from 'react-bootstrap-icons';
+import { ChevronDown, GeoAlt, GeoAltFill, Search, X } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
@@ -18,21 +18,13 @@ import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
 import { TOPICS, topicFor } from '../utilities/topics';
 import {
-  CATEGORY_DEPT, DEPARTMENTS, DEPT_BY_KEY, KIND_LABEL, PRE_PROFESSIONAL, departmentsFor,
+  CATEGORY_DEPT, DEPARTMENTS, DEPT_BY_KEY, KIND_LABEL,
 } from '../utilities/departments';
+import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
+import { useOrigin } from '../utilities/useOrigin';
 
 const PAGE_STEP = 12;
 const RADII = [2, 5, 10, 25];
-
-// Placeholder geography until real coordinates land — deterministic per club.
-// The spread has to exceed the largest radius, or the radius control is inert.
-const distanceFor = (id = '') => {
-  let value = 0;
-  for (let i = 0; i < id.length; i++) {
-    value = (value * 31 + id.charCodeAt(i)) % 997;
-  }
-  return Math.round((0.2 + (value % 280) / 10) * 10) / 10;
-};
 
 const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -45,7 +37,6 @@ const ClubFinder = () => {
   const [selectedDepts, setSelectedDepts] = useState([]);   // department keys
   const [selectedKinds, setSelectedKinds] = useState([]);   // lowercased category keys
   const [openDepts, setOpenDepts] = useState([]);           // disclosure only, never a filter
-  const [hidePrePro, setHidePrePro] = useState(false);
   const [selectedClub, setSelectedClub] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,6 +45,7 @@ const ClubFinder = () => {
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
   const reduceMotion = useReducedMotion();
+  const { origin, status, locate, isPrecise } = useOrigin();
 
   const { ready, clubs, joinedClubIds, interests, friendClubIds, place } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
@@ -69,7 +61,7 @@ const ClubFinder = () => {
       joinedClubIds: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch().map(membership => membership.clubId),
       interests: normalizeCategories(profile?.interests),
       friendClubIds: new Set(ProfileClubs.collection.find({ userId: { $in: acceptedIds } }).fetch().map(membership => membership.clubId)),
-      place: profile?.location || 'Honolulu, HI',
+      place: profile?.location,
       ready: clubsSubscription.ready() && membershipSubscription.ready(),
     };
   }, []);
@@ -88,13 +80,14 @@ const ClubFinder = () => {
         score,
         tier: sizeTier(score),
         topic,
-        distance: distanceFor(club._id),
+        distance: milesTo(club, origin),
         categoryKeys,
-        depts: departmentsFor(categories, topic.matched ? topic.key : null),
-        isPrePro: categoryKeys.some(key => PRE_PROFESSIONAL.has(key)),
+        // The poster and the rail read the same resolution, so a group can
+        // never be one category on its card and another in the index.
+        depts: topic.matched ? [topic.key] : [],
       };
     });
-  }, [clubs, interests, friendClubIds]);
+  }, [clubs, interests, friendClubIds, origin]);
 
   /**
    * Directory-wide totals. `max` is the bar's denominator and it is deliberately
@@ -116,11 +109,10 @@ const ClubFinder = () => {
   // promise the grid keeps and picking one department never zeroes the others.
   const inScope = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    return scored.filter(({ club, distance, isPrePro }) => distance <= radius
-      && !(hidePrePro && isPrePro)
+    return scored.filter(({ club, distance }) => (distance === null || distance <= radius)
       && (query === '' || [club.name, club.description, club.location, ...(club.tags || [])]
         .some(value => (value || '').toLowerCase().includes(query))));
-  }, [scored, searchTerm, radius, hidePrePro]);
+  }, [scored, searchTerm, radius]);
 
   const index = useMemo(() => DEPARTMENTS
     .filter(dept => (directory.depts[dept.key] || 0) > 0)
@@ -149,11 +141,6 @@ const ClubFinder = () => {
       };
     }), [inScope, directory, selectedDepts, selectedKinds]);
 
-  const preProCount = useMemo(
-    () => scored.filter(item => item.isPrePro && item.distance <= radius).length,
-    [scored, radius],
-  );
-
   // OR across departments; AND within one that has been refined to leaves.
   const filtered = useMemo(() => {
     const list = selectedDepts.length === 0 ? inScope : inScope.filter(item => selectedDepts
@@ -168,14 +155,15 @@ const ClubFinder = () => {
       return [...list].sort((a, b) => (a.club.name || '').localeCompare(b.club.name || ''));
     }
     if (sortMode === 'near') {
-      return [...list].sort((a, b) => a.distance - b.distance);
+      // Records with no published place sort last rather than to the front.
+      return [...list].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
     }
     return [...list].sort((a, b) => b.score - a.score);
   }, [inScope, selectedDepts, selectedKinds, sortMode]);
 
   useEffect(() => {
     setVisibleCount(PAGE_STEP + 6);
-  }, [searchTerm, selectedDepts, selectedKinds, hidePrePro, sortMode, radius]);
+  }, [searchTerm, selectedDepts, selectedKinds, sortMode, radius]);
 
   // Re-observe after each growth so loading continues even when the sentinel
   // stays inside the preload margin.
@@ -234,7 +222,6 @@ const ClubFinder = () => {
     setSearchTerm('');
     setSelectedDepts([]);
     setSelectedKinds([]);
-    setHidePrePro(false);
   };
 
   // The empty state's escape hatch: clearing filters alone cannot help when the
@@ -249,7 +236,7 @@ const ClubFinder = () => {
   }
 
   const visible = filtered.slice(0, visibleCount);
-  const hasFilters = Boolean(searchTerm) || selectedDepts.length > 0 || hidePrePro;
+  const hasFilters = Boolean(searchTerm) || selectedDepts.length > 0;
 
   return (
     <Container id="browse-clubs-page" className="page-shell py-4" fluid="xl">
@@ -262,13 +249,24 @@ const ClubFinder = () => {
         <aside className="filter-rail">
           <div className="rail-block">
             <div className="rail-title">You&apos;re matching for</div>
-            <div className="rail-line"><GeoAlt size={15} /> {place}</div>
+            <div className="rail-line">
+              <GeoAlt size={15} /> {isPrecise ? origin.label : (place || KAUAI.label)}
+            </div>
             <div className="rail-line">
               <GeoAlt size={15} />
               <select value={radius} onChange={event => setRadius(Number(event.target.value))} aria-label="Search radius">
                 {RADII.map(miles => <option key={miles} value={miles}>Within {miles} miles</option>)}
               </select>
             </div>
+            {/* Asked for, never assumed: the island centre is a fine default and
+                a permission prompt on first paint is not. */}
+            {!isPrecise && (
+              <button type="button" className="rail-locate" onClick={locate} disabled={status === 'locating'}>
+                <GeoAltFill size={13} />
+                {status === 'locating' ? 'Finding you…' : 'Use my location'}
+              </button>
+            )}
+            {status === 'denied' && <p className="rail-note">Measuring from the middle of the island.</p>}
           </div>
 
           {interests.length > 0 && (
@@ -408,21 +406,6 @@ const ClubFinder = () => {
               })}
             </ol>
 
-            {/* The 39% bucket is an attribute, not a subject, so it gets its own
-                axis rather than another row. ANDs with everything above. */}
-            {preProCount > 0 && (
-              <label className="idx-aside" htmlFor="idx-hide-prepro">
-                <input
-                  id="idx-hide-prepro"
-                  type="checkbox"
-                  checked={hidePrePro}
-                  onChange={() => setHidePrePro(value => !value)}
-                />
-                <span>Hide pre-professional chapters</span>
-                <em aria-hidden="true">{preProCount}</em>
-                <span className="visually-hidden">{` — hides ${preProCount} groups`}</span>
-              </label>
-            )}
           </div>
 
           <div className="rail-block">
@@ -472,12 +455,6 @@ const ClubFinder = () => {
                   <span className="visually-hidden">Remove filter</span>
                 </button>
               ))}
-              {hidePrePro && (
-                <button type="button" className="idx-stub is-kind" onClick={() => setHidePrePro(false)}>
-                  Pre-professional hidden<X size={13} aria-hidden="true" />
-                  <span className="visually-hidden">Show them again</span>
-                </button>
-              )}
               <button type="button" className="idx-receipt-clear" onClick={clearFilters}>Clear all</button>
             </div>
           )}
@@ -498,7 +475,7 @@ const ClubFinder = () => {
                   <Club
                     club={club}
                     tier={tier}
-                    distance={`${distance.toFixed(1)} mi`}
+                    distance={milesLabel(distance)}
                     isMember={joinedClubIds.includes(club._id)}
                     onAddToProfile={join}
                     onViewDetails={() => {

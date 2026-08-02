@@ -10,6 +10,7 @@ import {
   CalendarWeek,
   HeartFill,
   LightningChargeFill,
+  People,
   PlusCircle,
   Stars,
   XLg,
@@ -17,6 +18,7 @@ import {
 import { Events } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Clubs } from '../../api/club/Club';
+import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SwipeCard from '../components/SwipeCard';
 import { sortByDate } from '../utilities/helpers';
@@ -58,16 +60,18 @@ const DiscoverEvents = () => {
     return () => clearInterval(id);
   }, []);
 
-  const { ready, events, swipes, clubs } = useTracker(() => {
+  const { ready, events, swipes, clubs, memberships } = useTracker(() => {
     const eventsSub = Meteor.subscribe(Events.userPublicationName);
     const swipesSub = Meteor.subscribe(EventSwipes.userPublicationName);
     const clubsSub = Meteor.subscribe(Clubs.userPublicationName);
+    const memberSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
     return {
-      ready: eventsSub.ready() && swipesSub.ready() && clubsSub.ready(),
+      ready: eventsSub.ready() && swipesSub.ready() && clubsSub.ready() && memberSub.ready(),
       events: Events.collection.find({}).fetch(),
       // Scoped to the signed-in user: other pages may subscribe friends' swipes into this collection.
       swipes: EventSwipes.collection.find({ userId: Meteor.userId() }).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
+      memberships: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch(),
     };
   }, []);
 
@@ -76,10 +80,31 @@ const DiscoverEvents = () => {
   const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   const swipedIds = useMemo(() => new Set(swipes.map(swipe => swipe.eventId)), [swipes]);
+  const joinedClubIds = useMemo(
+    () => new Set(memberships.map(membership => membership.clubId)),
+    [memberships],
+  );
   const savedCount = useMemo(() => swipes.filter(swipe => swipe.decision === 'interested').length, [swipes]);
   const passedCount = useMemo(() => swipes.filter(swipe => swipe.decision === 'passed').length, [swipes]);
 
   const windowDays = TIME_WINDOWS.find(timeWindow => timeWindow.key === windowKey)?.days;
+
+  /**
+   * In clubs mode the deck deals groups you have not joined and have not
+   * already passed on. A group has no date, so the time windows do not apply —
+   * the toolbar hides them.
+   */
+  const clubDeck = useMemo(() => {
+    if (mode !== 'clubs') {
+      return [];
+    }
+    return clubs
+      .filter(club => !joinedClubIds.has(club._id) && !swipedIds.has(club._id))
+      // The card asks for `title`; a group calls it `name`. Normalised here so
+      // nothing downstream has to know which kind it is holding.
+      .map(club => ({ ...club, title: club.name }))
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }, [mode, clubs, joinedClubIds, swipedIds]);
 
   const windowEvents = useMemo(() => {
     const now = new Date();
@@ -98,19 +123,22 @@ const DiscoverEvents = () => {
     }));
   }, [events, mode, windowDays, clockTick]);
 
-  // The deck: unswiped events in the window, with freshly undone cards pinned on top.
+  // The deck: unswiped records in scope, with freshly undone cards pinned on top.
   const deck = useMemo(() => {
-    const fresh = windowEvents.filter(event => !swipedIds.has(event._id));
+    const fresh = mode === 'clubs'
+      ? clubDeck
+      : windowEvents.filter(event => !swipedIds.has(event._id));
+    const pool = mode === 'clubs' ? clubs : events;
     const pinned = pinnedIds
       .filter(id => !swipedIds.has(id))
-      .map(id => events.find(event => event._id === id))
+      .map(id => pool.find(record => record._id === id))
       .filter(Boolean);
     if (pinned.length === 0) {
       return fresh;
     }
     const pinnedSet = new Set(pinned.map(event => event._id));
     return [...pinned, ...fresh.filter(event => !pinnedSet.has(event._id))];
-  }, [windowEvents, swipedIds, pinnedIds, events]);
+  }, [mode, clubDeck, windowEvents, swipedIds, pinnedIds, events, clubs]);
 
   // Janitor: if a ghost's fly-off completion callback ever gets swallowed (animation
   // interrupted, tab backgrounded), sweep out ghosts whose swipe already left the deck.
@@ -156,7 +184,17 @@ const DiscoverEvents = () => {
     setFlippedId(null);
     // Recorded immediately — the client stub applies it synchronously, so even if this
     // card's fly-off is interrupted (filter change, unmount), the decision is never lost.
-    Meteor.call('eventSwipes.record', swiped._id, direction === 'right' ? 'interested' : 'passed', error => {
+    const decision = direction === 'right' ? 'interested' : 'passed';
+    if (mode === 'clubs' && decision === 'interested') {
+      // Swiping right on a group is joining it — the deck is the join, not a
+      // shortlist you have to work through again somewhere else.
+      Meteor.call('profileClubs.add', swiped._id, joinError => {
+        if (joinError) {
+          swal('Error', joinError.reason || joinError.message, 'error');
+        }
+      });
+    }
+    Meteor.call('eventSwipes.record', swiped._id, decision, mode === 'clubs' ? 'club' : 'event', error => {
       if (error) {
         // Rollback: dropping the ghost lets the card spring back into the deck.
         setExiting(prev => prev.filter(item => item.event._id !== swiped._id));
@@ -276,6 +314,13 @@ const DiscoverEvents = () => {
                 >
                   <CalendarWeek /> Upcoming
                 </button>
+                <button
+                  type="button"
+                  className={mode === 'clubs' ? 'active' : ''}
+                  onClick={() => setMode('clubs')}
+                >
+                  <People /> Groups
+                </button>
               </div>
               <Link to="/user-events" className="deck-saved-link">
                 <HeartFill size={13} /> {savedCount} saved
@@ -314,7 +359,7 @@ const DiscoverEvents = () => {
           <div className="swipe-deck-area">
             <div className="swipe-deck">
               {liveCount === 0 && (
-                windowEvents.length === 0 ? (
+                (mode === 'clubs' ? clubs.length === 0 : windowEvents.length === 0) ? (
                   <motion.div
                     className="deck-empty-card"
                     initial={{ scale: 0.85, opacity: 0, y: 18 }}
@@ -322,7 +367,7 @@ const DiscoverEvents = () => {
                     transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                   >
                     <span className="mb-empty-glyph" role="img" aria-label="telescope">🔭</span>
-                    <h2>Nothing {windowLabel}.</h2>
+                    <h2>{mode === 'clubs' ? 'No groups yet.' : `Nothing ${windowLabel}.`}</h2>
                     <p>Try a wider window.</p>
                     <div className="deck-empty-actions">
                       {mode === 'upcoming' && windowKey !== 'all' && (
@@ -348,7 +393,7 @@ const DiscoverEvents = () => {
                     transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                   >
                     <span className="mb-empty-glyph" role="img" aria-label="party popper">🎉</span>
-                    <h2>Deck cleared!</h2>
+                    <h2>{mode === 'clubs' ? "That's every group." : 'Deck cleared!'}</h2>
                     <p>That&apos;s everything {windowLabel}.</p>
                     <div className="deck-empty-actions">
                       {passedCount > 0 && (
@@ -372,6 +417,7 @@ const DiscoverEvents = () => {
                   stackIndex={card.stackIndex}
                   exitDirection={card.exitDirection}
                   flipped={flippedId === card.event._id}
+                  kind={mode === 'clubs' ? 'club' : 'event'}
                   onSwipe={startSwipe}
                   onFlip={toggleFlip}
                   onExited={handleExited}

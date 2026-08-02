@@ -2,7 +2,12 @@ import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
 
-/** Stores each user's Discover deck decision (interested or passed) for an event. */
+/**
+ * Each user's deck decision. The deck swipes events and, in its clubs mode,
+ * groups — one collection rather than two, because a decision is a decision and
+ * the unique index below already keys on the record id, which is distinct
+ * across collections. `kind` says which collection to look the id up in.
+ */
 class EventSwipesCollection {
   constructor() {
     this.name = 'EventSwipes';
@@ -11,6 +16,7 @@ class EventSwipesCollection {
       userId: String,
       eventId: String,
       decision: { type: String, allowedValues: ['interested', 'passed'] },
+      kind: { type: String, allowedValues: ['event', 'club'], optional: true, defaultValue: 'event' },
       createdAt: { type: Date, optional: true },
     });
     this.collection.attachSchema(this.schema);
