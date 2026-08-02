@@ -7,12 +7,17 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown, GeoAlt, GeoAltFill, Search, X } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
+import { Events } from '../../api/events/Events';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
 import { Friends } from '../../api/friends/Friends';
 import Club from '../components/Club';
 import ClubDetailsModal from '../components/ClubDetailsModal';
 import TopicMotif from '../components/TopicMotif';
+import TopicPosters from '../components/TopicPosters';
+import KindToggle from '../components/KindToggle';
+import NearbyMap from '../components/NearbyMap';
+import EventPoster from '../components/EventPoster';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
@@ -24,7 +29,10 @@ import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 
 const PAGE_STEP = 12;
-const RADII = [2, 5, 10, 25];
+// Kauaʻi is roughly 33 miles across, so a 10-mile default from the island
+// centre reaches one shore and calls the rest of the island far away. 25 covers
+// it; the shorter radii become meaningful once someone shares a real position.
+const RADII = [2, 5, 10, 25, 50];
 
 const slug = text => String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -34,6 +42,9 @@ const rise = {
 };
 
 const ClubFinder = () => {
+  // Geography-first, but the same two kinds of thing as Discover.
+  const [kind, setKind] = useState('events');
+  const [topicKey, setTopicKey] = useState(null);
   const [selectedDepts, setSelectedDepts] = useState([]);   // department keys
   const [selectedKinds, setSelectedKinds] = useState([]);   // lowercased category keys
   const [openDepts, setOpenDepts] = useState([]);           // disclosure only, never a filter
@@ -41,14 +52,15 @@ const ClubFinder = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('foryou');
-  const [radius, setRadius] = useState(10);
+  const [radius, setRadius] = useState(25);
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
   const reduceMotion = useReducedMotion();
   const { origin, status, locate, isPrecise } = useOrigin();
 
-  const { ready, clubs, joinedClubIds, interests, friendClubIds, place } = useTracker(() => {
+  const { ready, clubs, events, joinedClubIds, interests, friendClubIds, place } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
+    const eventsSubscription = Meteor.subscribe(Events.userPublicationName);
     const membershipSubscription = Meteor.userId() ? Meteor.subscribe(ProfileClubs.membershipPublicationName) : { ready: () => true };
     Meteor.subscribe(Profiles.userPublicationName);
     Meteor.subscribe(Friends.userPublicationName);
@@ -58,11 +70,12 @@ const ClubFinder = () => {
       .map(edge => (edge.requesterId === Meteor.userId() ? edge.receiverId : edge.requesterId));
     return {
       clubs: Clubs.collection.find({}).fetch(),
+      events: Events.collection.find({}).fetch(),
       joinedClubIds: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch().map(membership => membership.clubId),
       interests: normalizeCategories(profile?.interests),
       friendClubIds: new Set(ProfileClubs.collection.find({ userId: { $in: acceptedIds } }).fetch().map(membership => membership.clubId)),
       place: profile?.location,
-      ready: clubsSubscription.ready() && membershipSubscription.ready(),
+      ready: clubsSubscription.ready() && membershipSubscription.ready() && eventsSubscription.ready(),
     };
   }, []);
 
@@ -142,6 +155,36 @@ const ClubFinder = () => {
     }), [inScope, directory, selectedDepts, selectedKinds]);
 
   // OR across departments; AND within one that has been refined to leaves.
+  /** Events, scoped by the same geography and search as the groups. */
+  const nearbyEvents = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    const now = new Date();
+    return events
+      .filter(event => new Date(event.date) >= now)
+      .map(event => ({
+        event,
+        topic: topicFor(event.title, event.description, normalizeCategories(event.categories)),
+        distance: milesTo(event, origin),
+      }))
+      .filter(({ event, topic, distance }) => (distance === null || distance <= radius)
+        && (!topicKey || topic.key === topicKey)
+        && (query === '' || `${event.title} ${event.description || ''} ${event.location || ''}`
+          .toLowerCase().includes(query)))
+      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+  }, [events, origin, radius, searchTerm, topicKey]);
+
+  const eventTopicCounts = useMemo(() => {
+    const tally = {};
+    nearbyEvents.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
+    return tally;
+  }, [nearbyEvents]);
+
+  const clubTopicCounts = useMemo(() => {
+    const tally = {};
+    scored.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
+    return tally;
+  }, [scored]);
+
   const filtered = useMemo(() => {
     const list = selectedDepts.length === 0 ? inScope : inScope.filter(item => selectedDepts
       .some(key => {
@@ -161,9 +204,16 @@ const ClubFinder = () => {
     return [...list].sort((a, b) => b.score - a.score);
   }, [inScope, selectedDepts, selectedKinds, sortMode]);
 
+  /** What the map draws: whichever kind is showing, tagged with its colour, and
+      always the same set the list below it is showing. */
+  const mapRecords = useMemo(() => (kind === 'clubs'
+    ? filtered.map(({ club, topic }) => ({ ...club, topicKey: topic.key }))
+    : nearbyEvents.map(({ event, topic }) => ({ ...event, topicKey: topic.key }))),
+  [kind, filtered, nearbyEvents]);
+
   useEffect(() => {
     setVisibleCount(PAGE_STEP + 6);
-  }, [searchTerm, selectedDepts, selectedKinds, sortMode, radius]);
+  }, [searchTerm, selectedDepts, selectedKinds, sortMode, radius, kind, topicKey]);
 
   // Re-observe after each growth so loading continues even when the sentinel
   // stays inside the preload margin.
@@ -421,9 +471,30 @@ const ClubFinder = () => {
         </aside>
 
         <div>
+          {/* Geography first on this page: the map is the frame, and it always
+              shows exactly the set listed underneath it. */}
+          <NearbyMap records={mapRecords} origin={origin} height={280} />
+
+          <KindToggle
+            value={kind}
+            onChange={setKind}
+            counts={{ events: nearbyEvents.length, clubs: filtered.length }}
+          />
+
+          {/* Smaller than Discover's: here the covers are a filter, not the
+              way in — the map above them already did that job. */}
+          <TopicPosters
+            selected={topicKey}
+            onSelect={setTopicKey}
+            counts={kind === 'clubs' ? clubTopicCounts : eventTopicCounts}
+            compact
+          />
+
           <div className="finder-toolbar">
             <div className="finder-count">
-              {filtered.length} {filtered.length === 1 ? 'group' : 'groups'} within {radius} miles
+              {kind === 'clubs'
+                ? `${filtered.length} ${filtered.length === 1 ? 'group' : 'groups'} within ${radius} miles`
+                : `${nearbyEvents.length} ${nearbyEvents.length === 1 ? 'event' : 'events'} within ${radius} miles`}
             </div>
             <label className="mb-sort" htmlFor="mb-sort-select">
               Sort:
@@ -459,7 +530,27 @@ const ClubFinder = () => {
             </div>
           )}
 
-          {visible.length === 0 ? (
+          {kind === 'events' ? (
+            nearbyEvents.length === 0 ? (
+              <div className="mb-empty">
+                <h3>Nothing within {radius} miles.</h3>
+                <button type="button" onClick={resetAll} className="btn btn-solid-primary">Widen the search</button>
+              </div>
+            ) : (
+              <div className="masonry">
+                {nearbyEvents.slice(0, visibleCount).map(({ event, distance }) => (
+                  <motion.div key={event._id} className="masonry-item" variants={rise} initial="hidden" animate="show">
+                    <EventPoster
+                      event={event}
+                      neighborhood={event.region}
+                      distance={milesLabel(distance)}
+                      tier="md"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )
+          ) : visible.length === 0 ? (
             <div className="mb-empty">
               {/* Name the filter that actually excluded everything, and let the
                   reset clear the radius too — otherwise it cannot recover. */}

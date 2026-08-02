@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
@@ -11,6 +11,9 @@ import { Profiles } from '../../api/profiles/Profiles';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EventPoster from '../components/EventPoster';
 import TopicPosters from '../components/TopicPosters';
+import KindToggle from '../components/KindToggle';
+import Club from '../components/Club';
+import ClubDetailsModal from '../components/ClubDetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
 import { milesLabel, milesTo } from '../utilities/geo';
@@ -101,6 +104,10 @@ const Discover = () => {
   const query = (params.get('q') || '').trim();
   const requested = params.get('when');
   const topicKey = params.get('topic');
+  // Which kind of thing is being browsed. In the URL beside the other filters,
+  // so a link carries the whole view.
+  const kind = params.get('kind') === 'clubs' ? 'clubs' : 'events';
+  const [detailClub, setDetailClub] = useState(null);
   const when = WINDOWS.some(option => option.key === requested) ? requested : 'all';
 
   const setWhen = key => {
@@ -116,6 +123,18 @@ const Discover = () => {
   const clearQuery = () => {
     const updated = new URLSearchParams(params);
     updated.delete('q');
+    setParams(updated, { replace: true });
+  };
+
+  const setKind = next => {
+    const updated = new URLSearchParams(params);
+    if (next === 'clubs') {
+      updated.set('kind', 'clubs');
+    } else {
+      updated.delete('kind');
+    }
+    // A time window describes an event; it means nothing for a group.
+    updated.delete('when');
     setParams(updated, { replace: true });
   };
 
@@ -181,6 +200,21 @@ const Discover = () => {
       .sort((a, b) => b.score - a.score);
   }, [upcoming, clubByNumber, interests, when, query, topicKey]);
 
+  /** The same wall, dealing groups. Ranked by fit, filtered by the same search. */
+  const clubWall = useMemo(() => {
+    const context = { interests, friendClubIds: new Set() };
+    const needle = query.toLowerCase();
+    return clubs
+      .filter(club => !needle || `${club.name} ${club.description || ''} ${club.location || ''}`
+        .toLowerCase().includes(needle))
+      .map(club => {
+        const topic = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description);
+        return { club, topic, score: scoreClub(club, context) };
+      })
+      .filter(item => !topicKey || item.topic.key === topicKey)
+      .sort((a, b) => b.score - a.score);
+  }, [clubs, interests, query, topicKey]);
+
   /**
    * Counted before the category filter is applied, so a cover can say how much
    * is behind it without the act of opening one emptying all the others.
@@ -195,6 +229,24 @@ const Discover = () => {
       });
     return tally;
   }, [upcoming, when]);
+
+  /** Covers count whichever kind is being browsed. */
+  const clubTopicCounts = useMemo(() => {
+    const tally = {};
+    clubs.forEach(club => {
+      const key = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description).key;
+      tally[key] = (tally[key] || 0) + 1;
+    });
+    return tally;
+  }, [clubs]);
+
+  const join = clubId => {
+    Meteor.call('profileClubs.add', clubId, error => {
+      if (error) {
+        swal('Error', error.reason || error.message, 'error');
+      }
+    });
+  };
 
   const toggleGoing = event => {
     const isGoing = goingIds.has(event._id);
@@ -225,6 +277,8 @@ const Discover = () => {
       </header>
 
       <div className="discover-bar">
+        <KindToggle value={kind} onChange={setKind} counts={{ events: upcoming.length, clubs: clubs.length }} />
+        {kind === 'events' && (
         <div className="discover-windows" role="group" aria-label="When">
           {WINDOWS.map(option => (
             <button
@@ -238,12 +292,47 @@ const Discover = () => {
             </button>
           ))}
         </div>
+        )}
         <Link className="btn btn-match discover-swipe" to="/discover-events">Swipe instead</Link>
       </div>
 
-      <TopicPosters selected={topicKey} onSelect={setTopic} counts={topicCounts} />
+      <TopicPosters
+        selected={topicKey}
+        onSelect={setTopic}
+        counts={kind === 'clubs' ? clubTopicCounts : topicCounts}
+      />
 
-      {wall.length === 0 ? (
+      {kind === 'clubs' ? (
+        clubWall.length === 0 ? (
+          <div className="mb-empty">
+            <h3>{query ? `No groups matching “${query}”.` : 'No groups here.'}</h3>
+            <p>Try a different category, or start one yourself.</p>
+            <Link className="btn btn-solid-primary" to="/create-club">Start a group</Link>
+          </div>
+        ) : (
+          <div className="masonry discover-wall">
+            {clubWall.map(({ club }, index) => (
+              <motion.div
+                key={club._id}
+                className="masonry-item"
+                variants={rise}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-40px' }}
+                custom={index}
+              >
+                <Club
+                  club={club}
+                  tier={index < 2 ? 'lg' : 'md'}
+                  distance={milesLabel(milesTo(club, origin))}
+                  onAddToProfile={join}
+                  onViewDetails={setDetailClub}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )
+      ) : wall.length === 0 ? (
         <div className="mb-empty">
           <h3>{query ? `Nothing matching “${query}”.` : 'Nothing in that window.'}</h3>
           <p>Try a wider stretch of time, or start something yourself.</p>
@@ -280,6 +369,12 @@ const Discover = () => {
           })}
         </div>
       )}
+
+      <ClubDetailsModal
+        show={Boolean(detailClub)}
+        handleClose={() => setDetailClub(null)}
+        club={detailClub}
+      />
     </main>
   );
 };

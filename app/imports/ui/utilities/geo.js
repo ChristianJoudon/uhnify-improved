@@ -9,6 +9,8 @@
  * precision for deciding whether to go.
  */
 
+import { VENUES } from './venues';
+
 /** Kauaʻi's regions, as the register names them, at their town centres. */
 export const REGIONS = {
   'Līhuʻe': { lat: 21.9811, lng: -159.3711 },
@@ -44,17 +46,25 @@ const plain = text => String(text || '')
   .replace(/[̀-ͯʻ‘’']/g, '')
   .toLowerCase();
 
-/** A record's position, from its region if it has one, else its written place. */
+/**
+ * A record's position, most specific source first: the geocoded venue, then the
+ * town written into its location line, then the region it was filed under. A
+ * record that gave none of those gets null, and draws no distance and no pin.
+ */
 export const positionOf = record => {
   if (!record) {
     return null;
   }
-  if (record.region && REGIONS[record.region]) {
-    return REGIONS[record.region];
+  const venue = VENUES[(record.location || '').trim()];
+  if (venue) {
+    return venue;
   }
   const haystack = plain(`${record.location || ''} ${record.region || ''}`);
   const town = Object.keys(TOWNS).find(name => haystack.includes(name));
-  return town ? TOWNS[town] : null;
+  if (town) {
+    return TOWNS[town];
+  }
+  return record.region && REGIONS[record.region] ? REGIONS[record.region] : null;
 };
 
 const R_MILES = 3958.8;

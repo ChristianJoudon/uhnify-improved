@@ -14,8 +14,8 @@ import { TOPICS, TOPIC_KEYS } from '../utilities/topics';
  * `counts` is optional — a category with nothing in it right now still shows,
  * but says so, rather than being hidden or claiming a zero.
  */
-const TopicPosters = ({ selected, onSelect, counts }) => (
-  <ul className="topic-posters">
+const TopicPosters = ({ selected, onSelect, counts, compact }) => (
+  <ul className={`topic-posters${compact ? ' is-compact' : ''}`}>
     {TOPIC_KEYS.map((key, index) => {
       const topic = TOPICS[key];
       const on = selected === key;
@@ -55,11 +55,14 @@ TopicPosters.propTypes = {
   selected: PropTypes.string,
   onSelect: PropTypes.func.isRequired,
   counts: PropTypes.objectOf(PropTypes.number),
+  /** Nearby's covers are a filter under a map, not the way in, so they run small. */
+  compact: PropTypes.bool,
 };
 
 TopicPosters.defaultProps = {
   selected: null,
   counts: null,
+  compact: false,
 };
 
 export default TopicPosters;

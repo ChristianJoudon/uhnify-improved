@@ -5050,3 +5050,105 @@ which no longer has a caller.
   outline: none;
   box-shadow: 0 0 0 2px var(--mb-paper-bright), 0 0 0 4px var(--mb-ink);
 }
+
+/* ==========================================================================
+   Nearby: the map, and the covers at filter size
+   ========================================================================== */
+
+.mb-map {
+  position: relative;
+  margin-bottom: 1.1rem;
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  overflow: hidden;
+  box-shadow: var(--mb-shadow-small);
+  background: var(--mb-wood);
+}
+
+.mb-map-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Leaflet ships its own type and chrome; bring both onto the app's. */
+.mb-map .leaflet-container {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: var(--mb-wood);
+}
+
+.mb-map .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.82);
+  font-size: 0.66rem;
+  color: var(--mb-ink-soft);
+}
+
+.mb-map .leaflet-popup-content-wrapper {
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-feature);
+}
+
+.mb-map .leaflet-popup-content {
+  margin: 0.7rem 0.85rem;
+  font-size: 0.86rem;
+}
+
+.mb-pin-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  color: var(--mb-ink-soft);
+}
+
+.mb-map-empty {
+  position: absolute;
+  inset: auto 0 0.8rem;
+  z-index: 500;
+  margin: 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--mb-ink-soft);
+}
+
+/* The covers as a filter rather than an entrance: same rail, half the height,
+   and the tagline drops because the label alone is enough at this size. */
+.topic-posters.is-compact {
+  margin-bottom: 1.2rem;
+}
+
+.topic-posters.is-compact > li {
+  width: 116px;
+}
+
+.topic-posters.is-compact .topic-poster img {
+  aspect-ratio: 1 / 1;
+}
+
+.topic-posters.is-compact .topic-poster-body {
+  padding: 0.45rem 0.5rem 0.55rem;
+}
+
+.topic-posters.is-compact .topic-poster-name {
+  font-size: 0.8rem;
+}
+
+.topic-posters.is-compact .topic-poster-tagline {
+  display: none;
+}
+
+.topic-posters.is-compact .topic-poster-count {
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+}
+
+/* Events or groups. */
+.kind-toggle {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.kind-toggle-count {
+  margin-left: 0.1rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}

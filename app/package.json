@@ -14,6 +14,7 @@
     "graphql": "^16.8.1",
     "icons": "^1.0.0",
     "jquery": "^3.7.1",
+    "leaflet": "^1.9.4",
     "meteor-node-stubs": "^1.2.5",
     "moment-timezone": "^0.5.43",
     "owl.carousel": "^2.3.4",

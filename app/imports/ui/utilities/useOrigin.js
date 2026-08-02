@@ -6,11 +6,13 @@ const STORAGE_KEY = 'mb-origin';
 /**
  * Where to measure from.
  *
- * Asks the browser once, remembers the answer, and falls back to the middle of
- * the island. The fallback is not a failure state — most people opening this
- * are on Kauaʻi, and a sensible default beats a permission prompt on first
- * paint. So the prompt only fires when someone asks for it by pressing "Use my
- * location", never on mount.
+ * Three sources, best first. The device's own position is exact and needs
+ * permission. Failing that — declined, unavailable, or a browser that blocks it
+ * in an embedded frame — we ask an IP lookup, which lands within a town or so
+ * and needs no permission at all. Failing both, the middle of the island.
+ *
+ * Nothing fires on mount: the island centre is a fine default, and a permission
+ * prompt on first paint is not. It runs when someone presses the button.
  */
 export const useOrigin = () => {
   const [origin, setOrigin] = useState(() => {
@@ -33,23 +35,54 @@ export const useOrigin = () => {
     }
   }, [origin]);
 
-  const locate = () => {
-    if (!navigator.geolocation) {
-      setStatus('unsupported');
-      return;
+  const apply = (point, how) => {
+    setOrigin({ lat: point.lat, lng: point.lng, label: regionNear(point) });
+    setStatus(how);
+  };
+
+  /**
+   * Roughly where this connection is. No key, no permission; accurate to a town
+   * on a fixed line and to a region on mobile data, which is the right order of
+   * magnitude for "what is near me on one island".
+   */
+  const byNetwork = async () => {
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      if (!response.ok) {
+        throw new Error('lookup failed');
+      }
+      const data = await response.json();
+      if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+        apply({ lat: data.latitude, lng: data.longitude }, 'approx');
+        return true;
+      }
+    } catch (error) {
+      // Offline, blocked, or rate-limited — the island default still stands.
     }
+    return false;
+  };
+
+  const locate = async () => {
     setStatus('locating');
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const point = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setOrigin({ ...point, label: regionNear(point) });
-        setStatus('located');
-      },
-      // Declining is an ordinary choice, so it leaves the island default in
-      // place rather than putting an error on the page.
-      () => setStatus('denied'),
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 },
-    );
+    if (navigator.geolocation) {
+      const exact = await new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          position => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
+          () => resolve(null),
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 },
+        );
+      });
+      if (exact) {
+        apply(exact, 'located');
+        return;
+      }
+    }
+    // The device would not say, so ask the network rather than giving up: most
+    // people who press this want a better answer, not an explanation.
+    const ok = await byNetwork();
+    if (!ok) {
+      setStatus('denied');
+    }
   };
 
   const reset = () => {
