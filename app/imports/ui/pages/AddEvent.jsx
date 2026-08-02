@@ -44,10 +44,12 @@ const AddEvent = () => {
   const set = (field, value) => setForm(current => ({ ...current, [field]: value }));
 
   const host = useMemo(() => allClubs.find(club => club._id === form.hostId), [allClubs, form.hostId]);
+  // Title first, host categories as the fallback — the exact order EventPoster
+  // and SwipeCard use. Resolving it the other way here meant the preview
+  // captioned "This is the card people swipe" showed a different colour and
+  // motif than the card that actually got created.
   const topic = useMemo(
-    () => (host
-      ? topicFor(normalizeCategories(host.categories), host.tags, form.title, form.description)
-      : topicFor(form.title, form.description)),
+    () => topicFor(form.title, form.description, normalizeCategories(host?.categories), host?.tags),
     [host, form.title, form.description],
   );
 

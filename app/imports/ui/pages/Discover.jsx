@@ -50,6 +50,18 @@ const endOfToday = () => {
 };
 
 /**
+ * The end of the coming Sunday — today, if today is Sunday. Date-component
+ * stepping rather than millisecond arithmetic, so a DST boundary in between
+ * cannot shift it.
+ */
+const endOfComingSunday = () => {
+  const end = endOfToday();
+  end.setDate(end.getDate() + ((7 - end.getDay()) % 7));
+  end.setHours(23, 59, 59, 999);
+  return end;
+};
+
+/**
  * True when `date` falls in the chosen window. "This weekend" means the coming
  * Saturday and Sunday specifically, not simply the next seven days — otherwise
  * a Tuesday event answers a question nobody asked.
@@ -68,8 +80,10 @@ const inWindow = (date, key) => {
     return date <= new Date(endOfToday().getTime() + 30 * DAY_MS);
   }
   // Weekend: the next Sat/Sun to arrive, so on a Sunday it still means today.
-  return (date.getDay() === 0 || date.getDay() === 6)
-    && date <= new Date(endOfToday().getTime() + 7 * DAY_MS);
+  // The ceiling is the coming Sunday, not today+7 — a rolling seven days
+  // reaches into the FOLLOWING weekend whenever today is itself a Sat or Sun,
+  // which is exactly when someone is most likely to ask for "this weekend".
+  return (date.getDay() === 0 || date.getDay() === 6) && date <= endOfComingSunday();
 };
 
 const rise = {

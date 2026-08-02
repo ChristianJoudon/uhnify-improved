@@ -4291,6 +4291,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   flex: 1 1 auto;
   overflow-x: auto;
   scrollbar-width: none;
+  /* overflow-x:auto clips vertically too, which would shave the chips' focus
+     ring. The padding buys it room; the negative margin gives the space back. */
+  padding-block: 4px;
+  margin-block: -4px;
 }
 
 .discover-windows::-webkit-scrollbar {
@@ -4431,4 +4435,16 @@ div.btn-solid-primary button[type="submit"]:hover {
   bottom: -22%;
   width: 46%;
   opacity: 0.16;
+}
+
+/* Bootstrap's `.btn:focus-visible { outline: 0 }` wins over these classes, so
+   without an explicit rule the app's own buttons have no keyboard focus
+   indicator at all. !important because that is what the base rules already
+   need to beat bootstrap.min.css's bundle position. */
+.btn-match:focus-visible,
+.btn-solid-primary:focus-visible,
+.btn-soft-primary:focus-visible,
+.btn-outline-danger-soft:focus-visible {
+  outline: 2px solid var(--mb-ink) !important;
+  outline-offset: 2px;
 }

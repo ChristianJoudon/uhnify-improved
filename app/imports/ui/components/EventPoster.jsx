@@ -10,18 +10,28 @@ const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'O
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+const startOfDay = date => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+// Pinned to en-US like every other date in this app; the browser default
+// renders 8pm as "20:00" across most of Europe and Asia. On-the-hour times
+// drop the minutes rather than being string-surgeried afterwards.
+const HOUR_ONLY = new Intl.DateTimeFormat('en-US', { hour: 'numeric' });
+const HOUR_MINUTE = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
+const timeLabel = date => (date.getMinutes() === 0 ? HOUR_ONLY : HOUR_MINUTE).format(date);
+
 /**
- * The when-line, written the way a person would say it. "Tonight" and
- * "Tomorrow" beat a date the reader has to decode, and both are the whole
- * reason someone is on this page.
+ * The when-line, written the way a person would say it. "Today" and "Tomorrow"
+ * beat a date the reader has to decode, and both are the whole reason someone
+ * is on this page.
  */
 const whenLabel = date => {
-  const time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(':00', '');
-  const midnight = new Date();
-  midnight.setHours(0, 0, 0, 0);
-  const days = Math.floor((date.getTime() - midnight.getTime()) / DAY_MS);
+  const time = timeLabel(date);
+  // Calendar-day difference, rounded: a DST day is 23 or 25 hours long, so
+  // dividing raw milliseconds flips "Tonight" and "Tomorrow" around the change.
+  const days = Math.round((startOfDay(date).getTime() - startOfDay(new Date()).getTime()) / DAY_MS);
   if (days === 0) {
-    return `Tonight · ${time}`;
+    // "Tonight" is only true after about five; a 9am event today is "Today".
+    return `${date.getHours() >= 17 ? 'Tonight' : 'Today'} · ${time}`;
   }
   if (days === 1) {
     return `Tomorrow · ${time}`;
