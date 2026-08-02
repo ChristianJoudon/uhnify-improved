@@ -280,14 +280,6 @@ textarea.form-control {
   background: #f6e0d8 !important;
 }
 
-.link-button {
-  padding: 0;
-  border: none !important;
-  background: transparent !important;
-  color: var(--mb-match-deep) !important;
-  font-weight: 650;
-}
-
 /* uniforms puts a field's className on the WRAPPER, not the control — so
    `className="btn-solid-primary"` painted a dark box around a submit input
    that kept Bootstrap's default blue. Make the wrapper inert and hand the
@@ -355,8 +347,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 /* Quiet page intro — replaces the old glassy header card */
-.page-intro,
-.page-header-card {
+.page-intro {
   background: transparent;
   border: none;
   box-shadow: none;
@@ -364,8 +355,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 0.5rem;
 }
 
-.page-intro h1,
-.page-header-card h1 {
+.page-intro h1 {
   font-size: clamp(1.9rem, 3.5vw, 2.7rem);
   margin-bottom: 0.2rem;
 }
@@ -382,8 +372,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 0;
 }
 
-.page-intro p,
-.page-header-card p {
+.page-intro p {
   font-size: 1rem;
   max-width: 560px;
   margin-bottom: 0;
@@ -397,8 +386,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .section-heading h2,
-.section-heading-row h2,
-.calendar-header h2 {
+.section-heading-row h2 {
   font-size: clamp(1.35rem, 2.4vw, 1.8rem);
   margin-bottom: 0;
 }
@@ -513,107 +501,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 /* --------------------------------------------------------------------------
-   Landing
-   -------------------------------------------------------------------------- */
-
-.hero-section {
-  padding: clamp(2.5rem, 6vw, 5rem) 0 2rem;
-}
-
-.hero-section h1 {
-  font-size: clamp(2.6rem, 5.5vw, 4.4rem);
-  line-height: 1.02;
-  max-width: 620px;
-}
-
-.hero-copy {
-  font-size: 1.12rem;
-  max-width: 460px;
-  margin-top: 1rem;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  margin-top: 1.8rem;
-}
-
-.hero-visual {
-  border-radius: var(--mb-radius-sheet);
-  overflow: hidden;
-  box-shadow: var(--mb-shadow-feature);
-  background: var(--mb-paper-bright);
-}
-
-.hero-visual img {
-  display: block;
-  width: 100%;
-  max-height: 560px;
-  object-fit: cover;
-  object-position: center top;
-}
-
-.feature-section {
-  padding: 2.5rem 0 4rem;
-}
-
-.feature-card {
-  display: block;
-  text-decoration: none;
-  background: var(--mb-paper-bright);
-  border: 1px solid var(--mb-line-soft);
-  border-radius: var(--mb-radius-feature);
-  padding: 0.7rem;
-  box-shadow: var(--mb-shadow-small);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-  height: 100%;
-}
-
-.feature-card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--mb-shadow-feature);
-}
-
-.feature-media {
-  border-radius: calc(var(--mb-radius-feature) - 8px);
-  overflow: hidden;
-  background: var(--mb-paper-bright);
-}
-
-.feature-media img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.feature-card:hover .feature-media img {
-  transform: scale(1.04);
-}
-
-.feature-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.9rem 0.7rem 0.5rem;
-  font-weight: 650;
-  font-size: 1.06rem;
-  color: var(--mb-ink);
-}
-
-.feature-label svg {
-  color: var(--mb-match);
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.feature-card:hover .feature-label svg {
-  transform: translateX(4px);
-  color: var(--mb-ink);
-}
-
-/* --------------------------------------------------------------------------
    Cards (events, clubs, admin, profiles)
    -------------------------------------------------------------------------- */
 
@@ -625,16 +512,12 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .club-card,
-.club-card2,
 .event-card,
 .admin-card,
 .form-card,
-.profile-side-card,
 .profile-card,
 .stat-card,
-.value-card,
-.profile-info-card,
-.profile-bio-card {
+.value-card {
   background: var(--mb-paper-bright) !important;
   border: 1px solid var(--mb-line-soft) !important;
   border-radius: var(--mb-radius-card) !important;
@@ -642,15 +525,13 @@ div.btn-solid-primary button[type="submit"]:hover {
   overflow: hidden;
 }
 
-.discovery-card,
 .saved-card,
 .event-card,
 .admin-card {
   transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
 }
 
-/* Paper lift: a short move with a deeper offset, never a floating blur. */
-.discovery-card:hover,
+/* Paper lift: a short move with a deeper offset,
 .saved-card:hover,
 .event-card:hover,
 .admin-card:hover {
@@ -660,14 +541,12 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 /* Inset media: image floats inside the card with cream margin all around */
 .event-card,
-.club-card,
-.club-card2 {
+.club-card {
   padding: 0.55rem;
 }
 
 .event-card .card-body,
-.club-card .card-body,
-.club-card2 .card-body {
+.club-card .card-body {
   padding: 0.85rem 0.65rem 0.6rem;
 }
 
@@ -694,7 +573,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   transition: transform 0.35s ease;
 }
 
-.discovery-card:hover .club-card-media img,
 .saved-card:hover .club-card-media img,
 .event-card:hover .event-card-media img,
 .admin-card:hover .admin-card-header-image img {
@@ -739,8 +617,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   flex: 0 0 auto;
 }
 
-.club-card-description,
-.event-card-description,
 .admin-card .card-text {
   color: var(--mb-ink-soft);
   font-size: 0.9rem;
@@ -822,12 +698,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 1.4rem;
 }
 
-.filter-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
-}
-
 .empty-state-card {
   background: var(--mb-paper-bright) !important;
   border: 1px dashed var(--mb-line-strong) !important;
@@ -848,20 +718,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 .empty-state-card svg {
   color: var(--mb-match);
   margin-bottom: 0.8rem;
-}
-
-.custom-pagination .page-link {
-  border: 1px solid var(--mb-line-soft);
-  color: var(--mb-ink);
-  background: var(--mb-paper-bright);
-  border-radius: 999px !important;
-  margin: 0 0.18rem;
-}
-
-.custom-pagination .active .page-link {
-  background: var(--mb-ink);
-  border-color: var(--mb-ink);
-  color: var(--mb-paper-bright);
 }
 
 /* --------------------------------------------------------------------------
@@ -935,10 +791,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   border-radius: var(--mb-radius-feature);
   box-shadow: var(--mb-shadow-feature);
   padding: clamp(0.9rem, 2.4vw, 1.5rem);
-}
-
-.calendar-header {
-  margin-bottom: 1rem;
 }
 
 /* Toolbar ----------------------------------------------------------------- */
@@ -1242,8 +1094,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .fc-daygrid-event {
     font-size: 0.7rem;
-  }
-}
+  }}
 
 /* --------------------------------------------------------------------------
    Auth
@@ -1395,38 +1246,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-top: 0.5rem;
 }
 
-/* --------------------------------------------------------------------------
-   Profile
-   -------------------------------------------------------------------------- */
-
-.profile-hero-card {
-  border: 1px solid var(--mb-line-soft);
-  border-radius: var(--mb-radius-sheet);
-  box-shadow: var(--mb-shadow-small);
-  overflow: hidden;
-  background: var(--mb-paper-bright);
-}
-
-.profile-banner {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-}
-
-.profile-hero-content {
-  display: flex;
-  align-items: end;
-  gap: 1.2rem;
-  padding: 0 clamp(1.4rem, 3.5vw, 2.4rem) clamp(1.4rem, 3.5vw, 2.4rem);
-  margin-top: -56px;
-  position: relative;
-}
-
-.profile-hero-content h1 {
-  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
-}
-
-.profile-avatar-xl,
 .profile-avatar-lg {
   border-radius: 999px;
   object-fit: cover;
@@ -1434,17 +1253,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   box-shadow: var(--mb-shadow-small);
 }
 
-.profile-avatar-xl {
-  width: 132px;
-  height: 132px;
-}
-
 .profile-avatar-lg {
   width: 100px;
   height: 100px;
 }
 
-.profile-side-card .card-body,
 .admin-profile-card .card-body {
   padding: 1.6rem;
 }
@@ -1458,10 +1271,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink);
   font-weight: 650;
   font-size: 0.85rem;
-}
-
-.profile-bio-text {
-  color: var(--mb-ink-soft);
 }
 
 /* --------------------------------------------------------------------------
@@ -1707,15 +1516,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   scroll-snap-align: start;
 }
 
-.window-chip-label {
-  color: var(--mb-ink-soft);
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-right: 0.2rem;
-}
-
 .window-chip {
   border: 1px solid var(--mb-line-soft);
   background: var(--mb-paper-bright);
@@ -1800,15 +1600,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 .window-chip-scroll .window-chip {
   flex: 0 0 auto;
   scroll-snap-align: start;
-}
-
-.window-chip-label {
-  color: var(--mb-ink-soft);
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-right: 0.2rem;
 }
 
 .window-chip {
@@ -2254,26 +2045,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   scrollbar-width: thin;
 }
 
-.filter-group h4 {
-  font-size: 0.74rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--mb-ink-soft);
-  margin-bottom: 0.55rem;
-}
-
-.filter-group .form-check {
-  margin-bottom: 0.25rem;
-}
-
-.filter-group .form-check-label {
-  font-size: 0.9rem;
-  font-weight: 550;
-  color: var(--mb-ink);
-}
-
-.filter-group .form-check-input:checked,
 .rail-block .form-check-input:checked {
   background-color: var(--mb-ink);
   border-color: var(--mb-ink);
@@ -2294,12 +2065,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   box-shadow: 0 0 0 0.2rem rgba(232, 80, 32, 0.2);
 }
 
-.tag-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
 .masonry {
   column-width: 290px;
   column-gap: 1.1rem;
@@ -2308,73 +2073,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 .masonry-item {
   break-inside: avoid;
   margin-bottom: 1.1rem;
-}
-
-/* Dramatic size tiers: hero > standard > compact chip */
-.club-tile-lg .club-card-media {
-  height: 320px;
-}
-
-.club-tile-lg .club-card-title {
-  font-size: 1.45rem;
-  line-height: 1.12;
-}
-
-.club-tile-lg .card-body {
-  padding: 1.1rem 0.9rem 0.8rem !important;
-}
-
-.club-tile-lg .club-card-actions .btn {
-  padding: 0.65rem 1.1rem !important;
-  font-size: 0.95rem;
-}
-
-.club-tile-md .club-card-media {
-  height: 150px;
-}
-
-.club-tile-sm .club-card-media {
-  display: none;
-}
-
-.club-tile-sm {
-  background: var(--mb-paper-bright) !important;
-  padding: 0.35rem !important;
-}
-
-.club-tile-sm .card-body {
-  padding: 0.7rem 0.75rem 0.6rem !important;
-}
-
-.club-tile-sm .club-card-title {
-  font-size: 0.92rem;
-  margin-bottom: 0.15rem;
-}
-
-.club-tile-sm .meta-line {
-  font-size: 0.76rem;
-}
-
-.club-tile-sm .club-card-actions {
-  gap: 0.35rem;
-}
-
-.club-tile-sm .club-card-actions .btn {
-  padding: 0.32rem 0.7rem !important;
-  font-size: 0.78rem;
-}
-
-.match-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: var(--mb-wood);
-  color: var(--mb-ink);
-  border-radius: 999px;
-  padding: 0.3rem 0.65rem;
-  font-weight: 650;
-  font-size: 0.74rem;
-  margin-bottom: 0.5rem;
 }
 
 .load-sentinel {
@@ -2494,18 +2192,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-paper-bright);
 }
 
-.activity-item {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--mb-line-soft);
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
 .activity-text {
   font-size: 0.9rem;
   color: var(--mb-ink);
@@ -2514,11 +2200,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .activity-text strong {
   font-weight: 650;
-}
-
-.activity-sub {
-  color: var(--mb-ink-soft);
-  font-size: 0.78rem;
 }
 
 /* ==========================================================================
@@ -3063,8 +2744,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .mb-public-nav a:not(.mb-public-cta) {
     display: none;
-  }
-}
+  }}
 
 /* ==========================================================================
    Poster cards — the artwork is the card
@@ -4239,8 +3919,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   .profile-head-side {
     align-items: flex-start;
     width: 100%;
-  }
-}
+  }}
 
 /* ==========================================================================
    Create forms
@@ -4500,8 +4179,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .create-preview {
     position: static;
-  }
-}
+  }}
 
 /* --------------------------------------------------------------------------
    Motion preferences & responsive
@@ -4557,10 +4235,6 @@ div.btn-solid-primary button[type="submit"]:hover {
     padding: 0.8rem;
   }
 
-  .hero-section h1 {
-    font-size: clamp(2.2rem, 9vw, 3.4rem);
-  }
-
   .details-modal-grid {
     grid-template-columns: 1fr;
   }
@@ -4597,24 +4271,9 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .idx-dept + .idx-dept {
     border-top: 1px solid var(--mb-line-soft);
-  }
-
-  .profile-hero-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
+  }}
 
 @media (max-width: 575.98px) {
-  .page-header-card,
-  .hero-visual,
-  .profile-hero-card {
-    border-radius: var(--mb-radius-card);
-  }
-
-  .filter-grid {
-    grid-template-columns: 1fr;
-  }
 
   .club-card-actions .btn {
     flex-basis: 100%;
@@ -4652,16 +4311,13 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .idx-list {
     grid-template-columns: 1fr;
-  }
-
-}
+  }}
 
 
 @media (min-width: 992px) {
   :root {
     --mb-nav-h: 65px;
-  }
-}
+  }}
 
 /* ==========================================================================
    Discover — one events-only wall
@@ -4772,8 +4428,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .discover-swipe {
     width: 100%;
-  }
-}
+  }}
 
 /* Homepage: a single row of three, then the page ends. */
 .landing-wall {

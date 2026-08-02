@@ -5,12 +5,19 @@ import { useTracker } from 'meteor/react-meteor-data';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import LoadingSpinner from '../components/LoadingSpinner';
+import PageHead from '../components/PageHead';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { clubOccurrences } from '../../api/club/schedule';
+
+const FILTERS = [
+  { key: 'all', label: 'Everything' },
+  { key: 'events', label: 'Events' },
+  { key: 'clubs', label: 'Club meetings' },
+];
 
 /** One calendar for everything: one-off events and recurring club meetings, filterable. */
 const Agenda = () => {
@@ -69,20 +76,30 @@ const Agenda = () => {
 
   return (
     <Container id="agenda-page" className="page-shell py-4">
-      <div className="page-intro">
-        <h1>Agenda</h1>
-      </div>
+      <PageHead title="Agenda">
+        Everything you saved and every club you joined, on one month page.
+      </PageHead>
 
-      <div className="agenda-toolbar">
-        <div className="mode-toggle" role="tablist" aria-label="Agenda filter">
-          <button type="button" className={mode === 'all' ? 'active' : ''} onClick={() => setMode('all')}>Everything</button>
-          <button type="button" className={mode === 'events' ? 'active' : ''} onClick={() => setMode('events')}>Events</button>
-          <button type="button" className={mode === 'clubs' ? 'active' : ''} onClick={() => setMode('clubs')}>Club meetings</button>
+      <div className="mb-toolbar">
+        {/* These filter the one calendar below rather than swapping panels, so
+            they are pressable chips, not tabs. */}
+        <div className="mb-chip-row" role="group" aria-label="Filter the agenda">
+          {FILTERS.map(filter => (
+            <button
+              key={filter.key}
+              type="button"
+              className="mb-chip"
+              aria-pressed={mode === filter.key}
+              onClick={() => setMode(filter.key)}
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
         <div className="agenda-legend">
-          <span><i style={{ background: 'var(--mb-match)' }} /> Events</span>
-          <span><i style={{ background: 'var(--mb-pink-deep)' }} /> Saved</span>
-          <span><i style={{ background: 'var(--mb-teal)' }} /> Clubs</span>
+          <span><i className="agenda-legend-dot--event" aria-hidden="true" /> Events</span>
+          <span><i className="agenda-legend-dot--saved" aria-hidden="true" /> Saved</span>
+          <span><i className="agenda-legend-dot--club" aria-hidden="true" /> Clubs</span>
         </div>
       </div>
 
