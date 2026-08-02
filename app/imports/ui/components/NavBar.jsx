@@ -40,7 +40,7 @@ const NavBar = () => {
             {currentUser && <Nav.Link id="nav-discover" as={NavLink} to="/discover">Discover</Nav.Link>}
             {currentUser && <Nav.Link id="nav-match" as={NavLink} to="/discover-events">Match</Nav.Link>}
             {currentUser && <Nav.Link id="browse-clubs" as={NavLink} to="/search-clubs">Nearby</Nav.Link>}
-            {currentUser && <Nav.Link id="nav-agenda" as={NavLink} to="/agenda">Calendar</Nav.Link>}
+            {currentUser && <Nav.Link id="nav-agenda" as={NavLink} to="/upcoming-events">Calendar</Nav.Link>}
             {currentUser && <Nav.Link id="my-clubs" as={NavLink} to="/saved">Saved</Nav.Link>}
 
             {currentUser && (
@@ -86,7 +86,7 @@ const NavBar = () => {
                 <>
                   <NavDropdown.Item id="profile" as={NavLink} to="/profile">Profile</NavDropdown.Item>
                   <NavDropdown.Item id="nav-my-clubs" as={NavLink} to="/my-clubs">My Clubs</NavDropdown.Item>
-                  <NavDropdown.Item id="nav-calendar-events" as={NavLink} to="/upcoming-events">Agenda</NavDropdown.Item>
+                  <NavDropdown.Item id="nav-calendar-events" as={NavLink} to="/agenda">Agenda</NavDropdown.Item>
                   <NavDropdown.Item id="nav-customize" as={NavLink} to="/settings"><Gear /> Customize</NavDropdown.Item>
                   <NavDropdown.Divider />
                   <NavDropdown.Item id="navbar-current-user" as={NavLink} to="/signout">Logout</NavDropdown.Item>

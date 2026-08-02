@@ -5,6 +5,7 @@ import { navBar } from './navbar.component';
 import { browseClubsPage } from './browseclubs.page';
 import { myClubsPage } from './myclubs.page';
 import { eventFinderPage } from './eventfinder.page';
+import { agendaPage } from './agenda.page';
 import { addClubPage } from './addclubs.page';
 import { createEventsPage } from './createevents.page';
 import { myEventsPage } from './myevents.page';
@@ -109,7 +110,7 @@ test('Test the nav agenda page', async (testController) => {
   await navBar.gotoSignInPage(testController);
   await signinPage.signin(testController, credentials.username, credentials.password);
   await navBar.gotoAgendaPage(testController);
-  await eventFinderPage.isDisplayed(testController);
+  await agendaPage.isDisplayed(testController);
 });
 
 test('Test the nav customize page', async (testController) => {
