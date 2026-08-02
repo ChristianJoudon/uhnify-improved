@@ -5,7 +5,7 @@ import { Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useTracker } from 'meteor/react-meteor-data';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { ChevronDown, GeoAlt, GeoAltFill, Search, X } from 'react-bootstrap-icons';
+import { GeoAlt, GeoAltFill, Search, X } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
@@ -22,9 +22,6 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
 import { TOPICS, topicFor } from '../utilities/topics';
-import {
-  CATEGORY_DEPT, DEPARTMENTS, DEPT_BY_KEY, KIND_LABEL,
-} from '../utilities/departments';
 import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 
@@ -45,9 +42,6 @@ const ClubFinder = () => {
   // Geography-first, but the same two kinds of thing as Discover.
   const [kind, setKind] = useState('events');
   const [topicKey, setTopicKey] = useState(null);
-  const [selectedDepts, setSelectedDepts] = useState([]);   // department keys
-  const [selectedKinds, setSelectedKinds] = useState([]);   // lowercased category keys
-  const [openDepts, setOpenDepts] = useState([]);           // disclosure only, never a filter
   const [selectedClub, setSelectedClub] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,22 +96,6 @@ const ClubFinder = () => {
     });
   }, [clubs, interests, friendClubIds, origin]);
 
-  /**
-   * Directory-wide totals. `max` is the bar's denominator and it is deliberately
-   * the UNFILTERED maximum: normalising against the filtered max would peg the
-   * top bar at 100% forever and quietly destroy the drain, which is the whole
-   * reason the bars are there.
-   */
-  const directory = useMemo(() => {
-    const depts = {};
-    const kinds = {};
-    scored.forEach(item => {
-      item.depts.forEach(key => { depts[key] = (depts[key] || 0) + 1; });
-      item.categoryKeys.forEach(key => { kinds[key] = (kinds[key] || 0) + 1; });
-    });
-    return { depts, kinds, max: Math.max(1, ...Object.values(depts)) };
-  }, [scored]);
-
   // Every filter EXCEPT the index's own selections, so a printed count is a
   // promise the grid keeps and picking one department never zeroes the others.
   const inScope = useMemo(() => {
@@ -126,33 +104,6 @@ const ClubFinder = () => {
       && (query === '' || [club.name, club.description, club.location, ...(club.tags || [])]
         .some(value => (value || '').toLowerCase().includes(query))));
   }, [scored, searchTerm, radius]);
-
-  const index = useMemo(() => DEPARTMENTS
-    .filter(dept => (directory.depts[dept.key] || 0) > 0)
-    .map(dept => {
-      const live = inScope.filter(item => item.depts.includes(dept.key));
-      let state = 'off';
-      if (selectedDepts.includes(dept.key)) {
-        state = selectedKinds.some(key => CATEGORY_DEPT.get(key) === dept.key) ? 'refined' : 'on';
-      }
-      return {
-        ...dept,
-        state,
-        count: live.length,
-        share: Math.round((live.length / directory.max) * 100),
-        kinds: dept.categories
-          .map(category => category.toLowerCase())
-          .filter(key => (directory.kinds[key] || 0) > 0 || selectedKinds.includes(key))
-          .map(key => ({
-            key,
-            label: KIND_LABEL.get(key),
-            count: live.filter(item => item.categoryKeys.includes(key)).length,
-          }))
-          // Count-descending, not alphabetical. Alphabetical is the order of a
-          // list nobody edited, which was the original complaint.
-          .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)),
-      };
-    }), [inScope, directory, selectedDepts, selectedKinds]);
 
   // OR across departments; AND within one that has been refined to leaves.
   /** Events, scoped by the same geography and search as the groups. */
@@ -186,14 +137,9 @@ const ClubFinder = () => {
   }, [scored]);
 
   const filtered = useMemo(() => {
-    const list = selectedDepts.length === 0 ? inScope : inScope.filter(item => selectedDepts
-      .some(key => {
-        if (!item.depts.includes(key)) {
-          return false;
-        }
-        const refine = selectedKinds.filter(kind => CATEGORY_DEPT.get(kind) === key);
-        return refine.length === 0 || item.categoryKeys.some(kind => refine.includes(kind));
-      }));
+    // The covers do the categorising now: one control instead of a rail that
+    // said the same thing in a second vocabulary.
+    const list = topicKey ? inScope.filter(item => item.topic.key === topicKey) : inScope;
     if (sortMode === 'az') {
       return [...list].sort((a, b) => (a.club.name || '').localeCompare(b.club.name || ''));
     }
@@ -202,7 +148,7 @@ const ClubFinder = () => {
       return [...list].sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
     }
     return [...list].sort((a, b) => b.score - a.score);
-  }, [inScope, selectedDepts, selectedKinds, sortMode]);
+  }, [inScope, topicKey, sortMode]);
 
   /** What the map draws: whichever kind is showing, tagged with its colour, and
       always the same set the list below it is showing. */
@@ -213,7 +159,7 @@ const ClubFinder = () => {
 
   useEffect(() => {
     setVisibleCount(PAGE_STEP + 6);
-  }, [searchTerm, selectedDepts, selectedKinds, sortMode, radius, kind, topicKey]);
+  }, [searchTerm, sortMode, radius, kind, topicKey]);
 
   // Re-observe after each growth so loading continues even when the sentinel
   // stays inside the preload margin.
@@ -239,39 +185,9 @@ const ClubFinder = () => {
     });
   };
 
-  // Turning a department off releases every leaf it owns, so selection state
-  // can never disagree with itself.
-  const toggleDept = key => {
-    if (selectedDepts.includes(key)) {
-      setSelectedDepts(selectedDepts.filter(item => item !== key));
-      setSelectedKinds(selectedKinds.filter(kind => CATEGORY_DEPT.get(kind) !== key));
-    } else {
-      setSelectedDepts([...selectedDepts, key]);
-    }
-  };
-
-  // Picking a leaf selects its department too — otherwise a refinement would
-  // sit under a filter that is not on.
-  const toggleKind = kindKey => {
-    if (selectedKinds.includes(kindKey)) {
-      setSelectedKinds(selectedKinds.filter(item => item !== kindKey));
-      return;
-    }
-    setSelectedKinds([...selectedKinds, kindKey]);
-    const parent = CATEGORY_DEPT.get(kindKey);
-    if (!selectedDepts.includes(parent)) {
-      setSelectedDepts([...selectedDepts, parent]);
-    }
-  };
-
-  const toggleOpen = key => setOpenDepts(previous => (
-    previous.includes(key) ? previous.filter(item => item !== key) : [...previous, key]));
-
-  // openDepts is untouched — reading what is inside a department is not a filter.
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedDepts([]);
-    setSelectedKinds([]);
+    setTopicKey(null);
   };
 
   // The empty state's escape hatch: clearing filters alone cannot help when the
@@ -286,7 +202,7 @@ const ClubFinder = () => {
   }
 
   const visible = filtered.slice(0, visibleCount);
-  const hasFilters = Boolean(searchTerm) || selectedDepts.length > 0;
+  const hasFilters = Boolean(searchTerm) || Boolean(topicKey);
 
   return (
     <Container id="browse-clubs-page" className="page-shell py-4" fluid="xl">
@@ -353,111 +269,6 @@ const ClubFinder = () => {
             </div>
           </div>
 
-          <div className="rail-block rail-index">
-            <div className="rail-title">
-              The Index
-              <span className="idx-total">{scored.length}</span>
-            </div>
-            <div className="idx-rule" aria-hidden="true" />
-
-            <ol className="idx-list">
-              {index.map(dept => {
-                const open = openDepts.includes(dept.key);
-                // A department you have selected is never dead, so the filter
-                // that emptied the page can always be switched back off.
-                const dead = dept.count === 0 && dept.state === 'off';
-                const wash = TOPICS[dept.topic];
-                return (
-                  <li
-                    key={dept.key}
-                    className={`idx-dept is-${dept.state}${dead ? ' is-dead' : ''}${open ? ' is-open' : ''}`}
-                    style={{ '--idx-wash': wash.chip, '--idx-rule': wash.chipInk, '--idx-w': dept.share }}
-                  >
-                    {/* The filter. Full width — nothing sits beside it. */}
-                    <button
-                      type="button"
-                      className="idx-entry"
-                      aria-pressed={dept.state === 'refined' ? 'mixed' : dept.state === 'on'}
-                      aria-disabled={dead}
-                      onClick={() => { if (!dead) { toggleDept(dept.key); } }}
-                    >
-                      <span className="idx-folio" aria-hidden="true">{dept.folio}</span>
-                      <span className="idx-name">{dept.label}</span>
-                      <span className="idx-leader" aria-hidden="true" />
-                      <span className="idx-count">{dept.count}</span>
-                      <span className="visually-hidden">
-                        {` ${dept.count === 1 ? 'group' : 'groups'}`}
-                        {dept.state === 'refined' ? ', narrowed' : ''}
-                        {dead ? ', none here right now' : ''}
-                      </span>
-                    </button>
-
-                    {/* The weight. Drains as you filter. Not a control. */}
-                    <span className="idx-weight" aria-hidden="true"><i /></span>
-
-                    {/* The disclosure, stacked below — reading what is filed in
-                        a department must not apply its filter. */}
-                    {dept.kinds.length > 1 && (
-                      <button
-                        type="button"
-                        className="idx-peek"
-                        aria-expanded={open}
-                        aria-controls={`idx-drawer-${slug(dept.key)}`}
-                        onClick={() => toggleOpen(dept.key)}
-                      >
-                        {`${dept.kinds.length} filed here`}
-                        <ChevronDown size={11} aria-hidden="true" />
-                        <span className="visually-hidden">{` in ${dept.label}`}</span>
-                      </button>
-                    )}
-
-                    <AnimatePresence initial={false}>
-                      {open && (
-                        <motion.div
-                          key="drawer"
-                          id={`idx-drawer-${slug(dept.key)}`}
-                          className="idx-drawer"
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: reduceMotion ? 0 : 0.18, ease: [0.2, 0.8, 0.2, 1] }}
-                        >
-                          <p className="idx-note">{dept.note}</p>
-                          <ul className="idx-kinds">
-                            {dept.kinds.map(kind => {
-                              const on = selectedKinds.includes(kind.key);
-                              const kindDead = kind.count === 0 && !on;
-                              return (
-                                <li key={kind.key}>
-                                  <button
-                                    type="button"
-                                    className={`idx-kind${on ? ' is-on' : ''}${kindDead ? ' is-dead' : ''}`}
-                                    aria-pressed={on}
-                                    aria-disabled={kindDead}
-                                    onClick={() => { if (!kindDead) { toggleKind(kind.key); } }}
-                                  >
-                                    <span className="idx-tick" aria-hidden="true" />
-                                    <span className="idx-name">{kind.label}</span>
-                                    <span className="idx-leader" aria-hidden="true" />
-                                    <span className="idx-count">{kind.count}</span>
-                                    <span className="visually-hidden">
-                                      {` ${kind.count === 1 ? 'group' : 'groups'}`}
-                                    </span>
-                                  </button>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </li>
-                );
-              })}
-            </ol>
-
-          </div>
-
           <div className="rail-block">
             <div className="rail-title">How matches work</div>
             <p className="rail-note">
@@ -514,18 +325,6 @@ const ClubFinder = () => {
                   <span className="visually-hidden">Remove search</span>
                 </button>
               )}
-              {selectedDepts.map(key => (
-                <button key={key} type="button" className="idx-stub" onClick={() => toggleDept(key)}>
-                  {DEPT_BY_KEY[key].label}<X size={13} aria-hidden="true" />
-                  <span className="visually-hidden">Remove filter</span>
-                </button>
-              ))}
-              {selectedKinds.map(key => (
-                <button key={key} type="button" className="idx-stub is-kind" onClick={() => toggleKind(key)}>
-                  {KIND_LABEL.get(key)}<X size={13} aria-hidden="true" />
-                  <span className="visually-hidden">Remove filter</span>
-                </button>
-              ))}
               <button type="button" className="idx-receipt-clear" onClick={clearFilters}>Clear all</button>
             </div>
           )}

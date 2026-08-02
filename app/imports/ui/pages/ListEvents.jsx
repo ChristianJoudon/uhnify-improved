@@ -9,11 +9,16 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import swal from 'sweetalert';
 import { CalendarX, Stars } from 'react-bootstrap-icons';
 import { Events } from '../../api/events/Events';
+import { Clubs } from '../../api/club/Club';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import EventPoster from '../components/EventPoster';
-import { sortByDate } from '../utilities/helpers';
+import TopicPosters from '../components/TopicPosters';
+import KindToggle from '../components/KindToggle';
+import Club from '../components/Club';
+import { normalizeCategories, sortByDate } from '../utilities/helpers';
+import { topicFor } from '../utilities/topics';
 
 const SORTS = [
   { key: 'soonest', label: 'Earliest first' },
@@ -29,25 +34,34 @@ const rise = {
 const ListEvents = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sort, setSort] = useState('soonest');
+  // Same two controls as Nearby, in the same order, because it is the same
+  // question asked of a different frame: there the frame is a map, here a month.
+  const [kind, setKind] = useState('events');
+  const [topicKey, setTopicKey] = useState(null);
   const navigate = useNavigate();
   const userId = Meteor.userId();
 
-  const { ready, events, goingIds } = useTracker(() => {
+  const { ready, events, clubs, goingIds } = useTracker(() => {
     const subscription = Meteor.subscribe(Events.userPublicationName);
     // Saving works from the poster here exactly as it does on Discover, so the
     // page needs to know what this person has already said yes to.
     const swipesSub = Meteor.subscribe(EventSwipes.userPublicationName);
+    const clubsSub = Meteor.subscribe(Clubs.userPublicationName);
     return {
       events: Events.collection.find({}, { sort: { date: 1 } }).fetch(),
+      clubs: Clubs.collection.find({}).fetch(),
       goingIds: new Set(EventSwipes.collection.find({ userId: Meteor.userId(), decision: 'interested' })
         .map(swipe => swipe.eventId)),
-      ready: subscription.ready() && swipesSub.ready(),
+      ready: subscription.ready() && swipesSub.ready() && clubsSub.ready(),
     };
   }, []);
 
   const filteredEvents = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    const matches = sortByDate(events).filter(event => query === '' || [event.title, event.description, event.location].some(value => (value || '').toLowerCase().includes(query)));
+    const matches = sortByDate(events)
+      .filter(event => !topicKey
+        || topicFor(event.title, event.description, normalizeCategories(event.categories)).key === topicKey)
+      .filter(event => query === '' || [event.title, event.description, event.location].some(value => (value || '').toLowerCase().includes(query)));
     if (sort === 'latest') {
       return [...matches].reverse();
     }
@@ -55,7 +69,26 @@ const ListEvents = () => {
       return [...matches].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
     return matches;
-  }, [events, searchTerm, sort]);
+  }, [events, searchTerm, sort, topicKey]);
+
+  const filteredClubs = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return clubs
+      .filter(club => !topicKey
+        || topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description).key === topicKey)
+      .filter(club => query === '' || [club.name, club.description, club.location]
+        .some(value => (value || '').toLowerCase().includes(query)));
+  }, [clubs, searchTerm, topicKey]);
+
+  /** Counts on the covers follow whichever kind is showing. */
+  const topicCounts = useMemo(() => {
+    const tally = {};
+    const source = kind === 'clubs'
+      ? clubs.map(club => topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description).key)
+      : events.map(event => topicFor(event.title, event.description, normalizeCategories(event.categories)).key);
+    source.forEach(key => { tally[key] = (tally[key] || 0) + 1; });
+    return tally;
+  }, [kind, events, clubs]);
 
   const formattedEvents = filteredEvents.map(event => ({
     title: event.title,
@@ -93,6 +126,35 @@ const ListEvents = () => {
         Everything on the books, in one list.
       </PageHead>
 
+      {/* The month is this page's frame, the way the map is Nearby's: what the
+          calendar shows and what the cards below show are always one set. */}
+        <div id="event-calendar" className="calendar-container">
+          <FullCalendar
+            plugins={[dayGridPlugin]}
+            initialView="dayGridMonth"
+            events={formattedEvents}
+            height="auto"
+            views={{ dayGridMonth: { dayMaxEvents: 3 } }}
+            moreLinkText={count => `+${count} more`}
+            fixedWeekCount={false}
+            dayHeaderFormat={{ weekday: 'short' }}
+            eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
+            headerToolbar={{
+              start: 'today prev,next',
+              center: 'title',
+              end: 'dayGridMonth,dayGridWeek,dayGridDay',
+            }}
+          />
+        </div>
+
+      <KindToggle
+        value={kind}
+        onChange={setKind}
+        counts={{ events: filteredEvents.length, clubs: filteredClubs.length }}
+      />
+
+      <TopicPosters selected={topicKey} onSelect={setTopicKey} counts={topicCounts} compact />
+
       <div className="mb-toolbar">
         <input
           type="search"
@@ -102,7 +164,11 @@ const ListEvents = () => {
           value={searchTerm}
           onChange={event => setSearchTerm(event.target.value)}
         />
-        <span className="mb-toolbar-count">{filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}</span>
+        <span className="mb-toolbar-count">
+          {kind === 'clubs'
+            ? `${filteredClubs.length} ${filteredClubs.length === 1 ? 'group' : 'groups'}`
+            : `${filteredEvents.length} ${filteredEvents.length === 1 ? 'event' : 'events'}`}
+        </span>
         <select
           className="mb-field"
           aria-label="Sort events"
@@ -128,43 +194,25 @@ const ListEvents = () => {
         </div>
       ) : (
         <div className="mb-grid mb-grid--posters">
-          {filteredEvents.map((event, index) => (
-            <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
-              <EventPoster
-                event={event}
-                going={goingIds.has(event._id)}
-                onGoing={toggleGoing}
-                onOpen={toggleGoing}
-              />
-            </motion.div>
-          ))}
+          {kind === 'clubs'
+            ? filteredClubs.map((club, index) => (
+              <motion.div key={club._id} variants={rise} initial="hidden" animate="show" custom={index}>
+                <Club club={club} tier="md" onViewDetails={() => navigate('/search-clubs')} />
+              </motion.div>
+            ))
+            : filteredEvents.map((event, index) => (
+              <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
+                <EventPoster
+                  event={event}
+                  going={goingIds.has(event._id)}
+                  onGoing={toggleGoing}
+                  onOpen={toggleGoing}
+                />
+              </motion.div>
+            ))}
         </div>
       )}
 
-      <section className="mt-5">
-        <div className="mb-section-head">
-          <h2>Month view</h2>
-        </div>
-
-        <div id="event-calendar" className="calendar-container">
-          <FullCalendar
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            events={formattedEvents}
-            height="auto"
-            views={{ dayGridMonth: { dayMaxEvents: 3 } }}
-            moreLinkText={count => `+${count} more`}
-            fixedWeekCount={false}
-            dayHeaderFormat={{ weekday: 'short' }}
-            eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
-            headerToolbar={{
-              start: 'today prev,next',
-              center: 'title',
-              end: 'dayGridMonth,dayGridWeek,dayGridDay',
-            }}
-          />
-        </div>
-      </section>
     </Container>
   );
 };
