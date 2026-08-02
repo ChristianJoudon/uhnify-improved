@@ -7,7 +7,6 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import swal from 'sweetalert';
 import {
   ArrowCounterclockwise,
-  ArrowRepeat,
   CalendarWeek,
   HeartFill,
   LightningChargeFill,
@@ -407,18 +406,6 @@ const DiscoverEvents = () => {
               </motion.button>
               <motion.button
                 type="button"
-                className="swipe-btn swipe-btn-flip"
-                whileHover={{ scale: 1.1, rotate: 12 }}
-                whileTap={{ scale: 0.86 }}
-                onClick={toggleFlip}
-                disabled={!topEvent}
-                aria-label="Flip card for details"
-                title="Flip for details (↑ or double-tap)"
-              >
-                <ArrowRepeat />
-              </motion.button>
-              <motion.button
-                type="button"
                 className="swipe-btn swipe-btn-save"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.86 }}
@@ -430,6 +417,12 @@ const DiscoverEvents = () => {
                 <HeartFill />
               </motion.button>
             </div>
+
+            {/* Said once, under the deck. A gesture nobody is told about is a
+                gesture nobody uses — which is what the old double-tap was. */}
+            <p className="swipe-hint">
+              {topEvent && flippedId === topEvent._id ? 'Tap the card to go back' : 'Tap the card for details'}
+            </p>
           </div>
         </div>
       </Container>

@@ -1,14 +1,15 @@
 import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { CalendarEvent, GeoAlt, People, PersonBadge } from 'react-bootstrap-icons';
+import { ArrowLeft, CalendarEvent, GeoAlt, InfoCircle, People } from 'react-bootstrap-icons';
 import TopicMotif from './TopicMotif';
+import CardFields from './CardFields';
+import { EVENT_FIELDS } from '../utilities/cardFields';
 import { formatEventDate, formatShortDate, normalizeCategories } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
 
 const SWIPE_DISTANCE = 130;
 const SWIPE_VELOCITY = 650;
-const DOUBLE_TAP_WINDOW_MS = 320;
 
 const flyDistance = () => (typeof window !== 'undefined' ? window.innerWidth + 200 : 1200);
 
@@ -49,7 +50,6 @@ const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, 
   const rotate = useTransform(x, [-340, 340], [-17, 17]);
   const likeOpacity = useTransform(x, [36, SWIPE_DISTANCE], [0, 1]);
   const passOpacity = useTransform(x, [-SWIPE_DISTANCE, -36], [1, 0]);
-  const lastTapAt = useRef(0);
   const dragging = useRef(false);
   // The fly-off target is captured once per exit so mid-flight re-renders
   // (e.g. the swipe record landing in minimongo) cannot retarget the animation.
@@ -67,7 +67,6 @@ const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, 
 
   const handleDragStart = () => {
     dragging.current = true;
-    lastTapAt.current = 0;
   };
 
   const handleDragEnd = (domEvent, info) => {
@@ -83,17 +82,17 @@ const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, 
     }
   };
 
+  /**
+   * A single tap turns the card over. It used to take a double-tap, which is a
+   * gesture nobody finds — the affordance has to be the obvious one, and the
+   * card itself is the biggest target on the screen. `dragging` keeps a
+   * short drag that snapped back from counting as a tap.
+   */
   const handleTap = () => {
     if (!isTop || dragging.current) {
       return;
     }
-    const now = performance.now();
-    if (now - lastTapAt.current < DOUBLE_TAP_WINDOW_MS) {
-      lastTapAt.current = 0;
-      onFlip();
-    } else {
-      lastTapAt.current = now;
-    }
+    onFlip();
   };
 
   return (
@@ -156,26 +155,22 @@ const SwipeCard = ({ event, host, hostName, stackIndex, exitDirection, flipped, 
               <div className="meta-line"><CalendarEvent size={15} /> {formatEventDate(event.date)}</div>
               <div className="meta-line"><GeoAlt size={15} /> {event.location}</div>
             </div>
+            {/* Says what turning the card over gets you — details — rather than
+                naming the mechanism. The whole card is the real hit area; this
+                is what makes that discoverable. */}
+            <span className="swipe-info" aria-hidden="true"><InfoCircle size={17} /></span>
           </div>
           <div className="swipe-card-face swipe-card-back">
+            <span className="swipe-info swipe-info-back" aria-hidden="true"><ArrowLeft size={17} /></span>
             <h3>{event.title}</h3>
-            <div className="swipe-detail-row">
-              <CalendarEvent size={16} />
-              <div><strong>When</strong><span>{formatEventDate(event.date)}</span></div>
-            </div>
-            <div className="swipe-detail-row">
-              <GeoAlt size={16} />
-              <div><strong>Where</strong><span>{event.location}</span></div>
-            </div>
-            <div className="swipe-detail-row">
-              <People size={16} />
-              <div><strong>Host</strong><span>{hostName || `Club #${event.eventID}`}</span></div>
-            </div>
-            <div className="swipe-detail-row">
-              <PersonBadge size={16} />
-              <div><strong>Posted by</strong><span>{event.createdBy || 'Unknown'}</span></div>
-            </div>
-            <p className="swipe-card-description">{event.description || 'No description yet.'}</p>
+            {/* The back was hand-written rows with fallbacks, so a listing with
+                no host printed "Club #0" and one with no text printed "No
+                description yet." It reads the same schema as every other card
+                now: a row exists only when the listing published it. This is
+                also the surface with room for cost, audience and registration,
+                which the front has to leave out. */}
+            <CardFields record={{ ...event, hostName }} schema={EVENT_FIELDS} className="swipe-card-facts" />
+            {event.description && <p className="swipe-card-description">{event.description}</p>}
           </div>
         </motion.div>
         <motion.div className="swipe-stamp swipe-stamp-like" style={{ opacity: exitDirection === 'right' ? 1 : likeOpacity }}>

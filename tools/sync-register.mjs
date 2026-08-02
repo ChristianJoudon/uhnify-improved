@@ -25,9 +25,23 @@
  * MONGO_URL defaults to Meteor's dev database (mongodb://127.0.0.1:3001/meteor).
  * Point it at anything else to sync a deployed environment.
  */
+import crypto from 'crypto';
 import fs from 'fs';
 import { MongoClient } from 'mongodb';
 import { transform } from './lib/transform.mjs';
+
+/**
+ * Meteor's own _id shape: 17 characters from its unmistakable-character
+ * alphabet. The driver would otherwise mint a native ObjectId on insert, and
+ * Meteor collections are string-keyed — an ObjectId _id compares by reference
+ * on the client, so `selectedId === doc._id` silently stops being true and any
+ * selection built on it quietly breaks. That is exactly how the swipe deck's
+ * card flip stopped working after the first sync.
+ */
+const UNMISTAKABLE = '23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz';
+const meteorId = () => Array.from(crypto.randomBytes(17))
+  .map(byte => UNMISTAKABLE[byte % UNMISTAKABLE.length])
+  .join('');
 
 const args = process.argv.slice(2);
 const REGISTER = args.find(a => !a.startsWith('--'));
@@ -151,6 +165,9 @@ const syncInto = async (col, docs, label) => {
         filter: { sourceId },
         update: {
           $set: { ...rest, sourceId, importedFrom: DATASET, lastSyncedAt: new Date() },
+          // Only applies when the upsert actually inserts; an existing record
+          // keeps the _id every membership and swipe already points at.
+          $setOnInsert: { _id: meteorId() },
           ...(Object.keys(unset).length ? { $unset: unset } : {}),
         },
         upsert: true,
