@@ -33,10 +33,11 @@ const AddClub = () => {
 
   // Until a topic is picked, the preview shows what the club would be filed as
   // from its own words — the same resolution the finder will apply.
+  // Resolve exactly the way the saved card will, from the same sources in the
+  // same order, so the preview's colour is the colour that gets stored.
   const topic = useMemo(
-    () => (form.topicKey ? { key: form.topicKey, ...TOPICS[form.topicKey], field: TOPICS[form.topicKey].fields[0] }
-      : topicFor(form.name, form.description, form.tags)),
-    [form.topicKey, form.name, form.description, form.tags],
+    () => topicFor(form.topicKey ? TOPICS[form.topicKey].label : '', form.tags, form.name, form.description),
+    [form.topicKey, form.tags, form.name, form.description],
   );
 
   const when = scheduleLabel(form.schedule);
@@ -58,6 +59,8 @@ const AddClub = () => {
     const reader = new FileReader();
     reader.onload = e => set('image', e.target.result);
     reader.readAsDataURL(file);
+    // Clear it, or picking the same file after Remove fires no change event.
+    event.target.value = '';
   };
 
   const submit = event => {
@@ -70,12 +73,16 @@ const AddClub = () => {
       name: form.name.trim(),
       description: form.description.trim(),
       location: form.location.trim(),
-      image: form.image || undefined,
+      // Empty string, never undefined: check() rejects a present-but-undefined
+      // key, which throws in the client stub and kills latency compensation.
+      image: form.image,
       // The stored text stays human-readable; the structured schedule is what
       // the calendars actually expand.
       meetingTime: when || 'Schedule to come',
-      contactInfo: form.contactInfo.trim() || undefined,
-      categories: topic.label,
+      contactInfo: form.contactInfo.trim(),
+      // Only an explicitly chosen topic becomes the category; the fallback
+      // label is a display word, not a subject.
+      categories: form.topicKey ? TOPICS[form.topicKey].label : '',
       tags: form.tags,
       schedule: form.schedule,
     }, error => {
@@ -129,10 +136,11 @@ const AddClub = () => {
                 maxLength={NAME_MAX}
                 placeholder="Sunrise Hiking Crew"
                 onChange={e => set('name', e.target.value)}
+                aria-describedby="name-count"
                 required
               />
-              <span className="field-hint">{form.name.length}/{NAME_MAX}</span>
             </label>
+            <span className="field-hint" id="name-count">{form.name.length}/{NAME_MAX}</span>
 
             <label htmlFor="description">
               What it&apos;s about
@@ -143,10 +151,11 @@ const AddClub = () => {
                 maxLength={ABOUT_MAX}
                 placeholder="Who it's for and what you actually do."
                 onChange={e => set('description', e.target.value)}
+                aria-describedby="about-count"
                 required
               />
-              <span className="field-hint">{form.description.length}/{ABOUT_MAX}</span>
             </label>
+            <span className="field-hint" id="about-count">{form.description.length}/{ABOUT_MAX}</span>
 
             <label htmlFor="location">
               Where you meet
@@ -189,7 +198,7 @@ const AddClub = () => {
             </div>
 
             <div className="mt-3">
-              <span className="field-label">Tags</span>
+              <label className="field-label" htmlFor="tags">Tags</label>
               <ChipInput
                 id="tags"
                 values={form.tags}

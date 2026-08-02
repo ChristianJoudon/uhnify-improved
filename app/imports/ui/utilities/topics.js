@@ -72,7 +72,9 @@ export const TOPICS = {
     chip: '#fbe0d4',
     chipInk: '#b83c14',
     motif: 'community',
-    match: ['volunteer', 'service', 'cleanup', 'outreach', 'charity', 'mentor', 'fraternity', 'sorority', 'alumni'],
+    // 'community' must be here: a topic's own label is stored as the club's
+    // category, so it has to resolve back to the same topic on read.
+    match: ['community', 'volunteer', 'service', 'cleanup', 'outreach', 'charity', 'mentor', 'fraternity', 'sorority', 'alumni'],
   },
   wellness: {
     label: 'Wellness',

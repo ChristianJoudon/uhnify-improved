@@ -16,7 +16,11 @@ export const parseMeetingTime = text => {
   const lower = `${text}`.toLowerCase();
   const days = [];
   DAY_NAMES.forEach((dayName, dayIndex) => {
-    if (lower.includes(dayName.toLowerCase())) {
+    const full = dayName.toLowerCase();
+    // Also accept the 3-letter abbreviation, because scheduleLabel writes days
+    // that way — without this, reading back our own text loses the schedule.
+    const abbreviation = new RegExp(`\\b${full.slice(0, 3)}\\b`);
+    if (lower.includes(full) || abbreviation.test(lower)) {
       days.push(dayIndex);
     }
   });
@@ -32,7 +36,10 @@ export const parseMeetingTime = text => {
     }
     time = `${String(hour).padStart(2, '0')}:${match[2] || '00'}`;
   }
-  return { days, time, cadence: lower.includes('biweekly') ? 'biweekly' : 'weekly' };
+  // "every other" is how scheduleLabel writes it; "biweekly" is how the legacy
+  // seed data does.
+  const fortnightly = lower.includes('biweekly') || lower.includes('every other');
+  return { days, time, cadence: fortnightly ? 'biweekly' : 'weekly' };
 };
 
 /** Human label for a schedule: "Mon & Wed · 4:00 PM". */

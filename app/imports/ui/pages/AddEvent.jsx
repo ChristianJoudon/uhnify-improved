@@ -70,6 +70,7 @@ const AddEvent = () => {
     const reader = new FileReader();
     reader.onload = e => set('image', e.target.result);
     reader.readAsDataURL(file);
+    event.target.value = '';
   };
 
   const submit = event => {
@@ -86,7 +87,8 @@ const AddEvent = () => {
       description: form.description.trim(),
       date: new Date(form.date),
       location: form.location.trim(),
-      image: form.image || undefined,
+      // Empty string, never undefined — see AddClub.
+      image: form.image,
     }, error => {
       setSaving(false);
       if (error) {
@@ -144,10 +146,11 @@ const AddEvent = () => {
                 maxLength={TITLE_MAX}
                 placeholder="Sunset Movie Night"
                 onChange={e => set('title', e.target.value)}
+                aria-describedby="title-count"
                 required
               />
-              <span className="field-hint">{form.title.length}/{TITLE_MAX}</span>
             </label>
+            <span className="field-hint" id="title-count">{form.title.length}/{TITLE_MAX}</span>
 
             <label htmlFor="eventID">
               Hosted by
@@ -157,10 +160,10 @@ const AddEvent = () => {
                   <option key={club._id} value={club._id}>{club.name}</option>
                 ))}
               </select>
-              <span className="field-hint">
-                {myClubs.length > 0 ? 'Groups you belong to.' : 'Join a group and it will appear here first.'}
-              </span>
             </label>
+            <span className="field-hint">
+              {myClubs.length > 0 ? 'Groups you belong to.' : 'Join a group and it will appear here first.'}
+            </span>
 
             <div className="field-row">
               <label htmlFor="date">
@@ -198,9 +201,10 @@ const AddEvent = () => {
                 maxLength={ABOUT_MAX}
                 placeholder="What happens, what to bring, who it's for."
                 onChange={e => set('description', e.target.value)}
+                aria-describedby="about-count"
               />
-              <span className="field-hint">{form.description.length}/{ABOUT_MAX}</span>
             </label>
+            <span className="field-hint" id="about-count">{form.description.length}/{ABOUT_MAX}</span>
           </section>
 
           <section className="form-block">

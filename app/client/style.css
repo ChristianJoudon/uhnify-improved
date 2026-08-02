@@ -14,7 +14,7 @@
   /* Ink */
   --mb-ink: #303234;
   --mb-ink-soft: #62625e;
-  --mb-ink-faint: #8b8982;
+  --mb-ink-faint: #6e6c66;
 
   /* Brand — orange sampled from the Perfect Match matchbox (#e85020).
      Bright = shapes, marks, match heads, selected states.
@@ -3198,6 +3198,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   font-weight: 500;
   color: var(--mb-ink-soft);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mb-poster-meta svg {
@@ -3783,7 +3785,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.8rem;
 }
 
@@ -4072,8 +4074,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   z-index: -1;
 }
 
+/* Deliberately unpositioned: .mb-poster-open::after stretches to the panel,
+   and a positioned ancestor here would shrink the hit area to the text. */
 .mb-poster-copy {
-  position: relative;
+  position: static;
 }
 
 /* Over a photo the type needs its own scrim to stay readable. */

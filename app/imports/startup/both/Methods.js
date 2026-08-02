@@ -56,6 +56,14 @@ const parseNumericId = (value, label) => {
   return parsed;
 };
 
+const MAX_IMAGE_LENGTH = 2800000;
+
+const checkImageSize = image => {
+  if (image && image.length > MAX_IMAGE_LENGTH) {
+    throw new Meteor.Error('image-too-large', 'Please choose a smaller image.');
+  }
+};
+
 const normalizeTag = tag => `${tag}`.trim().replace(/\s+/g, ' ').slice(0, 28);
 
 const normalizeSchedule = schedule => {
@@ -189,6 +197,7 @@ Meteor.methods({
       schedule: Match.Optional(Object),
     });
     requireLoggedIn(this.userId);
+    checkImageSize(clubData.image);
 
     const clubID = nextNumericId(Clubs.collection, 'clubID');
     return Clubs.collection.insert({
@@ -296,6 +305,7 @@ Meteor.methods({
       image: Match.Optional(String),
     });
     requireLoggedIn(this.userId);
+    checkImageSize(eventData.image);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const eventId = Events.collection.insert({

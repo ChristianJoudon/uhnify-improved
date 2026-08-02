@@ -9,7 +9,7 @@ import TopicMotif from './TopicMotif';
 const PosterArt = ({ topic, eyebrow, title, tagline, image, placeholder }) => (
   <div
     className="mb-poster-art"
-    style={image ? undefined : { background: topic.field, color: topic.ink }}
+    style={image ? { background: '#303234', color: '#fff9f0' } : { background: topic.field, color: topic.ink }}
   >
     {image && <img className="mb-poster-photo" src={image} alt="" />}
     <div className={`mb-poster-copy${image ? ' on-photo' : ''}`}>
@@ -28,7 +28,8 @@ PosterArt.propTypes = {
     motif: PropTypes.string,
   }).isRequired,
   eyebrow: PropTypes.string,
-  title: PropTypes.string,
+  // A node, so the club card can hand in its stretched open-button.
+  title: PropTypes.node,
   tagline: PropTypes.string,
   image: PropTypes.string,
   placeholder: PropTypes.string,
