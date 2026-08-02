@@ -1,0 +1,14 @@
+{
+  "name": "matchbook-tools",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Build-time tools. Deliberately outside app/ — Meteor bundles and runs everything under app/ except public/, private/ and tests/.",
+  "scripts": {
+    "seed": "node import-register.mjs",
+    "sync": "node sync-register.mjs"
+  },
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  }
+}

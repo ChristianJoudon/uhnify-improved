@@ -9,3 +9,5 @@ app/.deploy/settings.json
 # Claude Code local / session files (keep launch.json shared)
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+# tools/ has its own package for build-time deps
+tools/node_modules/

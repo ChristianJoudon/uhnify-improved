@@ -6,6 +6,8 @@
   "clubs": [
     {
       "clubID": 1,
+      "sourceId": "club_8920ee28e910",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "East Kauaʻi Lions Club",
       "owner": "admin@foo.com",
       "description": "Lions service organization based in Līhuʻe.",
@@ -36,6 +38,8 @@
     },
     {
       "clubID": 2,
+      "sourceId": "club_52023c2647ef",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "East Kauaʻi Toastmasters",
       "owner": "admin@foo.com",
       "description": "Online Toastmasters club based in Kapaʻa.",
@@ -66,6 +70,8 @@
     },
     {
       "clubID": 3,
+      "sourceId": "club_7f9b1cb974c2",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Eckankar’s Kauaʻi Spiritual Experiences",
       "owner": "admin@foo.com",
       "description": "Meetup community for Eckankar-related spiritual discussion and experiences.",
@@ -88,6 +94,8 @@
     },
     {
       "clubID": 4,
+      "sourceId": "club_b7a473e44430",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "GROW YOUNG KAUAʻI",
       "owner": "admin@foo.com",
       "description": "Small public Meetup group listed in Līhuʻe.",
@@ -110,6 +118,8 @@
     },
     {
       "clubID": 5,
+      "sourceId": "club_a8219ffe7892",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Garden Isle Quilters",
       "owner": "admin@foo.com",
       "description": "Local quilting organization presenting an annual exhibit and sale.",
@@ -131,6 +141,8 @@
     },
     {
       "clubID": 6,
+      "sourceId": "club_062bc77ff5e6",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "H.I.K.E. — Hawaiʻi Inside Kauaʻi Explore",
       "owner": "admin@foo.com",
       "description": "Community for hiking, camping, backpacking, and fitness-oriented outdoor outings.",
@@ -155,6 +167,8 @@
     },
     {
       "clubID": 7,
+      "sourceId": "club_52176fb93ee2",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Chamber of Commerce",
       "owner": "admin@foo.com",
       "description": "Islandwide chamber hosting recurring Business Pau Hana networking events.",
@@ -178,6 +192,8 @@
     },
     {
       "clubID": 8,
+      "sourceId": "club_0abbc6cf9af9",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Happy Hour & Social Activities",
       "owner": "admin@foo.com",
       "description": "Meetup group for local social activities and happy hours.",
@@ -200,6 +216,8 @@
     },
     {
       "clubID": 9,
+      "sourceId": "club_5898114fa330",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Hawaiʻi Kizomba Dancing",
       "owner": "admin@foo.com",
       "description": "Community centered on kizomba dancing.",
@@ -222,6 +240,8 @@
     },
     {
       "clubID": 10,
+      "sourceId": "club_7c68a0a6fb1c",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Lions Club",
       "owner": "admin@foo.com",
       "description": "Islandwide Lions club; public schedule describes rotating locations.",
@@ -245,6 +265,8 @@
     },
     {
       "clubID": 11,
+      "sourceId": "club_eb3157e9b171",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Live Poets Society",
       "owner": "admin@foo.com",
       "description": "Adult poetry community that hosts workshops at Līhuʻe Public Library.",
@@ -269,6 +291,8 @@
     },
     {
       "clubID": 12,
+      "sourceId": "club_009a8dc3fd06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi North Shore Lions Club",
       "owner": "admin@foo.com",
       "description": "Lions service organization serving Kauaʻi’s North Shore.",
@@ -299,6 +323,8 @@
     },
     {
       "clubID": 13,
+      "sourceId": "club_9968f0fc16fb",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Pride",
       "owner": "admin@foo.com",
       "description": "Community organization offering social, cultural, and advocacy events.",
@@ -323,6 +349,8 @@
     },
     {
       "clubID": 14,
+      "sourceId": "club_bfc08a8b94cd",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Robotics Alliance",
       "owner": "admin@foo.com",
       "description": "Youth robotics teams and mentors presenting public demonstrations and recruiting opportunities.",
@@ -346,6 +374,8 @@
     },
     {
       "clubID": 15,
+      "sourceId": "club_08e9d6dbf096",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi Society of Artists",
       "owner": "admin@foo.com",
       "description": "Long-running nonprofit presenting exhibitions, lectures, and workshops.",
@@ -369,6 +399,8 @@
     },
     {
       "clubID": 16,
+      "sourceId": "club_84df5000fdf9",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi ʻUkulele Club",
       "owner": "admin@foo.com",
       "description": "Monthly all-ages ʻukulele jam and singalong.",
@@ -398,6 +430,8 @@
     },
     {
       "clubID": 17,
+      "sourceId": "club_e616ce25c10f",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kauaʻi-SUP",
       "owner": "admin@foo.com",
       "description": "Stand-up paddleboarding community.",
@@ -421,6 +455,8 @@
     },
     {
       "clubID": 18,
+      "sourceId": "club_e391f8644dc2",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Kōloa Community Printmaking Group",
       "owner": "admin@foo.com",
       "description": "Collaborative workspace for printmakers with shared tools and peer exchange.",
@@ -452,6 +488,8 @@
     },
     {
       "clubID": 19,
+      "sourceId": "club_8263b9e3a28c",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "NAMI Kauaʻi Peer Recovery Group",
       "owner": "admin@foo.com",
       "description": "Free, confidential peer support for people living with mental illness.",
@@ -483,6 +521,8 @@
     },
     {
       "clubID": 20,
+      "sourceId": "club_f7acab24b226",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "PRISM Club at Kauaʻi Community College",
       "owner": "admin@foo.com",
       "description": "KCC student organization that presents an annual Rocky Horror community event.",
@@ -506,6 +546,8 @@
     },
     {
       "clubID": 21,
+      "sourceId": "club_cb1b72c57531",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Rotary Club of Hanalei Bay",
       "owner": "admin@foo.com",
       "description": "Rotary service club serving Hanalei, Princeville, and Kīlauea.",
@@ -537,6 +579,8 @@
     },
     {
       "clubID": 22,
+      "sourceId": "club_a3d2cbe99bac",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Sunday Beach ʻOhana",
       "owner": "admin@foo.com",
       "description": "Beach-centered community meetup group.",
@@ -560,6 +604,8 @@
     },
     {
       "clubID": 23,
+      "sourceId": "club_269b49bc5711",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "West Side Writers’ Group",
       "owner": "admin@foo.com",
       "description": "Drop-in feedback and writing-prompt group for adult fiction, nonfiction, and poetry writers.",
@@ -590,6 +636,8 @@
     },
     {
       "clubID": 24,
+      "sourceId": "club_5b1092e0ea74",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "name": "Zonta Club of Kauaʻi",
       "owner": "admin@foo.com",
       "description": "Local Zonta club supporting women and girls through service and advocacy.",
@@ -623,6 +671,8 @@
   ],
   "events": [
     {
+      "sourceId": "evt_5c98bcdcb178@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "19th Annual Never Forget Sandy G Golf Tournament",
       "date": "2026-08-02T18:00:00.000Z",
@@ -643,6 +693,8 @@
       }
     },
     {
+      "sourceId": "evt_34e687ae80c0@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "24th Heiva i Kauaʻi Tahitian Dance Competitions",
       "description": "Annual Tahitian dance and drumming competition.",
@@ -673,6 +725,8 @@
       }
     },
     {
+      "sourceId": "ser_e2ab421d9bfe@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Sunday Sound Bath & Yin Yoga",
       "date": "2026-08-02T18:30:00.000Z",
@@ -700,6 +754,8 @@
       }
     },
     {
+      "sourceId": "ser_646374884d3e@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anaina Hou Farmers Market",
       "date": "2026-08-02T19:00:00.000Z",
@@ -721,6 +777,8 @@
       }
     },
     {
+      "sourceId": "ser_74f8bb691282@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Veterans Center Local Treasures Market",
       "date": "2026-08-02T19:00:00.000Z",
@@ -742,6 +800,8 @@
       }
     },
     {
+      "sourceId": "ser_07db3cc5000b@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lululemon Sunday Sweat",
       "date": "2026-08-02T19:00:00.000Z",
@@ -767,6 +827,8 @@
       }
     },
     {
+      "sourceId": "evt_2a1a23ffa2f1@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hawaiian Style Music with Bula & CJ",
       "date": "2026-08-02T21:30:00.000Z",
@@ -787,6 +849,8 @@
       }
     },
     {
+      "sourceId": "evt_01db35a014dc@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kimberly Hope at Kukui Grove",
       "description": "One-hour violin performance.",
@@ -813,6 +877,8 @@
       }
     },
     {
+      "sourceId": "ser_761570b8a109@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DA GRUV at Sunset Lanai",
       "date": "2026-08-02T22:30:00.000Z",
@@ -833,6 +899,8 @@
       }
     },
     {
+      "sourceId": "ser_a44f78c6f101@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ʻUkulele Basics & Jam Sessions",
       "date": "2026-08-02T23:00:00.000Z",
@@ -853,6 +921,8 @@
       }
     },
     {
+      "sourceId": "evt_831a3a16e889@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mahjong Lessons",
       "description": "Hong Kong-style mahjong lesson.",
@@ -881,6 +951,8 @@
       }
     },
     {
+      "sourceId": "ser_6006ce772710@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 16,
       "title": "Kauaʻi ʻUkulele Club Meetup",
       "description": "Bring an ʻukulele, jam, and sing; all ages welcome.",
@@ -908,6 +980,8 @@
       }
     },
     {
+      "sourceId": "ser_377bdd149e92@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kanikapila",
       "date": "2026-08-03T03:30:00.000Z",
@@ -933,6 +1007,8 @@
       }
     },
     {
+      "sourceId": "ser_1d248ab4a44e@2026-08-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Wrongway Jackson",
       "date": "2026-08-03T04:00:00.000Z",
@@ -953,6 +1029,8 @@
       }
     },
     {
+      "sourceId": "ser_043de5cf3c05@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Coffee and Play for Keiki",
       "description": "Soft play, games, and books.",
@@ -979,6 +1057,8 @@
       }
     },
     {
+      "sourceId": "ser_f958350d8b79@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Jam Sessions",
       "date": "2026-08-03T23:00:00.000Z",
@@ -1005,6 +1085,8 @@
       }
     },
     {
+      "sourceId": "ser_5aebc7a8c217@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anahola Farmers Market",
       "date": "2026-08-04T01:00:00.000Z",
@@ -1029,6 +1111,8 @@
       }
     },
     {
+      "sourceId": "ser_090e4ee667bb@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pau Hana Monday Market",
       "date": "2026-08-04T01:00:00.000Z",
@@ -1050,6 +1134,8 @@
       }
     },
     {
+      "sourceId": "evt_da7dec80436f@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 11,
       "title": "Kauaʻi Live Poets Society Workshop",
       "description": "Relaxed adult poetry workshop open to new members of all skill levels.",
@@ -1079,6 +1165,8 @@
       }
     },
     {
+      "sourceId": "evt_ad974c600e63@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Game Night",
       "description": "Tabletop gaming, including Euro games; participants may bring games.",
@@ -1106,6 +1194,8 @@
       }
     },
     {
+      "sourceId": "ser_254bb8809abe@2026-08-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ahi Lele Fire Show",
       "date": "2026-08-04T03:30:00.000Z",
@@ -1128,6 +1218,8 @@
       }
     },
     {
+      "sourceId": "evt_d71c901925fb@2026-08-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Farm to Keiki First Foods Storytime Series",
       "description": "Four-week early-childhood series featuring kalo, banana, breadfruit, and sweet potato.",
@@ -1157,6 +1249,8 @@
       }
     },
     {
+      "sourceId": "ser_1ca5c1a4935c@2026-08-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tunes, Tales & Twirls Keiki Story Time",
       "date": "2026-08-04T21:00:00.000Z",
@@ -1184,6 +1278,8 @@
       }
     },
     {
+      "sourceId": "ser_c738891b1982@2026-08-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "NAMI Peer Recovery Support Group",
       "description": "Free and confidential in-person peer recovery group; free lunch listed.",
@@ -1213,6 +1309,8 @@
       }
     },
     {
+      "sourceId": "ser_ac22641ef52e@2026-08-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tuesday Bridge",
       "date": "2026-08-05T00:00:00.000Z",
@@ -1239,6 +1337,8 @@
       }
     },
     {
+      "sourceId": "ser_f65c424ae8d7@2026-08-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waipā Farmers Market",
       "date": "2026-08-05T00:00:00.000Z",
@@ -1259,6 +1359,8 @@
       }
     },
     {
+      "sourceId": "ser_81bca8b9cb34@2026-08-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "YWCA Kauaʻi Hula Lessons",
       "date": "2026-08-05T02:00:00.000Z",
@@ -1287,6 +1389,8 @@
       }
     },
     {
+      "sourceId": "ser_05e7f5b0d8e6@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cantonese Mahjong",
       "date": "2026-08-05T23:00:00.000Z",
@@ -1313,6 +1417,8 @@
       }
     },
     {
+      "sourceId": "ser_15c2625bc0a4@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Makai Music & Art Festival",
       "date": "2026-08-05T23:00:00.000Z",
@@ -1338,6 +1444,8 @@
       }
     },
     {
+      "sourceId": "ser_2ae9645b4196@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kapaʻa Sunshine Market",
       "date": "2026-08-06T01:00:00.000Z",
@@ -1360,6 +1468,8 @@
       }
     },
     {
+      "sourceId": "ser_79cc0d04e2e9@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mokihana Berry Read-Aloud Club",
       "date": "2026-08-06T01:00:00.000Z",
@@ -1387,6 +1497,8 @@
       }
     },
     {
+      "sourceId": "evt_7f46cd7dbca4@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Happy Hour with Kaʻimi / Del",
       "date": "2026-08-06T02:00:00.000Z",
@@ -1407,6 +1519,8 @@
       }
     },
     {
+      "sourceId": "evt_70e5b1bf4366@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Game and Puzzle Night",
       "date": "2026-08-06T03:00:00.000Z",
@@ -1433,6 +1547,8 @@
       }
     },
     {
+      "sourceId": "ser_da88fc483171@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kōloa Game and Puzzle Night",
       "date": "2026-08-06T03:00:00.000Z",
@@ -1459,6 +1575,8 @@
       }
     },
     {
+      "sourceId": "evt_1c0ea6bc2b08@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mom’s Support Circle",
       "description": "Peer support space for mothers in varied circumstances.",
@@ -1486,6 +1604,8 @@
       }
     },
     {
+      "sourceId": "ser_254bb8809abe@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ahi Lele Fire Show",
       "date": "2026-08-06T03:30:00.000Z",
@@ -1508,6 +1628,8 @@
       }
     },
     {
+      "sourceId": "ser_6574c745ea99@2026-08-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Jukebox Heroes Live Rock Band Karaoke",
       "date": "2026-08-06T03:30:00.000Z",
@@ -1529,6 +1651,8 @@
       }
     },
     {
+      "sourceId": "evt_b7f5010df0b4@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Baby & Me Lapsit Storytime",
       "date": "2026-08-06T19:30:00.000Z",
@@ -1556,6 +1680,8 @@
       }
     },
     {
+      "sourceId": "ser_522e9f65ed5b@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Museum First Thursday Courtyard Market",
       "date": "2026-08-06T20:00:00.000Z",
@@ -1582,6 +1708,8 @@
       }
     },
     {
+      "sourceId": "ser_7db978a67da4@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kōloa Community Printmaking Group",
       "date": "2026-08-06T20:00:00.000Z",
@@ -1609,6 +1737,8 @@
       }
     },
     {
+      "sourceId": "evt_30e77ad6ebda@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "CPR & Choking First Aid with Dr. Arnie Serota",
       "description": "Informational CPR and choking-response workshop; does not provide certification.",
@@ -1636,6 +1766,8 @@
       }
     },
     {
+      "sourceId": "ser_0f2f29f9a33c@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Sunshine Market",
       "date": "2026-08-07T01:00:00.000Z",
@@ -1658,6 +1790,8 @@
       }
     },
     {
+      "sourceId": "ser_a7fa91055fc3@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Free Hula Show & Craft Fair",
       "date": "2026-08-07T02:00:00.000Z",
@@ -1684,6 +1818,8 @@
       }
     },
     {
+      "sourceId": "evt_5424c489a49e@2026-08-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Bruddah Adrian",
       "date": "2026-08-07T04:00:00.000Z",
@@ -1704,6 +1840,8 @@
       }
     },
     {
+      "sourceId": "ser_f958350d8b79@2026-08-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Jam Sessions",
       "date": "2026-08-07T23:00:00.000Z",
@@ -1730,6 +1868,8 @@
       }
     },
     {
+      "sourceId": "ser_1c1dde5111b2@2026-08-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Beach Resort Kauaʻi Made Craft Fair",
       "date": "2026-08-08T01:00:00.000Z",
@@ -1750,6 +1890,8 @@
       }
     },
     {
+      "sourceId": "ser_3c64115b1578@2026-08-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Art Nights",
       "date": "2026-08-08T03:00:00.000Z",
@@ -1776,6 +1918,8 @@
       }
     },
     {
+      "sourceId": "ser_7ea19589b9b0@2026-08-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Friday Art Night",
       "date": "2026-08-08T03:00:00.000Z",
@@ -1798,6 +1942,8 @@
       }
     },
     {
+      "sourceId": "evt_66e5551e3d98@2026-08-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Trivia Night",
       "date": "2026-08-08T04:00:00.000Z",
@@ -1820,6 +1966,8 @@
       }
     },
     {
+      "sourceId": "ser_9b88db509294@2026-08-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Line Dance",
       "date": "2026-08-08T04:00:00.000Z",
@@ -1845,6 +1993,8 @@
       }
     },
     {
+      "sourceId": "ser_c0f392412401@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lydgate Beach Community Cleanup",
       "date": "2026-08-08T18:30:00.000Z",
@@ -1870,6 +2020,8 @@
       }
     },
     {
+      "sourceId": "evt_54e660f5f202@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Horse Lei Making Workshop",
       "date": "2026-08-08T19:00:00.000Z",
@@ -1894,6 +2046,8 @@
       }
     },
     {
+      "sourceId": "ser_646374884d3e@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anaina Hou Farmers Market",
       "date": "2026-08-08T19:00:00.000Z",
@@ -1915,6 +2069,8 @@
       }
     },
     {
+      "sourceId": "ser_9ac8514513f0@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanalei Farmers Market",
       "date": "2026-08-08T19:00:00.000Z",
@@ -1935,6 +2091,8 @@
       }
     },
     {
+      "sourceId": "evt_3bf891f18995@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lauhala Bracelet Weaving Workshop",
       "description": "Traditional lauhala bracelet workshop; materials provided.",
@@ -1964,6 +2122,8 @@
       }
     },
     {
+      "sourceId": "evt_b6ef75200786@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "The Pinehearts",
       "date": "2026-08-08T20:30:00.000Z",
@@ -1984,6 +2144,8 @@
       }
     },
     {
+      "sourceId": "ser_948649729607@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Center Hula Show",
       "date": "2026-08-08T23:30:00.000Z",
@@ -2008,6 +2170,8 @@
       }
     },
     {
+      "sourceId": "ser_eef25e23f67a@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Made Craft Fair Saturdays",
       "date": "2026-08-09T01:00:00.000Z",
@@ -2028,6 +2192,8 @@
       }
     },
     {
+      "sourceId": "evt_3e5062d1f8bd@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Back to School Movie Night & Fun",
       "date": "2026-08-09T02:00:00.000Z",
@@ -2054,6 +2220,8 @@
       }
     },
     {
+      "sourceId": "ser_ffd115510c7b@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Downtown Līhuʻe Second Saturday Night Market",
       "date": "2026-08-09T02:00:00.000Z",
@@ -2079,6 +2247,8 @@
       }
     },
     {
+      "sourceId": "evt_3f0ec0aa877e@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pints with a Purpose",
       "description": "Fundraiser supporting Hawaiʻi families facing medical hardship.",
@@ -2104,6 +2274,8 @@
       }
     },
     {
+      "sourceId": "evt_cc9987e2c7ba@2026-08-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Island Magic Mike",
       "date": "2026-08-09T04:00:00.000Z",
@@ -2129,6 +2301,8 @@
       }
     },
     {
+      "sourceId": "ser_e2ab421d9bfe@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Sunday Sound Bath & Yin Yoga",
       "date": "2026-08-09T18:30:00.000Z",
@@ -2156,6 +2330,8 @@
       }
     },
     {
+      "sourceId": "ser_646374884d3e@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anaina Hou Farmers Market",
       "date": "2026-08-09T19:00:00.000Z",
@@ -2177,6 +2353,8 @@
       }
     },
     {
+      "sourceId": "ser_07db3cc5000b@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lululemon Sunday Sweat",
       "date": "2026-08-09T19:00:00.000Z",
@@ -2202,6 +2380,8 @@
       }
     },
     {
+      "sourceId": "ser_761570b8a109@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DA GRUV at Sunset Lanai",
       "date": "2026-08-09T22:30:00.000Z",
@@ -2222,6 +2402,8 @@
       }
     },
     {
+      "sourceId": "ser_a44f78c6f101@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ʻUkulele Basics & Jam Sessions",
       "date": "2026-08-09T23:00:00.000Z",
@@ -2242,6 +2424,8 @@
       }
     },
     {
+      "sourceId": "ser_83286f6a94c6@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Night Market",
       "date": "2026-08-10T02:00:00.000Z",
@@ -2263,6 +2447,8 @@
       }
     },
     {
+      "sourceId": "ser_377bdd149e92@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kanikapila",
       "date": "2026-08-10T03:30:00.000Z",
@@ -2288,6 +2474,8 @@
       }
     },
     {
+      "sourceId": "ser_1d248ab4a44e@2026-08-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Wrongway Jackson",
       "date": "2026-08-10T04:00:00.000Z",
@@ -2308,6 +2496,8 @@
       }
     },
     {
+      "sourceId": "evt_293792b23206@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Math Prep Week",
       "description": "Confidence-building math and data preparation program; lunch provided.",
@@ -2335,6 +2525,8 @@
       }
     },
     {
+      "sourceId": "ser_043de5cf3c05@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Coffee and Play for Keiki",
       "description": "Soft play, games, and books.",
@@ -2361,6 +2553,8 @@
       }
     },
     {
+      "sourceId": "ser_8d14697d8c5f@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Community Center Bingo",
       "date": "2026-08-10T21:00:00.000Z",
@@ -2382,6 +2576,8 @@
       }
     },
     {
+      "sourceId": "ser_f958350d8b79@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Jam Sessions",
       "date": "2026-08-10T23:00:00.000Z",
@@ -2408,6 +2604,8 @@
       }
     },
     {
+      "sourceId": "ser_5aebc7a8c217@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anahola Farmers Market",
       "date": "2026-08-11T01:00:00.000Z",
@@ -2432,6 +2630,8 @@
       }
     },
     {
+      "sourceId": "ser_090e4ee667bb@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pau Hana Monday Market",
       "date": "2026-08-11T01:00:00.000Z",
@@ -2453,6 +2653,8 @@
       }
     },
     {
+      "sourceId": "ser_254bb8809abe@2026-08-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ahi Lele Fire Show",
       "date": "2026-08-11T03:30:00.000Z",
@@ -2475,6 +2677,8 @@
       }
     },
     {
+      "sourceId": "evt_d71c901925fb@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Farm to Keiki First Foods Storytime Series",
       "description": "Four-week early-childhood series featuring kalo, banana, breadfruit, and sweet potato.",
@@ -2504,6 +2708,8 @@
       }
     },
     {
+      "sourceId": "ser_1ca5c1a4935c@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tunes, Tales & Twirls Keiki Story Time",
       "date": "2026-08-11T21:00:00.000Z",
@@ -2531,6 +2737,8 @@
       }
     },
     {
+      "sourceId": "ser_c738891b1982@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "NAMI Peer Recovery Support Group",
       "description": "Free and confidential in-person peer recovery group; free lunch listed.",
@@ -2560,6 +2768,8 @@
       }
     },
     {
+      "sourceId": "ser_ac22641ef52e@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tuesday Bridge",
       "date": "2026-08-12T00:00:00.000Z",
@@ -2586,6 +2796,8 @@
       }
     },
     {
+      "sourceId": "ser_f65c424ae8d7@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waipā Farmers Market",
       "date": "2026-08-12T00:00:00.000Z",
@@ -2606,6 +2818,8 @@
       }
     },
     {
+      "sourceId": "ser_81bca8b9cb34@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "YWCA Kauaʻi Hula Lessons",
       "date": "2026-08-12T02:00:00.000Z",
@@ -2634,6 +2848,8 @@
       }
     },
     {
+      "sourceId": "ser_653c6f750134@2026-08-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Moʻolelo Lecture Series",
       "date": "2026-08-12T03:00:00.000Z",
@@ -2659,6 +2875,8 @@
       }
     },
     {
+      "sourceId": "ser_05e7f5b0d8e6@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cantonese Mahjong",
       "date": "2026-08-12T23:00:00.000Z",
@@ -2685,6 +2903,8 @@
       }
     },
     {
+      "sourceId": "ser_15c2625bc0a4@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Makai Music & Art Festival",
       "date": "2026-08-12T23:00:00.000Z",
@@ -2710,6 +2930,8 @@
       }
     },
     {
+      "sourceId": "ser_2ae9645b4196@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kapaʻa Sunshine Market",
       "date": "2026-08-13T01:00:00.000Z",
@@ -2732,6 +2954,8 @@
       }
     },
     {
+      "sourceId": "ser_79cc0d04e2e9@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mokihana Berry Read-Aloud Club",
       "date": "2026-08-13T01:00:00.000Z",
@@ -2759,6 +2983,8 @@
       }
     },
     {
+      "sourceId": "ser_e350f91060f4@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Legos in the Library",
       "date": "2026-08-13T01:30:00.000Z",
@@ -2786,6 +3012,8 @@
       }
     },
     {
+      "sourceId": "evt_e9677e42117b@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Grocery Cart Makeover",
       "description": "Virtual grocery-shopping lesson focused on brain-healthy foods and nutrition labels.",
@@ -2813,6 +3041,8 @@
       }
     },
     {
+      "sourceId": "ser_254bb8809abe@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ahi Lele Fire Show",
       "date": "2026-08-13T03:30:00.000Z",
@@ -2835,6 +3065,8 @@
       }
     },
     {
+      "sourceId": "ser_6574c745ea99@2026-08-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Jukebox Heroes Live Rock Band Karaoke",
       "date": "2026-08-13T03:30:00.000Z",
@@ -2856,6 +3088,8 @@
       }
     },
     {
+      "sourceId": "ser_ed669f52e17e@2026-08-13",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Preschool Storytime",
       "date": "2026-08-13T20:00:00.000Z",
@@ -2882,6 +3116,8 @@
       }
     },
     {
+      "sourceId": "ser_5855c80630e8@2026-08-13",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Library Storytime",
       "date": "2026-08-13T20:30:00.000Z",
@@ -2908,6 +3144,8 @@
       }
     },
     {
+      "sourceId": "ser_0f2f29f9a33c@2026-08-13",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Sunshine Market",
       "date": "2026-08-14T01:00:00.000Z",
@@ -2930,6 +3168,8 @@
       }
     },
     {
+      "sourceId": "ser_a7fa91055fc3@2026-08-13",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Free Hula Show & Craft Fair",
       "date": "2026-08-14T02:00:00.000Z",
@@ -2956,6 +3196,8 @@
       }
     },
     {
+      "sourceId": "evt_922e3c07dee8@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Goodwill Reuse Collection Events",
       "description": "Public drop-off for reusable goods; volunteer shifts may also be available.",
@@ -2983,6 +3225,8 @@
       }
     },
     {
+      "sourceId": "evt_53a90af610ee@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 5,
       "title": "Garden Isle Quilters Exhibit & Sale",
       "date": "2026-08-14T20:00:00.000Z",
@@ -3009,6 +3253,8 @@
       }
     },
     {
+      "sourceId": "evt_92ef94bea519@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Plumeria Memory Cafe",
       "description": "Social gathering for people with memory challenges and their care partners.",
@@ -3038,6 +3284,8 @@
       }
     },
     {
+      "sourceId": "ser_f958350d8b79@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Jam Sessions",
       "date": "2026-08-14T23:00:00.000Z",
@@ -3064,6 +3312,8 @@
       }
     },
     {
+      "sourceId": "ser_1c1dde5111b2@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Beach Resort Kauaʻi Made Craft Fair",
       "date": "2026-08-15T01:00:00.000Z",
@@ -3084,6 +3334,8 @@
       }
     },
     {
+      "sourceId": "evt_50848189903d@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Writer’s Garden",
       "description": "Networking and creative gathering for local writers.",
@@ -3106,6 +3358,8 @@
       }
     },
     {
+      "sourceId": "ser_3c64115b1578@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Art Nights",
       "date": "2026-08-15T03:00:00.000Z",
@@ -3132,6 +3386,8 @@
       }
     },
     {
+      "sourceId": "ser_7ea19589b9b0@2026-08-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Friday Art Night",
       "date": "2026-08-15T03:00:00.000Z",
@@ -3154,6 +3410,8 @@
       }
     },
     {
+      "sourceId": "evt_a8fab58f042a@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Artisans & Crafters Fair",
       "date": "2026-08-15T18:00:00.000Z",
@@ -3179,6 +3437,8 @@
       }
     },
     {
+      "sourceId": "evt_df931bccae22@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hikiakalahau Community Workday",
       "description": "All-ages community workday; lunch is included in the public listing.",
@@ -3207,6 +3467,8 @@
       }
     },
     {
+      "sourceId": "ser_c0f392412401@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lydgate Beach Community Cleanup",
       "date": "2026-08-15T18:30:00.000Z",
@@ -3232,6 +3494,8 @@
       }
     },
     {
+      "sourceId": "evt_0154a1c4a3b1@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 14,
       "title": "Kauaʻi Robotics Expo",
       "description": "Live robotics expo featuring systems designed and programmed by local youth.",
@@ -3260,6 +3524,8 @@
       }
     },
     {
+      "sourceId": "evt_16bf3a11f8bd@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "St. Theresa Parish Pop-Up Market",
       "date": "2026-08-15T19:00:00.000Z",
@@ -3285,6 +3551,8 @@
       }
     },
     {
+      "sourceId": "ser_646374884d3e@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anaina Hou Farmers Market",
       "date": "2026-08-15T19:00:00.000Z",
@@ -3306,6 +3574,8 @@
       }
     },
     {
+      "sourceId": "ser_9ac8514513f0@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanalei Farmers Market",
       "date": "2026-08-15T19:00:00.000Z",
@@ -3326,6 +3596,8 @@
       }
     },
     {
+      "sourceId": "ser_948649729607@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Center Hula Show",
       "date": "2026-08-15T23:30:00.000Z",
@@ -3350,6 +3622,8 @@
       }
     },
     {
+      "sourceId": "ser_eef25e23f67a@2026-08-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Made Craft Fair Saturdays",
       "date": "2026-08-16T01:00:00.000Z",
@@ -3370,6 +3644,8 @@
       }
     },
     {
+      "sourceId": "ser_e2ab421d9bfe@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Sunday Sound Bath & Yin Yoga",
       "date": "2026-08-16T18:30:00.000Z",
@@ -3397,6 +3673,8 @@
       }
     },
     {
+      "sourceId": "evt_c015a77ba05e@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Beach House Craft Fair",
       "date": "2026-08-16T19:00:00.000Z",
@@ -3417,6 +3695,8 @@
       }
     },
     {
+      "sourceId": "ser_646374884d3e@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anaina Hou Farmers Market",
       "date": "2026-08-16T19:00:00.000Z",
@@ -3438,6 +3718,8 @@
       }
     },
     {
+      "sourceId": "ser_07db3cc5000b@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lululemon Sunday Sweat",
       "date": "2026-08-16T19:00:00.000Z",
@@ -3463,6 +3745,8 @@
       }
     },
     {
+      "sourceId": "ser_761570b8a109@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DA GRUV at Sunset Lanai",
       "date": "2026-08-16T22:30:00.000Z",
@@ -3483,6 +3767,8 @@
       }
     },
     {
+      "sourceId": "evt_5b8384fa0eed@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Bingo",
       "date": "2026-08-16T23:00:00.000Z",
@@ -3509,6 +3795,8 @@
       }
     },
     {
+      "sourceId": "ser_a44f78c6f101@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ʻUkulele Basics & Jam Sessions",
       "date": "2026-08-16T23:00:00.000Z",
@@ -3529,6 +3817,8 @@
       }
     },
     {
+      "sourceId": "evt_f462e149a888@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pop-Up Speakeasy with Lady Ipo",
       "date": "2026-08-17T02:00:00.000Z",
@@ -3556,6 +3846,8 @@
       }
     },
     {
+      "sourceId": "ser_377bdd149e92@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kanikapila",
       "date": "2026-08-17T03:30:00.000Z",
@@ -3581,6 +3873,8 @@
       }
     },
     {
+      "sourceId": "ser_1d248ab4a44e@2026-08-16",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Wrongway Jackson",
       "date": "2026-08-17T04:00:00.000Z",
@@ -3601,6 +3895,8 @@
       }
     },
     {
+      "sourceId": "ser_043de5cf3c05@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Coffee and Play for Keiki",
       "description": "Soft play, games, and books.",
@@ -3627,6 +3923,8 @@
       }
     },
     {
+      "sourceId": "ser_f958350d8b79@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Jam Sessions",
       "date": "2026-08-17T23:00:00.000Z",
@@ -3653,6 +3951,8 @@
       }
     },
     {
+      "sourceId": "ser_5aebc7a8c217@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anahola Farmers Market",
       "date": "2026-08-18T01:00:00.000Z",
@@ -3677,6 +3977,8 @@
       }
     },
     {
+      "sourceId": "ser_090e4ee667bb@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pau Hana Monday Market",
       "date": "2026-08-18T01:00:00.000Z",
@@ -3698,6 +4000,8 @@
       }
     },
     {
+      "sourceId": "evt_32af484ade80@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Family Literacy Night",
       "description": "Monthly family read-aloud, light dinner, and craft.",
@@ -3728,6 +4032,8 @@
       }
     },
     {
+      "sourceId": "ser_254bb8809abe@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ahi Lele Fire Show",
       "date": "2026-08-18T03:30:00.000Z",
@@ -3750,6 +4056,8 @@
       }
     },
     {
+      "sourceId": "ser_097148fa4d6e@2026-08-17",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Family Literacy Night",
       "date": "2026-08-18T03:30:00.000Z",
@@ -3776,6 +4084,8 @@
       }
     },
     {
+      "sourceId": "evt_d71c901925fb@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Farm to Keiki First Foods Storytime Series",
       "description": "Four-week early-childhood series featuring kalo, banana, breadfruit, and sweet potato.",
@@ -3805,6 +4115,8 @@
       }
     },
     {
+      "sourceId": "evt_ed13db290915@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cooking Up Brain Health",
       "description": "Cooking demonstration using MIND-diet principles, with samples and take-home resources.",
@@ -3832,6 +4144,8 @@
       }
     },
     {
+      "sourceId": "ser_1ca5c1a4935c@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tunes, Tales & Twirls Keiki Story Time",
       "date": "2026-08-18T21:00:00.000Z",
@@ -3859,6 +4173,8 @@
       }
     },
     {
+      "sourceId": "ser_c738891b1982@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "NAMI Peer Recovery Support Group",
       "description": "Free and confidential in-person peer recovery group; free lunch listed.",
@@ -3888,6 +4204,8 @@
       }
     },
     {
+      "sourceId": "ser_ac22641ef52e@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tuesday Bridge",
       "date": "2026-08-19T00:00:00.000Z",
@@ -3914,6 +4232,8 @@
       }
     },
     {
+      "sourceId": "ser_f65c424ae8d7@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waipā Farmers Market",
       "date": "2026-08-19T00:00:00.000Z",
@@ -3934,6 +4254,8 @@
       }
     },
     {
+      "sourceId": "ser_81bca8b9cb34@2026-08-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "YWCA Kauaʻi Hula Lessons",
       "date": "2026-08-19T02:00:00.000Z",
@@ -3962,6 +4284,8 @@
       }
     },
     {
+      "sourceId": "evt_a42a0c4e2707@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mālama Kūpuna",
       "date": "2026-08-19T20:00:00.000Z",
@@ -3987,6 +4311,8 @@
       }
     },
     {
+      "sourceId": "ser_05e7f5b0d8e6@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cantonese Mahjong",
       "date": "2026-08-19T23:00:00.000Z",
@@ -4013,6 +4339,8 @@
       }
     },
     {
+      "sourceId": "ser_15c2625bc0a4@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Makai Music & Art Festival",
       "date": "2026-08-19T23:00:00.000Z",
@@ -4038,6 +4366,8 @@
       }
     },
     {
+      "sourceId": "ser_2ae9645b4196@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kapaʻa Sunshine Market",
       "date": "2026-08-20T01:00:00.000Z",
@@ -4060,6 +4390,8 @@
       }
     },
     {
+      "sourceId": "ser_79cc0d04e2e9@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mokihana Berry Read-Aloud Club",
       "date": "2026-08-20T01:00:00.000Z",
@@ -4087,6 +4419,8 @@
       }
     },
     {
+      "sourceId": "evt_1e8b8b609c6e@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Līhuʻe LEGO Club",
       "date": "2026-08-20T02:00:00.000Z",
@@ -4115,6 +4449,8 @@
       }
     },
     {
+      "sourceId": "ser_254bb8809abe@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ahi Lele Fire Show",
       "date": "2026-08-20T03:30:00.000Z",
@@ -4137,6 +4473,8 @@
       }
     },
     {
+      "sourceId": "ser_6574c745ea99@2026-08-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Jukebox Heroes Live Rock Band Karaoke",
       "date": "2026-08-20T03:30:00.000Z",
@@ -4158,6 +4496,8 @@
       }
     },
     {
+      "sourceId": "ser_5855c80630e8@2026-08-20",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Library Storytime",
       "date": "2026-08-20T20:30:00.000Z",
@@ -4184,6 +4524,8 @@
       }
     },
     {
+      "sourceId": "ser_0f2f29f9a33c@2026-08-20",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Sunshine Market",
       "date": "2026-08-21T01:00:00.000Z",
@@ -4206,6 +4548,8 @@
       }
     },
     {
+      "sourceId": "ser_a7fa91055fc3@2026-08-20",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Free Hula Show & Craft Fair",
       "date": "2026-08-21T02:00:00.000Z",
@@ -4232,6 +4576,8 @@
       }
     },
     {
+      "sourceId": "evt_9fe0d396ecde@2026-08-20",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 7,
       "title": "Kauaʻi Concert Association Business Pau Hana",
       "date": "2026-08-21T03:00:00.000Z",
@@ -4252,6 +4598,8 @@
       }
     },
     {
+      "sourceId": "ser_f958350d8b79@2026-08-21",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kūpuna Jam Sessions",
       "date": "2026-08-21T23:00:00.000Z",
@@ -4278,6 +4626,8 @@
       }
     },
     {
+      "sourceId": "ser_1c1dde5111b2@2026-08-21",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Beach Resort Kauaʻi Made Craft Fair",
       "date": "2026-08-22T01:00:00.000Z",
@@ -4298,6 +4648,8 @@
       }
     },
     {
+      "sourceId": "ser_3c64115b1578@2026-08-21",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Art Nights",
       "date": "2026-08-22T03:00:00.000Z",
@@ -4324,6 +4676,8 @@
       }
     },
     {
+      "sourceId": "ser_7ea19589b9b0@2026-08-21",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Friday Art Night",
       "date": "2026-08-22T03:00:00.000Z",
@@ -4346,6 +4700,8 @@
       }
     },
     {
+      "sourceId": "evt_dffb168472a8@2026-08-21",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DUKE",
       "description": "One-person stage work about Duke Paoa Kahanamoku starring Moses Goods.",
@@ -4373,6 +4729,8 @@
       }
     },
     {
+      "sourceId": "ser_c0f392412401@2026-08-22",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lydgate Beach Community Cleanup",
       "date": "2026-08-22T18:30:00.000Z",
@@ -4398,6 +4756,8 @@
       }
     },
     {
+      "sourceId": "ser_646374884d3e@2026-08-22",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anaina Hou Farmers Market",
       "date": "2026-08-22T19:00:00.000Z",
@@ -4419,6 +4779,8 @@
       }
     },
     {
+      "sourceId": "ser_9ac8514513f0@2026-08-22",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanalei Farmers Market",
       "date": "2026-08-22T19:00:00.000Z",
@@ -4439,6 +4801,8 @@
       }
     },
     {
+      "sourceId": "ser_948649729607@2026-08-22",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Center Hula Show",
       "date": "2026-08-22T23:30:00.000Z",
@@ -4463,6 +4827,8 @@
       }
     },
     {
+      "sourceId": "ser_eef25e23f67a@2026-08-22",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Made Craft Fair Saturdays",
       "date": "2026-08-23T01:00:00.000Z",
@@ -4483,6 +4849,8 @@
       }
     },
     {
+      "sourceId": "evt_56a4702752db@2026-08-22",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Summer Nights Karaoke",
       "date": "2026-08-23T04:00:00.000Z",
@@ -4509,6 +4877,8 @@
       }
     },
     {
+      "sourceId": "ser_e2ab421d9bfe@2026-08-23",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Sunday Sound Bath & Yin Yoga",
       "date": "2026-08-23T18:30:00.000Z",
@@ -4536,6 +4906,8 @@
       }
     },
     {
+      "sourceId": "ser_07db3cc5000b@2026-08-23",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lululemon Sunday Sweat",
       "date": "2026-08-23T19:00:00.000Z",
@@ -4561,6 +4933,8 @@
       }
     },
     {
+      "sourceId": "ser_761570b8a109@2026-08-23",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DA GRUV at Sunset Lanai",
       "date": "2026-08-23T22:30:00.000Z",
@@ -4581,6 +4955,8 @@
       }
     },
     {
+      "sourceId": "ser_a44f78c6f101@2026-08-23",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ʻUkulele Basics & Jam Sessions",
       "date": "2026-08-23T23:00:00.000Z",
@@ -4601,6 +4977,8 @@
       }
     },
     {
+      "sourceId": "ser_377bdd149e92@2026-08-23",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kanikapila",
       "date": "2026-08-24T03:30:00.000Z",
@@ -4626,6 +5004,8 @@
       }
     },
     {
+      "sourceId": "ser_1d248ab4a44e@2026-08-23",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Wrongway Jackson",
       "date": "2026-08-24T04:00:00.000Z",
@@ -4646,6 +5026,8 @@
       }
     },
     {
+      "sourceId": "ser_043de5cf3c05@2026-08-24",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Coffee and Play for Keiki",
       "description": "Soft play, games, and books.",
@@ -4672,6 +5054,8 @@
       }
     },
     {
+      "sourceId": "ser_5aebc7a8c217@2026-08-24",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anahola Farmers Market",
       "date": "2026-08-25T01:00:00.000Z",
@@ -4696,6 +5080,8 @@
       }
     },
     {
+      "sourceId": "ser_090e4ee667bb@2026-08-24",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pau Hana Monday Market",
       "date": "2026-08-25T01:00:00.000Z",
@@ -4717,6 +5103,8 @@
       }
     },
     {
+      "sourceId": "evt_d71c901925fb@2026-08-25",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Farm to Keiki First Foods Storytime Series",
       "description": "Four-week early-childhood series featuring kalo, banana, breadfruit, and sweet potato.",
@@ -4746,6 +5134,8 @@
       }
     },
     {
+      "sourceId": "ser_1ca5c1a4935c@2026-08-25",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tunes, Tales & Twirls Keiki Story Time",
       "date": "2026-08-25T21:00:00.000Z",
@@ -4773,6 +5163,8 @@
       }
     },
     {
+      "sourceId": "ser_c738891b1982@2026-08-25",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "NAMI Peer Recovery Support Group",
       "description": "Free and confidential in-person peer recovery group; free lunch listed.",
@@ -4802,6 +5194,8 @@
       }
     },
     {
+      "sourceId": "ser_ac22641ef52e@2026-08-25",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tuesday Bridge",
       "date": "2026-08-26T00:00:00.000Z",
@@ -4828,6 +5222,8 @@
       }
     },
     {
+      "sourceId": "ser_f65c424ae8d7@2026-08-25",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waipā Farmers Market",
       "date": "2026-08-26T00:00:00.000Z",
@@ -4848,6 +5244,8 @@
       }
     },
     {
+      "sourceId": "ser_81bca8b9cb34@2026-08-25",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "YWCA Kauaʻi Hula Lessons",
       "date": "2026-08-26T02:00:00.000Z",
@@ -4876,6 +5274,8 @@
       }
     },
     {
+      "sourceId": "ser_05e7f5b0d8e6@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cantonese Mahjong",
       "date": "2026-08-26T23:00:00.000Z",
@@ -4902,6 +5302,8 @@
       }
     },
     {
+      "sourceId": "ser_15c2625bc0a4@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Makai Music & Art Festival",
       "date": "2026-08-26T23:00:00.000Z",
@@ -4927,6 +5329,8 @@
       }
     },
     {
+      "sourceId": "evt_bea11c0dae13@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Trashion Accessory Workshop",
       "description": "Hands-on upcycling workshop using discarded materials to make wearable accessories.",
@@ -4954,6 +5358,8 @@
       }
     },
     {
+      "sourceId": "ser_2ae9645b4196@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kapaʻa Sunshine Market",
       "date": "2026-08-27T01:00:00.000Z",
@@ -4976,6 +5382,8 @@
       }
     },
     {
+      "sourceId": "ser_79cc0d04e2e9@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mokihana Berry Read-Aloud Club",
       "date": "2026-08-27T01:00:00.000Z",
@@ -5003,6 +5411,8 @@
       }
     },
     {
+      "sourceId": "ser_6574c745ea99@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Jukebox Heroes Live Rock Band Karaoke",
       "date": "2026-08-27T03:30:00.000Z",
@@ -5024,6 +5434,8 @@
       }
     },
     {
+      "sourceId": "ser_3c668aaef5ea@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "West Side Writers’ Group",
       "date": "2026-08-27T03:30:00.000Z",
@@ -5051,6 +5463,8 @@
       }
     },
     {
+      "sourceId": "ser_e40829e94dd9@2026-08-26",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 13,
       "title": "Kauaʻi Pride Book Club",
       "date": "2026-08-27T04:30:00.000Z",
@@ -5072,6 +5486,8 @@
       }
     },
     {
+      "sourceId": "ser_5855c80630e8@2026-08-27",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Library Storytime",
       "date": "2026-08-27T20:30:00.000Z",
@@ -5098,6 +5514,8 @@
       }
     },
     {
+      "sourceId": "ser_0f2f29f9a33c@2026-08-27",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Sunshine Market",
       "date": "2026-08-28T01:00:00.000Z",
@@ -5120,6 +5538,8 @@
       }
     },
     {
+      "sourceId": "ser_a7fa91055fc3@2026-08-27",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Free Hula Show & Craft Fair",
       "date": "2026-08-28T02:00:00.000Z",
@@ -5146,6 +5566,8 @@
       }
     },
     {
+      "sourceId": "ser_1c1dde5111b2@2026-08-28",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Beach Resort Kauaʻi Made Craft Fair",
       "date": "2026-08-29T01:00:00.000Z",
@@ -5166,6 +5588,8 @@
       }
     },
     {
+      "sourceId": "ser_3c64115b1578@2026-08-28",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Art Nights",
       "date": "2026-08-29T03:00:00.000Z",
@@ -5192,6 +5616,8 @@
       }
     },
     {
+      "sourceId": "ser_7ea19589b9b0@2026-08-28",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Friday Art Night",
       "date": "2026-08-29T03:00:00.000Z",
@@ -5214,6 +5640,8 @@
       }
     },
     {
+      "sourceId": "ser_c0f392412401@2026-08-29",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lydgate Beach Community Cleanup",
       "date": "2026-08-29T18:30:00.000Z",
@@ -5239,6 +5667,8 @@
       }
     },
     {
+      "sourceId": "ser_9ac8514513f0@2026-08-29",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanalei Farmers Market",
       "date": "2026-08-29T19:00:00.000Z",
@@ -5259,6 +5689,8 @@
       }
     },
     {
+      "sourceId": "evt_c190238bc5ab@2026-08-29",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Farm Fair & Fun Tribute 2026",
       "description": "Fruit and vegetable show, agriculture education, local vendors, bonsai, and entertainment.",
@@ -5286,6 +5718,8 @@
       }
     },
     {
+      "sourceId": "ser_948649729607@2026-08-29",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Center Hula Show",
       "date": "2026-08-29T23:30:00.000Z",
@@ -5310,6 +5744,8 @@
       }
     },
     {
+      "sourceId": "ser_eef25e23f67a@2026-08-29",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Made Craft Fair Saturdays",
       "date": "2026-08-30T01:00:00.000Z",
@@ -5330,6 +5766,8 @@
       }
     },
     {
+      "sourceId": "ser_e2ab421d9bfe@2026-08-30",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Sunday Sound Bath & Yin Yoga",
       "date": "2026-08-30T18:30:00.000Z",
@@ -5357,6 +5795,8 @@
       }
     },
     {
+      "sourceId": "ser_07db3cc5000b@2026-08-30",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lululemon Sunday Sweat",
       "date": "2026-08-30T19:00:00.000Z",
@@ -5382,6 +5822,8 @@
       }
     },
     {
+      "sourceId": "ser_761570b8a109@2026-08-30",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DA GRUV at Sunset Lanai",
       "date": "2026-08-30T22:30:00.000Z",
@@ -5402,6 +5844,8 @@
       }
     },
     {
+      "sourceId": "ser_a44f78c6f101@2026-08-30",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ʻUkulele Basics & Jam Sessions",
       "date": "2026-08-30T23:00:00.000Z",
@@ -5422,6 +5866,8 @@
       }
     },
     {
+      "sourceId": "ser_377bdd149e92@2026-08-30",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kanikapila",
       "date": "2026-08-31T03:30:00.000Z",
@@ -5447,6 +5893,8 @@
       }
     },
     {
+      "sourceId": "ser_1d248ab4a44e@2026-08-30",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Wrongway Jackson",
       "date": "2026-08-31T04:00:00.000Z",
@@ -5467,6 +5915,8 @@
       }
     },
     {
+      "sourceId": "ser_043de5cf3c05@2026-08-31",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Coffee and Play for Keiki",
       "description": "Soft play, games, and books.",
@@ -5493,6 +5943,8 @@
       }
     },
     {
+      "sourceId": "ser_5aebc7a8c217@2026-08-31",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anahola Farmers Market",
       "date": "2026-09-01T01:00:00.000Z",
@@ -5517,6 +5969,8 @@
       }
     },
     {
+      "sourceId": "ser_090e4ee667bb@2026-08-31",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pau Hana Monday Market",
       "date": "2026-09-01T01:00:00.000Z",
@@ -5538,6 +5992,8 @@
       }
     },
     {
+      "sourceId": "ser_1ca5c1a4935c@2026-09-01",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tunes, Tales & Twirls Keiki Story Time",
       "date": "2026-09-01T21:00:00.000Z",
@@ -5565,6 +6021,8 @@
       }
     },
     {
+      "sourceId": "ser_c738891b1982@2026-09-01",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "NAMI Peer Recovery Support Group",
       "description": "Free and confidential in-person peer recovery group; free lunch listed.",
@@ -5594,6 +6052,8 @@
       }
     },
     {
+      "sourceId": "ser_ac22641ef52e@2026-09-01",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tuesday Bridge",
       "date": "2026-09-02T00:00:00.000Z",
@@ -5620,6 +6080,8 @@
       }
     },
     {
+      "sourceId": "ser_f65c424ae8d7@2026-09-01",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waipā Farmers Market",
       "date": "2026-09-02T00:00:00.000Z",
@@ -5640,6 +6102,8 @@
       }
     },
     {
+      "sourceId": "ser_81bca8b9cb34@2026-09-01",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "YWCA Kauaʻi Hula Lessons",
       "date": "2026-09-02T02:00:00.000Z",
@@ -5668,6 +6132,8 @@
       }
     },
     {
+      "sourceId": "ser_05e7f5b0d8e6@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cantonese Mahjong",
       "date": "2026-09-02T23:00:00.000Z",
@@ -5694,6 +6160,8 @@
       }
     },
     {
+      "sourceId": "ser_15c2625bc0a4@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Makai Music & Art Festival",
       "date": "2026-09-02T23:00:00.000Z",
@@ -5719,6 +6187,8 @@
       }
     },
     {
+      "sourceId": "ser_2ae9645b4196@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kapaʻa Sunshine Market",
       "date": "2026-09-03T01:00:00.000Z",
@@ -5741,6 +6211,8 @@
       }
     },
     {
+      "sourceId": "ser_79cc0d04e2e9@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mokihana Berry Read-Aloud Club",
       "date": "2026-09-03T01:00:00.000Z",
@@ -5768,6 +6240,8 @@
       }
     },
     {
+      "sourceId": "evt_70e5b1bf4366@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Game and Puzzle Night",
       "date": "2026-09-03T03:00:00.000Z",
@@ -5794,6 +6268,8 @@
       }
     },
     {
+      "sourceId": "ser_da88fc483171@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kōloa Game and Puzzle Night",
       "date": "2026-09-03T03:00:00.000Z",
@@ -5820,6 +6296,8 @@
       }
     },
     {
+      "sourceId": "ser_6574c745ea99@2026-09-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Jukebox Heroes Live Rock Band Karaoke",
       "date": "2026-09-03T03:30:00.000Z",
@@ -5841,6 +6319,8 @@
       }
     },
     {
+      "sourceId": "ser_522e9f65ed5b@2026-09-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Museum First Thursday Courtyard Market",
       "date": "2026-09-03T20:00:00.000Z",
@@ -5867,6 +6347,8 @@
       }
     },
     {
+      "sourceId": "ser_7db978a67da4@2026-09-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kōloa Community Printmaking Group",
       "date": "2026-09-03T20:00:00.000Z",
@@ -5894,6 +6376,8 @@
       }
     },
     {
+      "sourceId": "ser_5855c80630e8@2026-09-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Library Storytime",
       "date": "2026-09-03T20:30:00.000Z",
@@ -5920,6 +6404,8 @@
       }
     },
     {
+      "sourceId": "ser_0f2f29f9a33c@2026-09-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Sunshine Market",
       "date": "2026-09-04T01:00:00.000Z",
@@ -5942,6 +6428,8 @@
       }
     },
     {
+      "sourceId": "ser_a7fa91055fc3@2026-09-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Free Hula Show & Craft Fair",
       "date": "2026-09-04T02:00:00.000Z",
@@ -5968,6 +6456,8 @@
       }
     },
     {
+      "sourceId": "evt_c733b4661da2@2026-09-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 7,
       "title": "Kauaʻi Motor Sports Business Pau Hana",
       "date": "2026-09-04T03:00:00.000Z",
@@ -5987,6 +6477,8 @@
       }
     },
     {
+      "sourceId": "ser_1c1dde5111b2@2026-09-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Beach Resort Kauaʻi Made Craft Fair",
       "date": "2026-09-05T01:00:00.000Z",
@@ -6007,6 +6499,8 @@
       }
     },
     {
+      "sourceId": "ser_3c64115b1578@2026-09-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Art Nights",
       "date": "2026-09-05T03:00:00.000Z",
@@ -6033,6 +6527,8 @@
       }
     },
     {
+      "sourceId": "ser_7ea19589b9b0@2026-09-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Friday Art Night",
       "date": "2026-09-05T03:00:00.000Z",
@@ -6055,6 +6551,8 @@
       }
     },
     {
+      "sourceId": "ser_9b88db509294@2026-09-04",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Line Dance",
       "date": "2026-09-05T04:00:00.000Z",
@@ -6080,6 +6578,8 @@
       }
     },
     {
+      "sourceId": "ser_c0f392412401@2026-09-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lydgate Beach Community Cleanup",
       "date": "2026-09-05T18:30:00.000Z",
@@ -6105,6 +6605,8 @@
       }
     },
     {
+      "sourceId": "ser_9ac8514513f0@2026-09-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanalei Farmers Market",
       "date": "2026-09-05T19:00:00.000Z",
@@ -6125,6 +6627,8 @@
       }
     },
     {
+      "sourceId": "ser_e8552ed70a46@2026-09-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 13,
       "title": "Kauaʻi Pride Coffee Time",
       "description": "Informal monthly social meetup.",
@@ -6151,6 +6655,8 @@
       }
     },
     {
+      "sourceId": "ser_948649729607@2026-09-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Center Hula Show",
       "date": "2026-09-05T23:30:00.000Z",
@@ -6175,6 +6681,8 @@
       }
     },
     {
+      "sourceId": "ser_eef25e23f67a@2026-09-05",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Made Craft Fair Saturdays",
       "date": "2026-09-06T01:00:00.000Z",
@@ -6195,6 +6703,8 @@
       }
     },
     {
+      "sourceId": "evt_aa0382393c60@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Marathon and Half Marathon",
       "date": "2026-09-06T16:00:00.000Z",
@@ -6216,6 +6726,8 @@
       }
     },
     {
+      "sourceId": "ser_e2ab421d9bfe@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Sunday Sound Bath & Yin Yoga",
       "date": "2026-09-06T18:30:00.000Z",
@@ -6243,6 +6755,8 @@
       }
     },
     {
+      "sourceId": "ser_74f8bb691282@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Veterans Center Local Treasures Market",
       "date": "2026-09-06T19:00:00.000Z",
@@ -6264,6 +6778,8 @@
       }
     },
     {
+      "sourceId": "ser_07db3cc5000b@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lululemon Sunday Sweat",
       "date": "2026-09-06T19:00:00.000Z",
@@ -6289,6 +6805,8 @@
       }
     },
     {
+      "sourceId": "ser_761570b8a109@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "DA GRUV at Sunset Lanai",
       "date": "2026-09-06T22:30:00.000Z",
@@ -6309,6 +6827,8 @@
       }
     },
     {
+      "sourceId": "ser_a44f78c6f101@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ʻUkulele Basics & Jam Sessions",
       "date": "2026-09-06T23:00:00.000Z",
@@ -6329,6 +6849,8 @@
       }
     },
     {
+      "sourceId": "ser_6006ce772710@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 16,
       "title": "Kauaʻi ʻUkulele Club Meetup",
       "description": "Bring an ʻukulele, jam, and sing; all ages welcome.",
@@ -6356,6 +6878,8 @@
       }
     },
     {
+      "sourceId": "ser_377bdd149e92@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kanikapila",
       "date": "2026-09-07T03:30:00.000Z",
@@ -6381,6 +6905,8 @@
       }
     },
     {
+      "sourceId": "ser_1d248ab4a44e@2026-09-06",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Wrongway Jackson",
       "date": "2026-09-07T04:00:00.000Z",
@@ -6401,6 +6927,8 @@
       }
     },
     {
+      "sourceId": "ser_043de5cf3c05@2026-09-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Coffee and Play for Keiki",
       "description": "Soft play, games, and books.",
@@ -6427,6 +6955,8 @@
       }
     },
     {
+      "sourceId": "ser_5aebc7a8c217@2026-09-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Anahola Farmers Market",
       "date": "2026-09-08T01:00:00.000Z",
@@ -6451,6 +6981,8 @@
       }
     },
     {
+      "sourceId": "ser_090e4ee667bb@2026-09-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Pau Hana Monday Market",
       "date": "2026-09-08T01:00:00.000Z",
@@ -6472,6 +7004,8 @@
       }
     },
     {
+      "sourceId": "ser_1ca5c1a4935c@2026-09-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tunes, Tales & Twirls Keiki Story Time",
       "date": "2026-09-08T21:00:00.000Z",
@@ -6499,6 +7033,8 @@
       }
     },
     {
+      "sourceId": "ser_c738891b1982@2026-09-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "NAMI Peer Recovery Support Group",
       "description": "Free and confidential in-person peer recovery group; free lunch listed.",
@@ -6528,6 +7064,8 @@
       }
     },
     {
+      "sourceId": "ser_ac22641ef52e@2026-09-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Tuesday Bridge",
       "date": "2026-09-09T00:00:00.000Z",
@@ -6554,6 +7092,8 @@
       }
     },
     {
+      "sourceId": "ser_f65c424ae8d7@2026-09-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waipā Farmers Market",
       "date": "2026-09-09T00:00:00.000Z",
@@ -6574,6 +7114,8 @@
       }
     },
     {
+      "sourceId": "ser_81bca8b9cb34@2026-09-08",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "YWCA Kauaʻi Hula Lessons",
       "date": "2026-09-09T02:00:00.000Z",
@@ -6602,6 +7144,8 @@
       }
     },
     {
+      "sourceId": "ser_05e7f5b0d8e6@2026-09-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Cantonese Mahjong",
       "date": "2026-09-09T23:00:00.000Z",
@@ -6628,6 +7172,8 @@
       }
     },
     {
+      "sourceId": "ser_15c2625bc0a4@2026-09-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Makai Music & Art Festival",
       "date": "2026-09-09T23:00:00.000Z",
@@ -6653,6 +7199,8 @@
       }
     },
     {
+      "sourceId": "ser_2ae9645b4196@2026-09-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kapaʻa Sunshine Market",
       "date": "2026-09-10T01:00:00.000Z",
@@ -6675,6 +7223,8 @@
       }
     },
     {
+      "sourceId": "ser_79cc0d04e2e9@2026-09-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Mokihana Berry Read-Aloud Club",
       "date": "2026-09-10T01:00:00.000Z",
@@ -6702,6 +7252,8 @@
       }
     },
     {
+      "sourceId": "ser_e350f91060f4@2026-09-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Legos in the Library",
       "date": "2026-09-10T01:30:00.000Z",
@@ -6729,6 +7281,8 @@
       }
     },
     {
+      "sourceId": "ser_6574c745ea99@2026-09-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Jukebox Heroes Live Rock Band Karaoke",
       "date": "2026-09-10T03:30:00.000Z",
@@ -6750,6 +7304,8 @@
       }
     },
     {
+      "sourceId": "evt_3135188f0133@2026-09-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Ola Pono o Kauaʻi",
       "description": "Conference on collaborative healthcare, including community health, indigenous medicine, homelessness, and mental health.",
@@ -6775,6 +7331,8 @@
       }
     },
     {
+      "sourceId": "ser_ed669f52e17e@2026-09-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Preschool Storytime",
       "date": "2026-09-10T20:00:00.000Z",
@@ -6801,6 +7359,8 @@
       }
     },
     {
+      "sourceId": "ser_5855c80630e8@2026-09-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Library Storytime",
       "date": "2026-09-10T20:30:00.000Z",
@@ -6827,6 +7387,8 @@
       }
     },
     {
+      "sourceId": "ser_0f2f29f9a33c@2026-09-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Sunshine Market",
       "date": "2026-09-11T01:00:00.000Z",
@@ -6849,6 +7411,8 @@
       }
     },
     {
+      "sourceId": "ser_a7fa91055fc3@2026-09-10",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Free Hula Show & Craft Fair",
       "date": "2026-09-11T02:00:00.000Z",
@@ -6875,6 +7439,8 @@
       }
     },
     {
+      "sourceId": "evt_922e3c07dee8@2026-09-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Goodwill Reuse Collection Events",
       "description": "Public drop-off for reusable goods; volunteer shifts may also be available.",
@@ -6902,6 +7468,8 @@
       }
     },
     {
+      "sourceId": "ser_1c1dde5111b2@2026-09-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Beach Resort Kauaʻi Made Craft Fair",
       "date": "2026-09-12T01:00:00.000Z",
@@ -6922,6 +7490,8 @@
       }
     },
     {
+      "sourceId": "ser_3c64115b1578@2026-09-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Aloha Friday Art Nights",
       "date": "2026-09-12T03:00:00.000Z",
@@ -6948,6 +7518,8 @@
       }
     },
     {
+      "sourceId": "ser_7ea19589b9b0@2026-09-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanapēpē Friday Art Night",
       "date": "2026-09-12T03:00:00.000Z",
@@ -6970,6 +7542,8 @@
       }
     },
     {
+      "sourceId": "ser_c0f392412401@2026-09-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Lydgate Beach Community Cleanup",
       "date": "2026-09-12T18:30:00.000Z",
@@ -6995,6 +7569,8 @@
       }
     },
     {
+      "sourceId": "ser_9ac8514513f0@2026-09-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Hanalei Farmers Market",
       "date": "2026-09-12T19:00:00.000Z",
@@ -7015,6 +7591,8 @@
       }
     },
     {
+      "sourceId": "ser_948649729607@2026-09-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Center Hula Show",
       "date": "2026-09-12T23:30:00.000Z",
@@ -7039,6 +7617,8 @@
       }
     },
     {
+      "sourceId": "ser_eef25e23f67a@2026-09-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Made Craft Fair Saturdays",
       "date": "2026-09-13T01:00:00.000Z",
@@ -7059,6 +7639,8 @@
       }
     },
     {
+      "sourceId": "evt_0e58c8d11068@2026-09-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Relay For Life of Kauaʻi",
       "date": "2026-09-13T02:00:00.000Z",
@@ -7080,6 +7662,8 @@
       }
     },
     {
+      "sourceId": "ser_ffd115510c7b@2026-09-12",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Downtown Līhuʻe Second Saturday Night Market",
       "date": "2026-09-13T02:00:00.000Z",
@@ -7105,6 +7689,8 @@
       }
     },
     {
+      "sourceId": "ser_83286f6a94c6@2026-09-13",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Night Market",
       "date": "2026-09-14T02:00:00.000Z",
@@ -7126,6 +7712,8 @@
       }
     },
     {
+      "sourceId": "ser_653c6f750134@2026-09-15",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Princeville Moʻolelo Lecture Series",
       "date": "2026-09-16T03:00:00.000Z",
@@ -7151,6 +7739,8 @@
       }
     },
     {
+      "sourceId": "evt_89f6770cf63c@2026-09-20",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Mokihana Festival",
       "date": "2026-09-20T10:00:00.000Z",
@@ -7178,6 +7768,8 @@
       }
     },
     {
+      "sourceId": "evt_eaa2b171fe48@2026-10-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "ALOHA Kauaʻi Yoga & Peace Festival",
       "date": "2026-10-03T18:00:00.000Z",
@@ -7204,6 +7796,8 @@
       }
     },
     {
+      "sourceId": "evt_a2aa7bf05568@2026-10-03",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Brewers Festival — Block Party Edition",
       "date": "2026-10-04T01:00:00.000Z",
@@ -7231,6 +7825,8 @@
       }
     },
     {
+      "sourceId": "evt_922e3c07dee8@2026-10-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Goodwill Reuse Collection Events",
       "description": "Public drop-off for reusable goods; volunteer shifts may also be available.",
@@ -7258,6 +7854,8 @@
       }
     },
     {
+      "sourceId": "ser_e350f91060f4@2026-10-14",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Legos in the Library",
       "date": "2026-10-15T01:30:00.000Z",
@@ -7285,6 +7883,8 @@
       }
     },
     {
+      "sourceId": "evt_61c84f4a565e@2026-11-02",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Kauaʻi Writers Conference",
       "date": "2026-11-02T10:00:00.000Z",
@@ -7312,6 +7912,8 @@
       }
     },
     {
+      "sourceId": "evt_c0bdd369b8be@2026-11-07",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Eō e Emalani i Alakaʻi Festival",
       "date": "2026-11-07T19:00:00.000Z",
@@ -7333,6 +7935,8 @@
       }
     },
     {
+      "sourceId": "evt_922e3c07dee8@2026-11-13",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Goodwill Reuse Collection Events",
       "description": "Public drop-off for reusable goods; volunteer shifts may also be available.",
@@ -7360,6 +7964,8 @@
       }
     },
     {
+      "sourceId": "ser_e350f91060f4@2026-11-18",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Legos in the Library",
       "date": "2026-11-19T01:30:00.000Z",
@@ -7387,6 +7993,8 @@
       }
     },
     {
+      "sourceId": "evt_d7ebed834408@2026-11-20",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 20,
       "title": "The Rocky Horror Picture Show",
       "description": "Annual full-participation screening and queer-community celebration.",
@@ -7410,6 +8018,8 @@
       }
     },
     {
+      "sourceId": "ser_e350f91060f4@2026-12-09",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Legos in the Library",
       "date": "2026-12-10T01:30:00.000Z",
@@ -7437,6 +8047,8 @@
       }
     },
     {
+      "sourceId": "evt_922e3c07dee8@2026-12-11",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Goodwill Reuse Collection Events",
       "description": "Public drop-off for reusable goods; volunteer shifts may also be available.",
@@ -7464,6 +8076,8 @@
       }
     },
     {
+      "sourceId": "evt_353b98215084@2026-12-19",
+      "importedFrom": "Kauaʻi Public Events and Clubs Register",
       "eventID": 0,
       "title": "Waimea Light Parade",
       "date": "2026-12-20T03:00:00.000Z",
