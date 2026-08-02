@@ -23,6 +23,9 @@
      Bright = shapes, marks, match heads, selected states.
      Deep  = anything small and read as text (AA 5.07 on paper). */
   --mb-match: #e85020;
+  /* Type over the brand orange. --mb-ink on --mb-match is only 3.43:1; this is
+     4.79:1. The orange itself is a field and mark colour — never text. */
+  --mb-ink-on-match: #1a1614;
   --mb-match-deep: #b83c14;
   --mb-match-tint: #fde7dc;
 
@@ -65,6 +68,7 @@
 
   /* Shape */
   --mb-radius-control: 12px;
+  --mb-radius-tight: 10px;
   --mb-radius-card: 16px;
   --mb-radius-feature: 20px;
   --mb-radius-sheet: 24px;
@@ -84,41 +88,8 @@
 
   /* Legacy aliases — map the retired "breeze" names onto MatchBook tokens so
      pages not yet migrated inherit the new system instead of UH green. */
-  --paper: var(--mb-paper);
-  --paper-2: var(--mb-paper-edge);
-  --card: var(--mb-paper-bright);
-  --charcoal: var(--mb-ink);
-  --stone: var(--mb-ink-soft);
-  --forest: var(--mb-ink);
-  --forest-deep: #1f2123;
-  --sage: var(--mb-match);
-  --mint: var(--mb-wood);
-  --mint-2: var(--mb-paper-bright);
-  --gold: var(--mb-yellow);
-  --gold-soft: var(--mb-wood);
-  --blush: var(--mb-red-tint);
   /* --rose is the codebase's destructive/error accent — it must stay in the red
      family. Pink is reserved for the affection gestures (save, like). */
-  --rose: var(--mb-red-deep);
-  --sky: #e3e9ec;
-  --line: var(--mb-line-soft);
-  --line-strong: var(--mb-line-strong);
-  --shadow: var(--mb-shadow-feature);
-  --shadow-soft: var(--mb-shadow-small);
-  --radius-sm: 10px;
-  --radius-md: var(--mb-radius-card);
-  --radius-lg: var(--mb-radius-feature);
-  --radius-xl: var(--mb-radius-sheet);
-  --uh-green: var(--mb-ink);
-  --uh-green-2: #1f2123;
-  --leaf: var(--mb-match);
-  --cream: var(--mb-paper);
-  --sand: var(--mb-wood);
-  --ink: var(--mb-ink);
-  --muted: var(--mb-ink-soft);
-  --white: var(--mb-paper-bright);
-  --danger: var(--mb-danger);
-  --mint-legacy: var(--mb-wood);
 }
 
 * {
@@ -273,8 +244,8 @@ textarea.form-control {
   justify-content: center;
   gap: 0.5rem;
   background: var(--mb-match) !important;
-  color: #1a1614 !important;
-  border: 2px solid #1a1614 !important;
+  color: var(--mb-ink-on-match) !important;
+  border: 2px solid var(--mb-ink-on-match) !important;
   border-radius: var(--mb-radius-control) !important;
   font-weight: 750 !important;
   padding: 0.6rem 1.3rem !important;
@@ -487,10 +458,10 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .site-navbar .dropdown-menu {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-soft);
-  background: var(--card);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-tight);
+  box-shadow: var(--mb-shadow-small);
+  background: var(--mb-paper-bright);
   padding: 0.4rem;
   overflow: hidden;
 }
@@ -499,13 +470,13 @@ div.btn-solid-primary button[type="submit"]:hover {
   border-radius: 10px;
   padding: 0.55rem 0.8rem;
   font-weight: 550;
-  color: var(--charcoal);
+  color: var(--mb-ink);
 }
 
 .site-navbar .dropdown-item:hover,
 .site-navbar .dropdown-item.active {
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
 }
 
 .profile-menu-trigger {
@@ -519,7 +490,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   height: 32px;
   border-radius: 999px;
   object-fit: cover;
-  border: 2px solid var(--mint);
+  border: 2px solid var(--mb-wood);
 }
 
 /* --------------------------------------------------------------------------
@@ -550,10 +521,10 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .hero-visual {
-  border-radius: var(--radius-xl);
+  border-radius: var(--mb-radius-sheet);
   overflow: hidden;
-  box-shadow: var(--shadow);
-  background: var(--card);
+  box-shadow: var(--mb-shadow-feature);
+  background: var(--mb-paper-bright);
 }
 
 .hero-visual img {
@@ -571,24 +542,24 @@ div.btn-solid-primary button[type="submit"]:hover {
 .feature-card {
   display: block;
   text-decoration: none;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-feature);
   padding: 0.7rem;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--mb-shadow-small);
   transition: transform 0.22s ease, box-shadow 0.22s ease;
   height: 100%;
 }
 
 .feature-card:hover {
   transform: translateY(-6px);
-  box-shadow: var(--shadow);
+  box-shadow: var(--mb-shadow-feature);
 }
 
 .feature-media {
-  border-radius: calc(var(--radius-lg) - 8px);
+  border-radius: calc(var(--mb-radius-feature) - 8px);
   overflow: hidden;
-  background: var(--mint-2);
+  background: var(--mb-paper-bright);
 }
 
 .feature-media img {
@@ -610,17 +581,17 @@ div.btn-solid-primary button[type="submit"]:hover {
   padding: 0.9rem 0.7rem 0.5rem;
   font-weight: 650;
   font-size: 1.06rem;
-  color: var(--charcoal);
+  color: var(--mb-ink);
 }
 
 .feature-label svg {
-  color: var(--sage);
+  color: var(--mb-match);
   transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .feature-card:hover .feature-label svg {
   transform: translateX(4px);
-  color: var(--forest);
+  color: var(--mb-ink);
 }
 
 /* --------------------------------------------------------------------------
@@ -687,8 +658,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   position: relative;
   height: 170px;
   overflow: hidden;
-  background: var(--mint-2);
-  border-radius: calc(var(--radius-md) - 6px);
+  background: var(--mb-paper-bright);
+  border-radius: calc(var(--mb-radius-card) - 6px);
 }
 
 .club-card-media.compact {
@@ -720,7 +691,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   border: none;
   background: rgba(255, 254, 249, 0.92) !important;
   backdrop-filter: blur(8px);
-  color: var(--charcoal) !important;
+  color: var(--mb-ink) !important;
   border-radius: 999px;
   padding: 0.35rem 0.7rem;
   font-weight: 650;
@@ -738,21 +709,21 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.88rem;
   font-weight: 500;
   margin-bottom: 0.2rem;
 }
 
 .meta-line svg {
-  color: var(--sage);
+  color: var(--mb-match);
   flex: 0 0 auto;
 }
 
 .club-card-description,
 .event-card-description,
 .admin-card .card-text {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.9rem;
 }
 
@@ -765,8 +736,8 @@ div.btn-solid-primary button[type="submit"]:hover {
 /* .badge variant needs the extra specificity to beat Bootstrap's .bg-primary !important */
 .club-category-tag,
 .badge.club-category-tag {
-  background: var(--gold-soft) !important;
-  background-color: var(--gold-soft) !important;
+  background: var(--mb-wood) !important;
+  background-color: var(--mb-wood) !important;
   border: none;
   color: #6b5117 !important;
   border-radius: 999px;
@@ -797,10 +768,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   justify-content: space-between;
   gap: 0.8rem;
   padding: 0.55rem;
-  background: var(--card);
-  border: 1px solid var(--line);
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
   border-radius: 999px;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--mb-shadow-small);
 }
 
 .search-box {
@@ -815,7 +786,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .search-box svg {
-  color: var(--sage);
+  color: var(--mb-match);
 }
 
 .search-input {
@@ -839,10 +810,10 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .empty-state-card {
-  background: var(--card) !important;
-  border: 1px dashed var(--line-strong) !important;
-  border-radius: var(--radius-lg) !important;
-  color: var(--charcoal) !important;
+  background: var(--mb-paper-bright) !important;
+  border: 1px dashed var(--mb-line-strong) !important;
+  border-radius: var(--mb-radius-feature) !important;
+  color: var(--mb-ink) !important;
   padding: clamp(1.8rem, 4vw, 3rem) !important;
   box-shadow: none;
 }
@@ -856,22 +827,22 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .empty-state-card svg {
-  color: var(--sage);
+  color: var(--mb-match);
   margin-bottom: 0.8rem;
 }
 
 .custom-pagination .page-link {
-  border: 1px solid var(--line);
-  color: var(--forest);
-  background: var(--card);
+  border: 1px solid var(--mb-line-soft);
+  color: var(--mb-ink);
+  background: var(--mb-paper-bright);
   border-radius: 999px !important;
   margin: 0 0.18rem;
 }
 
 .custom-pagination .active .page-link {
-  background: var(--forest);
-  border-color: var(--forest);
-  color: var(--card);
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+  color: var(--mb-paper-bright);
 }
 
 /* --------------------------------------------------------------------------
@@ -879,21 +850,21 @@ div.btn-solid-primary button[type="submit"]:hover {
    -------------------------------------------------------------------------- */
 
 .modal-content {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-feature);
   overflow: hidden;
-  background: var(--card);
+  background: var(--mb-paper-bright);
 }
 
 .modal-header,
 .modal-footer {
-  background: var(--card);
-  border-color: var(--line);
+  background: var(--mb-paper-bright);
+  border-color: var(--mb-line-soft);
 }
 
 .modal-body {
-  background: var(--card);
+  background: var(--mb-paper-bright);
 }
 
 .modal-title-block .modal-title {
@@ -910,7 +881,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .details-modal-image {
   width: 100%;
   aspect-ratio: 1 / 0.85;
-  border-radius: var(--radius-sm);
+  border-radius: var(--mb-radius-tight);
   object-fit: cover;
 }
 
@@ -923,15 +894,15 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   gap: 0.6rem;
   align-items: center;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
 }
 
 .details-list svg {
-  color: var(--sage);
+  color: var(--mb-match);
 }
 
 .details-copy {
-  color: var(--charcoal);
+  color: var(--mb-ink);
 }
 
 /* --------------------------------------------------------------------------
@@ -1260,7 +1231,7 @@ div.btn-solid-primary button[type="submit"]:hover {
    -------------------------------------------------------------------------- */
 
 .auth-page {
-  background: linear-gradient(150deg, var(--paper) 30%, var(--mint-2));
+  background: linear-gradient(150deg, var(--mb-paper) 30%, var(--mb-paper-bright));
 }
 
 .auth-form-panel,
@@ -1273,10 +1244,10 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .auth-card {
   width: min(100%, 560px);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-soft);
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-sheet);
+  box-shadow: var(--mb-shadow-small);
   padding: clamp(1.8rem, 4vw, 3.2rem);
 }
 
@@ -1305,15 +1276,15 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: var(--card);
-  border: 1px solid var(--line);
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
   border-radius: 999px;
   padding: 0 1rem;
   margin-bottom: 0.9rem;
 }
 
 .input-with-icon svg {
-  color: var(--sage);
+  color: var(--mb-match);
 }
 
 .input-with-icon .form-control {
@@ -1323,7 +1294,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .auth-error {
   margin-top: 1rem;
-  color: var(--rose);
+  color: var(--mb-red-deep);
   font-weight: 650;
 }
 
@@ -1338,15 +1309,15 @@ div.btn-solid-primary button[type="submit"]:hover {
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  background: var(--mint);
-  color: var(--stone);
+  background: var(--mb-wood);
+  color: var(--mb-ink-soft);
   font-weight: 700;
   font-size: 0.9rem;
 }
 
 .stepper span.active {
-  background: var(--forest);
-  color: var(--card);
+  background: var(--mb-ink);
+  color: var(--mb-paper-bright);
 }
 
 .tag-container {
@@ -1356,11 +1327,11 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .tag-label {
-  border: 1px solid var(--line);
+  border: 1px solid var(--mb-line-soft);
   border-radius: 999px;
   padding: 0.6rem 0.95rem;
-  background: var(--card);
-  color: var(--charcoal);
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
   font-weight: 600;
   transition: all 0.16s ease;
 }
@@ -1368,8 +1339,8 @@ div.btn-solid-primary button[type="submit"]:hover {
 .tag-label.selected,
 .tag-label:hover {
   border-color: rgba(232, 80, 32, 0.35);
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
 }
 
 .form-controlsignup {
@@ -1378,8 +1349,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   justify-content: center;
   min-height: 48px;
   border-radius: 999px !important;
-  background: var(--card) !important;
-  color: var(--charcoal) !important;
+  background: var(--mb-paper-bright) !important;
+  color: var(--mb-ink) !important;
   font-weight: 650 !important;
   border: none !important;
   padding: 0.7rem 1.2rem !important;
@@ -1396,7 +1367,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .form-card label,
 .auth-card label {
   font-weight: 600;
-  color: var(--charcoal);
+  color: var(--mb-ink);
   margin-bottom: 0.4rem;
 }
 
@@ -1410,11 +1381,11 @@ div.btn-solid-primary button[type="submit"]:hover {
    -------------------------------------------------------------------------- */
 
 .profile-hero-card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-sheet);
+  box-shadow: var(--mb-shadow-small);
   overflow: hidden;
-  background: var(--card);
+  background: var(--mb-paper-bright);
 }
 
 .profile-banner {
@@ -1440,8 +1411,8 @@ div.btn-solid-primary button[type="submit"]:hover {
 .profile-avatar-lg {
   border-radius: 999px;
   object-fit: cover;
-  border: 5px solid var(--card);
-  box-shadow: var(--shadow-soft);
+  border: 5px solid var(--mb-paper-bright);
+  box-shadow: var(--mb-shadow-small);
 }
 
 .profile-avatar-xl {
@@ -1464,14 +1435,14 @@ div.btn-solid-primary button[type="submit"]:hover {
   align-items: center;
   border-radius: 999px;
   padding: 0.4rem 0.75rem;
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
   font-weight: 650;
   font-size: 0.85rem;
 }
 
 .profile-bio-text {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
 }
 
 /* --------------------------------------------------------------------------
@@ -1491,8 +1462,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   width: 52px;
   height: 52px;
   border-radius: 18px;
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
   font-size: 1.4rem;
 }
 
@@ -1500,11 +1471,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: block;
   font-size: 1.7rem;
   line-height: 1;
-  color: var(--charcoal);
+  color: var(--mb-ink);
 }
 
 .stat-card span {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-weight: 600;
   font-size: 0.88rem;
 }
@@ -1523,9 +1494,9 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .site-footer {
   background: transparent;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   padding: 2rem 0 2.4rem;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--mb-line-soft);
   margin-top: 3rem;
 }
 
@@ -1538,7 +1509,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .footer-brand {
-  color: var(--charcoal);
+  color: var(--mb-ink);
   font-size: 1.1rem;
   font-weight: 750;
   text-decoration: none;
@@ -1552,18 +1523,18 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .footer-link {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   text-decoration: none;
   font-weight: 550;
   font-size: 0.9rem;
 }
 
 .footer-link:hover {
-  color: var(--forest);
+  color: var(--mb-ink);
 }
 
 .footer-copy {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.85rem;
   margin: 0;
 }
@@ -1579,14 +1550,14 @@ div.btn-solid-primary button[type="submit"]:hover {
   width: 36px;
   height: 36px;
   border-radius: 999px;
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
   transition: background 0.16s ease;
 }
 
 .footer-socials a:hover {
-  background: var(--sage);
-  color: var(--card);
+  background: var(--mb-match);
+  color: var(--mb-paper-bright);
 }
 
 /* --------------------------------------------------------------------------
@@ -1594,11 +1565,11 @@ div.btn-solid-primary button[type="submit"]:hover {
    -------------------------------------------------------------------------- */
 
 .loading-state {
-  color: var(--forest);
+  color: var(--mb-ink);
 }
 
 .value-icon {
-  color: var(--sage);
+  color: var(--mb-match);
   font-size: 1.6rem;
   margin-bottom: 0.6rem;
 }
@@ -1662,7 +1633,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .mode-toggle {
   display: flex;
   gap: 0.25rem;
-  background: var(--mint-2);
+  background: var(--mb-paper-bright);
   border-radius: 999px;
   padding: 0.28rem;
 }
@@ -1718,7 +1689,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .window-chip-label {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1733,20 +1704,20 @@ div.btn-solid-primary button[type="submit"]:hover {
   padding: 0.32rem 0.75rem;
   font-weight: 600;
   font-size: 0.86rem;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   transition: all 0.16s ease;
 }
 
 .window-chip:hover {
   border-color: rgba(232, 80, 32, 0.35);
-  color: var(--forest);
+  color: var(--mb-ink);
   transform: translateY(-1px);
 }
 
 .window-chip.active {
-  background: var(--mint);
+  background: var(--mb-wood);
   border-color: transparent;
-  color: var(--forest);
+  color: var(--mb-ink);
 }
 
 
@@ -1757,7 +1728,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .mode-toggle {
   display: flex;
   gap: 0.25rem;
-  background: var(--mint-2);
+  background: var(--mb-paper-bright);
   border-radius: 999px;
   padding: 0.28rem;
 }
@@ -1813,7 +1784,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .window-chip-label {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1828,20 +1799,20 @@ div.btn-solid-primary button[type="submit"]:hover {
   padding: 0.32rem 0.75rem;
   font-weight: 600;
   font-size: 0.86rem;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   transition: all 0.16s ease;
 }
 
 .window-chip:hover {
   border-color: rgba(232, 80, 32, 0.35);
-  color: var(--forest);
+  color: var(--mb-ink);
   transform: translateY(-1px);
 }
 
 .window-chip.active {
-  background: var(--mint);
+  background: var(--mb-wood);
   border-color: transparent;
-  color: var(--forest);
+  color: var(--mb-ink);
 }
 
 .deck-saved-link {
@@ -1898,7 +1869,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .swipe-card {
   position: absolute;
   inset: 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--mb-radius-feature);
   perspective: 1400px;
   touch-action: none;
   user-select: none;
@@ -1924,11 +1895,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border-radius: var(--radius-lg);
+  border-radius: var(--mb-radius-feature);
   overflow: hidden;
-  background: var(--card);
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  box-shadow: var(--mb-shadow-feature);
   display: flex;
   flex-direction: column;
   padding: 0.65rem;
@@ -1942,8 +1913,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   position: relative;
   flex: 1 1 auto;
   overflow: hidden;
-  background: var(--mint-2);
-  border-radius: calc(var(--radius-lg) - 8px);
+  background: var(--mb-paper-bright);
+  border-radius: calc(var(--mb-radius-feature) - 8px);
 }
 
 .swipe-card-media img {
@@ -1975,12 +1946,12 @@ div.btn-solid-primary button[type="submit"]:hover {
   left: 0.85rem;
   background: rgba(255, 254, 249, 0.92);
   backdrop-filter: blur(8px);
-  color: var(--charcoal);
+  color: var(--mb-ink);
 }
 
 .swipe-pill-countdown {
   right: 0.85rem;
-  background: var(--gold-soft);
+  background: var(--mb-wood);
   color: #6b5117;
 }
 
@@ -2027,7 +1998,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .swipe-card-back {
   transform: rotateY(180deg);
   padding: 1.4rem 1.4rem 1.1rem;
-  background: var(--card);
+  background: var(--mb-paper-bright);
 }
 
 .swipe-card-back h3 {
@@ -2044,14 +2015,14 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .swipe-detail-row svg {
-  color: var(--sage);
+  color: var(--mb-match);
   flex: 0 0 auto;
   margin-top: 0.2rem;
 }
 
 .swipe-detail-row strong {
   display: block;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -2059,13 +2030,13 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .swipe-detail-row span {
-  color: var(--charcoal);
+  color: var(--mb-ink);
   font-weight: 550;
   font-size: 0.9rem;
 }
 
 .swipe-card-description {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.89rem;
   line-height: 1.55;
   margin: 0.3rem 0 0;
@@ -2120,9 +2091,9 @@ div.btn-solid-primary button[type="submit"]:hover {
   width: 50px;
   height: 50px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--mb-line-soft);
+  background: var(--mb-paper-bright);
+  box-shadow: var(--mb-shadow-small);
   font-size: 1.1rem;
   transition: background 0.16s ease, color 0.16s ease;
 }
@@ -2132,19 +2103,19 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .swipe-btn-undo {
-  color: var(--gold);
+  color: var(--mb-yellow);
 }
 
 .swipe-btn-undo:not(:disabled):hover {
-  background: var(--gold-soft);
+  background: var(--mb-wood);
 }
 
 .swipe-btn-flip {
-  color: var(--sage);
+  color: var(--mb-match);
 }
 
 .swipe-btn-flip:not(:disabled):hover {
-  background: var(--mint);
+  background: var(--mb-wood);
 }
 
 .swipe-btn-pass,
@@ -2182,9 +2153,9 @@ div.btn-solid-primary button[type="submit"]:hover {
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: var(--card);
-  border: 1px dashed var(--line-strong);
-  border-radius: var(--radius-lg);
+  background: var(--mb-paper-bright);
+  border: 1px dashed var(--mb-line-strong);
+  border-radius: var(--mb-radius-feature);
   box-shadow: none;
   padding: 2rem;
 }
@@ -2231,13 +2202,13 @@ div.btn-solid-primary button[type="submit"]:hover {
   border: none;
   background: rgba(255, 254, 249, 0.92);
   backdrop-filter: blur(8px);
-  color: var(--charcoal);
+  color: var(--mb-ink);
   transition: background 0.16s ease, color 0.16s ease;
 }
 
 .saved-remove-btn:hover {
-  background: var(--rose);
-  color: var(--card);
+  background: var(--mb-red-deep);
+  color: var(--mb-paper-bright);
 }
 
 /* --------------------------------------------------------------------------
@@ -2269,7 +2240,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   margin-bottom: 0.55rem;
 }
 
@@ -2280,7 +2251,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .filter-group .form-check-label {
   font-size: 0.9rem;
   font-weight: 550;
-  color: var(--charcoal);
+  color: var(--mb-ink);
 }
 
 .filter-group .form-check-input:checked,
@@ -2348,7 +2319,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .club-tile-sm {
-  background: var(--mint-2) !important;
+  background: var(--mb-paper-bright) !important;
   padding: 0.35rem !important;
 }
 
@@ -2378,8 +2349,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
   border-radius: 999px;
   padding: 0.3rem 0.65rem;
   font-weight: 650;
@@ -2416,7 +2387,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   gap: 0.9rem;
   align-items: center;
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -2450,19 +2421,19 @@ div.btn-solid-primary button[type="submit"]:hover {
   height: 40px;
   border-radius: 999px;
   object-fit: cover;
-  border: 2px solid var(--mint);
+  border: 2px solid var(--mb-wood);
   flex: 0 0 auto;
 }
 
 .friend-name {
   font-weight: 650;
-  color: var(--charcoal);
+  color: var(--mb-ink);
   font-size: 0.95rem;
   line-height: 1.15;
 }
 
 .friend-sub {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.8rem;
 }
 
@@ -2484,24 +2455,24 @@ div.btn-solid-primary button[type="submit"]:hover {
   height: 34px;
   border-radius: 999px;
   border: none;
-  background: var(--mint);
-  color: var(--forest);
+  background: var(--mb-wood);
+  color: var(--mb-ink);
   transition: background 0.16s ease, color 0.16s ease;
 }
 
 .icon-btn:hover {
-  background: var(--forest);
-  color: var(--card);
+  background: var(--mb-ink);
+  color: var(--mb-paper-bright);
 }
 
 .icon-btn.danger {
-  background: var(--blush);
+  background: var(--mb-red-tint);
   color: #a96a5d;
 }
 
 .icon-btn.danger:hover {
-  background: var(--rose);
-  color: var(--card);
+  background: var(--mb-red-deep);
+  color: var(--mb-paper-bright);
 }
 
 .activity-item {
@@ -2509,7 +2480,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   align-items: center;
   gap: 0.65rem;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--mb-line-soft);
 }
 
 .activity-item:last-child {
@@ -2518,7 +2489,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .activity-text {
   font-size: 0.9rem;
-  color: var(--charcoal);
+  color: var(--mb-ink);
   line-height: 1.3;
 }
 
@@ -2527,7 +2498,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .activity-sub {
-  color: var(--stone);
+  color: var(--mb-ink-soft);
   font-size: 0.78rem;
 }
 
@@ -4569,9 +4540,9 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 @media (max-width: 991.98px) {
   .site-navbar .navbar-collapse {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    background: var(--mb-paper-bright);
+    border: 1px solid var(--mb-line-soft);
+    border-radius: var(--mb-radius-card);
     margin-top: 0.8rem;
     padding: 0.8rem;
   }
@@ -4628,7 +4599,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   .page-header-card,
   .hero-visual,
   .profile-hero-card {
-    border-radius: var(--radius-md);
+    border-radius: var(--mb-radius-card);
   }
 
   .filter-grid {
