@@ -380,24 +380,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink-soft);
 }
 
-.section-heading,
-.section-heading-row {
-  margin-bottom: 1.4rem;
-}
-
-.section-heading h2,
-.section-heading-row h2 {
-  font-size: clamp(1.35rem, 2.4vw, 1.8rem);
-  margin-bottom: 0;
-}
-
-.section-heading-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
 /* --------------------------------------------------------------------------
    Navbar
    -------------------------------------------------------------------------- */
@@ -511,13 +493,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   overflow: hidden;
 }
 
-.club-card,
-.event-card,
-.admin-card,
-.form-card,
-.profile-card,
-.stat-card,
-.value-card {
+.club-card {
   background: var(--mb-paper-bright) !important;
   border: 1px solid var(--mb-line-soft) !important;
   border-radius: var(--mb-radius-card) !important;
@@ -525,34 +501,20 @@ div.btn-solid-primary button[type="submit"]:hover {
   overflow: hidden;
 }
 
-.saved-card,
-.event-card,
-.admin-card {
-  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
-}
-
-/* Paper lift: a short move with a deeper offset,
-.saved-card:hover,
-.event-card:hover,
-.admin-card:hover {
+/* Paper lift: a short move with a deeper offset {
   transform: translateY(-2px);
   box-shadow: var(--mb-shadow-feature);
 }
 
-/* Inset media: image floats inside the card with cream margin all around */
-.event-card,
 .club-card {
   padding: 0.55rem;
 }
 
-.event-card .card-body,
 .club-card .card-body {
   padding: 0.85rem 0.65rem 0.6rem;
 }
 
-.club-card-media,
-.event-card-media,
-.admin-card-header-image {
+.club-card-media {
   position: relative;
   height: 170px;
   overflow: hidden;
@@ -564,23 +526,14 @@ div.btn-solid-primary button[type="submit"]:hover {
   height: 160px;
 }
 
-.club-card-media img,
-.event-card-media img,
-.admin-card-header-image img {
+.club-card-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.35s ease;
 }
 
-.saved-card:hover .club-card-media img,
-.event-card:hover .event-card-media img,
-.admin-card:hover .admin-card-header-image img {
-  transform: scale(1.05);
-}
-
-.club-card-badge,
-.event-date-pill {
+.club-card-badge {
   position: absolute;
   bottom: 0.7rem;
   left: 0.7rem;
@@ -595,8 +548,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   font-size: 0.8rem;
 }
 
-.club-card-title,
-.event-card-title {
+.club-card-title {
   font-size: 1.08rem;
   line-height: 1.2;
   margin-bottom: 0.4rem;
@@ -615,11 +567,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 .meta-line svg {
   color: var(--mb-match);
   flex: 0 0 auto;
-}
-
-.admin-card .card-text {
-  color: var(--mb-ink-soft);
-  font-size: 0.9rem;
 }
 
 .club-card-categories {
@@ -653,22 +600,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   font-size: 0.9rem;
 }
 
-/* --------------------------------------------------------------------------
-   Search & filters
-   -------------------------------------------------------------------------- */
-
-.toolbar-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  padding: 0.55rem;
-  background: var(--mb-paper-bright);
-  border: 1px solid var(--mb-line-soft);
-  border-radius: 999px;
-  box-shadow: var(--mb-shadow-small);
-}
-
 .search-box {
   flex: 1;
   display: flex;
@@ -696,28 +627,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   gap: 0.45rem;
   flex-wrap: wrap;
   margin-bottom: 1.4rem;
-}
-
-.empty-state-card {
-  background: var(--mb-paper-bright) !important;
-  border: 1px dashed var(--mb-line-strong) !important;
-  border-radius: var(--mb-radius-feature) !important;
-  color: var(--mb-ink) !important;
-  padding: clamp(1.8rem, 4vw, 3rem) !important;
-  box-shadow: none;
-}
-
-.empty-state-card h2 {
-  font-size: 1.3rem;
-}
-
-.empty-state-card p {
-  margin-bottom: 1rem;
-}
-
-.empty-state-card svg {
-  color: var(--mb-match);
-  margin-bottom: 0.8rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -1096,224 +1005,14 @@ div.btn-solid-primary button[type="submit"]:hover {
     font-size: 0.7rem;
   }}
 
-/* --------------------------------------------------------------------------
-   Auth
-   -------------------------------------------------------------------------- */
-
-.auth-page {
-  background: linear-gradient(150deg, var(--mb-paper) 30%, var(--mb-paper-bright));
-}
-
-.auth-form-panel,
-.auth-side-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(2rem, 5vw, 4.5rem);
-}
-
-.auth-card {
-  width: min(100%, 560px);
-  background: var(--mb-paper-bright);
-  border: 1px solid var(--mb-line-soft);
-  border-radius: var(--mb-radius-sheet);
-  box-shadow: var(--mb-shadow-small);
-  padding: clamp(1.8rem, 4vw, 3.2rem);
-}
-
-.auth-card h1,
-.auth-side-panel h2 {
-  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
-  line-height: 1.05;
-}
-
-.auth-side-panel {
-  background: linear-gradient(160deg, rgba(48, 50, 52, 0.90), rgba(26, 22, 20, 0.94)),
-    url('/images/hero-perfect-match.webp') center/cover;
-  color: white;
-}
-
-.auth-side-panel h2,
-.auth-side-panel p {
-  color: white;
-}
-
-.auth-side-panel p {
-  opacity: 0.85;
-}
-
-.input-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: var(--mb-paper-bright);
-  border: 1px solid var(--mb-line-soft);
-  border-radius: 999px;
-  padding: 0 1rem;
-  margin-bottom: 0.9rem;
-}
-
-.input-with-icon svg {
-  color: var(--mb-match);
-}
-
-.input-with-icon .form-control {
-  border: none !important;
-  background: transparent !important;
-}
-
 .auth-error {
   margin-top: 1rem;
   color: var(--mb-red-deep);
   font-weight: 650;
 }
 
-.stepper {
-  display: flex;
-  gap: 0.45rem;
-}
-
-.stepper span {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  background: var(--mb-wood);
-  color: var(--mb-ink-soft);
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.stepper span.active {
-  background: var(--mb-ink);
-  color: var(--mb-paper-bright);
-}
-
-.tag-container {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.tag-label {
-  border: 1px solid var(--mb-line-soft);
-  border-radius: 999px;
-  padding: 0.6rem 0.95rem;
-  background: var(--mb-paper-bright);
-  color: var(--mb-ink);
-  font-weight: 600;
-  transition: all 0.16s ease;
-}
-
-.tag-label.selected,
-.tag-label:hover {
-  border-color: rgba(232, 80, 32, 0.35);
-  background: var(--mb-wood);
-  color: var(--mb-ink);
-}
-
-.form-controlsignup {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  border-radius: 999px !important;
-  background: var(--mb-paper-bright) !important;
-  color: var(--mb-ink) !important;
-  font-weight: 650 !important;
-  border: none !important;
-  padding: 0.7rem 1.2rem !important;
-}
-
-/* --------------------------------------------------------------------------
-   Forms
-   -------------------------------------------------------------------------- */
-
-.form-card .card-body {
-  padding: clamp(1.4rem, 3.5vw, 2.4rem);
-}
-
-.form-card label,
-.auth-card label {
-  font-weight: 600;
-  color: var(--mb-ink);
-  margin-bottom: 0.4rem;
-}
-
-.form-card .btn,
-.auth-card .btn {
-  margin-top: 0.5rem;
-}
-
-.profile-avatar-lg {
-  border-radius: 999px;
-  object-fit: cover;
-  border: 5px solid var(--mb-paper-bright);
-  box-shadow: var(--mb-shadow-small);
-}
-
-.profile-avatar-lg {
-  width: 100px;
-  height: 100px;
-}
-
-.admin-profile-card .card-body {
-  padding: 1.6rem;
-}
-
-.profile-title-pill {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 0.4rem 0.75rem;
-  background: var(--mb-wood);
-  color: var(--mb-ink);
-  font-weight: 650;
-  font-size: 0.85rem;
-}
-
-/* --------------------------------------------------------------------------
-   Admin
-   -------------------------------------------------------------------------- */
-
-.stat-card .card-body {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 1.2rem;
-}
-
-.stat-icon {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 18px;
-  background: var(--mb-wood);
-  color: var(--mb-ink);
-  font-size: 1.4rem;
-}
-
-.stat-card strong {
-  display: block;
-  font-size: 1.7rem;
-  line-height: 1;
-  color: var(--mb-ink);
-}
-
-.stat-card span {
-  color: var(--mb-ink-soft);
-  font-weight: 600;
-  font-size: 0.88rem;
-}
-
 .admin-section {
   margin-bottom: 3rem;
-}
-
-.admin-card .card-body {
-  padding: 1.2rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -1394,16 +1093,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .loading-state {
   color: var(--mb-ink);
-}
-
-.value-icon {
-  color: var(--mb-match);
-  font-size: 1.6rem;
-  margin-bottom: 0.6rem;
-}
-
-.value-card .card-body {
-  padding: 1.6rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -1970,12 +1659,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   padding: 2rem;
 }
 
-.deck-empty-emoji {
-  font-size: 3rem;
-  line-height: 1;
-  margin-bottom: 0.8rem;
-}
-
 .deck-empty-card h2 {
   font-size: 1.4rem;
 }
@@ -1992,33 +1675,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   justify-content: center;
   gap: 0.6rem;
   margin-top: 1.2rem;
-}
-
-.saved-event-tile {
-  position: relative;
-  height: 100%;
-}
-
-.saved-remove-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  border: none;
-  background: rgba(255, 254, 249, 0.92);
-  backdrop-filter: blur(8px);
-  color: var(--mb-ink);
-  transition: background 0.16s ease, color 0.16s ease;
-}
-
-.saved-remove-btn:hover {
-  background: var(--mb-red-deep);
-  color: var(--mb-paper-bright);
 }
 
 /* --------------------------------------------------------------------------
@@ -2083,19 +1739,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink-soft);
   font-size: 0.85rem;
   font-weight: 600;
-}
-
-/* --------------------------------------------------------------------------
-   Agenda
-   -------------------------------------------------------------------------- */
-
-.agenda-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.2rem;
 }
 
 /* Club-meeting colour lives with the other calendar chips, further up. */
@@ -2715,13 +2358,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .mb-chip:hover {
   background: var(--mb-wood);
-}
-
-.mb-chip.is-selected {
-  border-color: var(--mb-match);
-  box-shadow: inset 0 0 0 1px var(--mb-match);
-  color: var(--mb-match-deep);
-  font-weight: 650;
 }
 
 @media (max-width: 900px) {
@@ -4239,11 +3875,6 @@ div.btn-solid-primary button[type="submit"]:hover {
     grid-template-columns: 1fr;
   }
 
-  .toolbar-card,
-  .section-heading-row {
-    align-items: stretch;
-  }
-
   .finder-layout {
     grid-template-columns: 1fr;
   }
@@ -4505,15 +4136,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   right: -8%;
   bottom: 4%;
   width: 72%;
-  opacity: 0.16;
-}
-
-/* Event tile drawn from its topic rather than a photograph. */
-.event-card-media:not(.has-photo) .mb-motif {
-  z-index: 0;
-  right: -6%;
-  bottom: -22%;
-  width: 46%;
   opacity: 0.16;
 }
 
@@ -4819,22 +4441,22 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 /* ==========================================================================
    PAGE-LOCAL RULES
-   Everything the primitives do not cover, grouped by the page that needs it.
-   If a rule here starts appearing on a second page, it belongs upstairs.
+   Everything the primitives do not cover,
+grouped by the page that needs it.
+   If a rule here starts appearing on a second page,
+it belongs upstairs.
    ========================================================================== */
 
 /* ---- from auth ---- */
 /* --------------------------------------------------------------------------
    Auth — the three doorway pages
    --------------------------------------------------------------------------
-   Sign in, sign up and sign out are built from the same primitives as every
-   other page now — PageHead, .mb-panel, .mb-field, .mb-chip — so all that is
-   left to say here is the measure: a form run to the app's full 1240px reads
-   as a settings screen rather than as a way in.
-
-   Supersedes the earlier Auth block (.auth-page, .auth-card, .auth-form-panel,
-   .auth-side-panel, .input-with-icon, .stepper, .tag-container, .tag-label,
-   .form-controlsignup), which no longer has a caller.
+   Sign in,
+sign up and sign out are built from the same primitives as every
+   other page now — PageHead,
+.mb-panel,
+.mb-field,
+which no longer has a caller.
    -------------------------------------------------------------------------- */
 
 .auth-shell {
@@ -4975,8 +4597,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   .mb-toolbar .mb-field--search {
     flex-basis: 100%;
     max-width: none;
-  }
-}
+  }}
 
 /* --- Poster grid ---------------------------------------------------------
    A dated list has to read left to right, so these walls are a grid rather
