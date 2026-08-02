@@ -68,6 +68,10 @@
   --mb-shadow-feature: 4px 5px 0 rgba(48, 50, 52, 0.05), 0 8px 26px rgba(120, 80, 60, 0.07);
 
   /* Motion */
+  /* The Bootstrap navbar is .sticky-top at z-index 1020, so anything else that
+     sticks has to start below it or its top edge is swallowed. It grows at the
+     navbar-expand-lg breakpoint, so this tracks that. */
+  --mb-nav-h: 57px;
   --mb-fast: 140ms;
   --mb-standard: 200ms;
   --mb-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -4228,6 +4232,12 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 
+@media (min-width: 992px) {
+  :root {
+    --mb-nav-h: 65px;
+  }
+}
+
 /* ==========================================================================
    Discover — one events-only wall
    ========================================================================== */
@@ -4253,13 +4263,22 @@ div.btn-solid-primary button[type="submit"]:hover {
 /* Sticks to the top so the time window is always changeable mid-scroll. */
 .discover-bar {
   position: sticky;
-  top: 0;
+  top: var(--mb-nav-h);
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.4rem;
   padding: 0.7rem 0;
+}
+
+/* The bar sits inside the padded shell, so its own background would stop short
+   of the viewport and let cards scroll past in the margins. This bleeds it. */
+.discover-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0 -50vw;
+  z-index: -1;
   background: rgba(253, 248, 245, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -4402,5 +4421,14 @@ div.btn-solid-primary button[type="submit"]:hover {
   right: -8%;
   bottom: 4%;
   width: 72%;
+  opacity: 0.16;
+}
+
+/* Event tile drawn from its topic rather than a photograph. */
+.event-card-media:not(.has-photo) .mb-motif {
+  z-index: 0;
+  right: -6%;
+  bottom: -22%;
+  width: 46%;
   opacity: 0.16;
 }
