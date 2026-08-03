@@ -3,6 +3,9 @@
   "configurations": [
     {
       "name": "matchbook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start"],
+      "cwd": "app",
       "url": "http://localhost:3000",
       "port": 3000
     }

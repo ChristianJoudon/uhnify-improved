@@ -6,7 +6,6 @@ import { Meteor } from 'meteor/meteor';
 import { Container, Image, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { Gear, PersonCircle } from 'react-bootstrap-icons';
 import { Profiles } from '../../api/profiles/Profiles';
-import MatchMark from './brand/MatchMark';
 import Wordmark from './brand/Wordmark';
 import { profileImagePath } from '../utilities/helpers';
 
@@ -31,7 +30,6 @@ const NavBar = () => {
     <Navbar expand="lg" className="site-navbar" sticky="top">
       <Container className="page-shell">
         <Navbar.Brand as={NavLink} to="/" className="brand-lockup">
-          <MatchMark size={26} title="MatchBook" />
           <Wordmark />
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />

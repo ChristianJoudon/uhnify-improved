@@ -401,20 +401,16 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 /* Wordmark: charcoal letters, the "t" replaced by an upright match. */
+/* The wordmark is artwork now, cut to the ink. Height is the only dimension
+   worth setting — the file's own ratio supplies the width. */
 .mb-wordmark {
-  display: inline-flex;
-  align-items: baseline;
-  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
-  font-weight: 750;
-  font-size: 1.32rem;
-  letter-spacing: -0.03em;
-  color: var(--mb-ink);
-  line-height: 1;
+  display: block;
+  height: 1.55rem;
+  width: auto;
 }
 
-.mb-wordmark svg {
-  margin: 0 0.02em;
-  transform: translateY(0.06em);
+.footer-brand .mb-wordmark {
+  height: 1.3rem;
 }
 
 .nav-pill-group .nav-link,
