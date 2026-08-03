@@ -21,8 +21,12 @@ const PosterArt = ({ topic, eyebrow, title, tagline, image, placeholder, art }) 
       {image && <img className="mb-poster-photo" src={image} alt="" />}
       {cover && <img className="mb-poster-photo" src={cover} alt="" loading="lazy" />}
       <div className={`mb-poster-copy${onArt ? ' on-photo' : ''}`}>
-          {eyebrow && <span className="mb-poster-eyebrow">{eyebrow}</span>}
-        <h3 className={`mb-poster-title${title ? '' : ' is-placeholder'}`}>{title || placeholder}</h3>
+        {eyebrow && <span className="mb-poster-eyebrow">{eyebrow}</span>}
+        {/* A surface with nothing to head — the details sheet, whose title is
+            already in the modal header — passes neither, and gets neither. */}
+        {(title || placeholder) && (
+          <h3 className={`mb-poster-title${title ? '' : ' is-placeholder'}`}>{title || placeholder}</h3>
+        )}
         {tagline && <p className="mb-poster-tagline">{tagline}</p>}
       </div>
       {!onArt && <TopicMotif name={topic.motif} />}

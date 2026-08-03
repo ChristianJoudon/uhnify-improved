@@ -12,6 +12,8 @@
  * that appears in the imported dataset resolves to exactly one topic.
  */
 
+import { normalizeCategories } from './helpers';
+
 const wash = (from, to) => `linear-gradient(165deg, ${from} 0%, ${to} 100%)`;
 
 const ART = '/images/topics';
@@ -169,6 +171,35 @@ export const topicFor = (...sources) => {
     field: topic.fields[stableIndex(`${seed}~`, topic.fields.length)],
   };
 };
+
+/**
+ * One resolution per kind, so a record cannot be one topic on its card and
+ * another in the filter that surfaced it — or on the sheet that opens from it.
+ * Both readings existed side by side before this and disagreed whenever an
+ * event carried categories of its own.
+ *
+ * An event is named for what it is, so its own words lead; a club is named for
+ * who it is, so its categories do.
+ *
+ * The host is deliberately not a source. It used to be the fallback for an
+ * event named after a person, but every imported event carries categories of
+ * its own, and reading the host on some pages and not others gave one event two
+ * colours. Both the order and the content of these sources are load-bearing:
+ * the first group to match wins, and all of them together seed which of the
+ * topic's two washes gets drawn.
+ */
+export const topicForEvent = event => topicFor(
+  event.title,
+  event.description,
+  normalizeCategories(event.categories),
+);
+
+export const topicForClub = club => topicFor(
+  normalizeCategories(club.categories),
+  club.tags,
+  club.name,
+  club.description,
+);
 
 /** Icon + colour for one of the user's stated interests. */
 export const interestMeta = interest => topicFor(interest);

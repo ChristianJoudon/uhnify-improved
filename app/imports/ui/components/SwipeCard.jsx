@@ -5,8 +5,8 @@ import { ArrowLeft, CalendarEvent, GeoAlt, InfoCircle, People } from 'react-boot
 import TopicMotif from './TopicMotif';
 import CardFields from './CardFields';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
-import { formatEventDate, formatShortDate, normalizeCategories } from '../utilities/helpers';
-import { topicFor } from '../utilities/topics';
+import { formatEventDate, formatShortDate } from '../utilities/helpers';
+import { topicForEvent } from '../utilities/topics';
 
 const SWIPE_DISTANCE = 130;
 const SWIPE_VELOCITY = 650;
@@ -38,14 +38,13 @@ const daysUntilLabel = value => {
  * One card in the Discover deck. The top card can be dragged left/right to decide,
  * double-tapped to flip over for full details, and flies off screen when a decision lands.
  */
-const SwipeCard = ({ event, host, hostName, kind, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
+const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
   // A group and an event are the same object to this card — a thing with a
   // topic, a place and a time — so only the field schema differs.
   const fields = kind === 'club' ? CLUB_FIELDS : EVENT_FIELDS;
   // Same rule as every other card: the seeded stock art is not this app's
   // design, so only a genuinely uploaded photo becomes the card face. The
-  // event's own words pick the topic — its host group is only a fallback.
-  const topic = topicFor(event.title, event.description, normalizeCategories(host?.categories), host?.tags);
+  const topic = topicForEvent(event);
   const photo = event.image && event.image.startsWith('data:') ? event.image : '';
 
   const x = useMotionValue(0);
@@ -204,10 +203,6 @@ SwipeCard.propTypes = {
     eventID: PropTypes.number,
     image: PropTypes.string,
   }).isRequired,
-  host: PropTypes.shape({
-    categories: PropTypes.arrayOf(PropTypes.string),
-    tags: PropTypes.arrayOf(PropTypes.string),
-  }),
   hostName: PropTypes.string,
   /** 'event' or 'club' — decides which field schema the back reads. */
   kind: PropTypes.oneOf(['event', 'club']),
@@ -220,7 +215,6 @@ SwipeCard.propTypes = {
 };
 
 SwipeCard.defaultProps = {
-  host: null,
   hostName: '',
   kind: 'event',
   exitDirection: null,

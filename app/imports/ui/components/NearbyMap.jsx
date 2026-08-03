@@ -110,9 +110,13 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
     // it rather than leaving the reader to hunt.
     if (pins.length > 0) {
       const bounds = L.latLngBounds(pins.map(p => [p.at.lat, p.at.lng]));
-      // Tight padding and a higher ceiling: the island should fill the frame,
-      // not float in a channel with its neighbours for company.
-      map.current.fitBounds(bounds, { padding: [18, 18], maxZoom: 15 });
+      map.current.fitBounds(bounds, { padding: [18, 18], maxZoom: 15, animate: false });
+      // No horizontal nudging beyond this. Kauaʻi's pins project to roughly a
+      // 1.3 aspect and a full-width strip is nearer 2.5, so there is ocean on
+      // both sides no matter what; sliding east to hide Niʻihau only bought a
+      // lopsided island with a dead navy field on the other side. Centred and
+      // as large as the frame allows is the better trade — and Niʻihau, unlike
+      // Molokaʻi, is genuinely nearby.
     }
   }, [pins, onSelect]);
 
@@ -134,12 +138,13 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
   }, [origin]);
 
   return (
-    <div className="mb-map" style={{ height }}>
+    <div className="mb-map" style={height ? { height } : undefined}>
       {/* The two-tone repaint of the basemap, referenced from style.css.
           Positron's water is the one fill whose blue outruns its red, so the
-          alpha row below (-60R +60B) resolves to 1 over the sea and 0 over
-          every shade of land, road and park. That mask carries the navy; the
-          warm matrix carries everything else. */}
+          alpha row below (-200R +200B) resolves to 1 over the sea and 0 over
+          every shade of land, road and park. The slope is deliberately steep:
+          Positron's own tiles carry faint seams a shade off open water, and a
+          gentler threshold left them behind as a light grid on the sea. */}
       <svg className="mb-map-defs" aria-hidden="true" focusable="false">
         <filter id="mb-sea" colorInterpolationFilters="sRGB">
           <feColorMatrix
@@ -158,10 +163,17 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
             values="0 0 0 0 0
                     0 0 0 0 0
                     0 0 0 0 0
-                    -60 0 60 0 -0.5"
+                    -200 0 200 0 -0.8"
           />
+          {/* Close the mask: Positron's rasters carry hairline seams a shade
+              off open water, and by colour alone they are indistinguishable
+              from a road. Dilating then eroding by the same radius swallows
+              anything thinner than the radius and leaves the coastline where
+              it was. */}
+          <feMorphology in="seamask" operator="dilate" radius="2" result="grown" />
+          <feMorphology in="grown" operator="erode" radius="2" result="closed" />
           <feFlood floodColor="#1b3559" result="navy" />
-          <feComposite in="navy" in2="seamask" operator="in" result="sea" />
+          <feComposite in="navy" in2="closed" operator="in" result="sea" />
           <feMerge>
             <feMergeNode in="land" />
             <feMergeNode in="sea" />
@@ -181,6 +193,7 @@ NearbyMap.propTypes = {
   records: PropTypes.arrayOf(PropTypes.shape({})),
   origin: PropTypes.shape({ lat: PropTypes.number, lng: PropTypes.number }),
   onSelect: PropTypes.func,
+  /** Fixed height in px. Omit to let the stylesheet scale it to the window. */
   height: PropTypes.number,
 };
 
@@ -188,7 +201,7 @@ NearbyMap.defaultProps = {
   records: [],
   origin: null,
   onSelect: null,
-  height: 460,
+  height: 0,
 };
 
 export default NearbyMap;

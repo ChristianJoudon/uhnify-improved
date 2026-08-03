@@ -412,7 +412,6 @@ const DiscoverEvents = () => {
                 <SwipeCard
                   key={card.event._id}
                   event={card.event}
-                  host={clubByNumber.get(card.event.eventID)}
                   hostName={clubByNumber.get(card.event.eventID)?.name || ''}
                   stackIndex={card.stackIndex}
                   exitDirection={card.exitDirection}

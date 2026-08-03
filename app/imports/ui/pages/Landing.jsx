@@ -3,7 +3,6 @@ import { Meteor } from 'meteor/meteor';
 import { useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
-import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import EventPoster from '../components/EventPoster';
 import { sortByDate } from '../utilities/helpers';
@@ -19,13 +18,9 @@ const Landing = () => {
   const [interest, setInterest] = useState('');
   const [when, setWhen] = useState('week');
 
-  const { events, clubs } = useTracker(() => {
+  const { events } = useTracker(() => {
     Meteor.subscribe(Events.userPublicationName);
-    Meteor.subscribe(Clubs.userPublicationName);
-    return {
-      events: Events.collection.find({}).fetch(),
-      clubs: Clubs.collection.find({}).fetch(),
-    };
+    return { events: Events.collection.find({}).fetch() };
   }, []);
 
   /**
@@ -54,7 +49,6 @@ const Landing = () => {
       .slice(0, 3)
       .map(item => item.event);
   }, [events]);
-  const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   // The finder carries what was typed through to Discover. It used to discard
   // it and navigate to an unfiltered page, which made the control a prop.
@@ -142,8 +136,6 @@ const Landing = () => {
                   >
                     <EventPoster
                       event={event}
-                      host={clubByNumber.get(event.eventID)}
-                      neighborhood={event.region}
                       distance={milesLabel(miles)}
                       onGoing={enter}
                       onOpen={enter}

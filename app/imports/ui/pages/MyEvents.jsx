@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -11,6 +11,7 @@ import { People, Stars } from 'react-bootstrap-icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import EventPoster from '../components/EventPoster';
+import DetailsModal from '../components/DetailsModal';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
@@ -24,6 +25,9 @@ const rise = {
 };
 
 const MyEvents = () => {
+  // The same sheet every other wall opens.
+  const [detail, setDetail] = useState(null);
+
   const { ready, events, clubs, memberships, links, swipes } = useTracker(() => {
     const eventsSub = Meteor.subscribe(Events.userPublicationName);
     const clubsSub = Meteor.subscribe(Clubs.userPublicationName);
@@ -55,7 +59,6 @@ const MyEvents = () => {
 
   // The poster reads its host to colour itself when the event's own words are
   // too thin to place it; events carry the club's number, not its id.
-  const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   const calendarEvents = useMemo(() => {
     const clubIds = new Set(clubEvents.map(event => event._id));
@@ -94,10 +97,9 @@ const MyEvents = () => {
         <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
           <EventPoster
             event={event}
-            host={clubByNumber.get(event.eventID)}
             going={savedIds.has(event._id)}
             onGoing={toggleGoing}
-            onOpen={toggleGoing}
+            onOpen={() => setDetail(event)}
           />
         </motion.div>
       ))}
@@ -177,6 +179,14 @@ const MyEvents = () => {
           />
         </Container>
       </section>
+      <DetailsModal
+        show={Boolean(detail)}
+        onHide={() => setDetail(null)}
+        record={detail}
+        kind="event"
+        isIn={savedIds.has(detail?._id)}
+        onAct={toggleGoing}
+      />
     </Container>
   );
 };

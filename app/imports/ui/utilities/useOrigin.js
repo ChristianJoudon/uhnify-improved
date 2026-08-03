@@ -14,29 +14,42 @@ const STORAGE_KEY = 'mb-origin';
  * Nothing fires on mount: the island centre is a fine default, and a permission
  * prompt on first paint is not. It runs when someone presses the button.
  */
+/** Where a position came from. Only the first two are a real answer. */
+const LOCATED = ['located', 'approx'];
+
 export const useOrigin = () => {
-  const [origin, setOrigin] = useState(() => {
+  // The source travels with the position, and is what "do we know where they
+  // are" is read from. Comparing the origin object to KAUAI instead looked
+  // right and was not: a position restored from storage is a fresh object, so
+  // it never equalled the constant, and the island centre came back from disk
+  // claiming to be a located one. The button that would fix it was the button
+  // that had already hidden itself.
+  const [{ origin, source }, setState] = useState(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null');
-      return saved && typeof saved.lat === 'number' ? saved : KAUAI;
+      if (saved && typeof saved.lat === 'number' && LOCATED.includes(saved.source)) {
+        return { origin: { lat: saved.lat, lng: saved.lng, label: saved.label }, source: saved.source };
+      }
     } catch (error) {
-      return KAUAI;
+      // Unreadable storage is the same as none.
     }
+    return { origin: KAUAI, source: 'default' };
   });
   const [status, setStatus] = useState('idle');
 
   useEffect(() => {
-    if (origin !== KAUAI) {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(origin));
-      } catch (error) {
-        // A browser refusing storage is not a reason to lose the position.
-      }
+    if (!LOCATED.includes(source)) {
+      return;
     }
-  }, [origin]);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...origin, source }));
+    } catch (error) {
+      // A browser refusing storage is not a reason to lose the position.
+    }
+  }, [origin, source]);
 
   const apply = (point, how) => {
-    setOrigin({ lat: point.lat, lng: point.lng, label: regionNear(point) });
+    setState({ origin: { lat: point.lat, lng: point.lng, label: regionNear(point) }, source: how });
     setStatus(how);
   };
 
@@ -86,7 +99,7 @@ export const useOrigin = () => {
   };
 
   const reset = () => {
-    setOrigin(KAUAI);
+    setState({ origin: KAUAI, source: 'default' });
     setStatus('idle');
     try {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -95,5 +108,5 @@ export const useOrigin = () => {
     }
   };
 
-  return { origin, status, locate, reset, isPrecise: origin !== KAUAI };
+  return { origin, status, locate, reset, isPrecise: LOCATED.includes(source) };
 };

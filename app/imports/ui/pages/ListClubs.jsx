@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Collection, DoorOpen } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import Club from '../components/Club';
-import ClubDetailsModal from '../components/ClubDetailsModal';
+import DetailsModal from '../components/DetailsModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
@@ -103,7 +103,7 @@ const ListClub = () => {
           ))}
         </div>
       )}
-      <ClubDetailsModal show={showModal} handleClose={() => setShowModal(false)} club={selectedClub} />
+      <DetailsModal show={showModal} onHide={() => setShowModal(false)} record={selectedClub} kind="club" />
     </Container>
   );
 };

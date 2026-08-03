@@ -11,6 +11,8 @@
  * Adding a field to every card in the app is one entry here.
  */
 
+import { scheduleLabel } from '../../api/club/schedule';
+
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -100,11 +102,17 @@ export const EVENT_FIELDS = [
 
 /** The club card's rows. Same contract. */
 export const CLUB_FIELDS = [
-  { key: 'meets', icon: 'calendar', get: club => club.meetingTime },
+  // A recurring schedule is the better answer when there is one — it is what
+  // the whole schedule data layer exists to produce, and nine of the imported
+  // groups publish one. Reading meetingTime alone threw all of them away.
+  { key: 'meets', icon: 'calendar', get: club => scheduleLabel(club.schedule) || club.meetingTime },
   { key: 'where', icon: 'geo', get: whereLine },
   { key: 'membership', icon: 'people', get: club => club.membership },
   { key: 'phone', icon: 'phone', get: club => club.phone },
-  { key: 'email', icon: 'mail', get: club => club.email },
+  // `owner` is deliberately not a fallback here. It is the account that created
+  // the record, not a contact the group published — falling back to it printed
+  // the seeding admin's address on the sheet as though it were the group's.
+  { key: 'email', icon: 'mail', get: club => club.email || club.contactInfo },
 ];
 
 /**

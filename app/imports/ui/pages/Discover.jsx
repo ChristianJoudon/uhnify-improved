@@ -7,13 +7,14 @@ import swal from 'sweetalert';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
+import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EventPoster from '../components/EventPoster';
 import TopicPosters from '../components/TopicPosters';
 import KindToggle from '../components/KindToggle';
 import Club from '../components/Club';
-import ClubDetailsModal from '../components/ClubDetailsModal';
+import DetailsModal from '../components/DetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
 import { milesLabel, milesTo } from '../utilities/geo';
@@ -107,7 +108,8 @@ const Discover = () => {
   // Which kind of thing is being browsed. In the URL beside the other filters,
   // so a link carries the whole view.
   const kind = params.get('kind') === 'clubs' ? 'clubs' : 'events';
-  const [detailClub, setDetailClub] = useState(null);
+  // One sheet for either kind; the card that opened it says which.
+  const [detail, setDetail] = useState(null);
   const when = WINDOWS.some(option => option.key === requested) ? requested : 'all';
 
   const setWhen = key => {
@@ -148,12 +150,15 @@ const Discover = () => {
     setParams(updated, { replace: true });
   };
 
-  const { ready, events, clubs, swipes, interests, firstName } = useTracker(() => {
+  const { ready, events, clubs, swipes, joinedIds, interests, firstName } = useTracker(() => {
     const subs = [
       Meteor.subscribe(Events.userPublicationName),
       Meteor.subscribe(Clubs.userPublicationName),
       Meteor.subscribe(EventSwipes.userPublicationName),
       Meteor.subscribe(Profiles.userPublicationName),
+      // Without this the card and the sheet both offered to join a group the
+      // reader is already in.
+      Meteor.subscribe(ProfileClubs.membershipPublicationName),
     ];
     const profile = Profiles.collection.findOne({ userId });
     return {
@@ -161,6 +166,7 @@ const Discover = () => {
       events: Events.collection.find({}).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
       swipes: EventSwipes.collection.find({ userId }).fetch(),
+      joinedIds: new Set(ProfileClubs.collection.find({ userId }).map(membership => membership.clubId)),
       interests: normalizeCategories(profile?.interests),
       firstName: profile?.firstName || '',
     };
@@ -279,19 +285,19 @@ const Discover = () => {
       <div className="discover-bar">
         <KindToggle value={kind} onChange={setKind} counts={{ events: upcoming.length, clubs: clubs.length }} />
         {kind === 'events' && (
-        <div className="discover-windows" role="group" aria-label="When">
-          {WINDOWS.map(option => (
-            <button
-              key={option.key}
-              type="button"
-              className={`discover-window${when === option.key ? ' is-on' : ''}`}
-              onClick={() => setWhen(option.key)}
-              aria-pressed={when === option.key}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+          <div className="discover-windows" role="group" aria-label="When">
+            {WINDOWS.map(option => (
+              <button
+                key={option.key}
+                type="button"
+                className={`discover-window${when === option.key ? ' is-on' : ''}`}
+                onClick={() => setWhen(option.key)}
+                aria-pressed={when === option.key}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         )}
         <Link className="btn btn-match discover-swipe" to="/discover-events">Swipe instead</Link>
       </div>
@@ -325,8 +331,9 @@ const Discover = () => {
                   club={club}
                   tier={index < 2 ? 'lg' : 'md'}
                   distance={milesLabel(milesTo(club, origin))}
+                  isMember={joinedIds.has(club._id)}
                   onAddToProfile={join}
-                  onViewDetails={setDetailClub}
+                  onViewDetails={() => setDetail({ record: club, kind: 'club' })}
                 />
               </motion.div>
             ))}
@@ -340,7 +347,7 @@ const Discover = () => {
         </div>
       ) : (
         <div className="masonry discover-wall">
-          {wall.map(({ event, host }, index) => {
+          {wall.map(({ event }, index) => {
             const miles = milesTo(event, origin);
             return (
               <motion.div
@@ -354,12 +361,10 @@ const Discover = () => {
               >
                 <EventPoster
                   event={event}
-                  host={host}
-                  neighborhood={event.region}
                   distance={milesLabel(miles)}
                   going={goingIds.has(event._id)}
                   onGoing={toggleGoing}
-                  onOpen={() => toggleGoing(event)}
+                  onOpen={() => setDetail({ record: event, kind: 'event' })}
                   // The top few are drawn large, so the wall has a focal point
                   // instead of reading as a uniform grid.
                   tier={index < 2 ? 'lg' : 'md'}
@@ -370,10 +375,15 @@ const Discover = () => {
         </div>
       )}
 
-      <ClubDetailsModal
-        show={Boolean(detailClub)}
-        handleClose={() => setDetailClub(null)}
-        club={detailClub}
+      <DetailsModal
+        show={Boolean(detail)}
+        onHide={() => setDetail(null)}
+        record={detail?.record}
+        kind={detail?.kind || 'club'}
+        isIn={detail?.kind === 'event'
+          ? goingIds.has(detail?.record?._id)
+          : joinedIds.has(detail?.record?._id)}
+        onAct={detail?.kind === 'event' ? toggleGoing : record => join(record._id)}
       />
     </main>
   );

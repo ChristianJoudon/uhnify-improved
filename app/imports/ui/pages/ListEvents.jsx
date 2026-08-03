@@ -10,6 +10,7 @@ import swal from 'sweetalert';
 import { CalendarX, Stars } from 'react-bootstrap-icons';
 import { Events } from '../../api/events/Events';
 import { Clubs } from '../../api/club/Club';
+import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
@@ -17,6 +18,7 @@ import EventPoster from '../components/EventPoster';
 import TopicPosters from '../components/TopicPosters';
 import KindToggle from '../components/KindToggle';
 import Club from '../components/Club';
+import DetailsModal from '../components/DetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
 
@@ -38,21 +40,27 @@ const ListEvents = () => {
   // question asked of a different frame: there the frame is a map, here a month.
   const [kind, setKind] = useState('events');
   const [topicKey, setTopicKey] = useState(null);
+  // The same sheet Nearby and Discover open, so a card behaves the same way
+  // whichever page the reader met it on.
+  const [detail, setDetail] = useState(null);
   const navigate = useNavigate();
   const userId = Meteor.userId();
 
-  const { ready, events, clubs, goingIds } = useTracker(() => {
+  const { ready, events, clubs, goingIds, joinedIds } = useTracker(() => {
     const subscription = Meteor.subscribe(Events.userPublicationName);
     // Saving works from the poster here exactly as it does on Discover, so the
     // page needs to know what this person has already said yes to.
     const swipesSub = Meteor.subscribe(EventSwipes.userPublicationName);
     const clubsSub = Meteor.subscribe(Clubs.userPublicationName);
+    const memberSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
     return {
       events: Events.collection.find({}, { sort: { date: 1 } }).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
       goingIds: new Set(EventSwipes.collection.find({ userId: Meteor.userId(), decision: 'interested' })
         .map(swipe => swipe.eventId)),
-      ready: subscription.ready() && swipesSub.ready() && clubsSub.ready(),
+      joinedIds: new Set(ProfileClubs.collection.find({ userId: Meteor.userId() })
+        .map(membership => membership.clubId)),
+      ready: subscription.ready() && swipesSub.ready() && clubsSub.ready() && memberSub.ready(),
     };
   }, []);
 
@@ -113,6 +121,18 @@ const ListEvents = () => {
     });
   };
 
+  const joinClub = clubId => {
+    if (!userId) {
+      navigate('/signin');
+      return;
+    }
+    Meteor.call('profileClubs.add', clubId, error => {
+      if (error) {
+        swal('Error', error.reason || error.message, 'error');
+      }
+    });
+  };
+
   if (!ready) {
     return <LoadingSpinner />;
   }
@@ -137,24 +157,24 @@ const ListEvents = () => {
 
       <TopicPosters selected={topicKey} onSelect={setTopicKey} counts={topicCounts} compact />
 
-        <div id="event-calendar" className="calendar-container">
-          <FullCalendar
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            events={formattedEvents}
-            height="auto"
-            views={{ dayGridMonth: { dayMaxEvents: 3 } }}
-            moreLinkText={count => `+${count} more`}
-            fixedWeekCount={false}
-            dayHeaderFormat={{ weekday: 'short' }}
-            eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
-            headerToolbar={{
-              start: 'today prev,next',
-              center: 'title',
-              end: 'dayGridMonth,dayGridWeek,dayGridDay',
-            }}
-          />
-        </div>
+      <div id="event-calendar" className="calendar-container">
+        <FullCalendar
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          events={formattedEvents}
+          height="auto"
+          views={{ dayGridMonth: { dayMaxEvents: 3 } }}
+          moreLinkText={count => `+${count} more`}
+          fixedWeekCount={false}
+          dayHeaderFormat={{ weekday: 'short' }}
+          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
+          headerToolbar={{
+            start: 'today prev,next',
+            center: 'title',
+            end: 'dayGridMonth,dayGridWeek,dayGridDay',
+          }}
+        />
+      </div>
 
       <div className="mb-toolbar">
         <input
@@ -198,7 +218,13 @@ const ListEvents = () => {
           {kind === 'clubs'
             ? filteredClubs.map((club, index) => (
               <motion.div key={club._id} variants={rise} initial="hidden" animate="show" custom={index}>
-                <Club club={club} tier="md" onViewDetails={() => navigate('/search-clubs')} />
+                <Club
+                  club={club}
+                  tier="md"
+                  isMember={joinedIds.has(club._id)}
+                  onAddToProfile={joinClub}
+                  onViewDetails={() => setDetail({ record: club, kind: 'club' })}
+                />
               </motion.div>
             ))
             : filteredEvents.map((event, index) => (
@@ -207,13 +233,23 @@ const ListEvents = () => {
                   event={event}
                   going={goingIds.has(event._id)}
                   onGoing={toggleGoing}
-                  onOpen={toggleGoing}
+                  onOpen={() => setDetail({ record: event, kind: 'event' })}
                 />
               </motion.div>
             ))}
         </div>
       )}
 
+      <DetailsModal
+        show={Boolean(detail)}
+        onHide={() => setDetail(null)}
+        record={detail?.record}
+        kind={detail?.kind || 'event'}
+        isIn={detail?.kind === 'club'
+          ? joinedIds.has(detail?.record?._id)
+          : goingIds.has(detail?.record?._id)}
+        onAct={detail?.kind === 'club' ? record => joinClub(record._id) : toggleGoing}
+      />
     </Container>
   );
 };

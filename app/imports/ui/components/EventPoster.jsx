@@ -2,9 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import PosterArt from './PosterArt';
 import CardFields from './CardFields';
-import { normalizeCategories } from '../utilities/helpers';
 import { EVENT_FIELDS } from '../utilities/cardFields';
-import { topicFor } from '../utilities/topics';
+import { topicForEvent } from '../utilities/topics';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -49,14 +48,11 @@ const whenLabel = date => {
  * and clamps how much of the description shows — every size shows some, because
  * a listing that took the trouble to describe itself is the one worth reading.
  */
-const EventPoster = ({ event, host, neighborhood, distance, going, onGoing, onOpen, tier }) => {
+const EventPoster = ({ event, distance, going, onGoing, onOpen, tier }) => {
   const date = event.date instanceof Date ? event.date : new Date(event.date);
   const valid = !Number.isNaN(date.getTime());
-  // The event's own words come first — unlike a club, an event is named for
-  // what it is. Deferring to the host's category made an art exhibition run by
-  // a sports club read as "wellness", and turned the whole wall one colour.
-  // The host is the fallback for events named after a person or a place.
-  const topic = topicFor(event.title, event.description, normalizeCategories(host?.categories), host?.tags);
+  // One reading of an event's topic, shared with the sheet this card opens.
+  const topic = topicForEvent(event);
   // Only a genuinely uploaded photo becomes the poster face. The seeded stock
   // art is not this app's design and reads as clutter beside a drawn poster.
   const photo = event.image && event.image.startsWith('data:') ? event.image : '';
@@ -105,12 +101,6 @@ EventPoster.propTypes = {
     location: PropTypes.string,
     image: PropTypes.string,
   }).isRequired,
-  host: PropTypes.shape({
-    name: PropTypes.string,
-    categories: PropTypes.arrayOf(PropTypes.string),
-    tags: PropTypes.arrayOf(PropTypes.string),
-  }),
-  neighborhood: PropTypes.string,
   distance: PropTypes.string,
   going: PropTypes.bool,
   onGoing: PropTypes.func,
@@ -119,8 +109,6 @@ EventPoster.propTypes = {
 };
 
 EventPoster.defaultProps = {
-  host: null,
-  neighborhood: '',
   distance: '',
   going: false,
   onGoing: () => {},

@@ -664,6 +664,39 @@ div.btn-solid-primary button[type="submit"]:hover {
   object-fit: cover;
 }
 
+/* The sheet's poster. Without a .mb-poster-lg ancestor a PosterArt renders at
+   card size — 168px — inside a large modal, so the hero is sized here instead
+   of borrowing a tier class the sheet has no other use for. */
+.details-modal-poster .mb-poster-art {
+  min-height: 260px;
+  border-radius: var(--mb-radius-tight);
+}
+
+.details-fields {
+  margin-bottom: 1.1rem;
+}
+
+.details-copy {
+  margin-top: 1.1rem;
+}
+
+.details-modal-grid .club-card-categories {
+  margin-top: 1.1rem;
+}
+
+/* The input and its button on one row. This was Bootstrap utilities and an
+   inline max-width in the JSX; it is a rule now because two surfaces use it. */
+.details-tag-add {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.details-tag-add .mb-field {
+  max-width: 15rem;
+}
+
 .details-list {
   display: grid;
   gap: 0.7rem;
@@ -1727,8 +1760,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   box-shadow: 0 0 0 0.2rem rgba(232, 80, 32, 0.2);
 }
 
+/* Sized so the full-width page fits four columns, not three. At 290px the
+   1200px content box still divided into three — the 250px the rail gave back
+   went entirely into wider cards and bought no extra column at all. */
 .masonry {
-  column-width: 290px;
+  column-width: 265px;
   column-gap: 1.1rem;
 }
 
@@ -2590,8 +2626,131 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 /* ==========================================================================
-   Clubs page: matching rail
+   Clubs page: the matching bar
+
+   The two things this page matches on, plus search, as one line above the
+   frame. This was a 250px rail down the left side for the whole length of the
+   page; the map and the wall of cards both wanted that width more than two
+   selects and a search box did.
    ========================================================================== */
+
+.finder-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.7rem 1.2rem;
+  padding: 0.8rem 1.05rem;
+  margin-bottom: 1.1rem;
+  background: var(--mb-paper-bright);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-card);
+  box-shadow: var(--mb-shadow-small);
+}
+
+.finder-bar-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+.finder-bar-title {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mb-ink-faint);
+}
+
+.finder-bar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
+}
+
+.finder-bar-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 650;
+  font-size: 0.95rem;
+  color: var(--mb-ink);
+}
+
+.finder-bar-place svg {
+  color: var(--mb-match);
+  flex: 0 0 auto;
+}
+
+/* The shared field primitive fills its container by default, which is right in
+   a form column and wrong in a row of settings. */
+.finder-bar-row .mb-field {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* An interest is a statement, not a control, so it sits flat in its topic's
+   own colour rather than borrowing the chip's pressed-and-clickable look. */
+.finder-bar-interest {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.finder-bar-interest svg {
+  position: static;
+  width: 14px;
+  height: auto;
+  opacity: 0.95;
+  z-index: auto;
+}
+
+.finder-bar-edit {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--mb-match-deep);
+  text-decoration: none;
+}
+
+.finder-bar-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 1 18rem;
+  min-width: 12rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--mb-line-soft);
+  border-radius: 999px;
+  background: var(--mb-paper);
+}
+
+.finder-bar-search svg {
+  color: var(--mb-match);
+  flex: 0 0 auto;
+}
+
+.finder-bar-search .form-control {
+  border: none;
+  background: none;
+  box-shadow: none;
+  padding: 0.5rem 0;
+  font-size: 0.92rem;
+}
+
+.finder-bar-search .form-control:focus {
+  box-shadow: none;
+}
+
+/* The frame and the wall, now at full page width. */
+.finder-body {
+  min-width: 0;
+}
 
 .rail-block {
   background: var(--mb-paper-bright);
@@ -5055,8 +5214,13 @@ which no longer has a caller.
    Nearby: the map, and the covers at filter size
    ========================================================================== */
 
+/* Tall enough that the pins stop stacking, and it grows with the window so a
+   wide frame does not strand a small island in a field of navy — but capped,
+   because a map that fills the first screen pushes every card below the fold
+   and the map is the way in to the cards, not the destination. */
 .mb-map {
   position: relative;
+  height: clamp(340px, 33vw, 520px);
   margin-bottom: 1.1rem;
   border: 1px solid var(--mb-line-soft);
   border-radius: var(--mb-radius-card);
