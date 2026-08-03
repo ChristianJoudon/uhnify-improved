@@ -355,9 +355,18 @@ const ClubFinder = () => {
 
         {showing.length === 0 ? (
           <div className="mb-empty">
+            {/* Same three parts as every other empty state in the app — a
+                glyph, what happened, and what to do about it. This one had
+                only the first line and a button. */}
+            <GeoAlt className="mb-empty-glyph" aria-hidden="true" />
             {/* Name the filter that actually excluded everything, and let the
                 reset clear the radius too — otherwise it cannot recover. */}
             <h3>{hasFilters ? 'Nothing matches those filters.' : `Nothing within ${radius} miles.`}</h3>
+            <p>
+              {hasFilters
+                ? 'Try a shorter word, or drop the category and see the lot.'
+                : `Kauaʻi is about thirty miles across, so a wider radius usually finds ${kind === 'clubs' ? 'more groups' : 'more events'}.`}
+            </p>
             <button type="button" onClick={resetAll} className="btn btn-solid-primary">
               {hasFilters ? 'Clear filters' : 'Widen the search'}
             </button>
