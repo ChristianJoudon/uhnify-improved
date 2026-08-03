@@ -67,6 +67,10 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
       center: [KAUAI.lat, KAUAI.lng],
       zoom: 10,
       scrollWheelZoom: false,
+      // The same courtesy for touch: without this the map swallowed a vertical
+      // page scroll that happened to start on it, which on a phone is most of
+      // the first screen. Pinch zoom stays.
+      dragging: !L.Browser.mobile,
       attributionControl: true,
     });
     // Carto's Positron rather than OSM's standard layer: standard draws every

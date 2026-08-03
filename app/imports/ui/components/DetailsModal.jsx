@@ -75,6 +75,14 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
     });
   };
 
+  // Callers keep the modal mounted and clear the record on hide, so this branch
+  // ran during the CLOSING animation too — the sheet you just dismissed flashed
+  // "Loading…" on its way out. Nothing to show and nothing to close: render
+  // nothing.
+  if (!record && !show) {
+    return null;
+  }
+
   if (!record) {
     return (
       <Modal show={show} onHide={onHide} centered size="lg" className="details-modal">

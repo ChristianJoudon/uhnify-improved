@@ -71,7 +71,7 @@ const NavBar = () => {
               title={currentUser ? (
                 <span className="profile-menu-trigger">
                   <Image src={profileImagePath(profile?.picture)} alt="Profile" className="profilePicture" />
-                  <span className="d-none d-xl-inline">{profile?.firstName || 'Profile'}</span>
+                  <span className="d-none d-lg-inline">{profile?.firstName || 'Profile'}</span>
                 </span>
               ) : (
                 <span className="profile-menu-trigger"><PersonCircle /> Sign in</span>

@@ -1128,8 +1128,21 @@ div.btn-solid-primary button[type="submit"]:hover {
     justify-content: center;
   }
 
+  /* A month cell on a phone is about 45px wide; shrinking the type only made
+     the title unreadable. Drop the dot and the time, keep the pill's colour as
+     the signal, and let the title have the whole width. */
   .fc-daygrid-event {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
+    padding-inline: 0.2rem;
+  }
+
+  .fc .fc-daygrid-event-dot,
+  .fc .fc-event-time {
+    display: none;
+  }
+
+  .fc .fc-daygrid-day-frame {
+    min-height: 74px;
   }}
 
 .auth-error {
@@ -1950,6 +1963,13 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .mb-section {
   margin: 3.25rem 0;
+}
+
+/* `.mb-toolbar-count` carries `margin-right: auto` so it anchors left in a
+   toolbar row; inside a space-between section head that auto margin fought the
+   justification and pinned the count against the title. */
+.mb-section-head .mb-toolbar-count {
+  margin-right: 0;
 }
 
 .mb-section-head {
@@ -3785,6 +3805,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
   .customize-preview {
     position: static;
+    order: 2;
   }
 
   .profile-head-body {
@@ -4108,9 +4129,14 @@ div.btn-solid-primary button[type="submit"]:hover {
     grid-template-columns: 1fr;
   }
 
+  /* Stacked, the preview is the first child in source order, so a phone opened
+     Start an event on a picture of an empty poster and pushed the first field
+     below the fold. The form leads; the preview follows it. */
   .create-preview {
     position: static;
-  }}
+    order: 2;
+  }
+}
 
 /* --------------------------------------------------------------------------
    Motion preferences & responsive
@@ -4207,9 +4233,12 @@ div.btn-solid-primary button[type="submit"]:hover {
     flex-basis: 100%;
   }
 
+  /* The chrome above the deck — navbar, title, mode row (which wraps on a
+     phone) — was never budgeted for, so the card ran past the fold and the
+     three action buttons under it were off screen. */
   .swipe-deck {
-    height: min(62vh, 520px);
-    min-height: 420px;
+    height: min(52vh, 460px);
+    min-height: 320px;
   }
 
   .swipe-stamp {
@@ -5403,6 +5432,11 @@ which no longer has a caller.
 .mb-map .leaflet-popup-content-wrapper {
   border-radius: var(--mb-radius-card);
   box-shadow: var(--mb-shadow-feature);
+}
+
+.mb-map .leaflet-popup-content em {
+  font-style: normal;
+  color: var(--mb-ink-faint);
 }
 
 .mb-map .leaflet-popup-content {

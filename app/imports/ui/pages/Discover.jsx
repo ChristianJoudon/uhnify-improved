@@ -16,7 +16,7 @@ import KindToggle from '../components/KindToggle';
 import Club from '../components/Club';
 import DetailsModal from '../components/DetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
-import { topicFor } from '../utilities/topics';
+import { topicFor, topicForClub, topicForEvent } from '../utilities/topics';
 import { milesLabel, milesTo } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 import { scoreClub } from '../utilities/recommend';
@@ -226,25 +226,33 @@ const Discover = () => {
    * is behind it without the act of opening one emptying all the others.
    */
   const topicCounts = useMemo(() => {
+    const needle = query.toLowerCase();
     const tally = {};
     upcoming
       .filter(event => inWindow(new Date(event.date), when))
+      // Every filter the wall applies except the covers' own, search included —
+      // it was counting past the search box, so a cover promised events the
+      // query had already excluded.
+      .filter(event => !needle || `${event.title} ${event.description || ''} ${event.location || ''}`
+        .toLowerCase().includes(needle))
       .forEach(event => {
-        const key = topicFor(event.title, event.description, normalizeCategories(event.categories)).key;
-        tally[key] = (tally[key] || 0) + 1;
+        tally[topicForEvent(event).key] = (tally[topicForEvent(event).key] || 0) + 1;
       });
     return tally;
-  }, [upcoming, when]);
+  }, [upcoming, when, query]);
 
-  /** Covers count whichever kind is being browsed. */
+  /** Covers count whichever kind is being browsed, under the same search. */
   const clubTopicCounts = useMemo(() => {
+    const needle = query.toLowerCase();
     const tally = {};
-    clubs.forEach(club => {
-      const key = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description).key;
-      tally[key] = (tally[key] || 0) + 1;
-    });
+    clubs
+      .filter(club => !needle || `${club.name} ${club.description || ''} ${club.location || ''}`
+        .toLowerCase().includes(needle))
+      .forEach(club => {
+        tally[topicForClub(club).key] = (tally[topicForClub(club).key] || 0) + 1;
+      });
     return tally;
-  }, [clubs]);
+  }, [clubs, query]);
 
   const join = clubId => {
     Meteor.call('profileClubs.add', clubId, error => {
