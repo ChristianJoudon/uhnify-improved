@@ -31,7 +31,7 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
         topic={topic}
         eyebrow={when}
         image={photo}
-        tagline={tier === 'lg' ? club.description : ''}
+        tagline={club.description}
         title={(
           <button type="button" className="mb-poster-open" onClick={() => onViewDetails(club)}>
             {club.name}

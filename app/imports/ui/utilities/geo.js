@@ -13,7 +13,7 @@ import { VENUES } from './venues';
 
 /** Kauaʻi's regions, as the register names them, at their town centres. */
 export const REGIONS = {
-  'Līhuʻe': { lat: 21.9811, lng: -159.3711 },
+  Līhuʻe: { lat: 21.9811, lng: -159.3711 },
   'East Side': { lat: 22.0964, lng: -159.3390 },
   'North Shore': { lat: 22.2119, lng: -159.4014 },
   'South Shore': { lat: 21.9061, lng: -159.4690 },

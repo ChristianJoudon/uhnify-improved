@@ -45,8 +45,9 @@ const whenLabel = date => {
 
 /**
  * An event as a printed poster — the same object as the club poster, so one
- * wall of cards reads as one design. `tier` sets its footprint in the masonry;
- * only the largest carries a description.
+ * wall of cards reads as one design. `tier` sets its footprint in the masonry,
+ * and clamps how much of the description shows — every size shows some, because
+ * a listing that took the trouble to describe itself is the one worth reading.
  */
 const EventPoster = ({ event, host, neighborhood, distance, going, onGoing, onOpen, tier }) => {
   const date = event.date instanceof Date ? event.date : new Date(event.date);
@@ -66,7 +67,7 @@ const EventPoster = ({ event, host, neighborhood, distance, going, onGoing, onOp
         topic={topic}
         eyebrow={valid ? whenLabel(date) : ''}
         image={photo}
-        tagline={tier === 'lg' ? event.description : ''}
+        tagline={event.description}
         title={(
           <button type="button" className="mb-poster-open" onClick={() => onOpen(event)}>
             {event.title}

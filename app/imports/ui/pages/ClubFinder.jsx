@@ -268,23 +268,12 @@ const ClubFinder = () => {
               />
             </div>
           </div>
-
-          <div className="rail-block">
-            <div className="rail-title">How matches work</div>
-            <p className="rail-note">
-              We compare your interests, location, and the groups your friends joined to surface
-              ones you&apos;ll like.
-            </p>
-            <div className="rail-legend">
-              <i /><i /><i /><span>Best fits appear larger</span>
-            </div>
-          </div>
         </aside>
 
         <div>
           {/* Geography first on this page: the map is the frame, and it always
               shows exactly the set listed underneath it. */}
-          <NearbyMap records={mapRecords} origin={origin} height={280} />
+          <NearbyMap records={mapRecords} origin={origin} height={460} />
 
           <KindToggle
             value={kind}

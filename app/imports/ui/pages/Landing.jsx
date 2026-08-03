@@ -28,12 +28,32 @@ const Landing = () => {
     };
   }, []);
 
-  // Three, deliberately. The homepage's job is to show what this is, then get
-  // out of the way — a second and third grid of previews only delayed that.
-  const upcoming = useMemo(
-    () => sortByDate(events.filter(event => new Date(event.date) >= new Date())).slice(0, 3),
-    [events],
-  );
+  /**
+   * What you could actually go and do.
+   *
+   * Not simply the next three on the calendar: something a fortnight away on
+   * the far side of the island is "upcoming" but it is not an answer to "what
+   * is on right now". So this ranks on both axes at once — hours from now and
+   * miles from here — and takes the best three. A thing tonight ten minutes
+   * away beats a thing tonight forty minutes away, and both beat next week.
+   */
+  const upcoming = useMemo(() => {
+    const now = Date.now();
+    const HOURS = 36;
+    return sortByDate(events.filter(event => new Date(event.date) >= new Date()))
+      .map(event => {
+        const hours = (new Date(event.date).getTime() - now) / 3600000;
+        const miles = milesTo(event, KAUAI);
+        // Both normalised to 0–1 and added, so neither can dominate: soon but
+        // far and close but distant-in-time score alike, which is honest.
+        const soon = Math.min(hours / HOURS, 1);
+        const near = Math.min((miles === null ? 25 : miles) / 25, 1);
+        return { event, immediacy: soon + near };
+      })
+      .sort((a, b) => a.immediacy - b.immediacy)
+      .slice(0, 3)
+      .map(item => item.event);
+  }, [events]);
   const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
 
   // The finder carries what was typed through to Discover. It used to discard
@@ -103,7 +123,7 @@ const Landing = () => {
         {upcoming.length > 0 && (
           <section className="mb-section">
             <div className="mb-section-head">
-              <h2>Happening nearby</h2>
+              <h2>Happening right now, nearby</h2>
               <a className="mb-section-link" href="/upcoming-events">See all</a>
             </div>
             <div className="landing-wall">

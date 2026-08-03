@@ -5062,7 +5062,7 @@ which no longer has a caller.
   border-radius: var(--mb-radius-card);
   overflow: hidden;
   box-shadow: var(--mb-shadow-small);
-  background: var(--mb-wood);
+  background: #1b3559;
 }
 
 .mb-map-canvas {
@@ -5070,10 +5070,27 @@ which no longer has a caller.
   height: 100%;
 }
 
+/* Defs only — it paints nothing itself. */
+.mb-map-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
 /* Leaflet ships its own type and chrome; bring both onto the app's. */
 .mb-map .leaflet-container {
   font-family: "DM Sans", system-ui, sans-serif;
-  background: var(--mb-wood);
+  background: #1b3559;
+}
+
+/* Warm land, navy sea. A CSS filter chain can only push every pixel the same
+   way, and this needs two answers from one image — so the work happens in the
+   SVG filter defined in NearbyMap, which separates water from land by the one
+   thing that distinguishes them in Positron's palette (water is the only fill
+   whose blue outruns its red) and paints each its own colour. The pins are
+   untouched: they live in a pane above this one. */
+.mb-map .leaflet-tile-pane {
+  filter: url(#mb-sea);
 }
 
 .mb-map .leaflet-control-attribution {
@@ -5151,4 +5168,15 @@ which no longer has a caller.
   margin-left: 0.1rem;
   font-variant-numeric: tabular-nums;
   opacity: 0.7;
+}
+
+/* A description earns more room on a big poster than a small one, but it is
+   never cut to nothing — the point of showing it is that it can be read. */
+.mb-poster-md .mb-poster-tagline {
+  -webkit-line-clamp: 4;
+}
+
+.mb-poster-sm .mb-poster-tagline {
+  -webkit-line-clamp: 3;
+  font-size: 0.82rem;
 }

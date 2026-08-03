@@ -69,9 +69,14 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
       scrollWheelZoom: false,
       attributionControl: true,
     });
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '© OpenStreetMap',
+    // Carto's Positron rather than OSM's standard layer: standard draws every
+    // peak, trail and contour on Kauaʻi, which is a hiking map fighting a
+    // directory. Positron is roads, water and place names and nothing else, so
+    // the pins are the only thing with weight on it. Still keyless.
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      attribution: '© OpenStreetMap · © CARTO',
     }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
     return () => {
@@ -105,7 +110,9 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
     // it rather than leaving the reader to hunt.
     if (pins.length > 0) {
       const bounds = L.latLngBounds(pins.map(p => [p.at.lat, p.at.lng]));
-      map.current.fitBounds(bounds, { padding: [36, 36], maxZoom: 13 });
+      // Tight padding and a higher ceiling: the island should fill the frame,
+      // not float in a channel with its neighbours for company.
+      map.current.fitBounds(bounds, { padding: [18, 18], maxZoom: 15 });
     }
   }, [pins, onSelect]);
 
@@ -128,6 +135,39 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
 
   return (
     <div className="mb-map" style={{ height }}>
+      {/* The two-tone repaint of the basemap, referenced from style.css.
+          Positron's water is the one fill whose blue outruns its red, so the
+          alpha row below (-60R +60B) resolves to 1 over the sea and 0 over
+          every shade of land, road and park. That mask carries the navy; the
+          warm matrix carries everything else. */}
+      <svg className="mb-map-defs" aria-hidden="true" focusable="false">
+        <filter id="mb-sea" colorInterpolationFilters="sRGB">
+          <feColorMatrix
+            in="SourceGraphic"
+            result="land"
+            type="matrix"
+            values="1.02 0.03 0 0 0
+                    0.01 0.99 0 0 0
+                    0 0.02 0.92 0 0
+                    0 0 0 1 0"
+          />
+          <feColorMatrix
+            in="SourceGraphic"
+            result="seamask"
+            type="matrix"
+            values="0 0 0 0 0
+                    0 0 0 0 0
+                    0 0 0 0 0
+                    -60 0 60 0 -0.5"
+          />
+          <feFlood floodColor="#1b3559" result="navy" />
+          <feComposite in="navy" in2="seamask" operator="in" result="sea" />
+          <feMerge>
+            <feMergeNode in="land" />
+            <feMergeNode in="sea" />
+          </feMerge>
+        </filter>
+      </svg>
       <div ref={holder} className="mb-map-canvas" />
       {pins.length === 0 && (
         <p className="mb-map-empty">Nothing here to put on the map yet.</p>
@@ -148,7 +188,7 @@ NearbyMap.defaultProps = {
   records: [],
   origin: null,
   onSelect: null,
-  height: 300,
+  height: 460,
 };
 
 export default NearbyMap;

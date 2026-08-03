@@ -128,6 +128,15 @@ const ListEvents = () => {
 
       {/* The month is this page's frame, the way the map is Nearby's: what the
           calendar shows and what the cards below show are always one set. */}
+
+      <KindToggle
+        value={kind}
+        onChange={setKind}
+        counts={{ events: filteredEvents.length, clubs: filteredClubs.length }}
+      />
+
+      <TopicPosters selected={topicKey} onSelect={setTopicKey} counts={topicCounts} compact />
+
         <div id="event-calendar" className="calendar-container">
           <FullCalendar
             plugins={[dayGridPlugin]}
@@ -146,14 +155,6 @@ const ListEvents = () => {
             }}
           />
         </div>
-
-      <KindToggle
-        value={kind}
-        onChange={setKind}
-        counts={{ events: filteredEvents.length, clubs: filteredClubs.length }}
-      />
-
-      <TopicPosters selected={topicKey} onSelect={setTopicKey} counts={topicCounts} compact />
 
       <div className="mb-toolbar">
         <input
