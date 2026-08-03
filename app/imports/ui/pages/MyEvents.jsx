@@ -160,7 +160,7 @@ const MyEvents = () => {
           <h2>Month view</h2>
         </div>
 
-        <Container id="event-calendar" className="calendar-container">
+        <div id="event-calendar" className="calendar-container">
           <FullCalendar
             plugins={[dayGridPlugin]}
             initialView="dayGridMonth"
@@ -177,7 +177,7 @@ const MyEvents = () => {
               end: 'dayGridMonth,dayGridWeek,dayGridDay',
             }}
           />
-        </Container>
+        </div>
       </section>
       <DetailsModal
         show={Boolean(detail)}

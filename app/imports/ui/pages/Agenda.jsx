@@ -103,7 +103,7 @@ const Agenda = () => {
         </div>
       </div>
 
-      <Container className="calendar-container mb-5">
+      <div className="calendar-container">
         <FullCalendar
           plugins={[dayGridPlugin]}
           initialView="dayGridMonth"
@@ -121,7 +121,7 @@ const Agenda = () => {
             end: 'dayGridMonth,dayGridWeek,dayGridDay',
           }}
         />
-      </Container>
+      </div>
     </Container>
   );
 };

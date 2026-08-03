@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
-import { Badge, Button, Form, Modal } from 'react-bootstrap';
+import { Badge, Button, Modal } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { Plus } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
@@ -104,7 +104,10 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
           {(topic.matched ? topic.label : categories[0]) && (
             <span className="eyebrow">{topic.matched ? topic.label : categories[0]}</span>
           )}
-          <Modal.Title>{shape.heading(record)}</Modal.Title>
+          {/* A real heading: react-bootstrap renders ModalTitle as a div by
+              default, so the sheet's title was the one title-scale string in
+              the app set in DM Sans instead of Bricolage. */}
+          <Modal.Title as="h2">{shape.heading(record)}</Modal.Title>
         </div>
       </Modal.Header>
 
@@ -130,9 +133,14 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
                 is over in an evening, so it has nothing to annotate. */}
             {kind === 'club' && Meteor.userId() && (
               <div className="details-tag-add">
-                <Form.Control
+                {/* A plain input, not Form.Control: that renders `form-control
+                    mb-field` and the app's own `.form-control` rule is
+                    !important, so it beat every part of `.mb-field` the field
+                    was asked for. `.mb-field` alone is the whole treatment. */}
+                <input
                   type="text"
                   className="mb-field"
+                  aria-label="Add a tag"
                   placeholder="Add a tag (members)…"
                   value={newTag}
                   maxLength={28}

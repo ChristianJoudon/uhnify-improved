@@ -129,6 +129,9 @@ html {
   --bs-body-color: #303234 !important;
   --bs-body-font-family: "DM Sans", system-ui, sans-serif !important;
   --bs-border-radius: 12px !important;
+  /* Bootstrap's own `.form-control::placeholder` matches ours at (0,1,0) and
+     loads later, so the only way to reach it is through its variable. */
+  --bs-secondary-color: var(--mb-ink-faint) !important;
 }
 
 body {
@@ -162,14 +165,20 @@ p {
   line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
+/* Scoped to `body` purely for specificity. Bootstrap's reboot sets headings to
+   font-weight 500 at (0,0,1) and loads after this file, so the bare element
+   selector lost and every heading in the app rendered lighter than written.
+   `body h1` is (0,0,2) — it beats the reboot and still loses to every
+   class-level heading weight in this sheet, which a blanket !important would
+   have trampled. */
+body h1, body h2, body h3, body h4, body h5, body h6 {
   font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif !important;
   color: var(--mb-ink);
   font-weight: 650;
   letter-spacing: -0.015em;
 }
 
-h1 {
+body h1 {
   font-weight: 750;
 }
 
@@ -642,7 +651,9 @@ div.btn-solid-primary button[type="submit"]:hover {
    Modals
    -------------------------------------------------------------------------- */
 
-.modal-content {
+/* (0,2,0), because Bootstrap's own `.modal-content` matches ours at (0,1,0) and
+   lands later — the sheet rendered at Bootstrap's 8px over 16px cards. */
+.modal .modal-content {
   border: 1px solid var(--mb-line-soft);
   border-radius: var(--mb-radius-card);
   box-shadow: var(--mb-shadow-feature);
@@ -784,6 +795,9 @@ div.btn-solid-primary button[type="submit"]:hover {
    -------------------------------------------------------------------------- */
 
 .calendar-container {
+  /* Every other block on this page owns its own trailing space; this one did
+     not, and it is the one with a toolbar directly beneath it. */
+  margin-bottom: 1.2rem;
   background: var(--mb-paper-bright);
   border: 1px solid var(--mb-line-soft);
   border-radius: var(--mb-radius-feature);
@@ -3818,7 +3832,9 @@ div.btn-solid-primary button[type="submit"]:hover {
   gap: 1rem;
 }
 
-/* Shared field styling for the hand-rolled create/customize forms. */
+/* Shared field styling for the hand-rolled create/customize forms.
+   The label WRAPS its control, so this bottom margin is field-to-field rhythm,
+   not label-to-input — that gap is the input's own margin-top. */
 .create-form label,
 .customize-form label {
   display: block;
@@ -3828,6 +3844,46 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 0.9rem;
 }
 
+/* Field rhythm rides on the label's own margin, which leaves it hanging off the
+   bottom of whatever ends a card. `.form-block` closes with 1.2rem of padding,
+   so a card ending in a label sat on 2.1rem while its neighbour sat on 1.2rem —
+   three "identical" printed cards with visibly different bottom gutters. The
+   second selector is what catches a trailing `.field-row`: it is a grid, and the
+   row track is sized by the tallest item's MARGIN box, so every label in the
+   row has to be zeroed, not just the last. */
+.form-block > :last-child,
+.form-block > :last-child > label {
+  margin-bottom: 0;
+}
+
+/* Inside a two-up row the grid's own 0.8rem gap is the spacing; the labels'
+   0.9rem margins were stacking on top of it, and below 413px — every common
+   phone — the row is one column and the two margins ran in series. */
+.field-row > label {
+  margin-bottom: 0;
+}
+
+/* A hint carries the rhythm on to the next field, since it is the last box
+   before it — but only when there IS a next one. Unconditionally it grew the
+   bottom gutter of any card a hint happens to end. */
+.field-hint:has(+ *) {
+  margin-bottom: 0.9rem;
+}
+
+/* A hint annotates the control ABOVE it. Adjacent margins collapsed to the
+   label's 0.9rem above the hint and left nothing below, so "0/80" sat closer to
+   the next field than to the one it counts. Only labels actually followed by a
+   hint shrink, so every other field keeps the 0.9rem rhythm. */
+.create-form label:has(+ .field-hint),
+.customize-form label:has(+ .field-hint) {
+  margin-bottom: 0.25rem;
+}
+
+/* Was `.field-label` alone (0,1,0), which lost to `.create-form label` (0,1,1)
+   and never applied its 0.3rem — the label sat 0.9rem off its own chip box and
+   read as a heading for the whole card. */
+.create-form label.field-label,
+.customize-form label.field-label,
 .field-label {
   display: block;
   font-size: 0.8rem;
@@ -3869,7 +3925,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .field-hint {
   display: block;
-  margin-top: 0.3rem;
+  margin-top: 0.25rem;
   font-size: 0.76rem;
   font-weight: 500;
   color: var(--mb-ink-faint);
@@ -3883,7 +3939,8 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .create-actions .field-hint {
-  margin-top: 0;
+  /* The validation line in the submit row owns no rhythm of its own. */
+  margin: 0;
 }
 
 .btn:disabled {
@@ -5386,9 +5443,17 @@ which no longer has a caller.
 }
 
 /* Events or groups. */
+/* No external margin: on Discover this sits inside a `align-items: center` flex
+   bar, which centres each item's MARGIN box — so a bottom margin lifted the
+   chips off the baseline of everything beside them. The two stacked usages ask
+   for the space themselves. */
 .kind-toggle {
   display: flex;
   gap: 0.4rem;
+}
+
+.finder-body .kind-toggle,
+#list-events-page .kind-toggle {
   margin-bottom: 1rem;
 }
 
