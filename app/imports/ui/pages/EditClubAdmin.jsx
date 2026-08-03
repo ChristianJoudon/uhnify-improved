@@ -67,7 +67,28 @@ const EditClubAdmin = () => {
     }
   }, [doc, _id]);
 
-  if (!ready || !doc || seededFor.current !== _id) {
+  if (!ready) {
+    return <LoadingSpinner />;
+  }
+
+  // "Not there" is not "not loaded yet". Once the subscription is ready and the
+  // record still is not, this used to sit on the spinner forever — an admin who
+  // deletes something and then opens an old edit link saw a hung page.
+  if (!doc) {
+    return (
+      <Container id="edit-missing" className="page-shell py-4">
+        <div className="mb-empty">
+          <h3>That group is not here any more.</h3>
+          <p>It may have been deleted since this link was made.</p>
+          <Link className="btn btn-solid-primary" to="/admin">Back to the dashboard</Link>
+        </div>
+      </Container>
+    );
+  }
+
+  // One frame where the record has arrived but the effect that seeds `form` has
+  // not run yet; reading form.* here would throw.
+  if (!form || seededFor.current !== _id) {
     return <LoadingSpinner />;
   }
 

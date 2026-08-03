@@ -22,7 +22,7 @@ import EventPoster from '../components/EventPoster';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
-import { topicFor } from '../utilities/topics';
+import { topicFor, topicForEvent } from '../utilities/topics';
 import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 
@@ -108,36 +108,45 @@ const ClubFinder = () => {
         .some(value => (value || '').toLowerCase().includes(query))));
   }, [scored, searchTerm, radius]);
 
-  // OR across departments; AND within one that has been refined to leaves.
-  /** Events, scoped by the same geography and search as the groups. */
-  const nearbyEvents = useMemo(() => {
+  /** Events, scoped by the same geography and search as the groups — but NOT by
+      the covers, because this is the list the covers count. */
+  const eventsInScope = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     const now = new Date();
     return events
       .filter(event => new Date(event.date) >= now)
       .map(event => ({
         event,
-        topic: topicFor(event.title, event.description, normalizeCategories(event.categories)),
+        topic: topicForEvent(event),
         distance: milesTo(event, origin),
       }))
-      .filter(({ event, topic, distance }) => (distance === null || distance <= radius)
-        && (!topicKey || topic.key === topicKey)
+      .filter(({ event, distance }) => (distance === null || distance <= radius)
         && (query === '' || `${event.title} ${event.description || ''} ${event.location || ''}`
           .toLowerCase().includes(query)))
       .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
-  }, [events, origin, radius, searchTerm, topicKey]);
+  }, [events, origin, radius, searchTerm]);
 
+  const nearbyEvents = useMemo(
+    () => (topicKey ? eventsInScope.filter(item => item.topic.key === topicKey) : eventsInScope),
+    [eventsInScope, topicKey],
+  );
+
+  // Counted after every filter except the covers' own, so a cover says how much
+  // is actually behind it. Tallying the already-topic-filtered list made the
+  // other seven covers drop their count line the moment one was pressed; and
+  // tallying every club on the island, before radius and search, made the group
+  // covers promise more than the wall could ever show.
   const eventTopicCounts = useMemo(() => {
     const tally = {};
-    nearbyEvents.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
+    eventsInScope.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
     return tally;
-  }, [nearbyEvents]);
+  }, [eventsInScope]);
 
   const clubTopicCounts = useMemo(() => {
     const tally = {};
-    scored.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
+    inScope.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
     return tally;
-  }, [scored]);
+  }, [inScope]);
 
   const filtered = useMemo(() => {
     // The covers do the categorising now: one control instead of a rail that
@@ -331,14 +340,20 @@ const ClubFinder = () => {
               ? `${filtered.length} ${filtered.length === 1 ? 'group' : 'groups'} within ${radius} miles`
               : `${nearbyEvents.length} ${nearbyEvents.length === 1 ? 'event' : 'events'} within ${radius} miles`}
           </div>
-          <label className="mb-sort" htmlFor="mb-sort-select">
-            Sort:
-            <select id="mb-sort-select" value={sortMode} onChange={event => setSortMode(event.target.value)}>
-              <option value="foryou">Recommended</option>
-              <option value="near">Nearest</option>
-              <option value="az">A–Z</option>
-            </select>
-          </label>
+          {/* Groups only: `sortMode` never reaches the events list, which is
+              always nearest-first. Left on the events tab, picking a sort reset
+              the wall to eighteen cards in the very same order — which reads as
+              broken rather than as unimplemented. */}
+          {kind === 'clubs' && (
+            <label className="mb-sort" htmlFor="mb-sort-select">
+              Sort:
+              <select id="mb-sort-select" value={sortMode} onChange={event => setSortMode(event.target.value)}>
+                <option value="foryou">Recommended</option>
+                <option value="near">Nearest</option>
+                <option value="az">A–Z</option>
+              </select>
+            </label>
+          )}
         </div>
 
         {hasFilters && (

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import { Events } from '../../api/events/Events';
@@ -67,6 +67,12 @@ const Landing = () => {
 
   const enter = () => navigate(Meteor.userId() ? '/discover' : '/signin');
 
+  // A raw <a href> to /create-event full-reloaded the page, and ProtectedRoute
+  // reads Meteor.userId() once at first render — before the login token has
+  // resumed — so it bounced signed-in authors to the sign-in form too. Reading
+  // it at click time inside the live client never has that problem.
+  const organize = () => navigate(Meteor.userId() ? '/create-event' : '/signin');
+
   return (
     <main id="landing-page" className="landing-page">
       <section className="mb-hero">
@@ -118,7 +124,7 @@ const Landing = () => {
           <section className="mb-section">
             <div className="mb-section-head">
               <h2>Happening right now, nearby</h2>
-              <a className="mb-section-link" href="/upcoming-events">See all</a>
+              <Link className="mb-section-link" to="/upcoming-events">See all</Link>
             </div>
             <div className="landing-wall">
               {upcoming.map((event, index) => {
@@ -149,7 +155,8 @@ const Landing = () => {
 
         <section className="mb-section">
           <p className="landing-outro">
-            Running something of your own? <a href="/create-event">Put it on the map.</a>
+            Running something of your own?{' '}
+            <button type="button" className="mb-inline-link" onClick={organize}>Put it on the map.</button>
           </p>
         </section>
       </div>

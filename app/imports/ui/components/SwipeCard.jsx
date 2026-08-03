@@ -100,6 +100,12 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
   return (
     <motion.div
       className="swipe-card-slot"
+      /* backface-visibility and pointer-events hide the buried cards and the
+         face-down side from the eye and the mouse; neither touches the
+         accessibility tree. Without this a screen reader read all four stacked
+         cards, both faces of each — eight headings for one visible card, one of
+         them at opacity 0 — with no way to tell which the keys would act on. */
+      aria-hidden={!isTop && !exitDirection}
       style={{ zIndex: exitDirection ? 30 : 20 - stackIndex }}
       initial={{ y: 30 + stackIndex * 16, scale: 0.86, opacity: 0 }}
       animate={exitDirection
@@ -138,7 +144,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
           animate={{ rotateY: flipped && isTop ? 180 : 0 }}
           transition={{ type: 'spring', stiffness: 280, damping: 26 }}
         >
-          <div className="swipe-card-face swipe-card-front">
+          <div className="swipe-card-face swipe-card-front" aria-hidden={flipped}>
             <div
               className={`swipe-card-media${photo ? ' has-photo' : ''}`}
               style={photo ? undefined : { background: topic.field, color: topic.ink }}
@@ -168,7 +174,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
                 is what makes that discoverable. */}
             <span className="swipe-info" aria-hidden="true"><InfoCircle size={17} /></span>
           </div>
-          <div className="swipe-card-face swipe-card-back">
+          <div className="swipe-card-face swipe-card-back" aria-hidden={!flipped}>
             <span className="swipe-info swipe-info-back" aria-hidden="true"><ArrowLeft size={17} /></span>
             <h3>{event.title}</h3>
             {/* The back was hand-written rows with fallbacks, so a listing with

@@ -711,6 +711,53 @@ div.btn-solid-primary button[type="submit"]:hover {
   max-width: 15rem;
 }
 
+/* Bootstrap's close button is the one control in the app it never styled: a
+   #000 glyph at 50% and, on focus, a 4px rgba(13,110,253,.25) halo hard-coded
+   into --bs-btn-close-focus-shadow. That blue is otherwise absent from the
+   product, and it appears on the corner of the most-opened surface there is.
+   The glyph is a background-image data URI with its fill baked in, so recolouring
+   means replacing the image, not setting `color`. Scoped to .details-modal,
+   which lands on the modal root, so specificity beats Bootstrap without
+   !important. */
+.details-modal .btn-close {
+  --bs-btn-close-focus-shadow: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23303234'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+  opacity: 0.7;
+  border-radius: 999px;
+  transition: background-color 0.16s ease, opacity 0.16s ease;
+}
+
+.details-modal .btn-close:hover {
+  background-color: var(--mb-wood);
+  opacity: 1;
+}
+
+.details-modal .btn-close:focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+/* A button that has to read as the link inside a sentence, because it decides
+   where to go at click time rather than committing to an href. */
+.mb-inline-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--mb-match-deep);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.mb-inline-link:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 .details-list {
   display: grid;
   gap: 0.7rem;
@@ -1633,8 +1680,12 @@ div.btn-solid-primary button[type="submit"]:hover {
   opacity: 0.35;
 }
 
+/* Was --mb-yellow, which composited to 2.01:1 on the button's white and 1.68:1
+   on its hover — the icon is the control's only content, so it needs 3:1. It
+   also sat between a pass glyph at 6.04:1 and a save glyph at 5.81:1, reading
+   as permanently disabled next to them. */
 .swipe-btn-undo {
-  color: var(--mb-yellow);
+  color: var(--mb-match-deep);
 }
 
 .swipe-btn-undo:not(:disabled):hover {

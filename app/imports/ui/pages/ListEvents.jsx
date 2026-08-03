@@ -98,6 +98,12 @@ const ListEvents = () => {
     return tally;
   }, [kind, events, clubs]);
 
+  // The empty state and the grid read one list, so they can never disagree about
+  // whether there is anything here. They did: the gate counted events while the
+  // grid drew groups, so searching "lions" in Groups mode printed "Nothing
+  // matches that" above three groups it then refused to draw.
+  const showing = kind === 'clubs' ? filteredClubs : filteredEvents;
+
   const formattedEvents = filteredEvents.map(event => ({
     title: event.title,
     start: new Date(event.date),
@@ -190,28 +196,40 @@ const ListEvents = () => {
             ? `${filteredClubs.length} ${filteredClubs.length === 1 ? 'group' : 'groups'}`
             : `${filteredEvents.length} ${filteredEvents.length === 1 ? 'event' : 'events'}`}
         </span>
-        <select
-          className="mb-field"
-          aria-label="Sort events"
-          value={sort}
-          onChange={event => setSort(event.target.value)}
-        >
-          {SORTS.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
-        </select>
+        {/* Only the events list reads `sort`; offering it over groups would be a
+            control that visibly does nothing. */}
+        {kind === 'events' && (
+          <select
+            className="mb-field"
+            aria-label="Sort events"
+            value={sort}
+            onChange={event => setSort(event.target.value)}
+          >
+            {SORTS.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
+          </select>
+        )}
       </div>
 
-      {filteredEvents.length === 0 ? (
+      {showing.length === 0 ? (
         <div className="mb-empty">
           <CalendarX className="mb-empty-glyph" aria-hidden="true" />
-          <h3>{searchTerm.trim() ? 'Nothing matches that.' : 'Nothing on the calendar yet.'}</h3>
+          <h3>
+            {searchTerm.trim()
+              ? 'Nothing matches that.'
+              : `Nothing ${kind === 'clubs' ? 'here yet.' : 'on the calendar yet.'}`}
+          </h3>
           <p>
             {searchTerm.trim()
               ? 'Try a shorter word, or clear the search and browse the lot.'
-              : 'Events land here the moment a club posts one.'}
+              : `${kind === 'clubs' ? 'Groups' : 'Events'} land here as people start them.`}
           </p>
           {searchTerm.trim()
             ? <button type="button" className="btn btn-solid-primary" onClick={() => setSearchTerm('')}>Clear search</button>
-            : <Link className="btn btn-solid-primary" to="/create-event">Start an event</Link>}
+            : (
+              <Link className="btn btn-solid-primary" to={kind === 'clubs' ? '/create-club' : '/create-event'}>
+                {kind === 'clubs' ? 'Start a group' : 'Start an event'}
+              </Link>
+            )}
         </div>
       ) : (
         <div className="mb-grid mb-grid--posters">
