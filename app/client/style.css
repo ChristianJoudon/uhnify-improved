@@ -28,10 +28,12 @@
   --mb-match: #eb6219;
   --mb-match-hover: #f56f28;
   --mb-match-deep: #b74b11;
-  /* On an orange button: a charcoal keyline, and the label in the page's own
-     white. The keyline is what holds the button's shape — the label sits at
-     3.3:1 on the fill, which is below the 4.5:1 AA wants for type this size. */
-  --mb-match-edge: #1a1614;
+  /* On an orange button: the label in the page's own white, and the charcoal
+     that used to be its keyline, now carried by its shadow. As channels,
+     because that is the only way to reach it through rgba(). The label sits
+     at 3.3:1 on the fill — below the 4.5:1 AA wants for type this size, so
+     the shadow is what separates the button from the paper, not the label. */
+  --mb-match-edge-rgb: 26, 22, 20;
   --mb-match-label: #fcfcfb;
   --mb-match-tint: #fde7dc;
 
@@ -85,6 +87,15 @@
 
   /* Depth — print offsets, never diffuse glass */
   --mb-shadow-small: 2px 3px 0 rgba(48, 50, 52, 0.06), 0 2px 10px rgba(120, 80, 60, 0.05);
+  /* The orange button's own shadow, in the charcoal its keyline used to be:
+     a printed offset plus a little ambient, mid weight. It is doing the
+     keyline's old job of separating the button from the paper. */
+  --mb-shadow-match:
+    2px 3px 0 rgba(var(--mb-match-edge-rgb), 0.3),
+    0 3px 9px rgba(var(--mb-match-edge-rgb), 0.13);
+  --mb-shadow-match-lift:
+    4px 6px 0 rgba(var(--mb-match-edge-rgb), 0.26),
+    0 8px 18px rgba(var(--mb-match-edge-rgb), 0.12);
   --mb-shadow-feature: 4px 5px 0 rgba(48, 50, 52, 0.05), 0 8px 26px rgba(120, 80, 60, 0.07);
 
   /* Motion */
@@ -246,8 +257,10 @@ textarea.form-control {
 }
 
 /* Match accent button — used sparingly, for the one primary discovery action.
-   Near-black type on the bright orange field: a letterpress poster button, and
-   far more legible than white on orange (which no bright orange can pass). */
+   White type on the bright orange field, with no keyline: the charcoal that
+   used to outline it is now its shadow, which is what separates it from the
+   paper. The border stays in place at 2px transparent so it keeps the same
+   metrics as the black button it usually sits beside. */
 .btn-match {
   display: inline-flex !important;
   align-items: center;
@@ -255,18 +268,18 @@ textarea.form-control {
   gap: 0.5rem;
   background: var(--mb-match) !important;
   color: var(--mb-match-label) !important;
-  border: 2px solid var(--mb-match-edge) !important;
+  border: 2px solid transparent !important;
   border-radius: var(--mb-radius-control) !important;
   font-weight: 750 !important;
   padding: 0.6rem 1.3rem !important;
-  box-shadow: var(--mb-shadow-small);
+  box-shadow: var(--mb-shadow-match);
 }
 
 .btn-match:hover {
   background: var(--mb-match-hover) !important;
   color: var(--mb-match-label) !important;
   transform: translateY(-2px);
-  box-shadow: 4px 6px 0 rgba(48, 50, 52, 0.16);
+  box-shadow: var(--mb-shadow-match-lift);
 }
 
 .btn-outline-danger-soft {
