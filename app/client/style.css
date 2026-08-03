@@ -1108,27 +1108,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin: 0;
 }
 
-.footer-socials {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.footer-socials a {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  background: var(--mb-wood);
-  color: var(--mb-ink);
-  transition: background 0.16s ease;
-}
-
-.footer-socials a:hover {
-  background: var(--mb-match);
-  color: var(--mb-paper-bright);
-}
-
 /* --------------------------------------------------------------------------
    Misc
    -------------------------------------------------------------------------- */

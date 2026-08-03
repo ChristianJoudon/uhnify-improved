@@ -16,10 +16,10 @@ import { clubOccurrences } from '../../api/club/schedule';
 const FILTERS = [
   { key: 'all', label: 'Everything' },
   { key: 'events', label: 'Events' },
-  { key: 'clubs', label: 'Club meetings' },
+  { key: 'clubs', label: 'Group meetings' },
 ];
 
-/** One calendar for everything: one-off events and recurring club meetings, filterable. */
+/** One calendar for everything: one-off events and recurring group meetings, filterable. */
 const Agenda = () => {
   const [mode, setMode] = useState('all');
 
@@ -77,7 +77,7 @@ const Agenda = () => {
   return (
     <Container id="agenda-page" className="page-shell py-4">
       <PageHead title="Agenda">
-        Everything you saved and every club you joined, on one month page.
+        Everything you saved and every group you joined, on one month page.
       </PageHead>
 
       <div className="mb-toolbar">
@@ -99,7 +99,7 @@ const Agenda = () => {
         <div className="agenda-legend">
           <span><i className="agenda-legend-dot--event" aria-hidden="true" /> Events</span>
           <span><i className="agenda-legend-dot--saved" aria-hidden="true" /> Saved</span>
-          <span><i className="agenda-legend-dot--club" aria-hidden="true" /> Clubs</span>
+          <span><i className="agenda-legend-dot--club" aria-hidden="true" /> Groups</span>
         </div>
       </div>
 

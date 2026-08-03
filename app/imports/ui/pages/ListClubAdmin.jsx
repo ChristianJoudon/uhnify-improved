@@ -48,21 +48,21 @@ const ListClubAdmin = () => {
   return (
     <Container id="admin-dashboard" className="page-shell py-5">
       <PageHead title="Dashboard" eyebrow="Admin">
-        Every club, event and person on MatchBook.
+        Every group, event and person on MatchBook.
       </PageHead>
 
       <div className="admin-stats">
-        <Stat icon={<Stars />} label="clubs" value={clubs.length} />
+        <Stat icon={<Stars />} label="groups" value={clubs.length} />
         <Stat icon={<CalendarEvent />} label="events" value={events.length} />
         <Stat icon={<PeopleFill />} label="profiles" value={profiles.length} />
       </div>
 
       <section className="admin-section">
-        <h2 className="admin-section-title">Clubs</h2>
+        <h2 className="admin-section-title">Groups</h2>
         {clubs.length === 0 ? (
           <div className="mb-empty">
-            <h3>No clubs yet.</h3>
-            <p>Clubs appear here as members start them.</p>
+            <h3>No groups yet.</h3>
+            <p>Groups appear here as people start them.</p>
           </div>
         ) : (
           <div className="mb-grid">

@@ -51,18 +51,18 @@ const ListClub = () => {
       {/* Nothing sits beside the title when the page is empty — the empty state
           owns the invitation, and two of them would compete. */}
       <PageHead
-        title="My clubs"
+        title="Saved groups"
         action={clubs.length > 0 ? <Link to="/search-clubs" className="btn btn-soft-primary">Find more</Link> : null}
       >
-        {clubs.length > 0 ? `${clubs.length} ${clubs.length === 1 ? 'club' : 'clubs'} you're in.` : null}
+        {clubs.length > 0 ? `${clubs.length} ${clubs.length === 1 ? 'group' : 'groups'} you're in.` : null}
       </PageHead>
 
       {clubs.length === 0 ? (
         <div className="mb-empty">
           <Collection className="mb-empty-glyph" aria-hidden="true" />
-          <h3>No clubs yet</h3>
+          <h3>No groups yet</h3>
           <p>Groups you join land here, so the ones you care about stay one tap away.</p>
-          <Link to="/search-clubs" className="btn btn-match">Browse clubs</Link>
+          <Link to="/search-clubs" className="btn btn-match">Find groups</Link>
         </div>
       ) : (
         <div className="masonry">

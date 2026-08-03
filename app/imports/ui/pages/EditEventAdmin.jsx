@@ -189,7 +189,7 @@ const EditEventAdmin = () => {
               <select id="eventID" value={form.eventID} onChange={e => set('eventID', e.target.value)} required>
                 {!host && (
                   <option value={form.eventID}>
-                    {form.eventID ? `Club #${form.eventID} — no longer in the directory` : 'Choose a group…'}
+                    {form.eventID ? `Group #${form.eventID} — no longer in the directory` : 'Choose a group…'}
                   </option>
                 )}
                 {clubs.map(club => (

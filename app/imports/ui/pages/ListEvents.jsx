@@ -140,10 +140,10 @@ const ListEvents = () => {
   return (
     <Container id="list-events-page" className="page-shell py-4">
       <PageHead
-        title="Events"
+        title="Calendar"
         action={<Link className="btn btn-soft-primary" to="/discover-events"><Stars /> Swipe</Link>}
       >
-        Everything on the books, in one list.
+        Everything on the books, by the month.
       </PageHead>
 
       {/* The month is this page's frame, the way the map is Nearby's: what the

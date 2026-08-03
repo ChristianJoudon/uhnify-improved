@@ -46,7 +46,6 @@ const NavBar = () => {
                 <NavDropdown.Item id="add-clubs" as={NavLink} to="/create-club">Start a group</NavDropdown.Item>
                 <NavDropdown.Item id="create-event" as={NavLink} to="/create-event">Start an event</NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item id="event-finder" as={NavLink} to="/upcoming-events">All events</NavDropdown.Item>
                 <NavDropdown.Item id="my-events" as={NavLink} to="/user-events">My events</NavDropdown.Item>
               </NavDropdown>
             )}
@@ -55,7 +54,7 @@ const NavBar = () => {
 
             {!currentUser && (
               <>
-                <Nav.Link as={NavLink} to="/upcoming-events">Discover</Nav.Link>
+                <Nav.Link as={NavLink} to="/upcoming-events">Calendar</Nav.Link>
                 <Nav.Link as={NavLink} to="/search-clubs">Nearby</Nav.Link>
                 <Nav.Link as={NavLink} to="/create-club">For organizers</Nav.Link>
               </>
@@ -83,7 +82,6 @@ const NavBar = () => {
               {currentUser ? (
                 <>
                   <NavDropdown.Item id="profile" as={NavLink} to="/profile">Profile</NavDropdown.Item>
-                  <NavDropdown.Item id="nav-my-clubs" as={NavLink} to="/my-clubs">My Clubs</NavDropdown.Item>
                   <NavDropdown.Item id="nav-calendar-events" as={NavLink} to="/agenda">Agenda</NavDropdown.Item>
                   <NavDropdown.Item id="nav-customize" as={NavLink} to="/settings"><Gear /> Customize</NavDropdown.Item>
                   <NavDropdown.Divider />
