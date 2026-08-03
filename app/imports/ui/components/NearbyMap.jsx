@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -33,11 +33,18 @@ const pinFor = (topicKey, count) => {
   });
 };
 
+/** Two pins closer together than this on screen become one. Roughly a disc and
+    a half, so merged pins never clip each other. */
+const CLUSTER_PX = 40;
+
 const NearbyMap = ({ records, origin, onSelect, height }) => {
   const holder = useRef(null);
   const map = useRef(null);
   const layer = useRef(null);
   const youRef = useRef(null);
+  // Bumped on every zoom, because how close two pins LOOK is a function of the
+  // zoom, not of the data — the clustering has to be recomputed at each level.
+  const [zoomTick, setZoomTick] = useState(0);
 
   /** Group by exact position, so two things at one venue are one pin. */
   const pins = useMemo(() => {
@@ -73,16 +80,25 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
       dragging: !L.Browser.mobile,
       attributionControl: true,
     });
-    // Carto's Positron rather than OSM's standard layer: standard draws every
-    // peak, trail and contour on Kauaʻi, which is a hiking map fighting a
-    // directory. Positron is roads, water and place names and nothing else, so
-    // the pins are the only thing with weight on it. Still keyless.
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    // Two layers, because they want opposite treatment. The base is thresholded
+    // to two flat colours — a cream island on a navy sea — which is the only way
+    // to be rid of tile seams, contour shading and the streams that read as
+    // cracks at this zoom. Labels come separately and are NOT thresholded, so
+    // town names stay crisp type rather than being flattened into the island.
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 19,
+      className: 'mb-map-base',
       attribution: '© OpenStreetMap · © CARTO',
     }).addTo(map.current);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 19,
+      className: 'mb-map-labels',
+    }).addTo(map.current);
     layer.current = L.layerGroup().addTo(map.current);
+    map.current.on('zoomend', () => setZoomTick(tick => tick + 1));
     return () => {
       map.current.remove();
       map.current = null;
@@ -95,7 +111,34 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
       return;
     }
     layer.current.clearLayers();
-    pins.forEach(({ at, records: here }) => {
+    // Merge pins that would overlap on screen. Grouping by exact coordinate — as
+    // this did — only merges listings at the very same venue, so the east shore
+    // came out as a pile of half-covered discs with their counts unreadable.
+    const clustered = [];
+    const taken = new Set();
+    const placed = pins.map(p => ({ ...p, xy: map.current.latLngToLayerPoint([p.at.lat, p.at.lng]) }));
+    placed.forEach((pin, i) => {
+      if (taken.has(i)) {
+        return;
+      }
+      taken.add(i);
+      const group = [pin];
+      placed.forEach((other, j) => {
+        if (!taken.has(j) && pin.xy.distanceTo(other.xy) < CLUSTER_PX) {
+          taken.add(j);
+          group.push(other);
+        }
+      });
+      clustered.push({
+        at: {
+          lat: group.reduce((sum, g) => sum + g.at.lat, 0) / group.length,
+          lng: group.reduce((sum, g) => sum + g.at.lng, 0) / group.length,
+        },
+        records: group.flatMap(g => g.records),
+      });
+    });
+
+    clustered.forEach(({ at, records: here }) => {
       const [first] = here;
       const marker = L.marker([at.lat, at.lng], {
         icon: pinFor(first.topicKey, here.length),
@@ -122,7 +165,7 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
       // as large as the frame allows is the better trade — and Niʻihau, unlike
       // Molokaʻi, is genuinely nearby.
     }
-  }, [pins, onSelect]);
+  }, [pins, onSelect, zoomTick]);
 
   // "You are here", drawn differently from a listing because it is not one.
   useEffect(() => {
@@ -153,15 +196,6 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
         <filter id="mb-sea" colorInterpolationFilters="sRGB">
           <feColorMatrix
             in="SourceGraphic"
-            result="land"
-            type="matrix"
-            values="1.02 0.03 0 0 0
-                    0.01 0.99 0 0 0
-                    0 0.02 0.92 0 0
-                    0 0 0 1 0"
-          />
-          <feColorMatrix
-            in="SourceGraphic"
             result="seamask"
             type="matrix"
             values="0 0 0 0 0
@@ -169,17 +203,29 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
                     0 0 0 0 0
                     -200 0 200 0 -0.8"
           />
-          {/* Close the mask: Positron's rasters carry hairline seams a shade
-              off open water, and by colour alone they are indistinguishable
-              from a road. Dilating then eroding by the same radius swallows
-              anything thinner than the radius and leaves the coastline where
-              it was. */}
-          <feMorphology in="seamask" operator="dilate" radius="2" result="grown" />
-          <feMorphology in="grown" operator="erode" radius="2" result="closed" />
-          <feFlood floodColor="#1b3559" result="navy" />
-          <feComposite in="navy" in2="closed" operator="in" result="sea" />
+          {/* Soften, then cut hard. A blur followed by a near-vertical transfer
+              curve drops anything thinner than the blur — the hairline seams in
+              Positron's rasters AND the streams threading the island, which at
+              this zoom read as cracks rather than water — while a coastline,
+              being a large edge, survives and comes through smooth. Morphology
+              did the same job on the pixel grid and chewed the coast into
+              stair-steps. */}
+          <feGaussianBlur in="seamask" stdDeviation="2.4" result="soft" />
+          <feComponentTransfer in="soft" result="closed">
+            <feFuncA type="linear" slope="20" intercept="-9.5" />
+          </feComponentTransfer>
+          {/* Flood both sides. With the streams and shading gone the land has
+              nothing left worth keeping, so painting it flat removes the last
+              of the tile seams too and leaves one edge on the whole map: the
+              coast. Clipped to SourceAlpha so cream cannot bleed past the
+              tiles into the filter region. */}
+          <feFlood floodColor="#1b3559" result="navyFlood" />
+          <feComposite in="navyFlood" in2="closed" operator="in" result="sea" />
+          <feFlood floodColor="#fdf7ef" result="creamFlood" />
+          <feComposite in="creamFlood" in2="closed" operator="out" result="landRaw" />
+          <feComposite in="landRaw" in2="SourceAlpha" operator="in" result="landFlat" />
           <feMerge>
-            <feMergeNode in="land" />
+            <feMergeNode in="landFlat" />
             <feMergeNode in="sea" />
           </feMerge>
         </filter>

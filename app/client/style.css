@@ -473,7 +473,10 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .site-navbar .nav-link.active {
   background: transparent;
-  color: var(--mb-match-deep) !important;
+  /* The same orange as the underline beneath it, the wordmark above it and
+     every button in the app. It was --mb-match-deep against a --mb-match
+     underline: two oranges inside one nav item. */
+  color: var(--mb-match) !important;
   font-weight: 700;
   box-shadow: inset 0 -2px 0 var(--mb-match);
   border-radius: 0;
@@ -1272,11 +1275,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   white-space: nowrap;
 }
 
-.deck-toolbar-row .deck-saved-link {
-  flex: 0 0 auto;
-  margin-inline: auto;
-}
-
 .mode-toggle {
   display: flex;
   gap: 0.25rem;
@@ -1358,11 +1356,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink);
 }
 
-
-.deck-saved-link {
-  flex: 0 0 auto;
-}
-
 .mode-toggle {
   display: flex;
   gap: 0.25rem;
@@ -1442,30 +1435,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   background: var(--mb-wood);
   border-color: transparent;
   color: var(--mb-ink);
-}
-
-.deck-saved-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--mb-pink-tint);
-  border: none;
-  color: var(--mb-pink-deep);
-  border-radius: 999px;
-  padding: 0.4rem 0.85rem;
-  font-weight: 650;
-  font-size: 0.84rem;
-  text-decoration: none;
-  transition: transform var(--mb-fast) var(--mb-ease);
-}
-
-.deck-saved-link:hover {
-  transform: translateY(-1px);
-  color: var(--mb-pink-deep);
-}
-
-.deck-saved-link svg {
-  color: var(--mb-pink-deep);
 }
 
 .swipe-deck-area {
@@ -3389,7 +3358,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   cursor: pointer;
 }
 
-
 /* Chip row + sort ---------------------------------------------------------- */
 
 .finder-toolbar {
@@ -4151,7 +4119,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   .btn,
   .window-chip,
   .mode-toggle button,
-  .deck-saved-link,
   .swipe-btn,
   .mb-poster,
   .mb-chip,
@@ -4166,7 +4133,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   }
 
   .window-chip:hover,
-  .deck-saved-link:hover,
   .mb-poster:hover,
   .topic-poster:hover,
   .btn-match:hover,
@@ -4269,7 +4235,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   .idx-list {
     grid-template-columns: 1fr;
   }}
-
 
 @media (min-width: 992px) {
   :root {
@@ -4498,7 +4463,6 @@ div.btn-solid-primary button[type="submit"]:hover {
     padding-bottom: 0.4rem;
   }
 }
-
 
 /* ==========================================================================
    PRIMITIVES
@@ -4913,7 +4877,6 @@ which no longer has a caller.
   transform: translateY(-2px);
 }
 
-
 /* ---- from events-lists ---- */
 /* --- Toolbar fields ------------------------------------------------------
    A field is full-width because it normally sits in a stacked form; inside a
@@ -5081,7 +5044,6 @@ which no longer has a caller.
 .page-notice .page-intro-row {
   justify-content: center;
 }
-
 
 /* ---- from agenda ---- */
 /* Agenda legend swatches. These were three inline background strings on the
@@ -5419,8 +5381,50 @@ which no longer has a caller.
    thing that distinguishes them in Positron's palette (water is the only fill
    whose blue outruns its red) and paints each its own colour. The pins are
    untouched: they live in a pane above this one. */
-.mb-map .leaflet-tile-pane {
+/* Only the base layer is flattened. The labels ride in the shadow pane above
+   it and keep their own edges, or the town names would be flooded flat along
+   with the island they sit on. */
+.mb-map .leaflet-tile-pane .mb-map-base {
   filter: url(#mb-sea);
+}
+
+/* Labels: Positron draws them in a grey that vanishes on cream. Darken to the
+   app's ink and let the halo Carto bakes in do the separating. */
+.mb-map .mb-map-labels {
+  filter: saturate(0) brightness(0.55) contrast(1.35);
+}
+
+/* Leaflet's zoom control ships as white boxes with a blue focus ring. */
+.mb-map .leaflet-control-zoom a {
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  border: none;
+  border-bottom: 1px solid var(--mb-line-soft);
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  font-weight: 600;
+}
+
+.mb-map .leaflet-control-zoom a:last-child {
+  border-bottom: none;
+}
+
+.mb-map .leaflet-control-zoom a:hover {
+  background: var(--mb-wood);
+  color: var(--mb-ink);
+}
+
+.mb-map .leaflet-control-zoom a:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+.mb-map .leaflet-bar {
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-tight);
+  overflow: hidden;
+  box-shadow: var(--mb-shadow-small);
 }
 
 .mb-map .leaflet-control-attribution {

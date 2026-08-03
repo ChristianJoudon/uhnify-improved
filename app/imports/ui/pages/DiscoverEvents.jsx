@@ -84,7 +84,6 @@ const DiscoverEvents = () => {
     () => new Set(memberships.map(membership => membership.clubId)),
     [memberships],
   );
-  const savedCount = useMemo(() => swipes.filter(swipe => swipe.decision === 'interested').length, [swipes]);
   const passedCount = useMemo(() => swipes.filter(swipe => swipe.decision === 'passed').length, [swipes]);
 
   const windowDays = TIME_WINDOWS.find(timeWindow => timeWindow.key === windowKey)?.days;
@@ -328,9 +327,6 @@ const DiscoverEvents = () => {
                   <People /> Groups
                 </button>
               </div>
-              <Link to="/user-events" className="deck-saved-link">
-                <HeartFill size={13} /> {savedCount} saved
-              </Link>
             </div>
 
             <AnimatePresence initial={false}>
