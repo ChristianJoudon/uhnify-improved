@@ -130,7 +130,7 @@ const NearbyMap = ({ records, origin, onSelect, height }) => {
     }
     youRef.current = L.circleMarker([origin.lat, origin.lng], {
       radius: 7,
-      color: '#e85020',
+      color: '#eb6219',
       weight: 3,
       fillColor: '#fffdfc',
       fillOpacity: 1,

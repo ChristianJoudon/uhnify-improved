@@ -20,14 +20,19 @@
   --mb-ink-soft: #66625f;
   --mb-ink-faint: #6e6a66;
 
-  /* Brand — orange sampled from the Perfect Match matchbox (#e85020).
-     Bright = shapes, marks, match heads, selected states.
-     Deep  = anything small and read as text (AA 5.07 on paper). */
-  --mb-match: #e85020;
-  /* Type over the brand orange. --mb-ink on --mb-match is only 3.43:1; this is
-     4.79:1. The orange itself is a field and mark colour — never text. */
-  --mb-ink-on-match: #1a1614;
-  --mb-match-deep: #b83c14;
+  /* Brand — the wordmark's own ink, averaged over the 45,295 solid orange
+     pixels in the drawn logo (#eb6219). Hover and deep are the same hue at the
+     lightness offsets the previous pair used, so the family keeps its shape.
+     Bright = fills, marks, match heads, selected states — never text.
+     Deep  = anything small and read as type (5.08:1 on paper). */
+  --mb-match: #eb6219;
+  --mb-match-hover: #f56f28;
+  --mb-match-deep: #b74b11;
+  /* On an orange button: a charcoal keyline, and the label in the page's own
+     white. The keyline is what holds the button's shape — the label sits at
+     3.3:1 on the fill, which is below the 4.5:1 AA wants for type this size. */
+  --mb-match-edge: #1a1614;
+  --mb-match-label: #fcfcfb;
   --mb-match-tint: #fde7dc;
 
   /* Poster pink — sampled from the hero illustration's background (#e86870).
@@ -249,8 +254,8 @@ textarea.form-control {
   justify-content: center;
   gap: 0.5rem;
   background: var(--mb-match) !important;
-  color: var(--mb-ink-on-match) !important;
-  border: 2px solid var(--mb-ink-on-match) !important;
+  color: var(--mb-match-label) !important;
+  border: 2px solid var(--mb-match-edge) !important;
   border-radius: var(--mb-radius-control) !important;
   font-weight: 750 !important;
   padding: 0.6rem 1.3rem !important;
@@ -258,8 +263,8 @@ textarea.form-control {
 }
 
 .btn-match:hover {
-  background: #f2622f !important;
-  color: #1a1614 !important;
+  background: var(--mb-match-hover) !important;
+  color: var(--mb-match-label) !important;
   transform: translateY(-2px);
   box-shadow: 4px 6px 0 rgba(48, 50, 52, 0.16);
 }
@@ -4339,7 +4344,7 @@ div.btn-solid-primary button[type="submit"]:hover {
      Pastel fields carry every other colour, and they are fields — never type.
 
    So: text is ink; a selected thing is solid ink; the single primary action on
-   a view is orange with --mb-ink-on-match type; a surface is paper-bright with
+   a view is orange with --mb-match-label type; a surface is paper-bright with
    a soft edge and a print-offset shadow. Everything below is one of those.
    ========================================================================== */
 
