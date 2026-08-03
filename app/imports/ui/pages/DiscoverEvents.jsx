@@ -368,7 +368,13 @@ const DiscoverEvents = () => {
                   >
                     <span className="mb-empty-glyph" role="img" aria-label="telescope">🔭</span>
                     <h2>{mode === 'clubs' ? 'No groups yet.' : `Nothing ${windowLabel}.`}</h2>
-                    <p>Try a wider window.</p>
+                    {/* Only the upcoming mode has a window to widen; saying so
+                        in the other two pointed at a control not on screen. */}
+                    <p>
+                      {mode === 'clubs' && 'Nothing has been listed yet.'}
+                      {mode === 'today' && 'Nothing on today — try upcoming.'}
+                      {mode === 'upcoming' && 'Try a wider window.'}
+                    </p>
                     <div className="deck-empty-actions">
                       {mode === 'upcoming' && windowKey !== 'all' && (
                         <Button className="btn-soft-primary" onClick={() => setWindowKey('all')}>
@@ -394,7 +400,11 @@ const DiscoverEvents = () => {
                   >
                     <span className="mb-empty-glyph" role="img" aria-label="party popper">🎉</span>
                     <h2>{mode === 'clubs' ? "That's every group." : 'Deck cleared!'}</h2>
-                    <p>That&apos;s everything {windowLabel}.</p>
+                    <p>
+                      {mode === 'clubs'
+                        ? 'You have seen them all.'
+                        : `That's everything ${windowLabel}.`}
+                    </p>
                     <div className="deck-empty-actions">
                       {passedCount > 0 && (
                         <Button className="btn-soft-primary" onClick={handleResetPassed}>
@@ -402,7 +412,7 @@ const DiscoverEvents = () => {
                         </Button>
                       )}
                       <Button as={Link} to="/user-events" className="btn-solid-primary">
-                        <HeartFill /> View saved events
+                        <HeartFill /> {mode === 'clubs' ? 'View your groups' : 'View saved events'}
                       </Button>
                     </div>
                   </motion.div>
@@ -444,7 +454,7 @@ const DiscoverEvents = () => {
                 whileTap={{ scale: 0.86 }}
                 onClick={() => startSwipe('left')}
                 disabled={!topEvent}
-                aria-label="Pass on this event"
+                aria-label={mode === 'clubs' ? 'Pass on this group' : 'Pass on this event'}
                 title="Pass (←)"
               >
                 <XLg />
@@ -456,8 +466,8 @@ const DiscoverEvents = () => {
                 whileTap={{ scale: 0.86 }}
                 onClick={() => startSwipe('right')}
                 disabled={!topEvent}
-                aria-label="Save this event"
-                title="Interested (→)"
+                aria-label={mode === 'clubs' ? 'Save this group' : 'Save this event'}
+                title="Save (→)"
               >
                 <HeartFill />
               </motion.button>

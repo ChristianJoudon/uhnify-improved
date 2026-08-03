@@ -186,8 +186,8 @@ const ListEvents = () => {
         <input
           type="search"
           className="mb-field mb-field--search"
-          placeholder="Search events…"
-          aria-label="Search events"
+          placeholder={kind === 'clubs' ? 'Search groups…' : 'Search events…'}
+          aria-label={kind === 'clubs' ? 'Search groups' : 'Search events'}
           value={searchTerm}
           onChange={event => setSearchTerm(event.target.value)}
         />

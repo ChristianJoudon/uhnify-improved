@@ -10,7 +10,7 @@ import PageHead from '../components/PageHead';
  */
 const NotAuthorized = () => (
   <Container className="page-shell page-notice py-5">
-    <PageHead title="Members only." />
+    <PageHead title="Members only" />
     <div className="mb-empty">
       <ShieldLock className="mb-empty-glyph" aria-hidden="true" />
       <h3>You don&apos;t have access to this one.</h3>

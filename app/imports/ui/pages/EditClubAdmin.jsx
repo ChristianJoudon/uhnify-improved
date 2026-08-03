@@ -158,7 +158,7 @@ const EditClubAdmin = () => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       } else {
-        swal('Success', 'Club updated successfully.', 'success');
+        swal('Saved', 'That group is up to date.', 'success');
       }
     });
   };

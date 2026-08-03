@@ -26,7 +26,7 @@ const ProfileCard = ({ profile }) => {
           if (error) {
             swal('Error', error.reason || error.message, 'error');
           } else {
-            swal('Deleted', 'Profile removed successfully.', 'success');
+            swal('Deleted', 'Profile removed.', 'success');
           }
         });
       }

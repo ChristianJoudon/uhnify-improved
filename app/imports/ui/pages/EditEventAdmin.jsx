@@ -154,7 +154,7 @@ const EditEventAdmin = () => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       } else {
-        swal('Success', 'Event updated successfully.', 'success');
+        swal('Saved', 'That event is up to date.', 'success');
       }
     });
   };

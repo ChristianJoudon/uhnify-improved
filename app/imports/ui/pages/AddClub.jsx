@@ -163,7 +163,7 @@ const AddClub = () => {
                 id="location"
                 type="text"
                 value={form.location}
-                placeholder="Campus Center, Room 203"
+                placeholder="Līhuʻe Neighborhood Center"
                 onChange={e => set('location', e.target.value)}
                 required
               />

@@ -38,7 +38,7 @@ const ClubItemAdmin = ({ club }) => {
           if (error) {
             swal('Error', error.reason || error.message, 'error');
           } else {
-            swal('Deleted', 'Club removed successfully.', 'success');
+            swal('Deleted', 'Group removed.', 'success');
           }
         });
       }

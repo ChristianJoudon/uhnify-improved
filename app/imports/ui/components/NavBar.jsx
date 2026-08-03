@@ -74,7 +74,7 @@ const NavBar = () => {
                   <span className="d-none d-xl-inline">{profile?.firstName || 'Profile'}</span>
                 </span>
               ) : (
-                <span className="profile-menu-trigger"><PersonCircle /> Sign In</span>
+                <span className="profile-menu-trigger"><PersonCircle /> Sign in</span>
               )}
               id="nav-dropdown-profile"
               align="end"
@@ -85,12 +85,12 @@ const NavBar = () => {
                   <NavDropdown.Item id="nav-calendar-events" as={NavLink} to="/agenda">Agenda</NavDropdown.Item>
                   <NavDropdown.Item id="nav-customize" as={NavLink} to="/settings"><Gear /> Customize</NavDropdown.Item>
                   <NavDropdown.Divider />
-                  <NavDropdown.Item id="navbar-current-user" as={NavLink} to="/signout">Logout</NavDropdown.Item>
+                  <NavDropdown.Item id="navbar-current-user" as={NavLink} to="/signout">Sign out</NavDropdown.Item>
                 </>
               ) : (
                 <>
-                  <NavDropdown.Item id="nav-dropdown-profile-sign-in" as={NavLink} to="/signin">Sign In</NavDropdown.Item>
-                  <NavDropdown.Item id="login-dropdown-sign-up" as={NavLink} to="/signup">Sign Up</NavDropdown.Item>
+                  <NavDropdown.Item id="nav-dropdown-profile-sign-in" as={NavLink} to="/signin">Sign in</NavDropdown.Item>
+                  <NavDropdown.Item id="login-dropdown-sign-up" as={NavLink} to="/signup">Sign up</NavDropdown.Item>
                 </>
               )}
             </NavDropdown>

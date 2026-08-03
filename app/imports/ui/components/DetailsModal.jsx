@@ -45,7 +45,7 @@ const KINDS = {
     topic: topicForClub,
     heading: record => record.name,
     joined: "You're in",
-    join: 'Join',
+    join: "I'm in",
   },
 };
 

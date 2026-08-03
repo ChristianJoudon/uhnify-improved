@@ -188,7 +188,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
           </div>
         </motion.div>
         <motion.div className="swipe-stamp swipe-stamp-like" style={{ opacity: exitDirection === 'right' ? 1 : likeOpacity }}>
-          Interested
+          Saved
         </motion.div>
         <motion.div className="swipe-stamp swipe-stamp-pass" style={{ opacity: exitDirection === 'left' ? 1 : passOpacity }}>
           Pass

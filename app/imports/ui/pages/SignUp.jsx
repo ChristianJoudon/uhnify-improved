@@ -42,7 +42,7 @@ const SignUp = ({ location }) => {
         if (profileError) {
           swal('Error', profileError.reason || profileError.message, 'error');
         } else {
-          swal('Success', 'Registration successful!', 'success');
+          swal('Welcome', "You're in. Let's find you something.", 'success');
           setRedirectToRef(true);
         }
       });

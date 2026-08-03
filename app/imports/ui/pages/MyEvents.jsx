@@ -116,7 +116,7 @@ const MyEvents = () => {
         title="My events"
         action={<Link className="btn btn-soft-primary" to="/discover-events"><Stars /> Keep swiping</Link>}
       >
-        The ones you saved, and whatever your clubs have planned.
+        The ones you saved, and whatever your groups have planned.
       </PageHead>
 
       <section className="mb-5">
@@ -139,7 +139,7 @@ const MyEvents = () => {
 
       <section className="mb-5">
         <div className="mb-section-head">
-          <h2>From your clubs</h2>
+          <h2>From your groups</h2>
           {clubEvents.length > 0 && (
             <span className="mb-toolbar-count">{clubEvents.length} {clubEvents.length === 1 ? 'event' : 'events'}</span>
           )}
@@ -148,9 +148,9 @@ const MyEvents = () => {
         {clubEvents.length === 0 ? (
           <div className="mb-empty">
             <People className="mb-empty-glyph" aria-hidden="true" />
-            <h3>No club events yet.</h3>
-            <p>Join a club and everything it puts on shows up here.</p>
-            <Link className="btn btn-solid-primary" to="/search-clubs">Find clubs</Link>
+            <h3>No group events yet.</h3>
+            <p>Join a group and everything it puts on shows up here.</p>
+            <Link className="btn btn-solid-primary" to="/search-clubs">Find groups</Link>
           </div>
         ) : posterWall(clubEvents)}
       </section>

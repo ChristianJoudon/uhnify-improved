@@ -247,8 +247,8 @@ const ClubFinder = () => {
   return (
     <Container id="browse-clubs-page" className="page-shell py-4" fluid="xl">
       <div className="page-intro">
-        <h1>Good matches for you</h1>
-        <p>Groups near you, matched to what you actually care about.</p>
+        <h1>Nearby</h1>
+        <p>Events and groups around you, closest first.</p>
       </div>
 
       {/* The controls run as one line above the frame rather than down a rail

@@ -36,7 +36,7 @@ const EventCardAdmin = ({ event }) => {
           if (error) {
             swal('Error', error.reason || error.message, 'error');
           } else {
-            swal('Deleted', 'Event removed successfully.', 'success');
+            swal('Deleted', 'Event removed.', 'success');
           }
         });
       }
