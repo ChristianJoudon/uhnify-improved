@@ -24,8 +24,11 @@ const TopicPosters = ({ selected, onSelect, counts, compact }) => (
         <motion.li
           key={key}
           initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
+          // Not whileInView: this row scrolls sideways, and an intersection
+          // observer measures against the viewport, so the covers past the
+          // right edge never counted as seen and sat at opacity 0 until the
+          // reader scrolled — two of the eight, on a 1280px screen.
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: Math.min(index, 8) * 0.04, ease: [0.2, 0.8, 0.2, 1] }}
         >
           <button

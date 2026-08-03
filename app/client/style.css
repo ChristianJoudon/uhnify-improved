@@ -2058,6 +2058,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   text-overflow: ellipsis;
 }
 
+.mb-finder-field:focus-within {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
 .mb-finder-field input,
 .mb-finder-field select {
   border: none;
@@ -2749,16 +2754,25 @@ div.btn-solid-primary button[type="submit"]:hover {
   flex: 0 0 auto;
 }
 
-.finder-bar-search .form-control {
-  border: none;
-  background: none;
-  box-shadow: none;
-  padding: 0.5rem 0;
-  font-size: 0.92rem;
+/* The input inside is deliberately borderless, so it has nothing to ring. The
+   pill takes the focus instead — which is also what a sighted keyboard user
+   would point at if asked where they were. */
+.finder-bar-search:focus-within {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
 }
 
-.finder-bar-search .form-control:focus {
-  box-shadow: none;
+/* !important because the app's own `.form-control` rule is itself !important
+   (it has to be, to beat bootstrap.min.css's later bundle position). Without
+   it the input kept its own 1px border and 12px radius, drawing a second
+   rounded box inside this pill. */
+.finder-bar-search .form-control {
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0.5rem 0 !important;
+  font-size: 0.92rem;
 }
 
 /* The frame and the wall, now at full page width. */
@@ -3343,6 +3357,12 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: inherit;
   cursor: pointer;
   outline: none;
+}
+
+.mb-sort select:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 /* ==========================================================================
