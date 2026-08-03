@@ -456,6 +456,16 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: none;
 }
 
+/* Bootstrap's own `.nav-link:focus-visible` paints a 4px blue halo, and it was
+   the only rule matching a tabbed navbar link — the same leak already closed
+   for the .btn-* classes. */
+.site-navbar .nav-link:focus-visible,
+.site-navbar .dropdown-toggle:focus-visible {
+  outline: 2px solid var(--mb-ink) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
 .site-navbar .nav-link:hover,
 .site-navbar .dropdown-toggle:hover {
   background: var(--mb-wood);
@@ -485,7 +495,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink);
 }
 
+/* :focus too — keyboard arrowing through the menu otherwise fell through to
+   Bootstrap's grey, so the highlight changed colour depending on input device. */
 .site-navbar .dropdown-item:hover,
+.site-navbar .dropdown-item:focus,
 .site-navbar .dropdown-item.active {
   background: var(--mb-wood);
   color: var(--mb-ink);
@@ -858,9 +871,20 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-paper-bright) !important;
 }
 
+/* FullCalendar rings on plain :focus, so a mouse click on a month arrow left a
+   grey halo behind. Silence that, and ring on :focus-visible only — in the
+   app's own ink rather than the orange that means "the one action" elsewhere. */
 .fc .fc-button-primary:focus,
-.fc .fc-button-primary:not(:disabled).fc-button-active:focus {
-  box-shadow: inset 0 0 0 1px var(--mb-match) !important;
+.fc .fc-button:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.fc .fc-button-primary:focus-visible,
+.fc .fc-button-primary:not(:disabled).fc-button-active:focus-visible {
+  outline: 2px solid var(--mb-ink) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
 }
 
 .fc .fc-button-group > .fc-button {
@@ -1906,33 +1930,6 @@ div.btn-solid-primary button[type="submit"]:hover {
 .friend-actions .btn {
   padding: 0.38rem 0.8rem !important;
   font-size: 0.82rem;
-}
-
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: none;
-  background: var(--mb-wood);
-  color: var(--mb-ink);
-  transition: background 0.16s ease, color 0.16s ease;
-}
-
-.icon-btn:hover {
-  background: var(--mb-ink);
-  color: var(--mb-paper-bright);
-}
-
-.icon-btn.danger {
-  background: var(--mb-red-tint);
-  color: #a96a5d;
-}
-
-.icon-btn.danger:hover {
-  background: var(--mb-red-deep);
-  color: var(--mb-paper-bright);
 }
 
 .activity-text {
@@ -4069,6 +4066,18 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 /* Poster photo + copy layer ---------------------------------------------- */
 
+/* A scrim under the copy. The charcoal behind the photo is never visible —
+   the photo covers it — so near-white type over a bright upload had nothing
+   holding it up. The swipe card already does this; the poster did not. */
+.mb-poster-art:has(.mb-poster-photo) .mb-poster-copy::before {
+  content: "";
+  position: absolute;
+  inset: -1rem -1rem -1rem -1rem;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(30, 32, 34, 0) 0%, rgba(30, 32, 34, 0.72) 62%, rgba(30, 32, 34, 0.86) 100%);
+  pointer-events: none;
+}
+
 .mb-poster-photo {
   position: absolute;
   inset: 0;
@@ -4107,44 +4116,46 @@ div.btn-solid-primary button[type="submit"]:hover {
    Motion preferences & responsive
    -------------------------------------------------------------------------- */
 
+/* Kept honest against what actually renders. Thirteen of the selectors here
+   named components deleted in the poster and Index rewrites, and the ones that
+   replaced them — the category covers, the calendar's event pills — were never
+   added, so a reader who asks for less motion still got the covers easing and
+   the month page animating. */
 @media (prefers-reduced-motion: reduce) {
   .btn,
   .window-chip,
   .mode-toggle button,
   .deck-saved-link,
   .swipe-btn,
-  .event-card,
-  .discovery-card,
-  .saved-card,
-  .admin-card,
-  .feature-card,
   .mb-poster,
-  .mb-card,
-  .mb-group,
-  .idx-entry,
-  .idx-peek,
-  .idx-kind,
-  .idx-folio,
-  .idx-leader,
+  .mb-chip,
+  .topic-poster,
+  .discover-query,
   .idx-stub,
-  .idx-name,
-  .idx-weight i,
-  .idx-peek svg {
+  .calendar-event-pill,
+  .fc-daygrid-event,
+  .site-navbar .nav-link,
+  .footer-link {
     transition: none !important;
   }
 
   .window-chip:hover,
   .deck-saved-link:hover,
-  .feature-card:hover,
-  .event-card:hover,
-  .discovery-card:hover,
-  .saved-card:hover,
-  .admin-card:hover,
   .mb-poster:hover,
-  .mb-card:hover,
-  .mb-group:hover,
-  .idx-entry:hover .idx-name {
-    transform: none;
+  .topic-poster:hover,
+  .btn-match:hover,
+  .fc-daygrid-event:hover {
+    transform: none !important;
+  }
+
+  /* framer-motion reads this too, but only where the component asks. The wall
+     animations are entry-only and already run once. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -4369,7 +4380,12 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 /* The search carried over from the homepage finder, and how to drop it. */
+/* Built to .mb-chip's spec; it was the one such pill with no transition, so its
+   hover snapped where every other chip eased. */
 .discover-query {
+  transition: background var(--mb-fast) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease),
+    color var(--mb-fast) var(--mb-ease);
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;

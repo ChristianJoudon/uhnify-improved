@@ -299,10 +299,14 @@ const DiscoverEvents = () => {
           </div>
           <div className="deck-toolbar">
             <div className="deck-toolbar-row">
-              <div className="mode-toggle" role="tablist" aria-label="Event timing">
+              {/* role="group", not tablist: there are no tabpanels, and a tablist
+                  without tabs makes a screen reader announce positions that do
+                  not exist. The chips report their own state instead. */}
+              <div className="mode-toggle" role="group" aria-label="What to show">
                 <button
                   type="button"
                   className={mode === 'today' ? 'active' : ''}
+                  aria-pressed={mode === 'today'}
                   onClick={() => setMode('today')}
                 >
                   <LightningChargeFill /> Today
@@ -310,6 +314,7 @@ const DiscoverEvents = () => {
                 <button
                   type="button"
                   className={mode === 'upcoming' ? 'active' : ''}
+                  aria-pressed={mode === 'upcoming'}
                   onClick={() => setMode('upcoming')}
                 >
                   <CalendarWeek /> Upcoming
@@ -317,6 +322,7 @@ const DiscoverEvents = () => {
                 <button
                   type="button"
                   className={mode === 'clubs' ? 'active' : ''}
+                  aria-pressed={mode === 'clubs'}
                   onClick={() => setMode('clubs')}
                 >
                   <People /> Groups

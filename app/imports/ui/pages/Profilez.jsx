@@ -234,8 +234,8 @@ const Profilez = () => {
                   <div className="friend-sub">wants to be friends</div>
                 </div>
                 <div className="friend-actions">
-                  <button type="button" className="icon-btn" aria-label={`Accept ${displayName(person)}`} onClick={() => call('friends.accept', edge._id)}><Check size={16} /></button>
-                  <button type="button" className="icon-btn danger" aria-label={`Decline ${displayName(person)}`} onClick={() => call('friends.decline', edge._id)}><X size={16} /></button>
+                  <button type="button" className="mb-icon-btn" aria-label={`Accept ${displayName(person)}`} onClick={() => call('friends.accept', edge._id)}><Check size={16} /></button>
+                  <button type="button" className="mb-icon-btn mb-icon-btn--danger" aria-label={`Decline ${displayName(person)}`} onClick={() => call('friends.decline', edge._id)}><X size={16} /></button>
                 </div>
               </div>
             );
@@ -258,7 +258,7 @@ const Profilez = () => {
                   {person.title && <div className="friend-sub">{person.title}</div>}
                 </div>
                 <div className="friend-actions">
-                  <button type="button" className="icon-btn danger" aria-label={`Unfriend ${displayName(person)}`} onClick={() => call('friends.remove', friendId)}><X size={16} /></button>
+                  <button type="button" className="mb-icon-btn mb-icon-btn--danger" aria-label={`Unfriend ${displayName(person)}`} onClick={() => call('friends.remove', friendId)}><X size={16} /></button>
                 </div>
               </div>
             );
@@ -282,7 +282,7 @@ const Profilez = () => {
                 {person.title && <div className="friend-sub">{person.title}</div>}
               </div>
               <div className="friend-actions">
-                <button type="button" className="icon-btn" aria-label={`Add ${displayName(person)}`} onClick={() => call('friends.request', person.userId)}><PersonPlus size={16} /></button>
+                <button type="button" className="mb-icon-btn" aria-label={`Add ${displayName(person)}`} onClick={() => call('friends.request', person.userId)}><PersonPlus size={16} /></button>
               </div>
             </div>
           ))}
