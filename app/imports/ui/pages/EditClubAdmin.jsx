@@ -165,7 +165,7 @@ const EditClubAdmin = () => {
               placeholder="This group"
             />
             <div className="mb-poster-foot">
-              <img className="mb-poster-mark" src={imagePath(form.image)} alt="" />
+              {form.image && <img className="mb-poster-mark" src={imagePath(form.image)} alt="" />}
               <span className="mb-poster-meta">
                 {form.location || 'Where you meet'}
                 <em>{topic.label}</em>

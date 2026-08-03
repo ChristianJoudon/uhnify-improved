@@ -50,7 +50,7 @@ const ClubItemAdmin = ({ club }) => {
       <PosterArt topic={topic} eyebrow={when} image={photo} title={club.name} />
 
       <div className="mb-poster-foot">
-        <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />
+        {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />}
         <span className="mb-poster-meta">{club.location}</span>
         <span className="mb-poster-tools">
           {/* Icon-only: the club's name is directly above, so a label on each

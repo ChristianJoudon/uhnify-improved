@@ -1,4 +1,8 @@
-export const DEFAULT_CLUB_IMAGE = '/images/LogoCircle.png';
+/* No club default. The retired Umify mark used to stand in here, which put a
+   previous product's logo on the footer of all twenty-four imported groups —
+   none of which publishes an image. A group with no logo simply shows none;
+   its poster is already its artwork. */
+export const DEFAULT_CLUB_IMAGE = '';
 export const DEFAULT_EVENT_IMAGE = '/images/codingWorkshop.png';
 export const DEFAULT_PROFILE_IMAGE = '/images/defaultprofilepic.png';
 

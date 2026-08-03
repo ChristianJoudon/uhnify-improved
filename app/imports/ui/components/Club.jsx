@@ -42,7 +42,7 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
       <CardFields record={club} schema={CLUB_FIELDS} limit={tier === 'lg' ? 4 : 2} className="mb-poster-facts" />
 
       <div className="mb-poster-foot">
-        <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />
+        {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />}
         <span className="mb-poster-meta">
           {distance || topic.label}
         </span>
