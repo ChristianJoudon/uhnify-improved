@@ -27,6 +27,20 @@ class EventsCollection {
       categories: { type: Array, optional: true },
       'categories.$': String,
       ...listingFields,
+      /**
+       * When this was made and when it last changed.
+       *
+       * Both optional, because the register's imported records predate them
+       * and a required field would reject every seeded document. Absent means
+       * "from before we recorded it", which is honest; a backfilled guess
+       * would not be.
+       *
+       * The audit trail says who changed what and when. These say it on the
+       * document itself, which is what answers "is this listing stale?"
+       * without a join.
+       */
+      createdAt: { type: Date, optional: true },
+      updatedAt: { type: Date, optional: true },
     });
     this.collection.attachSchema(this.schema);
     this.userPublicationName = `${this.name}.publication.user`;

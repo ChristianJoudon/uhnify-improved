@@ -57,6 +57,10 @@ const parseNumericId = (value, label) => {
   return parsed;
 };
 
+/** Server clock. A client's is not evidence, and these fields are read as
+    "when did this actually change". */
+const now = () => new Date();
+
 const MAX_IMAGE_LENGTH = 2800000;
 
 const checkImageSize = image => {
@@ -231,7 +235,7 @@ Meteor.methods({
       fields.picture = checkPicture(profileData.picture);
     }
 
-    Profiles.collection.update(profile._id, { $set: fields });
+    Profiles.collection.update(profile._id, { $set: { ...fields, updatedAt: now() } });
   },
 
   'Profiles.remove'(profileId) {
@@ -258,6 +262,8 @@ Meteor.methods({
     const clubID = nextNumericId(Clubs.collection, 'clubID');
     return Clubs.collection.insert({
       clubID,
+      createdAt: now(),
+      updatedAt: now(),
       name: clubData.name,
       owner: getUsername(this.userId),
       description: clubData.description,
@@ -305,6 +311,7 @@ Meteor.methods({
         contactInfo: clubData.contactInfo || '',
         categories: normalizeCategories(clubData.categories),
         ...(clubData.tags ? { tags: clubData.tags.map(normalizeTag).filter(tag => tag.length >= 2).slice(0, 20) } : {}),
+        updatedAt: now(),
       },
     });
 
@@ -380,6 +387,8 @@ Meteor.methods({
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const eventId = Events.collection.insert({
+      createdAt: now(),
+      updatedAt: now(),
       eventID: hostClubID,
       title: eventData.title,
       description: eventData.description || '',
@@ -421,6 +430,7 @@ Meteor.methods({
         location: eventData.location,
         createdBy: eventData.createdBy,
         image: eventData.image || '/images/codingWorkshop.png',
+        updatedAt: now(),
       },
     });
 
