@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Container } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -20,7 +20,7 @@ import KindToggle from '../components/KindToggle';
 import Club from '../components/Club';
 import DetailsModal from '../components/DetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
-import { topicFor } from '../utilities/topics';
+import { topicFor, topicForEvent } from '../utilities/topics';
 
 const SORTS = [
   { key: 'soonest', label: 'Earliest first' },
@@ -45,6 +45,35 @@ const ListEvents = () => {
   const [detail, setDetail] = useState(null);
   const navigate = useNavigate();
   const userId = Meteor.userId();
+  const calendarRef = useRef(null);
+  // A seven-column month grid on a 375px phone gives each day about 45px — the
+  // titles clip to two characters and the page reads as noise. Below this it
+  // shows one day at a time instead, which is the same information at a size
+  // it can actually be read at.
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 719.98px)').matches,
+  );
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 719.98px)');
+    const onChange = event => setNarrow(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  // Driven rather than re-mounted: changing `initialView` alone does nothing
+  // once FullCalendar has mounted, and remounting would throw away the month
+  // the reader had navigated to.
+  useEffect(() => {
+    const api = calendarRef.current?.getApi();
+    if (!api) {
+      return;
+    }
+    const want = narrow ? 'dayGridDay' : 'dayGridMonth';
+    if (api.view.type !== want) {
+      api.changeView(want);
+    }
+  }, [narrow]);
 
   const { ready, events, clubs, goingIds, joinedIds } = useTracker(() => {
     const subscription = Meteor.subscribe(Events.userPublicationName);
@@ -108,7 +137,9 @@ const ListEvents = () => {
     title: event.title,
     start: new Date(event.date),
     description: event.description,
-    classNames: ['calendar-event-pill'],
+    // The pill takes its topic's colour, so a month page and the wall beneath
+    // it are the same eight colours saying the same eight things.
+    classNames: ['calendar-event-pill', `calendar-pill--${topicForEvent(event).key}`],
   }));
 
   // This route is public, so the first thing an unsigned visitor asks of an
@@ -165,8 +196,9 @@ const ListEvents = () => {
 
       <div id="event-calendar" className="calendar-container">
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin]}
-          initialView="dayGridMonth"
+          initialView={narrow ? 'dayGridDay' : 'dayGridMonth'}
           events={formattedEvents}
           height="auto"
           views={{ dayGridMonth: { dayMaxEvents: 3 } }}
@@ -174,11 +206,9 @@ const ListEvents = () => {
           fixedWeekCount={false}
           dayHeaderFormat={{ weekday: 'short' }}
           eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
-          headerToolbar={{
-            start: 'today prev,next',
-            center: 'title',
-            end: 'dayGridMonth,dayGridWeek,dayGridDay',
-          }}
+          headerToolbar={narrow
+            ? { start: 'prev,next', center: 'title', end: 'today' }
+            : { start: 'today prev,next', center: 'title', end: 'dayGridMonth,dayGridWeek,dayGridDay' }}
         />
       </div>
 

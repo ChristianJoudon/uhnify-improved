@@ -1063,6 +1063,51 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 /* Saved events read pink, club meetings read teal. */
+/* One pill colour per topic, taken from the same `chip` / `chipInk` the cards
+   and the map pins use — so a month page is the same eight colours saying the
+   same eight things, rather than 283 identical orange pills. Values are copied
+   from topics.js rather than referenced, because FullCalendar builds these
+   class names at runtime and there is no token to hang them on. */
+.calendar-pill--outdoors {
+  background: #e6f0e8 !important;
+  color: #2f5a51 !important;
+}
+
+.calendar-pill--music {
+  background: #fde3e7 !important;
+  color: #a2434f !important;
+}
+
+.calendar-pill--books {
+  background: #f9efe3 !important;
+  color: #6b5117 !important;
+}
+
+.calendar-pill--food {
+  background: #fdf0d8 !important;
+  color: #6b5117 !important;
+}
+
+.calendar-pill--art {
+  background: #fde6dd !important;
+  color: #a34b2c !important;
+}
+
+.calendar-pill--community {
+  background: #fde7db !important;
+  color: #a04d28 !important;
+}
+
+.calendar-pill--wellness {
+  background: #e8f1ef !important;
+  color: #2f5a51 !important;
+}
+
+.calendar-pill--night {
+  background: #e8edf3 !important;
+  color: #42525f !important;
+}
+
 .calendar-event-pill-saved {
   background: var(--mb-pink-tint) !important;
 }
@@ -1139,8 +1184,29 @@ div.btn-solid-primary button[type="submit"]:hover {
     padding-inline: 0.2rem;
   }
 
-  .fc .fc-daygrid-event-dot,
-  .fc .fc-event-time {
+  /* Day view on a phone: one column, so a pill can be a full-width row with
+     room for the whole title and the time. */
+  .fc-dayGridDay-view .fc-daygrid-event {
+    font-size: 0.92rem;
+    padding: 0.5rem 0.7rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .fc-dayGridDay-view .fc-event-time {
+    display: inline;
+    font-weight: 650;
+    margin-right: 0.35rem;
+  }
+
+  .fc-dayGridDay-view .fc-daygrid-day-frame {
+    min-height: 0;
+  }
+
+  /* Month only. A 45px-wide cell has no room for a time, but the day view that
+     replaces it at this width has nothing BUT room, and a listing without its
+     time is half a listing. */
+  .fc-dayGridMonth-view .fc-daygrid-event-dot,
+  .fc-dayGridMonth-view .fc-event-time {
     display: none;
   }
 
@@ -1515,7 +1581,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   border-radius: calc(var(--mb-radius-feature) - 8px);
 }
 
-.swipe-card-media img {
+/* Only a real uploaded photo fills the frame. This used to be every img in the
+   media box, which meant the topic illustration was stretched to 100%x100% and
+   object-fit: cover then cropped its right-hand side off. */
+.swipe-card-media.has-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2610,10 +2679,16 @@ div.btn-solid-primary button[type="submit"]:hover {
 /* On the swipe deck the face is large and otherwise empty, so the drawing is
    the picture rather than an accent in a corner. */
 .swipe-card-motif {
-  width: 58%;
-  max-width: 240px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 56%;
+  max-width: 230px;
+  max-height: 62%;
   height: auto;
-  margin: auto;
+  object-fit: contain;
+  -webkit-user-drag: none;
   filter: drop-shadow(0 2px 3px rgba(48, 50, 52, 0.22));
 }
 
