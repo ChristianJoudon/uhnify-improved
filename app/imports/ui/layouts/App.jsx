@@ -21,11 +21,11 @@ import Agenda from '../pages/Agenda';
 import ListClubAdmin from '../pages/ListClubAdmin';
 import ClubFinder from '../pages/ClubFinder';
 import Footer from '../components/Footer';
-import ProfileSettings from '../pages/Profile';
+import ProfileSettings from '../pages/Settings';
 import AddClub from '../pages/AddClub';
 import MyEvents from '../pages/MyEvents';
 import AddEvent from '../pages/AddEvent';
-import Profile from '../pages/Profilez';
+import Profile from '../pages/Profile';
 import EditClubAdmin from '../pages/EditClubAdmin';
 import EditEventAdmin from '../pages/EditEventAdmin';
 

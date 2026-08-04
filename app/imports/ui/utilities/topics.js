@@ -10,7 +10,12 @@
  * it inherits the topic's.
  *
  * `match` is the register's own category vocabulary, not a guess. Every value
- * that appears in the imported dataset resolves to exactly one topic.
+ * that appears in the imported dataset resolves to exactly one topic — AND
+ * every topic's own display label resolves to itself. That second rule is not
+ * decoration: Customize stores an interest as the label string, and every
+ * consumer resolves it back through topicFor. Three labels used to match none
+ * of their own keywords, so picking "Nights Out" as an interest resolved to
+ * whatever the hash fallback happened to pick.
  */
 
 import { normalizeCategories } from './helpers';
@@ -32,7 +37,7 @@ export const TOPICS = {
     chipInk: '#2f5a51',
     icon: `${ICON}/outdoors.png`,
     motif: 'outdoors',
-    match: ['outdoor', 'outdoors', 'hiking', 'hike', 'camping', 'beach', 'running', 'run',
+    match: ['move', 'explore', 'outdoor', 'outdoors', 'hiking', 'hike', 'camping', 'beach', 'running', 'run',
       'fitness', 'yoga', 'sports', 'sport', 'golf', 'watersports', 'stand_up_paddle',
       'paddle', 'surf', 'surfing', 'environment', 'sustainability', 'nature'],
   },
@@ -86,7 +91,7 @@ export const TOPICS = {
     chipInk: '#a34b2c',
     icon: `${ICON}/art.png`,
     motif: 'art',
-    match: ['art', 'arts_crafts', 'arts_culture', 'visual_art', 'craft', 'crafts',
+    match: ['make', 'create', 'art', 'arts_crafts', 'arts_culture', 'visual_art', 'craft', 'crafts',
       'printmaking', 'quilting', 'exhibition', 'exhibitions', 'workshop', 'workshops',
       'film', 'photography', 'fashion', 'design', 'culture', 'technology', 'robotics', 'lego'],
   },
@@ -129,7 +134,7 @@ export const TOPICS = {
     chipInk: '#42525f',
     icon: `${ICON}/night.png`,
     motif: 'night',
-    match: ['night', 'nightlife', 'night_market', 'games', 'game', 'trivia', 'social',
+    match: ['nights', 'night', 'nightlife', 'night_market', 'games', 'game', 'trivia', 'social',
       'festival', 'holiday', 'party', 'bingo', 'mixer', 'club'],
   },
 };

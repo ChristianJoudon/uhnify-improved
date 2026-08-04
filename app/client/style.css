@@ -2692,6 +2692,144 @@ div.btn-solid-primary button[type="submit"]:hover {
   filter: drop-shadow(0 2px 3px rgba(48, 50, 52, 0.22));
 }
 
+/* The drawn illustration in the profile's header band and the settings preview
+   — the same treatment the poster corner uses, at the size each band affords. */
+.profile-head-art,
+.preview-banner-art {
+  position: absolute;
+  right: 4%;
+  bottom: -14%;
+  width: 128px;
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 2px rgba(48, 50, 52, 0.2));
+}
+
+.preview-banner-art {
+  width: 96px;
+  right: 6%;
+}
+
+/* An interest chip names a topic, so it carries that topic's drawing. */
+.topic-chip-art {
+  width: 17px;
+  height: 17px;
+  margin-right: 0.3rem;
+  vertical-align: -3px;
+}
+
+/* Was a 10px pastel square: colour only, meaningless to anyone not already
+   fluent in eight pastels, and blank for anything past. */
+.panel-mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.panel-mark img {
+  width: 19px;
+  height: 19px;
+  object-fit: contain;
+}
+
+.panel-mark--past {
+  background: var(--mb-line-soft);
+}
+
+.panel-mark--past img {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+/* The topic picker: the one screen that asks you to weigh all eight against
+   each other, and it was eight bare words. */
+.topic-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.6rem;
+}
+
+.topic-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-tight);
+  background: var(--mb-paper-bright);
+  color: var(--mb-ink);
+  transition: border-color var(--mb-fast) var(--mb-ease), background var(--mb-fast) var(--mb-ease);
+}
+
+.topic-pick-plate {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+
+.topic-pick-plate img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.topic-pick-text {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.topic-pick-text strong {
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.topic-pick-text small {
+  font-size: 0.72rem;
+  color: var(--mb-ink-faint);
+  line-height: 1.2;
+}
+
+.topic-pick:hover {
+  border-color: var(--mb-line-strong);
+}
+
+/* Selected reads the same way it does on every other control in the app. */
+.topic-pick.is-on {
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+  color: var(--mb-paper-bright);
+}
+
+.topic-pick.is-on .topic-pick-text small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.topic-pick:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+/* The bio, inside the header where it belongs rather than floating unattached
+   between the header card and the panels. */
+.profile-head-bio {
+  margin: 0.35rem 0 0;
+  max-width: 46ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .mb-poster-foot {
   display: flex;
   align-items: center;
@@ -3637,12 +3775,6 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink-faint);
 }
 
-.profile-bio-line {
-  max-width: 70ch;
-  margin: 1.1rem 0.2rem 0;
-  font-size: 1rem;
-  color: var(--mb-ink-soft);
-}
 
 /* Panels ------------------------------------------------------------------ */
 
@@ -3738,7 +3870,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 .preview-banner {
   position: relative;
   isolation: isolate;
-  height: 84px;
+  height: 132px;
   overflow: hidden;
 }
 
