@@ -246,7 +246,13 @@ Meteor.methods({
       location: clubData.location,
       image: clubData.image,
       meetingTime: clubData.meetingTime,
-      contactInfo: clubData.contactInfo || getUsername(this.userId),
+      // Blank stays blank. This used to fall back to the creator's account
+      // name, which `getUsername` resolves to their EMAIL — so leaving the
+      // optional "how to reach us" box empty published your address on the
+      // group's card to everyone, including signed-out visitors. An organizer
+      // who types a contact has chosen to publish it; one who does not has
+      // chosen the opposite, and the card simply draws no contact row.
+      contactInfo: clubData.contactInfo || '',
       categories: normalizeCategories(clubData.categories),
       tags: (clubData.tags || []).map(normalizeTag).filter(tag => tag.length >= 2).slice(0, 20),
       schedule: normalizeSchedule(clubData.schedule) || parseMeetingTime(clubData.meetingTime) || undefined,

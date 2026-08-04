@@ -10,8 +10,15 @@ import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
 import { AuditLog } from '../../api/audit/AuditLog';
 
+// `owner` is an account name, which `getUsername` resolves to an email address,
+// and these three publications answer to anyone — no login required. It is read
+// nowhere but the admin editor, which subscribes to the admin publication
+// below, so withholding it here costs nothing and stops every creator's address
+// being one console subscription away.
+const PUBLIC_FIELDS = { fields: { owner: 0 } };
+
 Meteor.publish(Clubs.userPublicationName, function () {
-  return Clubs.collection.find({}, { sort: { name: 1 } });
+  return Clubs.collection.find({}, { sort: { name: 1 }, ...PUBLIC_FIELDS });
 });
 
 Meteor.publish(Clubs.adminPublicationName, function () {
@@ -22,7 +29,7 @@ Meteor.publish(Clubs.adminPublicationName, function () {
 });
 
 Meteor.publish(Events.userPublicationName, function () {
-  return Events.collection.find({}, { sort: { date: 1 } });
+  return Events.collection.find({}, { sort: { date: 1 }, ...PUBLIC_FIELDS });
 });
 
 Meteor.publish(Events.adminPublicationName, function () {
@@ -47,7 +54,7 @@ Meteor.publish(Profiles.adminPublicationName, function () {
 });
 
 Meteor.publish('clubs.all', function () {
-  return Clubs.collection.find({}, { sort: { name: 1 } });
+  return Clubs.collection.find({}, { sort: { name: 1 }, ...PUBLIC_FIELDS });
 });
 
 Meteor.publish(null, function () {
