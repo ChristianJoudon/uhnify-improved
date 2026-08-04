@@ -199,15 +199,14 @@ const Settings = () => {
                     type="button"
                     className={`topic-pick${on ? ' is-on' : ''}`}
                     aria-pressed={on}
+                    style={on ? undefined : { background: topic.chip, borderColor: topic.chip }}
                     onClick={() => toggleInterest(topic.label)}
                   >
                     {/* The one place in the app that asks you to weigh all
                         eight topics against each other, and it was eight bare
                         words. The drawings exist to make a topic recognisable
                         at a glance; this is where that matters most. */}
-                    <span className="topic-pick-plate" style={{ background: topic.chip }}>
-                      <img src={topic.icon} alt="" />
-                    </span>
+                    <img className="topic-pick-art" src={topic.icon} alt="" />
                     <span className="topic-pick-text">
                       <strong>{topic.label}</strong>
                       <small>{topic.tagline}</small>

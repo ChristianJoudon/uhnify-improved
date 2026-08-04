@@ -6,14 +6,40 @@ import { TOPICS, TOPIC_KEYS } from '../utilities/topics';
 /**
  * The eight categories, as their covers.
  *
- * This is the one surface where the artwork belongs: a cover says what a whole
- * category feels like, which is worth a poster once and worth nothing repeated
- * across two hundred event cards. Everything is read from TOPICS, so a ninth
- * category appears here the moment it exists.
+ * The cover is composed rather than painted. It used to be one of eight
+ * 800x1000 JPEGs with the category name and tagline burnt into the pixels —
+ * the only painterly rasters in an app whose identity is flat drawn shapes,
+ * and the only place a third typeface appeared. Worse, the name was then set a
+ * SECOND time as live text directly underneath, so every cover said its own
+ * name twice in two different faces, and the raster half could not reflow,
+ * could not be translated, and was being cropped by the compact rail.
  *
- * `counts` is optional — a category with nothing in it right now still shows,
- * but says so, rather than being hidden or claiming a zero.
+ * It is now made of parts TOPICS already owns: the pastel field as the ground,
+ * the drawn illustration as the subject, and the label, tagline and count as
+ * real type. The same recipe every card in the app already follows.
  */
+
+/**
+ * "Move & Explore" reads as two words joined, not three. Setting the ampersand
+ * on its own line, small, lets both halves start at the left margin at full
+ * size — a title rather than a label that happens to wrap.
+ */
+const Title = ({ label }) => {
+  const parts = label.split(' & ');
+  if (parts.length !== 2) {
+    return <span className="topic-poster-name">{label}</span>;
+  }
+  return (
+    <span className="topic-poster-name">
+      {parts[0]}
+      <span className="topic-poster-amp" aria-hidden="true">&amp;</span>
+      {parts[1]}
+    </span>
+  );
+};
+
+Title.propTypes = { label: PropTypes.string.isRequired };
+
 const TopicPosters = ({ selected, onSelect, counts, compact }) => (
   <ul className={`topic-posters${compact ? ' is-compact' : ''}`}>
     {TOPIC_KEYS.map((key, index) => {
@@ -37,16 +63,25 @@ const TopicPosters = ({ selected, onSelect, counts, compact }) => (
             aria-pressed={on}
             onClick={() => onSelect(on ? null : key)}
           >
-            <img src={topic.poster} alt="" loading="lazy" />
-            <span className="topic-poster-body">
-              <span className="topic-poster-name">{topic.label}</span>
-              <span className="topic-poster-tagline">{topic.tagline}</span>
-              {count !== undefined && (
-                <span className="topic-poster-count">
-                  {count === 0 ? 'Nothing right now' : `${count} on`}
-                </span>
-              )}
+            {/* The first wash, always. The second exists so a wall of many
+                cards in one category reads with rhythm; a rail of eight
+                covers, one per topic, has that rhythm already and wants to be
+                the same colour on every visit. */}
+            <span className="topic-poster-plate" style={{ background: topic.fields[0] }}>
+              {/* alt="" because the name is real text right below it now. It
+                  was not before — it was pixels, and the button's accessible
+                  name came from the tagline. */}
+              <img className="topic-poster-art" src={topic.icon} alt="" loading="lazy" />
             </span>
+            <span className="topic-poster-body">
+              <Title label={topic.label} />
+              <span className="topic-poster-tagline">{topic.tagline}</span>
+            </span>
+            {count !== undefined && (
+              <span className="topic-poster-count">
+                {count === 0 ? 'Nothing right now' : `${count} on`}
+              </span>
+            )}
           </button>
         </motion.li>
       );

@@ -2759,26 +2759,20 @@ div.btn-solid-primary button[type="submit"]:hover {
   gap: 0.6rem;
   text-align: left;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--mb-line-soft);
-  border-radius: var(--mb-radius-tight);
-  background: var(--mb-paper-bright);
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: var(--mb-ink);
   transition: border-color var(--mb-fast) var(--mb-ease), background var(--mb-fast) var(--mb-ease);
 }
 
-.topic-pick-plate {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  flex: 0 0 auto;
-}
-
-.topic-pick-plate img {
-  width: 30px;
-  height: 30px;
+/* The pill itself carries the topic's colour, so the drawing sits straight on
+   it — a coloured plate on a white pill was the colour twice, once as a swatch
+   and once as nothing. */
+.topic-pick-art {
+  width: 34px;
+  height: 34px;
   object-fit: contain;
+  flex: 0 0 auto;
 }
 
 .topic-pick-text {
@@ -2800,7 +2794,7 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .topic-pick:hover {
-  border-color: var(--mb-line-strong);
+  border-color: var(--mb-ink-soft) !important;
 }
 
 /* Selected reads the same way it does on every other control in the app. */
@@ -5435,7 +5429,8 @@ which no longer has a caller.
 }
 
 .topic-poster {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   padding: 0;
   overflow: hidden;
@@ -5449,41 +5444,70 @@ which no longer has a caller.
     border-color var(--mb-fast) var(--mb-ease);
 }
 
-.topic-poster img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
+/* The plate: the topic's own pastel wash, with its drawing as the subject.
+   Not a photograph, so it is never cropped — `contain`, always. */
+.topic-poster-plate {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 5 / 4;
+  padding: 0.6rem;
+}
+
+/* Capped at 96px: the sources are 320px square, so at 2x this is exactly
+   native. Wider and the flat edges soften, which is the whole quality being
+   protected here. */
+.topic-poster-art {
+  width: 62%;
+  max-width: 96px;
+  height: auto;
+  max-height: 84%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgba(48, 50, 52, 0.2));
 }
 
 .topic-poster-body {
   display: block;
-  padding: 0.7rem 0.8rem 0.85rem;
+  flex: 1 1 auto;
+  padding: 0.7rem 0.8rem 0.75rem;
 }
 
 .topic-poster-name {
   display: block;
   font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
-  font-size: 0.98rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
+  font-size: 1.12rem;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
   color: var(--mb-ink);
+}
+
+/* The ampersand on its own line, small — so both halves of the name start at
+   the left margin at full size instead of one of them wrapping short. */
+.topic-poster-amp {
+  display: block;
+  font-size: 0.7em;
+  font-weight: 500;
+  opacity: 0.55;
+  line-height: 1.1;
 }
 
 .topic-poster-tagline {
   display: block;
-  margin-top: 0.15rem;
-  font-size: 0.78rem;
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  line-height: 1.35;
   color: var(--mb-ink-soft);
 }
 
+/* Its own band at the foot, so all eight counts share one baseline however
+   long the names above them run. */
 .topic-poster-count {
   display: block;
-  margin-top: 0.4rem;
-  font-size: 0.74rem;
-  font-weight: 650;
-  letter-spacing: 0.06em;
+  padding: 0.4rem 0.8rem 0.45rem;
+  border-top: 1px solid var(--mb-line-soft);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--mb-ink-faint);
 }
@@ -5494,23 +5518,18 @@ which no longer has a caller.
   border-color: var(--mb-line-strong);
 }
 
-/* Selected is solid ink, like every other selected thing in the app. */
+/* Selected is solid ink, like every other selected thing in the app — but only
+   the count band, so the drawing and its field survive the selection instead
+   of being swallowed by it. */
 .topic-poster.is-on {
   border-color: var(--mb-ink);
   box-shadow: inset 0 0 0 2px var(--mb-ink), var(--mb-shadow-feature);
 }
 
-.topic-poster.is-on .topic-poster-body {
-  background: var(--mb-ink);
-}
-
-.topic-poster.is-on .topic-poster-name {
-  color: var(--mb-paper-bright);
-}
-
-.topic-poster.is-on .topic-poster-tagline,
 .topic-poster.is-on .topic-poster-count {
-  color: rgba(255, 255, 255, 0.72);
+  background: var(--mb-ink);
+  border-top-color: var(--mb-ink);
+  color: var(--mb-paper-bright);
 }
 
 .topic-poster:focus-visible {
@@ -5748,16 +5767,22 @@ which no longer has a caller.
   width: 116px;
 }
 
-.topic-posters.is-compact .topic-poster img {
-  aspect-ratio: 1 / 1;
+.topic-posters.is-compact .topic-poster-plate {
+  aspect-ratio: 4 / 3;
+  padding: 0.4rem;
+}
+
+.topic-posters.is-compact .topic-poster-art {
+  width: 66%;
+  max-width: 58px;
 }
 
 .topic-posters.is-compact .topic-poster-body {
-  padding: 0.45rem 0.5rem 0.55rem;
+  padding: 0.45rem 0.5rem 0.5rem;
 }
 
 .topic-posters.is-compact .topic-poster-name {
-  font-size: 0.8rem;
+  font-size: 0.84rem;
 }
 
 .topic-posters.is-compact .topic-poster-tagline {
@@ -5765,8 +5790,8 @@ which no longer has a caller.
 }
 
 .topic-posters.is-compact .topic-poster-count {
-  margin-top: 0.2rem;
-  font-size: 0.68rem;
+  padding: 0.3rem 0.5rem 0.32rem;
+  font-size: 0.62rem;
 }
 
 /* Events or groups. */
