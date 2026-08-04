@@ -21,6 +21,7 @@ import Club from '../components/Club';
 import DetailsModal from '../components/DetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor, topicForEvent } from '../utilities/topics';
+import Segmented from '../components/form/Segmented';
 
 const SORTS = [
   { key: 'soonest', label: 'Earliest first' },
@@ -229,14 +230,14 @@ const ListEvents = () => {
         {/* Only the events list reads `sort`; offering it over groups would be a
             control that visibly does nothing. */}
         {kind === 'events' && (
-          <select
-            className="mb-field"
-            aria-label="Sort events"
+          <Segmented
+            name="mb-events-sort"
+            label="Sort"
+            size="sm"
             value={sort}
-            onChange={event => setSort(event.target.value)}
-          >
-            {SORTS.map(option => <option key={option.key} value={option.key}>{option.label}</option>)}
-          </select>
+            options={SORTS.map(option => ({ value: option.key, label: option.label }))}
+            onChange={setSort}
+          />
         )}
       </div>
 

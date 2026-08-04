@@ -17,6 +17,7 @@ import DetailsModal from '../components/DetailsModal';
 import TopicMotif from '../components/TopicMotif';
 import TopicPosters from '../components/TopicPosters';
 import KindToggle from '../components/KindToggle';
+import Segmented from '../components/form/Segmented';
 import NearbyMap from '../components/NearbyMap';
 import EventPoster from '../components/EventPoster';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -323,14 +324,17 @@ const ClubFinder = () => {
                   standing in, and the app used to present that as fact. */}
               {isPrecise && !isExact && <em className="finder-bar-hedge">roughly — from your network</em>}
             </span>
-            <select
-              className="mb-field"
+            {/* Five numbers, so all five are on the line. This was the control
+                the owner pointed at: as a <select> the choice was hidden behind
+                an OS-drawn menu that no stylesheet in this project can reach. */}
+            <Segmented
+              name="mb-radius"
+              label="Within"
+              unit="miles"
               value={radius}
-              onChange={event => setRadius(Number(event.target.value))}
-              aria-label="Search radius"
-            >
-              {RADII.map(miles => <option key={miles} value={miles}>Within {miles} miles</option>)}
-            </select>
+              options={RADII.map(miles => ({ value: miles, label: miles, spoken: `Within ${miles} miles` }))}
+              onChange={miles => setRadius(Number(miles))}
+            />
             {/* Asked for, never assumed: the island centre is a fine default and
                 a permission prompt on first paint is not. */}
             {/* Once a real position is in hand, the way back out of it has to
@@ -425,14 +429,18 @@ const ClubFinder = () => {
               the wall to eighteen cards in the very same order — which reads as
               broken rather than as unimplemented. */}
           {kind === 'clubs' && (
-            <label className="mb-sort" htmlFor="mb-sort-select">
-              Sort:
-              <select id="mb-sort-select" value={sortMode} onChange={event => setSortMode(event.target.value)}>
-                <option value="foryou">Recommended</option>
-                <option value="near">Nearest</option>
-                <option value="az">A–Z</option>
-              </select>
-            </label>
+            <Segmented
+              name="mb-sort"
+              label="Sort"
+              size="sm"
+              value={sortMode}
+              options={[
+                { value: 'foryou', label: 'Recommended' },
+                { value: 'near', label: 'Nearest' },
+                { value: 'az', label: 'A–Z' },
+              ]}
+              onChange={setSortMode}
+            />
           )}
         </div>
 

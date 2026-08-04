@@ -201,8 +201,7 @@ body h1 {
   box-shadow: 1px 2px 0 rgba(48, 50, 52, 0.12);
 }
 
-.form-control,
-.form-select {
+.form-control {
   border-radius: var(--mb-radius-control) !important;
   border: 1px solid var(--mb-line-soft) !important;
   background: var(--mb-paper-bright);
@@ -216,8 +215,7 @@ textarea.form-control {
   min-height: 130px;
 }
 
-.form-control:focus,
-.form-select:focus {
+.form-control:focus {
   border-color: var(--mb-match) !important;
   box-shadow: inset 0 0 0 1px var(--mb-match) !important;
 }
@@ -2209,7 +2207,10 @@ div.btn-solid-primary button[type="submit"]:hover {
 
 .mb-finder {
   display: grid;
-  grid-template-columns: 1.7fr 1fr auto;
+  /* The choice column takes what it needs and the text field takes the rest.
+     At `1fr` the segmented control overran its cell and sat on top of the
+     submit button — a fraction cannot know how wide four words are. */
+  grid-template-columns: minmax(0, 1.7fr) auto auto;
   gap: 0.35rem;
   background: var(--mb-paper-bright);
   border: 2px solid var(--mb-ink);
@@ -2232,7 +2233,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   border-left: 1px solid var(--mb-line-soft);
 }
 
-.mb-finder-field label {
+/* Direct child only. A segmented group is built from <label> elements, so the
+   unscoped selector reached inside it and set every option in 0.64rem caps —
+   "THIS WEEKEND" where the design says "This weekend". */
+.mb-finder-field > label,
+.mb-finder-field .mb-segmented-label {
   font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -2248,8 +2253,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   outline-offset: 2px;
 }
 
-.mb-finder-field input,
-.mb-finder-field select {
+.mb-finder-field input {
   border: none;
   background: transparent;
   color: var(--mb-ink);
@@ -3703,30 +3707,8 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 1rem;
 }
 
-.mb-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.86rem;
-  font-weight: 650;
-  color: var(--mb-ink);
-  white-space: nowrap;
-}
-
-.mb-sort select {
-  border: none;
-  background: transparent;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  outline: none;
-}
-
-.mb-sort select:focus-visible {
-  outline: 2px solid var(--mb-ink);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
+/* `.mb-sort` lived here: the sort control's bare-select styling. The control
+   is a segmented group now and nothing carries the class. */
 
 /* ==========================================================================
    Profile + Customize
@@ -6163,4 +6145,264 @@ body .swal-icon:first-child { margin-top: 1.6rem; }
   body .swal-modal { animation: none; }
   body .swal-button { transition: none; }
   body .swal-button:not([disabled]):hover { transform: none; }
+}
+
+/* ============================================================================
+   SEGMENTED — one of a few, all on show
+   ----------------------------------------------------------------------------
+   The replacement for every short <select> in the app. See Segmented.jsx for
+   why a dropdown was the wrong control here at all; the short version is that
+   macOS draws the open menu itself, outside the page, so no amount of styling
+   reaches it — and with five options or fewer there is no reason to open one.
+
+   Built on hidden radio inputs, so the states below are driven by :checked and
+   :focus-visible on the input rather than by a class the JavaScript maintains.
+   ========================================================================= */
+
+.mb-segmented-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.mb-segmented-label,
+.mb-segmented-unit {
+  color: var(--mb-ink-soft);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.mb-segmented {
+  display: inline-flex;
+  align-items: stretch;
+  /* The track is the control's outline; the segments inside are bare until
+     chosen. One border, not five. */
+  border: 1px solid var(--mb-line-control);
+  border-radius: 999px;
+  background: var(--mb-paper);
+  /* 5px, not 3: the focus ring's outer layer stands 4px off the segment, and
+     at 3px it was cropped by the track's own edge. */
+  padding: 5px;
+  gap: 2px;
+}
+
+.mb-segment {
+  position: relative;
+  margin: 0;
+  display: inline-flex;
+}
+
+/* Hidden from sight, present in the accessibility tree — which is the whole
+   point of using real radios. `appearance: none` alone would leave a 13px box
+   taking up space on some platforms. */
+.mb-segment input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mb-segment span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.78rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--mb-ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mb-segment:hover span {
+  background: var(--mb-paper-edge);
+  color: var(--mb-ink);
+}
+
+/* Chosen is solid ink — the same thing every other selected control in this app
+   says, so "this one" reads the same everywhere. */
+.mb-segment input:checked + span {
+  background: var(--mb-ink);
+  color: var(--mb-paper);
+  box-shadow: var(--mb-shadow-small);
+}
+
+.mb-segment input:checked + span,
+.mb-segment input:checked:hover + span {
+  color: var(--mb-paper);
+}
+
+/* The same two-layer ring as everywhere else, so it survives on the paper track
+   and on the solid-ink chosen segment alike. */
+.mb-segment input:focus-visible + span {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper), 0 0 0 4px var(--mb-ink);
+}
+
+.mb-segmented-field.is-sm .mb-segment span {
+  padding: 0.3rem 0.62rem;
+  font-size: 0.85rem;
+}
+
+.mb-segmented-field.is-sm .mb-segmented-label,
+.mb-segmented-field.is-sm .mb-segmented-unit {
+  font-size: 0.84rem;
+}
+
+/* Narrow screens: tighten, do not scroll.
+   This block used to set `overflow-x: auto` with the scrollbar hidden, which
+   was wrong twice over. It put options out of sight behind no affordance —
+   which is the dropdown's original sin, restated by the control built to
+   replace it. And an overflow container clips box-shadows, so the focus ring
+   on the first and last segment was being cut off on every phone. Shrinking
+   beats hiding: five bare numerals fit a 375px line at this padding. */
+@media (max-width: 560px) {
+  .mb-segmented-field {
+    flex: 1 1 100%;
+  }
+
+  .mb-segmented {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .mb-segment span {
+    padding-inline: 0.5rem;
+  }
+}
+
+/* Touch. `is-sm` earns its quiet by type size and track weight, never by being
+   harder to hit — at 0.3rem of padding the small segments were a 25px target
+   against the 44px a finger needs. */
+@media (pointer: coarse) {
+  .mb-segment span {
+    min-height: 44px;
+  }
+}
+
+/* Forced colours throw out `background`, and the radio that would normally
+   carry "chosen" is hidden — so without this the selection becomes invisible
+   in Windows High Contrast. A border survives where a fill does not. */
+@media (forced-colors: active) {
+  .mb-segment input:checked + span {
+    border: 2px solid Highlight;
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .mb-segment input:focus-visible + span {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-segment span {
+    transition: none;
+  }
+}
+
+/* ============================================================================
+   THE SELECTS THAT STAY
+   ----------------------------------------------------------------------------
+   Five of the app's seven dropdowns became segmented controls, because their
+   choice was short enough to show whole. Two are not: "Hosted by" lists every
+   group you could hang an event on, and that list grows. For a list of that
+   shape the native control is genuinely the better one — it is searchable by
+   typing, it never runs off the bottom of a phone, and on iOS and Android the
+   OS sheet beats anything we would build.
+
+   So these keep their behaviour and lose their paint. `appearance: none` is the
+   load-bearing line and it appeared NOWHERE in this stylesheet before now,
+   which is why every select in the app had been rendering as a raw platform
+   widget. The chevron is an inline SVG data URI in the app's own ink, because a
+   background-image is the only way to draw into a control whose own arrow we
+   have just removed.
+
+   Being straight about the limit: on macOS the OPEN menu is drawn by the
+   operating system, outside the page, and no stylesheet reaches it. What
+   follows fixes the closed state — which is what is on screen except during the
+   moment of choosing. The only way to fix the open state is to not open one,
+   which is exactly what the segmented control above does, and why it took the
+   five controls that could take it.
+   ========================================================================= */
+
+.create-form select,
+.mb-field,
+.rail-line select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1.5 1.75 6 6.25l4.5-4.5' stroke='%23303234' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  /* Room for the chevron, so a long group name cannot run underneath it. */
+  padding-right: 2.4rem;
+  /* iOS Safari zooms the whole page when a control under 16px takes focus, and
+     then does not zoom back out. */
+  font-size: max(16px, 1rem);
+}
+
+/* Deleted with this block: a `.form-select` rule that styled a class no element
+   in the app has ever carried. It was Bootstrap's hook, and nothing here uses
+   Bootstrap's select. */
+
+/* The date and time fields keep the platform picker — a calendar is a calendar,
+   and nobody is served by us drawing our own. What they do not keep is the
+   platform's grey glyph sitting inside one of our fields. Recoloured to the
+   app's ink and given a hit area worth pressing. */
+.create-form input[type="time"]::-webkit-calendar-picker-indicator,
+.create-form input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.create-form input[type="date"]::-webkit-calendar-picker-indicator {
+  /* The glyph is a UA image; a filter is the only way to reach its colour. */
+  filter: grayscale(1) brightness(0.42);
+  opacity: 0.75;
+  cursor: pointer;
+  padding: 0.15rem;
+  border-radius: 6px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.create-form input[type="time"]::-webkit-calendar-picker-indicator:hover,
+.create-form input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+.create-form input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: var(--mb-paper-edge);
+}
+
+/* The hero's choice field: caption above the track, like every other field in
+   the bar, rather than the label-beside-track the control uses inline. */
+.mb-finder-field.is-choice .mb-segmented-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.mb-finder-field.is-choice .mb-segmented {
+  border-color: var(--mb-line-soft);
+}
+
+@media (max-width: 700px) {
+  /* Stacked, so the four options get the full width of the bar instead of
+     competing with the interests field for it. */
+  .mb-finder-field.is-choice .mb-segmented {
+    width: 100%;
+  }
+
+  .mb-finder-field.is-choice .mb-segment {
+    flex: 1;
+  }
+
+  .mb-finder-field.is-choice .mb-segment span {
+    width: 100%;
+    padding-inline: 0.4rem;
+  }
 }

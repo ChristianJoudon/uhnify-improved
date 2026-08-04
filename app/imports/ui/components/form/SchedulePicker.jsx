@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { DAY_NAMES, scheduleLabel } from '../../../api/club/schedule';
+import Segmented from './Segmented';
 
 /**
  * Builds the structured schedule the calendars already understand, instead of
@@ -44,17 +45,19 @@ const SchedulePicker = ({ value, onChange }) => {
             onChange={event => onChange({ ...value, time: event.target.value })}
           />
         </label>
-        <label htmlFor="club-cadence">
-          How often
-          <select
-            id="club-cadence"
-            value={value.cadence || 'weekly'}
-            onChange={event => onChange({ ...value, cadence: event.target.value })}
-          >
-            <option value="weekly">Every week</option>
-            <option value="biweekly">Every other week</option>
-          </select>
-        </label>
+        {/* Two options. This was a dropdown, which meant opening an OS menu to
+            choose between "every week" and "every other week". */}
+        <Segmented
+          name="club-cadence"
+          label="How often"
+          size="sm"
+          value={value.cadence || 'weekly'}
+          options={[
+            { value: 'weekly', label: 'Every week' },
+            { value: 'biweekly', label: 'Every other week' },
+          ]}
+          onChange={cadence => onChange({ ...value, cadence })}
+        />
       </div>
 
       <p className="schedule-echo">

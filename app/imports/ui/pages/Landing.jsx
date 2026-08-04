@@ -7,6 +7,7 @@ import { Events } from '../../api/events/Events';
 import EventPoster from '../components/EventPoster';
 import { sortByDate } from '../utilities/helpers';
 import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
+import Segmented from '../components/form/Segmented';
 
 const rise = {
   hidden: { opacity: 0, y: 18 },
@@ -93,14 +94,22 @@ const Landing = () => {
                     onChange={changeEvent => setInterest(changeEvent.target.value)}
                   />
                 </div>
-                <div className="mb-finder-field">
-                  <label htmlFor="mb-when">When</label>
-                  <select id="mb-when" value={when} onChange={changeEvent => setWhen(changeEvent.target.value)}>
-                    <option value="today">Tonight</option>
-                    <option value="week">This week</option>
-                    <option value="weekend">This weekend</option>
-                    <option value="anytime">Anytime</option>
-                  </select>
+                <div className="mb-finder-field is-choice">
+                  {/* The first control a stranger meets. It was the one thing on
+                      the homepage the browser drew rather than the app. */}
+                  <Segmented
+                    name="mb-when"
+                    label="When"
+                    size="sm"
+                    value={when}
+                    options={[
+                      { value: 'today', label: 'Tonight' },
+                      { value: 'week', label: 'This week' },
+                      { value: 'weekend', label: 'Weekend' },
+                      { value: 'anytime', label: 'Anytime' },
+                    ]}
+                    onChange={setWhen}
+                  />
                 </div>
                 <button type="submit" className="btn btn-match">Find it</button>
               </form>
