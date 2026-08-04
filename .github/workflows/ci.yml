@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+  # Catch it on the branch, before it reaches main. Every failure in this
+  # workflow's history landed on main because there was nothing checking
+  # earlier.
+  pull_request:
 
 defaults:
   run:
@@ -13,6 +17,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    # A Meteor build plus the suite takes a few minutes; past this it is a hang,
+    # and a hung job holds a runner until GitHub's own six-hour ceiling.
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v3
@@ -33,9 +40,29 @@ jobs:
 
       - run: curl https://install.meteor.com/ | sh
 
-      - name: Run Meteor commands
+      - name: Install Meteor packages
         shell: bash -l {0}
-        run: |
-          meteor npm install
-          meteor npm run lint
-#          meteor npm run testcafe-ci
+        run: meteor npm install
+
+      # Split from the tests deliberately. Run as one block, a red build said
+      # something was wrong without saying whether the code was badly formatted
+      # or actually broken — and those deserve different reactions.
+      - name: Lint
+        shell: bash -l {0}
+        run: meteor npm run lint
+
+      # `meteor test` boots its own database, so this touches no development
+      # data and needs no service container. It runs the server suite: methods,
+      # publications, cascades, the audit trail, and the authorization cases —
+      # including the profile-takeover regression, which is the single test
+      # most worth having a build catch.
+      #
+      # The client half needs a browser driver and is not run here; that is what
+      # the end-to-end job below would cover if it were switched on.
+      - name: Server tests
+        shell: bash -l {0}
+        run: meteor npm test
+
+#      - name: End-to-end
+#        shell: bash -l {0}
+#        run: meteor npm run testcafe-ci
