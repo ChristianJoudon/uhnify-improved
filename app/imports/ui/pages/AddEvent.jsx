@@ -57,7 +57,8 @@ const AddEvent = () => {
   const valid = form.title.trim() && form.hostId && form.date && form.location.trim();
 
   const pickImage = event => {
-    const file = event.target.files?.[0];
+    const input = event.target;
+    const file = input.files?.[0];
     if (!file) {
       return;
     }
@@ -72,7 +73,10 @@ const AddEvent = () => {
     const reader = new FileReader();
     reader.onload = e => set('image', e.target.result);
     reader.readAsDataURL(file);
-    event.target.value = '';
+    // Held as a local first: assigning straight through `event.target` trips
+    // no-param-reassign, a rule that exists to stop a handler mutating its
+    // caller's data — and this is a deliberate write to a DOM node, not that.
+    input.value = '';
   };
 
   const submit = event => {

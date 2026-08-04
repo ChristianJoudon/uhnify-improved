@@ -21,6 +21,13 @@ module.exports = {
     'meteor',
     'react',
   ],
+  globals: {
+    /* Meteor 2.x exposes this as a server global rather than as an importable
+       package — `import { Assets } from 'meteor/assets'` does not exist — so
+       without declaring it here the seed loader reads as an undefined variable
+       and fails the build on a line that is entirely correct. */
+    Assets: 'readonly',
+  },
   rules: {
     'arrow-parens': 'off',
     camelcase: 'off',
@@ -51,5 +58,23 @@ module.exports = {
     'react/function-component-definition': [2, { namedComponents: 'arrow-function' }],
     'react/jsx-one-expression-per-line': 'off',
     'react/no-array-index-key': 'off',
+    /* airbnb sets this rule's `assert` to 'both', which demands a label BOTH
+       carry htmlFor AND wrap its control. The accessibility requirement is
+       either one: an explicit htmlFor/id pair is a complete association, and
+       every label this flagged has one pointing at a real input — including
+       ChipInput's, which puts the id it is given on the <input> it renders.
+
+       'either' is the rule's own default and matches the standard. Nesting the
+       controls instead would have satisfied the stricter setting by changing
+       the DOM these forms are laid out against, which is a real risk taken to
+       satisfy a lint preference rather than to help anybody reading a screen.
+
+       `controlComponents` teaches it that ChipInput IS a control, so a future
+       nested usage is understood too. */
+    'jsx-a11y/label-has-associated-control': ['error', {
+      assert: 'either',
+      controlComponents: ['ChipInput'],
+      depth: 25,
+    }],
   },
 };

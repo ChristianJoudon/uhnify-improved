@@ -277,6 +277,10 @@ const Discover = () => {
     return <LoadingSpinner />;
   }
 
+  /** Which of the two walls is on. Named once so the markup below can ask a
+      single question at a time instead of nesting them. */
+  const showingClubs = kind === 'clubs';
+
   return (
     <main id="discover-page" className="mb-shell discover-page">
       <header className="discover-head">
@@ -316,44 +320,51 @@ const Discover = () => {
         counts={kind === 'clubs' ? clubTopicCounts : topicCounts}
       />
 
-      {kind === 'clubs' ? (
-        clubWall.length === 0 ? (
-          <div className="mb-empty">
-            <h3>{query ? `No groups matching “${query}”.` : 'No groups here.'}</h3>
-            <p>Try a different category, or start one yourself.</p>
-            <Link className="btn btn-solid-primary" to="/create-club">Start a group</Link>
-          </div>
-        ) : (
-          <div className="masonry discover-wall">
-            {clubWall.map(({ club }, index) => (
-              <motion.div
-                key={club._id}
-                className="masonry-item"
-                variants={rise}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: '-40px' }}
-                custom={index}
-              >
-                <Club
-                  club={club}
-                  tier={index < 2 ? 'lg' : 'md'}
-                  distance={milesLabel(milesTo(club, origin))}
-                  isMember={joinedIds.has(club._id)}
-                  onAddToProfile={join}
-                  onViewDetails={() => setDetail({ record: club, kind: 'club' })}
-                />
-              </motion.div>
-            ))}
-          </div>
-        )
-      ) : wall.length === 0 ? (
+      {/* Three siblings rather than a ternary inside a ternary. The old shape
+          asked two questions at once — which kind, and is it empty — and the
+          reader had to hold the first while answering the second. */}
+      {showingClubs && clubWall.length === 0 && (
+        <div className="mb-empty">
+          <h3>{query ? `No groups matching “${query}”.` : 'No groups here.'}</h3>
+          <p>Try a different category, or start one yourself.</p>
+          <Link className="btn btn-solid-primary" to="/create-club">Start a group</Link>
+        </div>
+      )}
+
+      {showingClubs && clubWall.length > 0 && (
+        <div className="masonry discover-wall">
+          {clubWall.map(({ club }, index) => (
+            <motion.div
+              key={club._id}
+              className="masonry-item"
+              variants={rise}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: '-40px' }}
+              custom={index}
+            >
+              <Club
+                club={club}
+                tier={index < 2 ? 'lg' : 'md'}
+                distance={milesLabel(milesTo(club, origin))}
+                isMember={joinedIds.has(club._id)}
+                onAddToProfile={join}
+                onViewDetails={() => setDetail({ record: club, kind: 'club' })}
+              />
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {!showingClubs && wall.length === 0 && (
         <div className="mb-empty">
           <h3>{query ? `Nothing matching “${query}”.` : 'Nothing in that window.'}</h3>
           <p>Try a wider stretch of time, or start something yourself.</p>
           <Link className="btn btn-solid-primary" to="/create-event">Start an event</Link>
         </div>
-      ) : (
+      )}
+
+      {!showingClubs && wall.length > 0 && (
         <div className="masonry discover-wall">
           {wall.map(({ event }, index) => {
             const miles = milesTo(event, origin);
