@@ -1,10 +1,9 @@
 import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ArrowLeft, CalendarEvent, GeoAlt, InfoCircle, People } from 'react-bootstrap-icons';
+import { ArrowLeft, GeoAlt, InfoCircle } from 'react-bootstrap-icons';
 import CardFields from './CardFields';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
-import { formatEventDate, formatShortDate } from '../utilities/helpers';
 import { topicForEvent } from '../utilities/topics';
 
 const SWIPE_DISTANCE = 130;
@@ -33,6 +32,42 @@ const daysUntilLabel = value => {
   return `In ${days} days`;
 };
 
+const MONTH_SHORT = new Intl.DateTimeFormat('en-US', { month: 'short' });
+const DOW_SHORT = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+const HOUR = new Intl.DateTimeFormat('en-US', { hour: 'numeric' });
+const HOUR_MIN = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' });
+const clock = date => (date.getMinutes() === 0 ? HOUR : HOUR_MIN).format(date);
+
+/** The block on the left: month, day, weekday, the way a printed listing sets it. */
+const dateParts = value => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return {
+    month: MONTH_SHORT.format(date).toUpperCase(),
+    day: date.getDate(),
+    dow: DOW_SHORT.format(date).toUpperCase(),
+  };
+};
+
+/** "7:30 – 10:30 PM" when the listing published an end, the start alone when
+    it did not. Same rule as everywhere else: no data, no element. */
+const timeRange = (start, end) => {
+  const from = start instanceof Date ? start : new Date(start);
+  if (Number.isNaN(from.getTime())) {
+    return '';
+  }
+  let to = null;
+  if (end) {
+    to = end instanceof Date ? end : new Date(end);
+  }
+  if (!to || Number.isNaN(to.getTime()) || to <= from) {
+    return clock(from);
+  }
+  return `${clock(from)} – ${clock(to)}`;
+};
+
 /**
  * One card in the Discover deck. The top card can be dragged left/right to decide,
  * double-tapped to flip over for full details, and flies off screen when a decision lands.
@@ -41,6 +76,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
   // A group and an event are the same object to this card — a thing with a
   // topic, a place and a time — so only the field schema differs.
   const fields = kind === 'club' ? CLUB_FIELDS : EVENT_FIELDS;
+  const when = event.date ? dateParts(event.date) : null;
   // Same rule as every other card: the seeded stock art is not this app's
   // design, so only a genuinely uploaded photo becomes the card face. The
   const topic = topicForEvent(event);
@@ -151,22 +187,33 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
               {photo
                 ? <img src={photo} alt={event.title} draggable={false} />
                 : <img className="swipe-card-motif" src={topic.icon} alt="" />}
-              {/* A group has no single date, so its card carries neither pill —
-                  the same rule as everywhere else: no data, no element. */}
-              {event.date && <span className="swipe-pill swipe-pill-date">{formatShortDate(event.date)}</span>}
+              {/* The subject, named once, over the picture. The title moved to
+                  the foot where the rest of the listing is. */}
+              <span className="swipe-pill swipe-pill-topic">{topic.label}</span>
               {event.date && <span className="swipe-pill swipe-pill-countdown">{daysUntilLabel(event.date)}</span>}
-              <div className="swipe-card-headline">
-                {hostName && <span className="swipe-host-chip"><People size={13} /> {hostName}</span>}
-                <h3>{event.title}</h3>
-              </div>
             </div>
-            <div className="swipe-card-body">
-              {(event.date || event.meetingTime) && (
-                <div className="meta-line">
-                  <CalendarEvent size={15} /> {event.date ? formatEventDate(event.date) : event.meetingTime}
+            {/* The foot reads as a printed listing: the date as a block on the
+                left, a rule, then the time, the name and the place. A group has
+                no single date, so it simply has no block — the rule and the
+                column close up around it. */}
+            <div className="swipe-card-foot">
+              {when && (
+                <div className="swipe-date">
+                  <span className="swipe-date-month">{when.month}</span>
+                  <strong className="swipe-date-day">{when.day}</strong>
+                  <span className="swipe-date-dow">{when.dow}</span>
                 </div>
               )}
-              {event.location && <div className="meta-line"><GeoAlt size={15} /> {event.location}</div>}
+              <div className="swipe-foot-main">
+                {event.date
+                  ? <span className="swipe-time">{timeRange(event.date, event.endDate)}</span>
+                  : event.meetingTime && <span className="swipe-time">{event.meetingTime}</span>}
+                <h3>{event.title}</h3>
+                {event.location && (
+                  <p className="swipe-where"><GeoAlt size={14} aria-hidden="true" /> {event.location}</p>
+                )}
+                {hostName && <p className="swipe-host">Hosted by {hostName}</p>}
+              </div>
             </div>
             {/* Says what turning the card over gets you — details — rather than
                 naming the mechanism. The whole card is the real hit area; this
@@ -203,6 +250,8 @@ SwipeCard.propTypes = {
     title: PropTypes.string,
     description: PropTypes.string,
     date: PropTypes.instanceOf(Date),
+    endDate: PropTypes.instanceOf(Date),
+    meetingTime: PropTypes.string,
     location: PropTypes.string,
     createdBy: PropTypes.string,
     eventID: PropTypes.number,
