@@ -300,6 +300,15 @@ Meteor.methods({
     Clubs.collection.remove(clubId);
     ProfileClubs.collection.remove({ clubId });
     EventClubs.collection.remove({ clubId });
+    // A group can be swiped on just as an event can — `EventSwipes.eventId`
+    // holds whichever kind of _id was swiped. Left behind, these are rows that
+    // point at nothing, and they count towards the "passed" tally the deck
+    // offers to clear.
+    EventSwipes.collection.remove({ eventId: clubId });
+    // Deliberately NOT deleting the group's events. An event outlives the group
+    // that listed it — it may be linked to others, and the wall reads it on its
+    // own terms. What it must not do is keep a link to a group that is gone,
+    // which is what the EventClubs removal above is for.
   },
 
   'profileClubs.add'(clubId) {
@@ -403,6 +412,11 @@ Meteor.methods({
     requireAdmin(this.userId);
     Events.collection.remove(eventId);
     EventClubs.collection.remove({ eventId });
+    // Everyone who ever saved or passed this event still has a row pointing at
+    // it. Those rows are why a deleted event could go on being counted in
+    // someone's saved list and in the passed tally, for an event no page could
+    // ever render again.
+    EventSwipes.collection.remove({ eventId });
   },
 
   'eventSwipes.record'(eventId, decision, kind = 'event') {

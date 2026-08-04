@@ -25,7 +25,13 @@ class EventSwipesCollection {
       Meteor.startup(() => {
         // One decision per user per event, enforced at the database level so the
         // find-then-insert in eventSwipes.record cannot race into duplicates.
-        this.collection.rawCollection().createIndex({ userId: 1, eventId: 1 }, { unique: true }).catch(() => {});
+        this.collection.rawCollection().createIndex({ userId: 1, eventId: 1 }, { unique: true }).catch(error => {
+          // Not swallowed. This index IS the guarantee of one swipe per person per listing —
+          // without it the constraint silently does not exist, and the
+          // find-then-insert guards upstream become the only thing standing
+          // between two concurrent calls and a duplicate row.
+          console.error('[index] failed to create; uniqueness is NOT enforced:', error.message);
+        });
       });
     }
   }
