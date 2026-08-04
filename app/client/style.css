@@ -37,6 +37,19 @@
   --mb-match-label: #fcfcfb;
   --mb-match-tint: #fde7dc;
 
+  /* The map's two fields.
+     These were a one-off navy and a one-off cream, neither of which appears
+     anywhere else in the system — and sampling the brand illustrations settles
+     why they looked wrong: the artwork is entirely warm (orange #dc4e13 to
+     #ea4c0f, cream #f4e1ce, and a deep charcoal-brown #2d2825 to #3c342e).
+     There is no blue in any of it. The map is the app's largest single field of
+     colour, so it was the loudest thing not speaking the language.
+
+     This is the app's own --mb-blue taken deeper: still reads as water, which
+     a warm neutral did not — that came out as mud. Only the sea is a flat
+     colour; the island is drawn from the tiles so it keeps its roads. */
+  --mb-sea: #3f5563;
+
   /* Poster pink — sampled from the hero illustration's background (#e86870).
      Deep passes AA for text; tint is for fills behind ink. */
   --mb-pink: #e96d76;
@@ -5791,7 +5804,7 @@ which no longer has a caller.
   border-radius: var(--mb-radius-card);
   overflow: hidden;
   box-shadow: var(--mb-shadow-small);
-  background: #1b3559;
+  background: var(--mb-sea);
 }
 
 .mb-map-canvas {
@@ -5809,7 +5822,7 @@ which no longer has a caller.
 /* Leaflet ships its own type and chrome; bring both onto the app's. */
 .mb-map .leaflet-container {
   font-family: "DM Sans", system-ui, sans-serif;
-  background: #1b3559;
+  background: var(--mb-sea);
 }
 
 /* Warm land, navy sea. A CSS filter chain can only push every pixel the same

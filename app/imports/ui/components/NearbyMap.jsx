@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { KAUAI, KAUAI_BOUNDS, positionOf } from '../utilities/geo';
+import { KAUAI_ROADS } from '../utilities/kauaiRoads';
 import { TOPICS } from '../utilities/topics';
 
 /**
@@ -17,26 +18,55 @@ import { TOPICS } from '../utilities/topics';
  * underneath; it just cannot honestly be put anywhere.
  */
 
-/** A pin in the record's own topic colour, matching its poster. */
+/**
+ * A pin in its topic's own colour — the same one its card is drawn in.
+ *
+ * The fill used to be `chipInk`, which is the topic's dark TEXT colour, so a
+ * Music pin was maroon while a Music card is pale pink. Same family, but not
+ * the same colour, and on a map the two sit near enough to each other for the
+ * mismatch to read as two different systems. The fill is the card's own pastel
+ * now, ringed and numbered in charcoal — the same ink the cards set their type
+ * in, so a pin reads as a small piece of the card it stands for.
+ *
+ * The numeral is the one part that cannot follow the ring. White on these
+ * pastels measures between 1.13:1 and 1.21:1 — not "low contrast" but very
+ * nearly invisible, since 1:1 is no difference at all. Charcoal on the same
+ * fills clears 10:1, and the count is the only thing on this map carrying a
+ * number worth reading.
+ */
 const pinFor = (topicKey, count, chosen) => {
-  const fill = (TOPICS[topicKey] && TOPICS[topicKey].chipInk) || '#303234';
+  const topic = TOPICS[topicKey] || {};
+  const fill = topic.chip || '#e8edf3';
   // Scaled by how much is here, gently — a place with forty listings should
   // read as busier than one with two without becoming a blob.
   const size = Math.round(24 + Math.min(Math.sqrt(count), 6) * 3.4);
   const r = size / 2;
   const label = count > 1
-    ? `<text x="${r}" y="${r + 3.6}" text-anchor="middle" font-size="${count > 99 ? 9 : 10.5}" font-weight="700" fill="#fffdfc" font-family="DM Sans, sans-serif">${count > 99 ? '99+' : count}</text>`
+    ? `<text x="${r}" y="${r + 3.6}" text-anchor="middle" font-size="${count > 99 ? 9 : 10.5}" font-weight="700" fill="#303234" font-family="DM Sans, sans-serif">${count > 99 ? '99+' : count}</text>`
     : '';
   return L.divIcon({
     className: `mb-pin${chosen ? ' is-chosen' : ''}`,
     html: `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">
-      <circle cx="${r}" cy="${r}" r="${r - 2.5}" fill="${fill}" stroke="${chosen ? '#1a1614' : '#fffdfc'}" stroke-width="${chosen ? 3 : 2.5}" />
+      <circle cx="${r}" cy="${r}" r="${r - 2.5}" fill="${fill}" stroke="#303234" stroke-width="${chosen ? 2.6 : 1.6}" />
       ${label}
     </svg>`,
     iconSize: [size, size],
     iconAnchor: [r, r],
   });
 };
+
+/**
+ * The sea, as a literal because an SVG `feFlood` cannot read a CSS custom
+ * property. It mirrors --mb-sea in style.css and the two must change together:
+ * the stylesheet's copy paints the frame behind the tiles, this one paints the
+ * water itself, and a mismatch shows as a hairline of the wrong colour at the
+ * map's edge. There is no matching land constant — the island is drawn from the
+ * tiles now rather than flooded, which is what keeps its roads.
+ */
+const SEA = '#3f5563';
+const LAND = '#f7ece0';
+/** The road network's ink, and its two weights. */
+const ROAD = '#3f3a35';
 
 /** The widest a pin ever gets, at the top of the count scale in `pinFor`. */
 const PIN_MAX = 24 + 6 * 3.4;
@@ -125,6 +155,25 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
     // Leaflet's own "Leaflet | 🇺🇦" prefix is not part of it, and on a phone that
     // optional branding took nearly half the map's width.
     map.current.attributionControl.setPrefix('');
+    /**
+     * The roads, once, beneath everything else.
+     *
+     * Added before the pin layer so a pin is never underneath a road, and drawn
+     * with `interactive: false` so the network cannot swallow a click meant for
+     * a pin or for the map.
+     */
+    const roads = L.layerGroup().addTo(map.current);
+    KAUAI_ROADS.forEach(({ k, p }) => {
+      L.polyline(p, {
+        color: ROAD,
+        weight: k === 'major' ? 1.6 : 1,
+        opacity: k === 'major' ? 0.75 : 0.5,
+        lineJoin: 'round',
+        lineCap: 'round',
+        interactive: false,
+      }).addTo(roads);
+    });
+
     layer.current = L.layerGroup().addTo(map.current);
     map.current.on('zoomend', () => setZoomTick(tick => tick + 1));
     return () => {
@@ -269,21 +318,39 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
           <feComponentTransfer in="soft" result="closed">
             <feFuncA type="linear" slope="20" intercept="-9.5" />
           </feComponentTransfer>
-          {/* Flood both sides. With the streams and shading gone the land has
-              nothing left worth keeping, so painting it flat removes the last
-              of the tile seams too and leaves one edge on the whole map: the
-              coast.
+          {/* The land keeps its detail now, which is how the roads came back.
 
-              Deliberately NOT clipped to SourceAlpha. Leaflet lays its tiles at
-              fractional pixels, so hairline transparent gaps run between them;
-              clipping to the source's own alpha punched those gaps straight
-              through the flood and the backdrop showed as a pale grid ruled
-              across the island. The flood covers the whole filter region
-              instead, and the region is the map — which is entirely tiled. */}
-          <feFlood floodColor="#1b3559" result="navyFlood" />
-          <feComposite in="navyFlood" in2="closed" operator="in" result="sea" />
-          <feFlood floodColor="#fdf7ef" result="creamFlood" />
-          <feComposite in="creamFlood" in2="closed" operator="out" result="land" />
+              It used to be flooded flat — one colour edge to edge — and that
+              erased the road network along with the tile seams it was aimed at.
+              Instead the tile's own luminance is kept and recoloured: Positron
+              draws roads WHITE on a light grey land, a difference of a few
+              percent that is invisible until it is stretched.
+
+              So: drop to luminance, stretch that narrow band until roads
+              separate from the ground they sit on, then map the result through
+              a warm ramp — dark end to sand, light end to cream. The roads come
+              out as the pale threads across the island, which is exactly what
+              they look like on paper. */}
+          {/* The island is one flat field again. Trying to lift roads out of the
+              tiles was abandoned on measurement, not taste: at the zoom this map
+              is framed to, a tile over Līhuʻe is 58,540 pixels of water, ~6,500
+              of land and road pixels in the double digits. There was nothing
+              there to recover, and stretching the contrast far enough to look
+              for it only amplified the raster's own noise into grey mud. The
+              roads are drawn from real geometry instead — see kauaiRoads.js. */}
+          <feFlood floodColor={LAND} result="landFlood" />
+          <feComposite in="landFlood" in2="closed" operator="out" result="land" />
+
+          {/* The sea stays flat. It carries no information — every place worth
+              drawing is on the island — and a flat field is what lets the coast
+              read as one clean edge.
+
+              Deliberately NOT clipped to SourceAlpha: Leaflet lays its tiles at
+              fractional pixels, so hairline transparent gaps run between them,
+              and clipping to the source's own alpha punched those gaps through
+              the flood as a pale grid ruled across the map. */}
+          <feFlood floodColor={SEA} result="seaFlood" />
+          <feComposite in="seaFlood" in2="closed" operator="in" result="sea" />
           <feMerge>
             <feMergeNode in="land" />
             <feMergeNode in="sea" />
