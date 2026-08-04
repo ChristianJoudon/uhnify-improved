@@ -8,6 +8,7 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
+import { Counters } from '../../api/counters/Counters';
 import { parseMeetingTime } from '../../api/club/schedule';
 
 const addClubMethod = 'Clubs.insert';
@@ -94,9 +95,26 @@ const normalizeSchedule = schedule => {
   return { days, time, cadence };
 };
 
+/**
+ * The next group number.
+ *
+ * This was max-plus-one over the collection, which raced (two creators read the
+ * same maximum and both insert it) and reused (delete the newest group and the
+ * next one takes its number back — along with the orphaned events that still
+ * name it as their host). See api/counters/Counters.js.
+ *
+ * The client stub cannot do any of this: it has neither the counter nor a way
+ * to increment one atomically. It returns a placeholder that the server's own
+ * number replaces the moment the real call lands, which is exactly what
+ * latency compensation is for.
+ */
 const nextNumericId = (collection, field) => {
-  const newest = collection.find({}, { sort: { [field]: -1 }, limit: 1 }).fetch()[0];
-  return (newest?.[field] || 0) + 1;
+  if (!Meteor.isServer) {
+    const newest = collection.find({}, { sort: { [field]: -1 }, limit: 1 }).fetch()[0];
+    return (newest?.[field] || 0) + 1;
+  }
+  const highest = collection.find({}, { sort: { [field]: -1 }, limit: 1 }).fetch()[0];
+  return Counters.nextId(`${collection._name}.${field}`, highest?.[field] || 0);
 };
 
 const findClubByAnyId = clubId => {
