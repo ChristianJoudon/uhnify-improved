@@ -51,17 +51,25 @@ jobs:
         shell: bash -l {0}
         run: meteor npm run lint
 
-      # `meteor test` boots its own database, so this touches no development
-      # data and needs no service container. It runs the server suite: methods,
-      # publications, cascades, the audit trail, and the authorization cases —
-      # including the profile-takeover regression, which is the single test
-      # most worth having a build catch.
+      # The 43 server tests are NOT wired in here yet, and the reason is worth
+      # writing down so the next attempt does not repeat it.
       #
-      # The client half needs a browser driver and is not run here; that is what
-      # the end-to-end job below would cover if it were switched on.
-      - name: Server tests
-        shell: bash -l {0}
-        run: meteor npm test
+      # `meteor npm test` runs them, passes all 43 in about six seconds, prints
+      # "Load the app in a browser to run client tests" — and then waits for a
+      # browser that never arrives. On a runner that is a job hanging until the
+      # timeout below kills it, with every test green in the log above. It exits
+      # on this machine and does not exit on CI, so a local check of the exit
+      # code is not evidence about what the runner will do.
+      #
+      # The fix is to give meteortesting:mocha a browser driver (TEST_BROWSER_
+      # DRIVER=puppeteer, plus the dependency) so the client half actually runs
+      # and the process can finish. That is a real change with a real download
+      # cost, not a flag, so it is left for its own commit rather than bolted on
+      # here. `TEST_CLIENT=0` does NOT work — it hangs in exactly the same way.
+      #
+      #  - name: Server tests
+      #    shell: bash -l {0}
+      #    run: meteor npm test
 
 #      - name: End-to-end
 #        shell: bash -l {0}
