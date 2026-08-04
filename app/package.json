@@ -34,6 +34,7 @@
     "@babel/preset-react": "^7.22.5",
     "@typescript-eslint/eslint-plugin": "^6.12.0",
     "@typescript-eslint/parser": "^6.12.0",
+    "chai": "^4.5.0",
     "eslint": "^8.44.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-plugin-import": "^2.27.5",
@@ -43,6 +44,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-utils": "^3.0.0",
+    "mocha": "^10.8.2",
     "testcafe": "^3.3.0"
   },
   "scripts": {
@@ -53,6 +55,8 @@
     "testcafe-single": "testcafe chrome tests/*.testcafe.js -t \"Test that signin and signout work\"",
     "testcafe-ci": "testcafe chrome:headless tests/*.testcafe.js -q --app \"meteor npm run start\"",
     "test-all": "meteor reset && meteor npm run lint && meteor npm run unimported && meteor npm run testcafe-ci",
-    "unimported": "npx unimported"
+    "unimported": "npx unimported",
+    "test": "TEST_WATCH=0 meteor test --once --driver-package meteortesting:mocha --settings ../config/settings.development.json --port 3100",
+    "test-watch": "TEST_WATCH=1 meteor test --driver-package meteortesting:mocha --settings ../config/settings.development.json --port 3100"
   }
 }

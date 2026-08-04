@@ -44,3 +44,5 @@ hot-module-replacement@0.5.3
 dev-error-overlay@0.1.2
 check
 reywood:publish-composite
+
+meteortesting:mocha            # backend test driver: `meteor test` runs server-side unit tests

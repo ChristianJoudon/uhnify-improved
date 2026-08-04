@@ -122,14 +122,45 @@ Meteor.methods({
     check(lastName, String);
     check(interests, Match.Optional([String]));
 
+    // The caller's own id, not one they named. `requireLoggedIn(targetUserId)`
+    // asserts a *supplied argument* is truthy, which is not a login check at
+    // all — the real one is `this.userId`, and it has to come first.
+    requireLoggedIn(this.userId);
     const targetUserId = userId || this.userId;
-    requireLoggedIn(targetUserId);
 
-    if (this.userId !== targetUserId && !Roles.userIsInRole(this.userId, 'admin')) {
+    const isAdmin = Roles.userIsInRole(this.userId, 'admin');
+    if (this.userId !== targetUserId && !isAdmin) {
       throw new Meteor.Error('not-authorized', 'You can only create a profile for your own account.');
     }
 
+    /**
+     * The email must be the account's own.
+     *
+     * Without this the method was a profile takeover, and the check above did
+     * not stop it: that check only proves `targetUserId` is you, while the
+     * lookup below ORs on an email you supply. Sign in as anyone, call
+     *
+     *     Meteor.call('createUserProfile', null, 'victim@example.com', …)
+     *
+     * and the `$or` matches the victim's profile by email, whereupon the update
+     * sets that document's `userId` to yours. Their profile becomes your
+     * profile — your publication serves it and they are told theirs cannot be
+     * found. Both branches of the `$or` are needed (an account created before
+     * its profile has no profile to find by userId), so the fix is to make the
+     * email untrusted input that must match the account it claims.
+     */
+    const account = Meteor.users.findOne(targetUserId);
+    const accountEmail = account?.username || account?.emails?.[0]?.address;
+    if (!isAdmin && accountEmail && email !== accountEmail) {
+      throw new Meteor.Error('not-authorized', 'That email does not belong to your account.');
+    }
+
     const existingProfile = Profiles.collection.findOne({ $or: [{ userId: targetUserId }, { email }] });
+    // Belt and braces: even matched by an email that passed the check above, a
+    // profile already owned by somebody else is never adopted.
+    if (existingProfile && existingProfile.userId && existingProfile.userId !== targetUserId) {
+      throw new Meteor.Error('profile-taken', 'A profile already exists for that account.');
+    }
     const profileData = {
       userId: targetUserId,
       email,
