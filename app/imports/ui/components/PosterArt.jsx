@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import TopicMotif from './TopicMotif';
 
 /**
  * The poster face, shared by the club card and the create-form previews, so a
@@ -29,7 +28,13 @@ const PosterArt = ({ topic, eyebrow, title, tagline, image, placeholder, art }) 
         )}
         {tagline && <p className="mb-poster-tagline">{tagline}</p>}
       </div>
-      {!onArt && <TopicMotif name={topic.motif} />}
+      {/* The topic's illustration. It replaced a hand-drawn SVG watermark at
+          12% opacity — these are finished artwork, so they sit at full strength
+          in their own corner rather than being washed into the field. Not shown
+          over a photo or a cover, where there is already a picture. */}
+      {!onArt && topic.icon && (
+        <img className="mb-poster-motif" src={topic.icon} alt="" loading="lazy" />
+      )}
     </div>
   );
 };
@@ -38,6 +43,7 @@ PosterArt.propTypes = {
   topic: PropTypes.shape({
     field: PropTypes.string,
     ink: PropTypes.string,
+    icon: PropTypes.string,
     motif: PropTypes.string,
     poster: PropTypes.string,
   }).isRequired,

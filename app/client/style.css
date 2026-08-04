@@ -2576,6 +2576,47 @@ div.btn-solid-primary button[type="submit"]:hover {
   pointer-events: none;
 }
 
+/* The topic's illustration on a single event or group card. It replaced a
+   drawn SVG at 12% opacity, which is right for a watermark and wrong for
+   finished artwork — these get their own corner at full strength instead. */
+.mb-poster-motif {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.5rem;
+  width: 28%;
+  min-width: 52px;
+  max-width: 92px;
+  height: auto;
+  pointer-events: none;
+  /* Each illustration carries cream shapes — a moon, a book's pages, a cup —
+     which would disappear into a pastel field with nothing to separate them. */
+  filter: drop-shadow(0 1px 1px rgba(48, 50, 52, 0.24));
+}
+
+/* Reserve the corner, so a long title or tagline never runs underneath the
+   drawing. The eyebrow is exempt: it sits at the top of the face, where the
+   drawing is not, and a date has no room to spare. */
+.mb-poster-art:has(.mb-poster-motif) .mb-poster-title,
+.mb-poster-art:has(.mb-poster-motif) .mb-poster-tagline {
+  padding-right: 26%;
+}
+
+.mb-poster-lg .mb-poster-motif {
+  max-width: 132px;
+  right: 0.8rem;
+  bottom: 0.75rem;
+}
+
+/* On the swipe deck the face is large and otherwise empty, so the drawing is
+   the picture rather than an accent in a corner. */
+.swipe-card-motif {
+  width: 58%;
+  max-width: 240px;
+  height: auto;
+  margin: auto;
+  filter: drop-shadow(0 2px 3px rgba(48, 50, 52, 0.22));
+}
+
 .mb-poster-foot {
   display: flex;
   align-items: center;

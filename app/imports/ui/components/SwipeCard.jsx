@@ -2,7 +2,6 @@ import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, CalendarEvent, GeoAlt, InfoCircle, People } from 'react-bootstrap-icons';
-import TopicMotif from './TopicMotif';
 import CardFields from './CardFields';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
 import { formatEventDate, formatShortDate } from '../utilities/helpers';
@@ -151,7 +150,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
             >
               {photo
                 ? <img src={photo} alt={event.title} draggable={false} />
-                : <TopicMotif name={topic.motif} />}
+                : <img className="swipe-card-motif" src={topic.icon} alt="" />}
               {/* A group has no single date, so its card carries neither pill —
                   the same rule as everywhere else: no data, no element. */}
               {event.date && <span className="swipe-pill swipe-pill-date">{formatShortDate(event.date)}</span>}

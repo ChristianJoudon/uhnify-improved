@@ -2,8 +2,9 @@
  * MatchBook topics — the one place a subject is defined.
  *
  * A topic owns everything that follows from "what kind of thing is this":
- * its name, its one-line promise, its cover art, the pastel field and motif a
- * poster is drawn in, and the vocabulary that resolves a record to it. Adding a
+ * its name, its one-line promise, its cover art, the illustration its cards
+ * carry, the pastel field a poster is drawn in, and the vocabulary that
+ * resolves a record to it. Adding a
  * ninth topic means adding one entry here and one image; nothing downstream
  * needs to know it happened, because no club or event carries its own artwork —
  * it inherits the topic's.
@@ -17,6 +18,8 @@ import { normalizeCategories } from './helpers';
 const wash = (from, to) => `linear-gradient(165deg, ${from} 0%, ${to} 100%)`;
 
 const ART = '/images/topics';
+/** The drawn illustration a single event or group card carries. */
+const ICON = '/images/motifs';
 
 export const TOPICS = {
   outdoors: {
@@ -27,6 +30,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#e6f0e8',
     chipInk: '#2f5a51',
+    icon: `${ICON}/outdoors.png`,
     motif: 'outdoors',
     match: ['outdoor', 'outdoors', 'hiking', 'hike', 'camping', 'beach', 'running', 'run',
       'fitness', 'yoga', 'sports', 'sport', 'golf', 'watersports', 'stand_up_paddle',
@@ -40,6 +44,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#fde3e7',
     chipInk: '#a2434f',
+    icon: `${ICON}/music.png`,
     motif: 'music',
     match: ['music', 'performance', 'dance', 'hula', 'karaoke', 'open_mic', 'concert',
       'band', 'choir', 'theater', 'theatre', 'comedy', 'fire_show', 'parade', 'ukulele'],
@@ -52,6 +57,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#f9efe3',
     chipInk: '#6b5117',
+    icon: `${ICON}/books.png`,
     motif: 'books',
     match: ['books', 'book', 'reading', 'writing', 'poetry', 'learning', 'education',
       'lecture', 'discussion', 'history', 'storytime', 'literacy', 'math', 'college',
@@ -65,6 +71,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#fdf0d8',
     chipInk: '#6b5117',
+    icon: `${ICON}/food.png`,
     motif: 'food',
     match: ['food', 'food_drink', 'market', 'farmers_market', 'craft_market', 'shopping',
       'agriculture', 'beer', 'cooking', 'potluck', 'dinner', 'coffee'],
@@ -77,6 +84,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#fde6dd',
     chipInk: '#a34b2c',
+    icon: `${ICON}/art.png`,
     motif: 'art',
     match: ['art', 'arts_crafts', 'arts_culture', 'visual_art', 'craft', 'crafts',
       'printmaking', 'quilting', 'exhibition', 'exhibitions', 'workshop', 'workshops',
@@ -90,6 +98,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#fde7db',
     chipInk: '#a04d28',
+    icon: `${ICON}/community.png`,
     motif: 'community',
     match: ['community', 'volunteer', 'service', 'advocacy', 'fundraiser', 'donation',
       'reuse', 'civic', 'veterans', 'lgbtq', 'women', 'youth', 'seniors', 'kupuna',
@@ -103,6 +112,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#e8f1ef',
     chipInk: '#2f5a51',
+    icon: `${ICON}/wellness.png`,
     motif: 'wellness',
     match: ['garden', 'gardening', 'plants', 'plant', 'home', 'health', 'health_wellness',
       'community_health', 'healthcare', 'wellness', 'mental_health', 'support_group',
@@ -117,6 +127,7 @@ export const TOPICS = {
     ink: '#303234',
     chip: '#e8edf3',
     chipInk: '#42525f',
+    icon: `${ICON}/night.png`,
     motif: 'night',
     match: ['night', 'nightlife', 'night_market', 'games', 'game', 'trivia', 'social',
       'festival', 'holiday', 'party', 'bingo', 'mixer', 'club'],
