@@ -6115,31 +6115,49 @@ body .swal-button:focus-visible {
   box-shadow: 0 0 0 2px var(--mb-paper), 0 0 0 4px var(--mb-ink);
 }
 
-/* The status marks are drawn from borders and pseudo-elements in sweetalert's
-   own colours. Recolour rather than redraw: the shapes are fine, the palette
-   was the problem. */
-body .swal-icon--warning { border-color: var(--mb-yellow); }
-body .swal-icon--warning .swal-icon--warning__body,
-body .swal-icon--warning .swal-icon--warning__dot { background-color: var(--mb-yellow); }
-body .swal-icon--success { border-color: var(--mb-success); }
-body .swal-icon--success__line { background-color: var(--mb-success); }
-body .swal-icon--success__ring { border-color: rgba(46, 102, 91, 0.3); }
-body .swal-icon--error { border-color: var(--mb-red-deep); }
-body .swal-icon--error__line { background-color: var(--mb-red-deep); }
-body .swal-icon--info { border-color: var(--mb-match); }
-body .swal-icon--info::before,
-body .swal-icon--info::after { background-color: var(--mb-match); }
+/* The status marks keep sweetalert's own geometry exactly. Colour is the only
+   thing changed here, and that is deliberate after getting it wrong once: every
+   part of these icons is absolutely positioned in HARD PIXELS against an 80px
+   box — the success ring is `width:80px; left:-4px`, its two strokes sit at
+   `left:14px; top:46px` and `right:8px; top:38px`. Resizing the container to
+   58px moved the box and left all of that behind, so the tick landed outside
+   its own ring. There is no size here now, and none should be added: the only
+   safe edit to a CSS-drawn icon whose parts are pinned in pixels is its colour.
 
-/* Smaller marks. At 80px the icon was the loudest thing in the box, louder
-   than the sentence it was decorating. */
-body .swal-icon {
-  width: 58px;
-  height: 58px;
-  border-width: 3px;
-  margin: 1.35rem auto 0.35rem;
+   One orange, all four marks. They are notifications of the same app, not four
+   different severities that need four hues to tell apart — the title and the
+   sentence already say which is which. */
+body .swal-icon--success,
+body .swal-icon--error,
+body .swal-icon--info,
+body .swal-icon--warning {
+  border-color: var(--mb-match);
 }
 
-body .swal-icon:first-child { margin-top: 1.6rem; }
+body .swal-icon--success__line,
+body .swal-icon--error__line,
+body .swal-icon--warning .swal-icon--warning__body,
+body .swal-icon--warning .swal-icon--warning__dot {
+  background-color: var(--mb-match);
+}
+
+body .swal-icon--info::before,
+body .swal-icon--info::after {
+  background-color: var(--mb-match);
+}
+
+body .swal-icon--success__ring {
+  border-color: rgba(235, 98, 25, 0.22);
+}
+
+/* Not decoration: this is a mask sweetalert lays over the ring to hide the two
+   corners the strokes overshoot, and it works by being painted the same colour
+   as the modal behind it. Stock hard-codes #fff, so the moment the modal became
+   paper it stopped hiding anything and started drawing a pale wedge across the
+   ring. It has to track the modal's background exactly. */
+body .swal-icon--success__hide-corners {
+  background-color: var(--mb-paper);
+}
 
 @media (prefers-reduced-motion: reduce) {
   body .swal-modal { animation: none; }

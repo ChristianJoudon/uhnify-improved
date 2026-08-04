@@ -75,10 +75,18 @@ const Settings = () => {
         const canvas = document.createElement('canvas');
         canvas.width = AVATAR_PX;
         canvas.height = AVATAR_PX;
+        const ctx = canvas.getContext('2d');
+        // Paper first. JPEG has no alpha channel, so every transparent pixel in
+        // the source becomes BLACK on export — upload a drawing on a clear
+        // background and you get your artwork in a black circle. Flattening
+        // onto paper is what a photo would have looked like anyway, and it is
+        // the colour these avatars are shown against everywhere.
+        ctx.fillStyle = '#fcfcfb';
+        ctx.fillRect(0, 0, AVATAR_PX, AVATAR_PX);
         // Square, centre-cropped, because every surface that shows this draws
         // it in a circle. Cropping here means the stored picture is the picture
         // people actually see.
-        canvas.getContext('2d').drawImage(
+        ctx.drawImage(
           img,
           (img.width - side) / 2,
           (img.height - side) / 2,
