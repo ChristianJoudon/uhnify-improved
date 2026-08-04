@@ -59,15 +59,16 @@ const TopicPosters = ({ selected, onSelect, counts, compact }) => (
         >
           <button
             type="button"
+            /* The first wash, always, across the WHOLE cover — plate, body and
+               count band are one field with rules between them. The second wash
+               exists so a wall of many cards in one category reads with rhythm;
+               a rail of eight covers has that rhythm already. */
             className={`topic-poster${on ? ' is-on' : ''}`}
             aria-pressed={on}
+            style={{ background: topic.fields[0] }}
             onClick={() => onSelect(on ? null : key)}
           >
-            {/* The first wash, always. The second exists so a wall of many
-                cards in one category reads with rhythm; a rail of eight
-                covers, one per topic, has that rhythm already and wants to be
-                the same colour on every visit. */}
-            <span className="topic-poster-plate" style={{ background: topic.fields[0] }}>
+            <span className="topic-poster-plate">
               {/* alt="" because the name is real text right below it now. It
                   was not before — it was pixels, and the button's accessible
                   name came from the tagline. */}
