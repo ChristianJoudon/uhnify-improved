@@ -21,7 +21,7 @@ const Footer = () => (
   <footer className="site-footer mt-auto">
     <Container className="page-shell">
       <div className="footer-row">
-        <Link to="/" className="footer-brand"><Wordmark /></Link>
+        <Link to="/" className="footer-brand"><Wordmark mark="struck" /></Link>
         <div className="footer-links">
           <Link to="/discover" className="footer-link">Discover</Link>
           <Link to="/discover-events" className="footer-link">Match</Link>

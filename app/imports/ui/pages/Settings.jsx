@@ -10,6 +10,9 @@ import { Profiles } from '../../api/profiles/Profiles';
 import { normalizeCategories, profileImagePath } from '../utilities/helpers';
 import { TOPICS, TOPIC_KEYS, topicFor } from '../utilities/topics';
 
+/** Stored and displayed at the same size — see `shrink`. */
+const AVATAR_PX = 320;
+
 const Settings = () => {
   const [imagePreview, setImagePreview] = useState('');
   const [form, setForm] = useState(null);
@@ -51,23 +54,63 @@ const Settings = () => {
     [form],
   );
 
-  const handleImageChange = event => {
+  /**
+   * Shrink to an avatar before it ever leaves the page.
+   *
+   * A photo straight off a phone is four to eight megabytes, and base64 adds a
+   * third again — so the old code read the file at full resolution, pushed ten
+   * megabytes down the wire, and only then had the server reject it for being
+   * too big. It is displayed at 96px. Nothing above a few hundred is doing any
+   * work, and at this size the whole picture costs about as much as a line of
+   * text.
+   */
+  const shrink = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('That file could not be read.'));
+    reader.onload = e => {
+      const img = new window.Image();
+      img.onerror = () => reject(new Error('That file is not an image we can read.'));
+      img.onload = () => {
+        const side = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = AVATAR_PX;
+        canvas.height = AVATAR_PX;
+        // Square, centre-cropped, because every surface that shows this draws
+        // it in a circle. Cropping here means the stored picture is the picture
+        // people actually see.
+        canvas.getContext('2d').drawImage(
+          img,
+          (img.width - side) / 2,
+          (img.height - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          AVATAR_PX,
+          AVATAR_PX,
+        );
+        resolve(canvas.toDataURL('image/jpeg', 0.86));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const handleImageChange = async event => {
     const file = event.target.files?.[0];
     if (!file || !file.type.startsWith('image')) {
       swal('Invalid file', 'Please choose an image file.', 'error');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = e => {
-      const result = e.target.result;
-      setImagePreview(result);
-      Meteor.call('Profiles.updatePicture', result, error => {
-        if (error) {
-          swal('Error', error.reason || error.message, 'error');
-        }
-      });
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Staged, not sent. This used to commit the moment the file was chosen,
+      // while every other control on the page waited for Save — one form with
+      // two different ideas of what "saved" means, and no way to tell from the
+      // screen which fields were already gone. The photo now waits its turn.
+      setImagePreview(await shrink(file));
+    } catch (error) {
+      swal('Could not read that', error.message, 'error');
+    }
   };
 
   const submit = event => {
@@ -79,8 +122,15 @@ const Settings = () => {
       title: form.title,
       bio: form.bio,
       interests: form.interests,
+      // Absent unless a new one was chosen, so saving the form cannot blank a
+      // picture that was never touched.
+      ...(imagePreview ? { picture: imagePreview } : {}),
     }, error => {
       if (error) {
+        // The preview goes back to what is actually stored. It used to keep
+        // showing a photo the server had refused, so the page displayed an
+        // image nobody would ever see again.
+        setImagePreview('');
         swal('Error', error.reason || error.message, 'error');
       } else {
         swal('Saved', 'Your profile is up to date.', 'success');

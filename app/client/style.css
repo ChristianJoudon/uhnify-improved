@@ -427,15 +427,22 @@ div.btn-solid-primary button[type="submit"]:hover {
   text-decoration: none;
 }
 
-/* Wordmark: charcoal letters, the "t" replaced by an upright match. */
-/* The wordmark is artwork now, cut to the ink. Height is the only dimension
-   worth setting — the file's own ratio supplies the width. */
+/* The wordmark is artwork, cut to the ink. Height is the only dimension worth
+   setting — the file's own ratio supplies the width.
+
+   This governs the header's cut, which is the name alone. The number is not a
+   round one: the mark it replaced spent its bottom quarter on a struck match,
+   so 1.55rem there drew a word only ~1.12rem tall. Setting the new file to
+   1.55 would have enlarged the name by half without anyone asking. 1.25 gives
+   it the room the strike used to occupy and no more. */
 .mb-wordmark {
   display: block;
-  height: 1.55rem;
+  height: 1.25rem;
   width: auto;
 }
 
+/* The footer still carries the struck match, and that file is a quarter taller
+   than its own word — so this stays where it was. */
 .footer-brand .mb-wordmark {
   height: 1.3rem;
 }

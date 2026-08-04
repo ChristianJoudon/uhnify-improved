@@ -2,22 +2,29 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 /**
- * The MatchBook wordmark: drawn serif letterforms in the match orange, with a
- * struck match ruled underneath the word.
+ * The MatchBook wordmark: drawn serif letterforms in the match orange.
  *
- * The file is deliberately named differently from the mark it replaced. Serving
- * new artwork from the same path means every returning reader keeps the old one
- * out of their cache until it expires — the one change nobody would think to
- * hard-refresh for.
+ * Two cuts of the same name, and the difference is where they sit. The header
+ * carries the name alone — a struck match ruled under it reads as an underline
+ * at 1.55rem, and an underline in the top-left corner of every screen reads as
+ * a link that is not one. The footer keeps the struck match, because down there
+ * it is a sign-off rather than a control and has the room to be one.
  *
- * Artwork rather than type-plus-SVG now, because the letterforms carry a
- * hand-drawn character no available typeface did. The file is cut to the ink
- * with no surrounding padding, so the CSS height is the height of the mark
- * itself and every surface can size it against its own type.
+ * Both files are cut to the ink with no surrounding padding, so the CSS height
+ * is the height of the mark itself and every surface sizes it against its own
+ * type. Both are also deliberately named differently from the marks they
+ * replaced: serving new artwork from an old path means every returning reader
+ * keeps the previous one out of their cache until it expires — the one change
+ * nobody would think to hard-refresh for.
  */
-const Wordmark = ({ className }) => (
+const MARKS = {
+  plain: '/images/matchbook-wordmark.png',
+  struck: '/images/matchbook-logo.png',
+};
+
+const Wordmark = ({ className, mark }) => (
   <img
-    src="/images/matchbook-logo.png"
+    src={MARKS[mark]}
     alt="MatchBook"
     className={`mb-wordmark ${className}`.trim()}
   />
@@ -25,10 +32,13 @@ const Wordmark = ({ className }) => (
 
 Wordmark.propTypes = {
   className: PropTypes.string,
+  /** `plain` is the name on its own; `struck` rules a lit match beneath it. */
+  mark: PropTypes.oneOf(['plain', 'struck']),
 };
 
 Wordmark.defaultProps = {
   className: '',
+  mark: 'plain',
 };
 
 export default Wordmark;

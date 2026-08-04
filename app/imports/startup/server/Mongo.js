@@ -60,26 +60,45 @@ const addInterest = data => {
   Interests.collection.insert(data);
 };
 
+/**
+ * Seed the demo accounts' profiles — once, and never again.
+ *
+ * This used to `$set` the whole seed shape over any profile that already
+ * existed, on EVERY server start. Seeding is a startup task, so the effect was
+ * that restarting the dev server silently reverted the signed-in account's
+ * picture, name, title, bio AND interests to the values in settings.json. From
+ * the inside that looks exactly like "my profile changes didn't save": they
+ * did save, they were reactive, they survived a reload — and then a restart
+ * some minutes later put them back. Everything editable on the Customize page
+ * went, not just the photo.
+ *
+ * A default belongs to a profile that does not exist yet. Once someone owns
+ * one, it is theirs. The only thing still re-synced is the link to the account
+ * document, because a reset users collection issues new _ids and an unlinked
+ * profile is one nobody can reach.
+ */
 const syncDefaultProfiles = () => {
   Meteor.settings.defaultProfiles?.forEach(defaultProfile => {
     const user = Meteor.users.findOne({ username: defaultProfile.email });
     const existingProfile = Profiles.collection.findOne({ email: defaultProfile.email });
-    const profile = {
-      UH_ID: defaultProfile.UH_ID,
-      userId: user?._id || existingProfile?.userId,
-      email: defaultProfile.email,
-      firstName: defaultProfile.firstName,
-      lastName: defaultProfile.lastName,
-      bio: defaultProfile.bio,
-      title: defaultProfile.title,
-      picture: defaultProfile.picture,
-      interests: defaultProfile.interests || [],
-    };
 
-    if (existingProfile) {
-      Profiles.collection.update(existingProfile._id, { $set: profile });
-    } else {
-      Profiles.collection.insert(profile);
+    if (!existingProfile) {
+      Profiles.collection.insert({
+        UH_ID: defaultProfile.UH_ID,
+        userId: user?._id,
+        email: defaultProfile.email,
+        firstName: defaultProfile.firstName,
+        lastName: defaultProfile.lastName,
+        bio: defaultProfile.bio,
+        title: defaultProfile.title,
+        picture: defaultProfile.picture,
+        interests: defaultProfile.interests || [],
+      });
+      return;
+    }
+
+    if (user?._id && user._id !== existingProfile.userId) {
+      Profiles.collection.update(existingProfile._id, { $set: { userId: user._id } });
     }
   });
 };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KAUAI, regionNear } from './geo';
+import { KAUAI, placeNear } from './geo';
 
 const STORAGE_KEY = 'mb-origin';
 
@@ -16,6 +16,11 @@ const STORAGE_KEY = 'mb-origin';
  */
 /** Where a position came from. Only the first two are a real answer. */
 const LOCATED = ['located', 'approx'];
+
+/** Past this many metres of claimed accuracy, a fix is a neighbourhood guess.
+    Kauaʻi's towns are about five miles apart, so three kilometres is the point
+    at which a position stops being able to tell them apart. */
+const COARSE_METRES = 3000;
 
 export const useOrigin = () => {
   // The source travels with the position, and is what "do we know where they
@@ -49,7 +54,7 @@ export const useOrigin = () => {
   }, [origin, source]);
 
   const apply = (point, how) => {
-    setState({ origin: { lat: point.lat, lng: point.lng, label: regionNear(point) }, source: how });
+    setState({ origin: { lat: point.lat, lng: point.lng, label: placeNear(point) }, source: how });
     setStatus(how);
   };
 
@@ -75,23 +80,49 @@ export const useOrigin = () => {
     return false;
   };
 
+  /**
+   * Ask the device. Only fall back to the network when the device had no
+   * answer to give — never when it was told not to give one.
+   *
+   * This used to swallow the error and ask the IP service on ANY failure, then
+   * present the result with the same confidence as a satellite fix. On this
+   * island the IP service answers with the cable company's head end in Līhuʻe,
+   * so someone standing in Kīlauea pressed a button labelled "Use my location"
+   * and was told they were sixteen miles away, with nothing on screen to say
+   * the app had guessed.
+   *
+   * The options matter as much as the branching. `enableHighAccuracy: false`
+   * with a ten-minute `maximumAge` invited the browser to answer from its own
+   * cached network estimate — the very thing we are trying not to accept.
+   */
   const locate = async () => {
     setStatus('locating');
     if (navigator.geolocation) {
-      const exact = await new Promise(resolve => {
+      const fix = await new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(
-          position => resolve({ lat: position.coords.latitude, lng: position.coords.longitude }),
-          () => resolve(null),
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 },
+          position => resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          }),
+          error => resolve({ denied: error.code === error.PERMISSION_DENIED }),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
         );
       });
-      if (exact) {
-        apply(exact, 'located');
+      // Refused is an answer. Substituting a guess for it is how the app came
+      // to state a town the reader was not in.
+      if (fix.denied) {
+        setStatus('blocked');
+        return;
+      }
+      if (typeof fix.lat === 'number') {
+        // Metres. Beyond a few kilometres the "fix" is a network estimate the
+        // browser handed back through the geolocation API, and it deserves the
+        // same hedge as our own network lookup.
+        apply(fix, fix.accuracy > COARSE_METRES ? 'approx' : 'located');
         return;
       }
     }
-    // The device would not say, so ask the network rather than giving up: most
-    // people who press this want a better answer, not an explanation.
     const ok = await byNetwork();
     if (!ok) {
       setStatus('denied');
@@ -108,5 +139,14 @@ export const useOrigin = () => {
     }
   };
 
-  return { origin, status, locate, reset, isPrecise: LOCATED.includes(source) };
+  return {
+    origin,
+    status,
+    locate,
+    reset,
+    isPrecise: LOCATED.includes(source),
+    /** Whether the position came from the device or was inferred from the
+        network. The screen says which; it used to say neither. */
+    isExact: source === 'located',
+  };
 };

@@ -64,6 +64,21 @@ const checkImageSize = image => {
   }
 };
 
+/**
+ * A profile picture, checked once for both of the things that can be wrong with
+ * it. There used to be a second size ceiling here — 2,500,000 against the
+ * 2,800,000 above — two numbers for one idea, and neither of them the one the
+ * uploader was actually measured against.
+ */
+const checkPicture = picture => {
+  checkImageSize(picture);
+  const known = ['data:image/', '/images/', 'images/', 'http'];
+  if (!known.some(prefix => picture.startsWith(prefix))) {
+    throw new Meteor.Error('invalid-image', 'Please choose a valid image file or image URL.');
+  }
+  return picture;
+};
+
 const normalizeTag = tag => `${tag}`.trim().replace(/\s+/g, ' ').slice(0, 28);
 
 const normalizeSchedule = schedule => {
@@ -142,6 +157,11 @@ Meteor.methods({
       bio: String,
       title: String,
       interests: Match.Optional([String]),
+      // Optional, and absent means "leave it alone" rather than "clear it".
+      // The Customize page carries one Save for the whole form now, including
+      // the photo, so that a reader has exactly one thing to press and one
+      // answer to the question of whether their edits are stored.
+      picture: Match.Optional(String),
     });
     requireLoggedIn(this.userId);
 
@@ -150,32 +170,19 @@ Meteor.methods({
       throw new Meteor.Error('profile-not-found', 'No profile exists for this account yet.');
     }
 
-    Profiles.collection.update(profile._id, {
-      $set: {
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        email: profileData.email,
-        bio: profileData.bio,
-        title: profileData.title,
-        interests: profileData.interests || [],
-      },
-    });
-  },
-
-  'Profiles.updatePicture'(picture) {
-    check(picture, String);
-    requireLoggedIn(this.userId);
-
-    if (picture.length > 2500000) {
-      throw new Meteor.Error('image-too-large', 'Please choose a smaller profile image.');
+    const fields = {
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      email: profileData.email,
+      bio: profileData.bio,
+      title: profileData.title,
+      interests: profileData.interests || [],
+    };
+    if (profileData.picture !== undefined) {
+      fields.picture = checkPicture(profileData.picture);
     }
 
-    const validImage = picture.startsWith('data:image/') || picture.startsWith('/images/') || picture.startsWith('images/') || picture.startsWith('http');
-    if (!validImage) {
-      throw new Meteor.Error('invalid-image', 'Please choose a valid image file or image URL.');
-    }
-
-    Profiles.collection.update({ userId: this.userId }, { $set: { picture } });
+    Profiles.collection.update(profile._id, { $set: fields });
   },
 
   'Profiles.remove'(profileId) {

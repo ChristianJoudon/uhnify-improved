@@ -71,9 +71,9 @@ const ClubFinder = () => {
   const [radius, setRadius] = useState(25);
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
-  const { origin, status, locate, reset, isPrecise } = useOrigin();
+  const { origin, status, locate, reset, isPrecise, isExact } = useOrigin();
 
-  const { ready, clubs, events, joinedClubIds, goingIds, interests, friendClubIds, place } = useTracker(() => {
+  const { ready, clubs, events, joinedClubIds, goingIds, interests, friendClubIds } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
     const eventsSubscription = Meteor.subscribe(Events.userPublicationName);
     const swipesSubscription = Meteor.subscribe(EventSwipes.userPublicationName);
@@ -92,7 +92,6 @@ const ClubFinder = () => {
         .find({ userId: Meteor.userId(), decision: 'interested' }).map(swipe => swipe.eventId)),
       interests: normalizeCategories(profile?.interests),
       friendClubIds: new Set(ProfileClubs.collection.find({ userId: { $in: acceptedIds } }).fetch().map(membership => membership.clubId)),
-      place: profile?.location,
       ready: clubsSubscription.ready() && membershipSubscription.ready()
         && eventsSubscription.ready() && swipesSubscription.ready(),
     };
@@ -312,8 +311,17 @@ const ClubFinder = () => {
         <div className="finder-bar-block">
           <span className="finder-bar-title">You&apos;re matching for</span>
           <div className="finder-bar-row">
+            {/* `place` used to be read here from `profile.location` — a field
+                the Profiles schema does not declare and nothing ever writes, so
+                it was permanently undefined and this always fell through to the
+                island name. The origin knows where it is measuring from; ask it. */}
             <span className="finder-bar-place">
-              <GeoAlt size={15} /> {isPrecise ? origin.label : (place || KAUAI.label)}
+              <GeoAlt size={15} /> {isPrecise ? origin.label : KAUAI.label}
+              {/* Approximate is a different claim from located, and saying so
+                  is the whole fix: the network lookup answers with the cable
+                  company's building in Līhuʻe no matter which town you are
+                  standing in, and the app used to present that as fact. */}
+              {isPrecise && !isExact && <em className="finder-bar-hedge">roughly — from your network</em>}
             </span>
             <select
               className="mb-field"
@@ -328,10 +336,19 @@ const ClubFinder = () => {
             {/* Once a real position is in hand, the way back out of it has to
                 be on screen — otherwise a stored one is permanent. */}
             {isPrecise ? (
-              <button type="button" className="mb-chip" onClick={reset}>
-                <GeoAltFill size={13} />
-                Use the whole island
-              </button>
+              <>
+                {/* A guess needs a way to be corrected, not just undone. */}
+                {!isExact && (
+                  <button type="button" className="mb-chip" onClick={locate} disabled={status === 'locating'}>
+                    <GeoAltFill size={13} />
+                    {status === 'locating' ? 'Finding you…' : 'Not right? Try again'}
+                  </button>
+                )}
+                <button type="button" className="mb-chip" onClick={reset}>
+                  <GeoAltFill size={13} />
+                  Use the whole island
+                </button>
+              </>
             ) : (
               <button type="button" className="mb-chip" onClick={locate} disabled={status === 'locating'}>
                 <GeoAltFill size={13} />
@@ -352,7 +369,13 @@ const ClubFinder = () => {
             })}
             {interests.length > 0 && <Link className="finder-bar-edit" to="/settings">Edit</Link>}
           </div>
-          {status === 'denied' && <p className="rail-note">Measuring from the middle of the island.</p>}
+          {status === 'blocked' && (
+            <p className="rail-note">
+              Your browser is blocking location for this site. Allow it in the address bar, or keep
+              browsing the whole island — everything is here either way.
+            </p>
+          )}
+          {status === 'denied' && <p className="rail-note">Could not work out where you are. Measuring from the middle of the island.</p>}
         </div>
 
         <div className="finder-bar-search">
