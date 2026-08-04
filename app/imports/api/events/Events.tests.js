@@ -46,7 +46,8 @@ if (Meteor.isServer) {
 
         assert.equal(Events.collection.find({ _id: eventId }).count(), 0);
         assert.equal(
-          EventSwipes.collection.find({ eventId }).count(), 0,
+          EventSwipes.collection.find({ eventId }).count(),
+          0,
           'a swipe on a deleted event still counts towards someone’s saved list',
         );
       });
