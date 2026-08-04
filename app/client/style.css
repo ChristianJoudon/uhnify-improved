@@ -6009,3 +6009,158 @@ which no longer has a caller.
   -webkit-line-clamp: 3;
   font-size: 0.82rem;
 }
+
+/* ============================================================================
+   DIALOGS
+   ----------------------------------------------------------------------------
+   Every confirmation, error and welcome in the app is a sweetalert — 49 call
+   sites across 17 files — and every one of them arrived stock: a 478px white
+   box at 5px radius, a 27px title in 65%-black, and a #7cd1f9 sky-blue confirm
+   button beside a #e64942 red. Sky blue is not in this app's palette at all,
+   and it was sitting on the two most-pressed buttons in the product.
+
+   sweetalert v2 injects its stylesheet from JavaScript at import time, which
+   lands in <head> AFTER this file. Equal specificity therefore loses, so every
+   rule here is written one level deeper than the rule it replaces — `body` in
+   front of the class it beats. That is the same trick already used against
+   Bootstrap's reboot further up, and it is preferred to !important because it
+   leaves the door open for a caller to override a single dialog.
+   ========================================================================= */
+
+body .swal-overlay {
+  background-color: rgba(31, 33, 35, 0.42);
+}
+
+body .swal-modal {
+  width: min(440px, calc(100vw - 2.5rem));
+  background-color: var(--mb-paper);
+  border: 1px solid var(--mb-line-soft);
+  border-radius: var(--mb-radius-sheet);
+  box-shadow: var(--mb-shadow-feature);
+  padding-bottom: 0.35rem;
+}
+
+/* The display face, as everywhere else a heading is set. Stock left this to
+   inherit, so dialog titles were the one place DM Sans played the display
+   role — the same defect already fixed for the details sheet's own title. */
+body .swal-title {
+  font-family: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  color: var(--mb-ink);
+  font-weight: 700;
+  font-size: 1.32rem;
+  letter-spacing: -0.01em;
+  padding: 1.5rem 1.6rem 0.25rem;
+  margin-bottom: 0;
+}
+
+body .swal-title:not(:last-child) {
+  margin-bottom: 0.1rem;
+}
+
+body .swal-text {
+  color: var(--mb-ink-soft);
+  font-size: 0.97rem;
+  line-height: 1.5;
+  text-align: center;
+  padding: 0 1.6rem;
+  max-width: none;
+}
+
+body .swal-footer {
+  text-align: center;
+  padding: 1.15rem 1.5rem 1.35rem;
+  margin-top: 0.35rem;
+}
+
+body .swal-button-container {
+  margin: 0.25rem;
+}
+
+/* The one primary action, in the app's own orange — matching every other
+   primary button, shadow and all. */
+body .swal-button {
+  background-color: var(--mb-match);
+  color: var(--mb-match-label);
+  border-radius: var(--mb-radius-control);
+  box-shadow: var(--mb-shadow-match);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.62rem 1.35rem;
+  transition: background-color 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+body .swal-button:not([disabled]):hover {
+  background-color: var(--mb-match-hover);
+  box-shadow: var(--mb-shadow-match-lift);
+  transform: translateY(-1px);
+}
+
+body .swal-button:not([disabled]):active {
+  transform: translateY(0);
+  box-shadow: var(--mb-shadow-match);
+}
+
+/* Cancel is the quiet one: a bordered ghost, like every secondary control. */
+body .swal-button--cancel {
+  background-color: transparent;
+  color: var(--mb-ink);
+  border: 1px solid var(--mb-line-control);
+  box-shadow: none;
+}
+
+body .swal-button--cancel:not([disabled]):hover {
+  background-color: var(--mb-paper-edge);
+  box-shadow: none;
+  transform: none;
+}
+
+body .swal-button--danger {
+  background-color: var(--mb-red-deep);
+  box-shadow: 2px 3px 0 rgba(var(--mb-match-edge-rgb), 0.22);
+}
+
+body .swal-button--danger:not([disabled]):hover {
+  background-color: var(--mb-red);
+  box-shadow: 2px 3px 0 rgba(var(--mb-match-edge-rgb), 0.28);
+}
+
+/* One ring, the same one the rest of the app uses. Stock drew a coloured halo
+   per button variant, so focus looked different in a dialog than anywhere else. */
+body .swal-button:focus,
+body .swal-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper), 0 0 0 4px var(--mb-ink);
+}
+
+/* The status marks are drawn from borders and pseudo-elements in sweetalert's
+   own colours. Recolour rather than redraw: the shapes are fine, the palette
+   was the problem. */
+body .swal-icon--warning { border-color: var(--mb-yellow); }
+body .swal-icon--warning .swal-icon--warning__body,
+body .swal-icon--warning .swal-icon--warning__dot { background-color: var(--mb-yellow); }
+body .swal-icon--success { border-color: var(--mb-success); }
+body .swal-icon--success__line { background-color: var(--mb-success); }
+body .swal-icon--success__ring { border-color: rgba(46, 102, 91, 0.3); }
+body .swal-icon--error { border-color: var(--mb-red-deep); }
+body .swal-icon--error__line { background-color: var(--mb-red-deep); }
+body .swal-icon--info { border-color: var(--mb-match); }
+body .swal-icon--info::before,
+body .swal-icon--info::after { background-color: var(--mb-match); }
+
+/* Smaller marks. At 80px the icon was the loudest thing in the box, louder
+   than the sentence it was decorating. */
+body .swal-icon {
+  width: 58px;
+  height: 58px;
+  border-width: 3px;
+  margin: 1.35rem auto 0.35rem;
+}
+
+body .swal-icon:first-child { margin-top: 1.6rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  body .swal-modal { animation: none; }
+  body .swal-button { transition: none; }
+  body .swal-button:not([disabled]):hover { transform: none; }
+}
