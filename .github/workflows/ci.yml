@@ -51,25 +51,48 @@ jobs:
         shell: bash -l {0}
         run: meteor npm run lint
 
-      # The 43 server tests are NOT wired in here yet, and the reason is worth
-      # writing down so the next attempt does not repeat it.
+      # The server suite: methods, publications, cascades, the audit trail and
+      # the authorization cases — including the profile-takeover regression,
+      # which is the single test most worth a build catching.
       #
-      # `meteor npm test` runs them, passes all 43 in about six seconds, prints
-      # "Load the app in a browser to run client tests" — and then waits for a
-      # browser that never arrives. On a runner that is a job hanging until the
-      # timeout below kills it, with every test green in the log above. It exits
-      # on this machine and does not exit on CI, so a local check of the exit
-      # code is not evidence about what the runner will do.
+      # Not simply `meteor npm test`, and the reason is load-bearing. That
+      # command runs every test, prints the summary in about six seconds, then
+      # waits for a browser to run the CLIENT half — which a runner does not
+      # have. The first attempt at this step passed all 43 and then sat for
+      # fifteen minutes until the job timeout killed it. `TEST_CLIENT=0` and
+      # `TEST_CLIENT=false` both hang identically; neither is a fix.
       #
-      # The fix is to give meteortesting:mocha a browser driver (TEST_BROWSER_
-      # DRIVER=puppeteer, plus the dependency) so the client half actually runs
-      # and the process can finish. That is a real change with a real download
-      # cost, not a flag, so it is left for its own commit rather than bolted on
-      # here. `TEST_CLIENT=0` does NOT work — it hangs in exactly the same way.
+      # There are no client tests to wait for: every *.tests.js file in this
+      # repo is wrapped in `if (Meteor.isServer)`. So rather than download a
+      # browser to discover that, the run is stopped once it has printed its
+      # summary and judged on what it printed.
       #
-      #  - name: Server tests
-      #    shell: bash -l {0}
-      #    run: meteor npm test
+      # That is a workaround, and it is written as one. What makes it safe is
+      # that it fails closed: a failing test exits 1, and so does a run that
+      # printed no summary at all — verified both ways before this was
+      # committed, by breaking a test on purpose and watching it go red.
+      - name: Server tests
+        shell: bash -l {0}
+        run: |
+          rm -f test.log
+          meteor npm test > test.log 2>&1 &
+          RUNNER=$!
+          for _ in $(seq 1 150); do
+            grep -qE "[0-9]+ (passing|failing)" test.log && break
+            kill -0 $RUNNER 2>/dev/null || break
+            sleep 2
+          done
+          sleep 2
+          kill $RUNNER 2>/dev/null || true
+          sed 's/I[0-9]*-[0-9:.()+-]*? *//' test.log | tail -40
+          if grep -qE "[1-9][0-9]* failing" test.log; then
+            echo "::error::server tests failed"
+            exit 1
+          fi
+          if ! grep -qE "[0-9]+ passing" test.log; then
+            echo "::error::server tests produced no result — the run did not get that far"
+            exit 1
+          fi
 
 #      - name: End-to-end
 #        shell: bash -l {0}

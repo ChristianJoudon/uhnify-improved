@@ -11,3 +11,4 @@ app/.deploy/settings.json
 .claude/scheduled_tasks.lock
 # tools/ has its own package for build-time deps
 tools/node_modules/
+app/test.log
