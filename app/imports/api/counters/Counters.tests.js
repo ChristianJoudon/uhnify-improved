@@ -66,7 +66,8 @@ if (Meteor.isServer) {
       assert.notEqual(second.clubID, first.clubID, 'the new group must not inherit the old number');
       const stranded = Events.collection.findOne({ title: 'Belongs to First' });
       assert.notEqual(
-        stranded.eventID, second.clubID,
+        stranded.eventID,
+        second.clubID,
         'and so must not adopt the previous holder’s events',
       );
     });

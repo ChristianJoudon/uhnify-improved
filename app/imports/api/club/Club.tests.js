@@ -52,7 +52,8 @@ if (Meteor.isServer) {
 
       const after = Clubs.collection.findOne(made._id);
       assert.equal(
-        after.createdAt.getTime(), made.createdAt.getTime(),
+        after.createdAt.getTime(),
+        made.createdAt.getTime(),
         'when it was made does not change when it is edited',
       );
       assert.isAtLeast(after.updatedAt.getTime(), made.updatedAt.getTime());
