@@ -2035,12 +2035,12 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin: 0;
 }
 
+/* No frame. The old hero was a square illustration WITH its own background, so
+   a bordered, pink-filled panel suited it; this one is a cut-out, and a
+   cut-out in a box reads as a mistake. It sits on the paper. */
 .mb-hero-art {
-  border-radius: var(--mb-radius-feature);
-  overflow: hidden;
-  border: 1px solid var(--mb-line-soft);
-  box-shadow: var(--mb-shadow-feature);
-  background: var(--mb-pink);
+  display: flex;
+  align-items: center;
 }
 
 .mb-hero-art svg,
@@ -4768,6 +4768,20 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-top: 0.7rem;
 }
 
+/* Scene art in an empty state. `.mb-empty-glyph` is a 2rem symbol; these are
+   drawings and need room to read. */
+.mb-empty-art {
+  display: block;
+  width: auto;
+  max-width: min(240px, 62%);
+  height: auto;
+  margin: 0 auto 0.9rem;
+}
+
+.mb-empty-art--tall {
+  max-width: min(150px, 42%);
+}
+
 .mb-empty-glyph {
   font-size: 2rem;
   line-height: 1;
@@ -4803,6 +4817,17 @@ which no longer has a caller.
 .auth-shell {
   width: min(100%, 31rem);
   margin-inline: auto;
+}
+
+/* A struck match over the sign-in and sign-up forms. Left, not centred: the
+   heading and copy beneath it are left-aligned, and a centred mark over
+   left-aligned type reads as two different layouts. Sized in px because the
+   auth column is a fixed 31rem and never needs to scale. */
+.auth-mark {
+  display: block;
+  width: auto;
+  height: 88px;
+  margin: 0 0 0.2rem -0.35rem;
 }
 
 .auth-form {

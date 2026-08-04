@@ -57,6 +57,9 @@ const SignUp = ({ location }) => {
   return (
     <Container id="signup-page" className="page-shell py-4">
       <div className="auth-shell">
+        {/* The one gesture the product is named for. Decorative — the
+            heading under it already says where you are. */}
+        <img className="auth-mark" src="/images/art-strike.webp" alt="" width="300" height="562" />
         <PageHead title="Join MatchBook" eyebrow={`Step ${currentStep} of ${STEPS.length} · ${STEPS[currentStep - 1]}`}>
           Three short steps, then we start matching you.
         </PageHead>

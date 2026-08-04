@@ -28,6 +28,9 @@ const SignIn = () => {
   return (
     <Container id="sign-in" className="page-shell py-4">
       <div className="auth-shell">
+        {/* The one gesture the product is named for. Decorative — the
+            heading under it already says where you are. */}
+        <img className="auth-mark" src="/images/art-strike.webp" alt="" width="300" height="562" />
         <PageHead title="Sign in">Pick up where you left off.</PageHead>
 
         <form className="mb-panel auth-form" onSubmit={handleSubmit}>

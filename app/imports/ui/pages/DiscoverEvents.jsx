@@ -368,7 +368,7 @@ const DiscoverEvents = () => {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                   >
-                    <span className="mb-empty-glyph" role="img" aria-label="telescope">🔭</span>
+                    <img className="mb-empty-art" src="/images/art-nothing-here.webp" alt="" width="520" height="285" />
                     <h2>{mode === 'clubs' ? 'No groups yet.' : `Nothing ${windowLabel}.`}</h2>
                     {/* Only the upcoming mode has a window to widen; saying so
                         in the other two pointed at a control not on screen. */}
@@ -400,7 +400,7 @@ const DiscoverEvents = () => {
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     transition={{ type: 'spring', stiffness: 220, damping: 18 }}
                   >
-                    <span className="mb-empty-glyph" role="img" aria-label="party popper">🎉</span>
+                    <img className="mb-empty-art" src="/images/art-deck-cleared.webp" alt="" width="420" height="420" />
                     <h2>{mode === 'clubs' ? "That's every group." : 'Deck cleared!'}</h2>
                     <p>
                       {mode === 'clubs'

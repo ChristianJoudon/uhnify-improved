@@ -16,8 +16,10 @@ const SignOut = () => {
       <div className="auth-shell">
         <PageHead title="Signed out">See you soon.</PageHead>
         <div className="mb-panel auth-done">
-          <span className="auth-done-glyph" role="img" aria-label="Waving hand">👋</span>
-          <p>Your clubs, your saves and everything you said yes to are still here.</p>
+          {/* A book with matches still in it — the copy underneath says the
+              same thing in words. */}
+          <img className="mb-empty-art mb-empty-art--tall" src="/images/art-signed-out.webp" alt="" width="340" height="510" />
+          <p>Your groups, your saves and everything you said yes to are still here.</p>
           <Link to="/signin" className="btn btn-solid-primary">Sign back in</Link>
         </div>
       </div>

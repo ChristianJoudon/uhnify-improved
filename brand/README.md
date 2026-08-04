@@ -65,3 +65,28 @@ they were found:
 `running-spare.png` is a ninth illustration with no topic of its own — a runner,
 an alternative to the mountain for Move & Explore. Swap the `icon:` path in
 topics.js to use it.
+
+## Scene art
+
+`scene-sources/*.png` — the matchbook scenes as delivered. Unlike the wordmark
+and the card motifs, these arrived with real transparency already (`srgba`,
+corner alpha 0), so nothing was keyed out of them. They are only resized and
+converted to WebP:
+
+    magick 05-overlapped-matchbooks.png -resize 1400x -quality 88 \
+      ../app/public/images/hero-matchbook.webp
+
+Where each one went:
+
+  05-overlapped-matchbooks   the landing hero
+  07-matchstick-rosette      "Deck cleared!" on the swipe deck
+  08-loose-match-pile        "Nothing here" on the swipe deck
+  01-open-matchbook-corner   the signed-out page
+  02-oversized-flaming-match sign in and sign up
+  04-gathering-matches       unplaced
+
+`04-gathering-matches.png` has no home yet — it is a texture rather than a
+subject, and there was no screen that needed one.
+
+`app/public/images/hero-perfect-match.webp` is the retired hero and is no
+longer referenced.

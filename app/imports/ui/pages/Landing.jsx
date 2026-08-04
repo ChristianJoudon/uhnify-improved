@@ -108,11 +108,10 @@ const Landing = () => {
 
             <motion.div className="mb-hero-art" variants={rise} initial="hidden" animate="show" custom={1}>
               <img
-                src="/images/hero-perfect-match.webp"
-                alt="A matchbox of people, labelled Perfect Match"
-                width="1254"
-                height="1254"
-                fetchpriority="high"
+                src="/images/hero-matchbook.webp"
+                alt="An open matchbook with a few matches beside it"
+                width="1400"
+                height="891"
               />
             </motion.div>
           </div>
