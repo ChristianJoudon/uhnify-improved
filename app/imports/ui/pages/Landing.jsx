@@ -8,6 +8,7 @@ import EventPoster from '../components/EventPoster';
 import { sortByDate } from '../utilities/helpers';
 import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
 import Segmented from '../components/form/Segmented';
+import { useTuck } from '../utilities/useTuck';
 
 const rise = {
   hidden: { opacity: 0, y: 18 },
@@ -15,6 +16,8 @@ const rise = {
 };
 
 const Landing = () => {
+  // The choices slide under "Find it" rather than over it — see .mb-tuck.
+  const whenTuck = useTuck();
   const navigate = useNavigate();
   const [interest, setInterest] = useState('');
   const [when, setWhen] = useState('week');
@@ -96,20 +99,27 @@ const Landing = () => {
                 </div>
                 <div className="mb-finder-field is-choice">
                   {/* The first control a stranger meets. It was the one thing on
-                      the homepage the browser drew rather than the app. */}
-                  <Segmented
-                    name="mb-when"
-                    label="When"
-                    size="sm"
-                    value={when}
-                    options={[
-                      { value: 'today', label: 'Tonight' },
-                      { value: 'week', label: 'This week' },
-                      { value: 'weekend', label: 'Weekend' },
-                      { value: 'anytime', label: 'Anytime' },
-                    ]}
-                    onChange={setWhen}
-                  />
+                      the homepage the browser drew rather than the app.
+
+                      The scroller around it is what keeps the choices off the
+                      submit button: too narrow to hold all four, they tuck
+                      beneath it and scroll back out, instead of overlapping it
+                      for as long as a resize is in flight. */}
+                  <div ref={whenTuck.ref} className={whenTuck.className}>
+                    <Segmented
+                      name="mb-when"
+                      label="When"
+                      size="sm"
+                      value={when}
+                      options={[
+                        { value: 'today', label: 'Tonight' },
+                        { value: 'week', label: 'This week' },
+                        { value: 'weekend', label: 'Weekend' },
+                        { value: 'anytime', label: 'Anytime' },
+                      ]}
+                      onChange={setWhen}
+                    />
+                  </div>
                 </div>
                 <button type="submit" className="btn btn-match">Find it</button>
               </form>

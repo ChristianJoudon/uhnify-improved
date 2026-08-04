@@ -12,7 +12,6 @@ import {
   LightningChargeFill,
   People,
   PlusCircle,
-  Stars,
   XLg,
 } from 'react-bootstrap-icons';
 import { Events } from '../../api/events/Events';
@@ -22,6 +21,7 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SwipeCard from '../components/SwipeCard';
 import { sortByDate } from '../utilities/helpers';
+import { useTuck } from '../utilities/useTuck';
 
 // The row scrolls, so the timeline can run further ahead than a wrapping row
 // could afford.
@@ -41,6 +41,7 @@ const STACK_SIZE = 4;
 
 /** Tinder-style Discover deck: swipe right to save an event, left to pass, double-tap to flip. */
 const DiscoverEvents = () => {
+  const deckTuck = useTuck();
   const [mode, setMode] = useState('upcoming');
   const [windowKey, setWindowKey] = useState('all');
   // Cards mid-flight. Each entry snapshots the event doc so the ghost keeps rendering
@@ -293,11 +294,11 @@ const DiscoverEvents = () => {
     <MotionConfig reducedMotion="user">
       <Container id="discover-events-page" className="page-shell py-3">
         <div className="discover-layout">
-          <div className="discover-title">
-            <h1><Stars /> Match</h1>
-          </div>
+          {/* No page title. The nav already says Match, the deck says what it
+              is by being a deck, and on a laptop the heading was costing the
+              card the vertical room that makes it feel like a card. */}
           <div className="deck-toolbar">
-            <div className="deck-toolbar-row">
+            <div ref={deckTuck.ref} className={`deck-toolbar-row ${deckTuck.className}`}>
               {/* role="group", not tablist: there are no tabpanels, and a tablist
                   without tabs makes a screen reader announce positions that do
                   not exist. The chips report their own state instead. */}

@@ -1158,18 +1158,70 @@ div.btn-solid-primary button[type="submit"]:hover {
   border-radius: 6px;
 }
 
+/* The "+3 more" sheet.
+   It has to read as a card lifted off the month, and it was not: FullCalendar
+   gives the popover a background but leaves the BODY transparent, so the grid
+   showed straight through the list — the day behind it and its own pills were
+   legible between the rows. Its stock z-index also sits below the day cells
+   this app raises for their own hover state, which is why it looked interleaved
+   with the calendar rather than on top of it. */
 .fc .fc-popover {
-  border: 1px solid var(--mb-line-strong);
+  border: 1px solid var(--mb-line-soft);
   border-radius: var(--mb-radius-card);
   box-shadow: var(--mb-shadow-feature);
   background: var(--mb-paper-bright);
+  /* Above everything the calendar draws, including raised day frames. */
+  z-index: 30;
+  width: min(320px, calc(100vw - 2rem));
+  overflow: hidden;
 }
 
 .fc .fc-popover-header {
-  background: var(--mb-paper);
-  font-family: "Bricolage Grotesque", sans-serif;
-  font-weight: 650;
+  background: var(--mb-paper-bright);
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
   color: var(--mb-ink);
+  padding: 0.85rem 1rem 0.6rem;
+  border-bottom: 1px solid var(--mb-line-soft);
+}
+
+/* The opaque field the stock stylesheet never sets. Without it the month grid
+   reads through the list. */
+.fc .fc-popover-body {
+  background: var(--mb-paper-bright);
+  padding: 0.5rem;
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+}
+
+/* Inside the sheet a pill is a row, not a chip: there is width here, so the
+   time and the whole title fit on one line and nothing is truncated. */
+.fc .fc-popover-body .fc-daygrid-event {
+  display: block;
+  padding: 0.5rem 0.6rem !important;
+  margin: 0 0 0.25rem !important;
+  border-radius: var(--mb-radius-tight);
+  font-size: 0.9rem;
+  white-space: normal;
+}
+
+.fc .fc-popover-body .fc-event-title {
+  white-space: normal;
+  font-weight: 600;
+}
+
+.fc .fc-popover-close {
+  opacity: 0.55;
+  font-size: 1.15rem;
+  padding: 0.15rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.fc .fc-popover-close:hover {
+  opacity: 1;
+  background: var(--mb-paper-edge);
 }
 
 @media (max-width: 575.98px) {
@@ -1331,7 +1383,9 @@ div.btn-solid-primary button[type="submit"]:hover {
 .deck-toolbar-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  /* No wrap: it tucks now. Wrapping moved the deck down the page mid-resize,
+     which is a bigger jump than a row that scrolls. */
+  flex-wrap: nowrap;
   gap: 0.5rem 0.6rem;
 }
 
@@ -2210,7 +2264,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   /* The choice column takes what it needs and the text field takes the rest.
      At `1fr` the segmented control overran its cell and sat on top of the
      submit button — a fraction cannot know how wide four words are. */
-  grid-template-columns: minmax(0, 1.7fr) auto auto;
+  /* The text field keeps a floor so it cannot be crushed out of existence —
+     `minmax(0, …)` on it let the auto columns take everything and collapsed it
+     to zero. The choice column is the one allowed below its content width, so
+     it is the one that tucks. */
+  grid-template-columns: minmax(9rem, 1.7fr) minmax(0, max-content) auto;
   gap: 0.35rem;
   background: var(--mb-paper-bright);
   border: 2px solid var(--mb-ink);
@@ -6353,8 +6411,11 @@ body .swal-icon--success__hide-corners {
    five controls that could take it.
    ========================================================================= */
 
+/* `select` only. Written as a bare `.mb-field` this reached every input
+   carrying that class — the sign-in email and password fields among them — and
+   drew a dropdown chevron on a text box. */
 .create-form select,
-.mb-field,
+select.mb-field,
 .rail-line select {
   appearance: none;
   -webkit-appearance: none;
@@ -6397,6 +6458,14 @@ body .swal-icon--success__hide-corners {
 
 /* The hero's choice field: caption above the track, like every other field in
    the bar, rather than the label-beside-track the control uses inline. */
+.mb-finder-field.is-choice {
+  /* `auto` alone sizes a grid track to max-content, so the choices could not be
+     squeezed and simply ran over the submit button instead. Both the track
+     (above) and the cell have to be allowed below their content width before
+     the scroller inside them ever gets a chance to scroll. */
+  min-width: 0;
+}
+
 .mb-finder-field.is-choice .mb-segmented-field {
   display: flex;
   flex-direction: column;
@@ -6423,4 +6492,81 @@ body .swal-icon--success__hide-corners {
     width: 100%;
     padding-inline: 0.4rem;
   }
+}
+
+/* ============================================================================
+   TUCK — a control row that slides under its trailing action
+   ----------------------------------------------------------------------------
+   Three rows in this app end with a button and hold a variable number of
+   choices before it: the homepage hero, Nearby's matching-for bar, and the
+   deck toolbar. When the choices outgrew the room they overflowed ON TOP of the
+   button, so during a window resize the words sat over "Find it" for as long as
+   the layout was between states.
+
+   Wrapping was the other option and it is worse: the row jumps to two lines and
+   the page below it hops. Tucking keeps one line always — the choices pass
+   beneath the button and can be scrolled back out.
+
+   The fade is not decoration. A scroller with a hidden scrollbar that gives no
+   sign there is more to see is exactly how a dropdown hides its options, which
+   is the thing the segmented control exists to stop doing. The soft right edge
+   is what says "keep going this way".
+   ========================================================================= */
+
+.mb-tuck {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Padding and a matching negative margin: the focus ring stands 4px proud of
+     a control, and an overflow container shaves anything outside its box. This
+     buys the ring its room back without moving the row. */
+  padding: 5px;
+  margin: -5px;
+  scroll-padding-inline: 0.75rem;
+  /* Momentum on touch, and a snap so a half-cut chip is not where it settles. */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.mb-tuck::-webkit-scrollbar {
+  display: none;
+}
+
+/* Applied only while there IS something hidden — see the `is-tucked` class the
+   pages set — so a row that fits has no fade at all. */
+.mb-tuck.is-tucked {
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.75rem), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.75rem), transparent 100%);
+}
+
+.mb-tuck > * {
+  flex: 0 0 auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-tuck {
+    scroll-behavior: auto;
+  }
+}
+
+/* A primary button that is also a nav link. react-bootstrap's `.nav-link` sets
+   its own colour, and `.active` sets another — both land on the CTA in the
+   public header, which painted the match orange label onto the match orange
+   fill and left the button reading as an empty pill. The button is the
+   stronger idea of the two: if it looks like a button it keeps a button's
+   label colour. */
+.btn-match.nav-link,
+.btn-match.nav-link.active,
+.btn-match.nav-link:hover,
+.btn-match.nav-link:focus {
+  /* !important because the colour is not coming from a selector this can
+     outrank — Bootstrap 5 resolves `.nav-link` through `--bs-nav-link-color`,
+     and the app sets that variable to the match orange for the plain nav links.
+     A custom property cannot be beaten on specificity, only overridden. */
+  color: var(--mb-match-label) !important;
 }

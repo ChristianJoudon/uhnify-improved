@@ -6,6 +6,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
+import DetailsModal from '../components/DetailsModal';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
@@ -22,6 +23,9 @@ const FILTERS = [
 /** One calendar for everything: one-off events and recurring group meetings, filterable. */
 const Agenda = () => {
   const [mode, setMode] = useState('all');
+  /** The pill the reader clicked, so the month page can answer "what is this"
+      without sending them to another page to find out. */
+  const [detail, setDetail] = useState(null);
 
   const { ready, events, clubs, memberships, links, swipes } = useTracker(() => {
     const eventsSub = Meteor.subscribe(Events.userPublicationName);
@@ -50,6 +54,7 @@ const Agenda = () => {
       .map(event => ({
         title: event.title,
         start: new Date(event.date),
+        extendedProps: { record: event, kind: 'event' },
         classNames: ['calendar-event-pill', savedIds.has(event._id) ? 'calendar-event-pill-saved' : ''].filter(Boolean),
       }));
 
@@ -58,6 +63,9 @@ const Agenda = () => {
       .flatMap(club => clubOccurrences(club, 26).map(start => ({
         title: club.name,
         start,
+        // A recurring meeting has no record of its own — every occurrence is
+        // the same group, so the sheet opens the group.
+        extendedProps: { record: club, kind: 'club' },
         classNames: ['calendar-event-pill', 'calendar-event-pill-club'],
       })));
 
@@ -112,6 +120,10 @@ const Agenda = () => {
           // Cap entries per cell so a busy week stays a readable page, not a wall.
           views={{ dayGridMonth: { dayMaxEvents: 3 } }}
           moreLinkText={count => `+${count} more`}
+          eventClick={info => {
+            info.jsEvent.preventDefault();
+            setDetail({ record: info.event.extendedProps.record, kind: info.event.extendedProps.kind });
+          }}
           fixedWeekCount={false}
           dayHeaderFormat={{ weekday: 'short' }}
           eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
@@ -122,6 +134,18 @@ const Agenda = () => {
           }}
         />
       </div>
+
+      {/* Read-only on purpose: everything on this page is already saved or
+          already joined, so there is no action left to offer — only the
+          question of what the pill actually is. `onAct` is omitted and the
+          sheet renders no button. */}
+      <DetailsModal
+        show={Boolean(detail)}
+        onHide={() => setDetail(null)}
+        record={detail?.record}
+        kind={detail?.kind || 'event'}
+        isIn
+      />
     </Container>
   );
 };

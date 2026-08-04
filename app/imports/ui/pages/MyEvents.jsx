@@ -67,12 +67,16 @@ const MyEvents = () => {
         title: event.title,
         start: new Date(event.date),
         description: event.description,
+        // Carried so a click opens this exact record rather than re-finding it
+        // by title, which picks the wrong one whenever a series repeats a name.
+        extendedProps: { record: event },
         classNames: ['calendar-event-pill'],
       })),
       ...savedEvents.filter(event => !clubIds.has(event._id)).map(event => ({
         title: event.title,
         start: new Date(event.date),
         description: event.description,
+        extendedProps: { record: event },
         classNames: ['calendar-event-pill', 'calendar-event-pill-saved'],
       })),
     ];
@@ -168,6 +172,10 @@ const MyEvents = () => {
             height="auto"
             views={{ dayGridMonth: { dayMaxEvents: 3 } }}
             moreLinkText={count => `+${count} more`}
+            eventClick={info => {
+              info.jsEvent.preventDefault();
+              setDetail(info.event.extendedProps.record);
+            }}
             fixedWeekCount={false}
             dayHeaderFormat={{ weekday: 'short' }}
             eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}

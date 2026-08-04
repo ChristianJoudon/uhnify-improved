@@ -138,6 +138,10 @@ const ListEvents = () => {
     title: event.title,
     start: new Date(event.date),
     description: event.description,
+    // The record travels with the pill so a click can open the sheet without
+    // looking it up again by title — which would pick the wrong one whenever a
+    // series repeats a name, and this register is mostly weekly series.
+    extendedProps: { record: event },
     // The pill takes its topic's colour, so a month page and the wall beneath
     // it are the same eight colours saying the same eight things.
     classNames: ['calendar-event-pill', `calendar-pill--${topicForEvent(event).key}`],
@@ -204,6 +208,11 @@ const ListEvents = () => {
           height="auto"
           views={{ dayGridMonth: { dayMaxEvents: 3 } }}
           moreLinkText={count => `+${count} more`}
+          eventClick={info => {
+            // Otherwise FullCalendar treats the pill as a link and navigates.
+            info.jsEvent.preventDefault();
+            setDetail({ record: info.event.extendedProps.record, kind: 'event' });
+          }}
           fixedWeekCount={false}
           dayHeaderFormat={{ weekday: 'short' }}
           eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}

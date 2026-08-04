@@ -26,6 +26,7 @@ import { scoreClub, sizeTier } from '../utilities/recommend';
 import { TOPIC_KEYS, topicFor, topicForEvent } from '../utilities/topics';
 import { KAUAI, milesLabel, milesTo, positionOf } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
+import { useTuck } from '../utilities/useTuck';
 
 const PAGE_STEP = 12;
 // Kauaʻi is roughly 33 miles across, so a 10-mile default from the island
@@ -73,6 +74,7 @@ const ClubFinder = () => {
   const [visibleCount, setVisibleCount] = useState(PAGE_STEP + 6);
   const sentinelRef = useRef(null);
   const { origin, status, locate, reset, isPrecise, isExact } = useOrigin();
+  const barTuck = useTuck();
 
   const { ready, clubs, events, joinedClubIds, goingIds, interests, friendClubIds } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
@@ -311,7 +313,10 @@ const ClubFinder = () => {
       <div className="finder-bar">
         <div className="finder-bar-block">
           <span className="finder-bar-title">You&apos;re matching for</span>
-          <div className="finder-bar-row">
+          {/* Tucks rather than wraps: the radius, the location button and the
+              interests are one line whatever the width, and what does not fit
+              slides under the edge to be scrolled back. */}
+          <div ref={barTuck.ref} className={`finder-bar-row ${barTuck.className}`}>
             {/* `place` used to be read here from `profile.location` — a field
                 the Profiles schema does not declare and nothing ever writes, so
                 it was permanently undefined and this always fell through to the
