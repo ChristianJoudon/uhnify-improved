@@ -1,8 +1,4 @@
 {
-  "monti": {
-    "appId": "changeme",
-    "appSecret": "changeme"
-  },
   "defaultAccounts": [
     {
       "email": "admin@foo.com",

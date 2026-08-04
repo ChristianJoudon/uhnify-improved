@@ -46,3 +46,4 @@ check
 reywood:publish-composite
 
 meteortesting:mocha            # backend test driver: `meteor test` runs server-side unit tests
+ddp-rate-limiter@1.1.1           # throttle methods and logins at the DDP layer
