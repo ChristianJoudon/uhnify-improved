@@ -8,6 +8,7 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
+import { AuditLog } from '../../api/audit/AuditLog';
 
 Meteor.publish(Clubs.userPublicationName, function () {
   return Clubs.collection.find({}, { sort: { name: 1 } });
@@ -150,4 +151,19 @@ Meteor.publish(EventClubs.userPublicationName, function () {
       { eventID: { $in: joinedClubNumbers } },
     ],
   }, { sort: { date: 1 } });
+});
+
+/**
+ * The trail, newest first, administrators only.
+ *
+ * Capped hard rather than paged: this is a log, its entries carry actor emails,
+ * and shipping an unbounded personal-activity history to a browser is the leak
+ * the redaction in auditTrail.js is there to prevent — it would be undone by
+ * publishing all of it anyway.
+ */
+Meteor.publish(AuditLog.adminPublicationName, function () {
+  if (this.userId && Roles.userIsInRole(this.userId, 'admin')) {
+    return AuditLog.collection.find({}, { sort: { at: -1 }, limit: 200 });
+  }
+  return this.ready();
 });
