@@ -80,7 +80,7 @@ const TopicPosters = ({ selected, onSelect, counts, compact }) => (
             </span>
             {count !== undefined && (
               <span className="topic-poster-count">
-                {count === 0 ? 'Nothing right now' : `${count} on`}
+                {count === 0 ? 'Nothing on' : `${count} on`}
               </span>
             )}
           </button>

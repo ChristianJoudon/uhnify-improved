@@ -5720,7 +5720,25 @@ which no longer has a caller.
    and the map is the way in to the cards, not the destination. */
 .mb-map {
   position: relative;
-  height: clamp(340px, 33vw, 520px);
+  /* The island's own projected aspect, corner to corner. The frame is cut to
+     Kauaʻi rather than Kauaʻi being letterboxed into the frame: fitting the
+     island's bounds then fills the width AND the height, so the coast runs
+     nearly to both edges with only the padding as buffer — and the
+     neighbouring island 17 miles west falls outside by geometry rather than by
+     being panned away from. */
+  width: 100%;
+  aspect-ratio: 1.3 / 1;
+  /* Low enough that the island's own ratio governs at phone widths too. At 420
+     the floor won instead, and the extra 160px was pure sea: the island is
+     width-constrained on a narrow screen, so a taller frame grew the water and
+     not Kauaʻi. */
+  min-height: 300px;
+  /* Width first. Without the explicit width the aspect ratio resolved by
+     SHRINKING the frame to fit this cap, which left the map narrower than its
+     own column with a dead strip beside it. Pinned to the column, the cap now
+     only ever costs height — and a window too short for the full ratio gets a
+     little more sea at the sides rather than a hole in the layout. */
+  max-height: 86vh;
   margin-bottom: 1.1rem;
   border: 1px solid var(--mb-line-soft);
   border-radius: var(--mb-radius-card);
@@ -5767,6 +5785,79 @@ which no longer has a caller.
 }
 
 /* Leaflet's zoom control ships as white boxes with a blue focus ring. */
+/* Pins. They sit on a flat two-tone island, so they carry their own shadow to
+   lift off it, and grow slightly under the pointer to say they are live. */
+.mb-pin svg {
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(15, 26, 45, 0.35));
+  transition: transform var(--mb-fast) var(--mb-ease);
+}
+
+.mb-pin:hover svg,
+.mb-pin:focus-visible svg {
+  transform: scale(1.12);
+}
+
+.mb-pin.is-chosen svg {
+  transform: scale(1.16);
+  filter: drop-shadow(0 3px 6px rgba(15, 26, 45, 0.5));
+}
+
+.mb-map .leaflet-marker-icon:focus-visible {
+  outline: 2px solid var(--mb-paper-bright);
+  outline-offset: 2px;
+  border-radius: 999px;
+}
+
+/* The place chosen off the map, said in words directly under it, with the way
+   back out attached. */
+.map-receipt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: -0.3rem 0 1rem;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid var(--mb-line-soft);
+  border-radius: 999px;
+  background: var(--mb-paper-bright);
+  font-size: 0.88rem;
+  color: var(--mb-ink);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.map-receipt > svg {
+  color: var(--mb-match);
+  flex: 0 0 auto;
+}
+
+.map-receipt strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.map-receipt button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.15rem;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 650;
+  color: var(--mb-match-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.map-receipt button:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 .mb-map .leaflet-control-zoom a {
   background: var(--mb-paper-bright);
   color: var(--mb-ink);
@@ -5800,9 +5891,15 @@ which no longer has a caller.
 }
 
 .mb-map .leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.82);
-  font-size: 0.66rem;
-  color: var(--mb-ink-soft);
+  background: rgba(252, 252, 251, 0.72);
+  border-radius: 6px 0 0 0;
+  padding: 1px 6px;
+  font-size: 0.6rem;
+  color: var(--mb-ink-faint);
+}
+
+.mb-map .leaflet-control-attribution a {
+  color: var(--mb-ink-faint);
 }
 
 .mb-map .leaflet-popup-content-wrapper {

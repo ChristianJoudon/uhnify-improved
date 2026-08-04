@@ -40,6 +40,18 @@ const TOWNS = {
 /** The island's rough centre — where "near me" starts before anyone says otherwise. */
 export const KAUAI = { lat: 22.0964, lng: -159.5261, label: 'Kauaʻi' };
 
+/**
+ * The island's own extent, corner to corner: Kīlauea Point in the north down to
+ * Makahuena in the south, Polihale in the west out to the Anahola coast.
+ *
+ * The map frames THIS rather than framing the pins. Fitting the pins looked
+ * right until a filter emptied the west side, at which point the frame snapped
+ * in and cropped the south coast — the island changing shape as a side effect
+ * of choosing a category. Kauaʻi is one small island; there is no reading of
+ * this map that benefits from ever seeing less than all of it.
+ */
+export const KAUAI_BOUNDS = { south: 21.855, west: -159.805, north: 22.245, east: -159.275 };
+
 // Strip the ʻokina and diacritics so "Līhuʻe" and "Lihue" are the same town.
 const plain = text => String(text || '')
   .normalize('NFD')

@@ -22,8 +22,8 @@ import EventPoster from '../components/EventPoster';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
-import { topicFor, topicForEvent } from '../utilities/topics';
-import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
+import { TOPIC_KEYS, topicFor, topicForEvent } from '../utilities/topics';
+import { KAUAI, milesLabel, milesTo, positionOf } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 
 const PAGE_STEP = 12;
@@ -44,6 +44,28 @@ const ClubFinder = () => {
   // One sheet, whichever kind was clicked: the reader is asking the same
   // question of an event as of a group.
   const [detail, setDetail] = useState(null);
+  // A place picked off the map. It narrows the wall the same way a category
+  // does — which is what the map is for. It used to open a popup that listed
+  // every record at the venue by title, so a weekly market printed its own name
+  // six times over a "+23 more".
+  const [spot, setSpot] = useState(null);
+  /**
+   * Is this record at the pin the reader tapped?
+   *
+   * One predicate, read by the covers' counts, the count line, and the wall.
+   * There were three copies of this test, on two different record shapes, and
+   * they disagreed: the receipt said seven and the wall said nothing.
+   *
+   * The tolerance is a hair wider than exact, because a pin standing for a
+   * cluster sits at its members' average rather than on any one of them.
+   */
+  const atSpot = record => {
+    if (!spot) {
+      return true;
+    }
+    const at = positionOf(record);
+    return Boolean(at) && Math.abs(at.lat - spot.lat) < 0.02 && Math.abs(at.lng - spot.lng) < 0.02;
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('foryou');
   const [radius, setRadius] = useState(25);
@@ -136,17 +158,26 @@ const ClubFinder = () => {
   // other seven covers drop their count line the moment one was pressed; and
   // tallying every club on the island, before radius and search, made the group
   // covers promise more than the wall could ever show.
+  // Seeded with a zero for every topic, so a cover with nothing behind it says
+  // "nothing on" rather than going quiet — an absent count band and a count
+  // band still loading look identical.
+  const emptyTally = () => TOPIC_KEYS.reduce((tally, key) => ({ ...tally, [key]: 0 }), {});
+
   const eventTopicCounts = useMemo(() => {
-    const tally = {};
-    eventsInScope.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
+    const tally = emptyTally();
+    eventsInScope.filter(item => atSpot(item.event)).forEach(({ topic }) => {
+      tally[topic.key] = (tally[topic.key] || 0) + 1;
+    });
     return tally;
-  }, [eventsInScope]);
+  }, [eventsInScope, spot]);
 
   const clubTopicCounts = useMemo(() => {
-    const tally = {};
-    inScope.forEach(({ topic }) => { tally[topic.key] = (tally[topic.key] || 0) + 1; });
+    const tally = emptyTally();
+    inScope.filter(item => atSpot(item.club)).forEach(({ topic }) => {
+      tally[topic.key] = (tally[topic.key] || 0) + 1;
+    });
     return tally;
-  }, [inScope]);
+  }, [inScope, spot]);
 
   const filtered = useMemo(() => {
     // The covers do the categorising now: one control instead of a rail that
@@ -173,11 +204,21 @@ const ClubFinder = () => {
 
   // Paging follows whichever kind is on screen. Reading the club count while
   // events were showing stopped the events wall dead at the number of groups.
-  const total = kind === 'events' ? nearbyEvents.length : filtered.length;
+  const total = kind === 'events'
+    ? nearbyEvents.filter(item => atSpot(item.event)).length
+    : filtered.filter(item => atSpot(item.club)).length;
 
   useEffect(() => {
     setVisibleCount(PAGE_STEP + 6);
   }, [searchTerm, sortMode, radius, kind, topicKey]);
+
+  // The chosen place survives a change of category — the two compose, so a pin
+  // and a cover together answer "what art is on at Kukui Grove". It does NOT
+  // survive a change of radius, kind or search: those redraw the map itself,
+  // and a pin that is no longer on it cannot go on filtering the wall beneath.
+  useEffect(() => {
+    setSpot(null);
+  }, [searchTerm, radius, kind]);
 
   // Re-observe after each growth so loading continues even when the sentinel
   // stays inside the preload margin.
@@ -237,12 +278,24 @@ const ClubFinder = () => {
   // One list feeds the wall, whichever kind is showing: the empty state and the
   // grid then read the same thing and cannot disagree about whether there is
   // anything here.
+  // The place narrows the list BEFORE paging it. Filtering after the slice
+  // asked "are any of the first eighteen at this pin", which for a pin on the
+  // far side of the island is usually no — the receipt said seven and the wall
+  // said nothing.
   const showing = kind === 'events'
-    ? nearbyEvents.slice(0, visibleCount)
+    ? nearbyEvents
       .map(({ event, distance }) => ({ key: event._id, kind: 'event', record: event, distance }))
-    : filtered.slice(0, visibleCount)
-      .map(({ club, tier, distance }) => ({ key: club._id, kind: 'club', record: club, tier, distance }));
+      .filter(item => atSpot(item.record))
+      .slice(0, visibleCount)
+    : filtered
+      .map(({ club, tier, distance }) => ({ key: club._id, kind: 'club', record: club, tier, distance }))
+      .filter(item => atSpot(item.record))
+      .slice(0, visibleCount);
   const hasFilters = Boolean(searchTerm) || Boolean(topicKey);
+  const noun = count => {
+    const word = kind === 'clubs' ? 'group' : 'event';
+    return count === 1 ? word : `${word}s`;
+  };
 
   return (
     <Container id="browse-clubs-page" className="page-shell py-4" fluid="xl">
@@ -317,7 +370,13 @@ const ClubFinder = () => {
       <div className="finder-body">
         {/* Geography first on this page: the map is the frame, and it always
             shows exactly the set listed underneath it. */}
-        <NearbyMap records={mapRecords} origin={origin} />
+        <NearbyMap
+          records={mapRecords}
+          origin={origin}
+          chosen={spot}
+          onSelect={next => setSpot(current => (
+            current && current.lat === next.lat && current.lng === next.lng ? null : next))}
+        />
 
         <KindToggle
           value={kind}
@@ -336,9 +395,7 @@ const ClubFinder = () => {
 
         <div className="finder-toolbar">
           <div className="finder-count">
-            {kind === 'clubs'
-              ? `${filtered.length} ${filtered.length === 1 ? 'group' : 'groups'} within ${radius} miles`
-              : `${nearbyEvents.length} ${nearbyEvents.length === 1 ? 'event' : 'events'} within ${radius} miles`}
+            {`${total} ${noun(total)} ${spot ? 'here' : `within ${radius} miles`}`}
           </div>
           {/* Groups only: `sortMode` never reaches the events list, which is
               always nearest-first. Left on the events tab, picking a sort reset
@@ -355,6 +412,20 @@ const ClubFinder = () => {
             </label>
           )}
         </div>
+
+        {spot && (
+          <div className="map-receipt" role="status">
+            <GeoAlt size={14} aria-hidden="true" />
+            {/* The place, not its count. The pin's own tally counts everything
+                standing there, which stops being the number on the wall the
+                moment a category is added on top — and the count line directly
+                above this was already saying so. */}
+            <span>At <strong>{spot.label || 'this place'}</strong></span>
+            <button type="button" onClick={() => setSpot(null)}>
+              Show everything <X size={13} aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {hasFilters && (
           <div className="idx-receipt" aria-label="Active filters" aria-live="polite">
@@ -376,14 +447,23 @@ const ClubFinder = () => {
             <GeoAlt className="mb-empty-glyph" aria-hidden="true" />
             {/* Name the filter that actually excluded everything, and let the
                 reset clear the radius too — otherwise it cannot recover. */}
-            <h3>{hasFilters ? 'Nothing matches those filters.' : `Nothing within ${radius} miles.`}</h3>
+            <h3>
+              {spot && 'Nothing here right now.'}
+              {!spot && (hasFilters ? 'Nothing matches those filters.' : `Nothing within ${radius} miles.`)}
+            </h3>
             <p>
-              {hasFilters
+              {spot && 'Nothing at this pin matches the rest of your filters.'}
+              {!spot && (hasFilters
                 ? 'Try a shorter word, or drop the category and see the lot.'
-                : `Kauaʻi is about thirty miles across, so a wider radius usually finds ${kind === 'clubs' ? 'more groups' : 'more events'}.`}
+                : `Kauaʻi is about thirty miles across, so a wider radius usually finds ${kind === 'clubs' ? 'more groups' : 'more events'}.`)}
             </p>
-            <button type="button" onClick={resetAll} className="btn btn-solid-primary">
-              {hasFilters ? 'Clear filters' : 'Widen the search'}
+            <button
+              type="button"
+              onClick={() => { setSpot(null); if (!spot) { resetAll(); } }}
+              className="btn btn-solid-primary"
+            >
+              {spot && 'Show everything'}
+              {!spot && (hasFilters ? 'Clear filters' : 'Widen the search')}
             </button>
           </div>
         ) : (
