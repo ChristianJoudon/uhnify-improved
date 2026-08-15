@@ -34,6 +34,15 @@ if (Meteor.isServer) {
         assert.equal(mine.firstName, 'A');
       });
 
+      it('does not store support participation as a public profile interest', function () {
+        Profiles.collection.remove({ userId: attacker });
+        callAs(attacker, 'createUserProfile', attacker, 'attacker@test.example', 'A', 'B', [
+          'Support Groups',
+          'Music & Performance',
+        ]);
+        assert.deepEqual(Profiles.collection.findOne({ userId: attacker }).interests, ['Music & Performance']);
+      });
+
       it('refuses a signed-out caller', function () {
         assert.equal(
           errorFrom(() => callAs(null, 'createUserProfile', null, 'attacker@test.example', 'A', 'B', [])),
@@ -76,6 +85,14 @@ if (Meteor.isServer) {
         });
         assert.equal(Profiles.collection.findOne({ userId: attacker }).firstName, 'Changed');
         assert.notEqual(Profiles.collection.findOne({ userId: victim }).firstName, 'Changed');
+      });
+
+      it('removes a supplied support-group interest before saving', function () {
+        callAs(attacker, 'Profiles.update', {
+          firstName: 'Private', lastName: 'Interest', email: 'attacker@test.example',
+          bio: '', title: '', interests: ['Support Groups', 'Books & Ideas'],
+        });
+        assert.deepEqual(Profiles.collection.findOne({ userId: attacker }).interests, ['Books & Ideas']);
       });
 
       it('refuses a signed-out caller', function () {

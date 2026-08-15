@@ -97,3 +97,31 @@ jobs:
 #      - name: End-to-end
 #        shell: bash -l {0}
 #        run: meteor npm run testcafe-ci
+
+  community-ingestion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: ./services/community-ingestion
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+          cache-dependency-path: services/community-ingestion/package-lock.json
+
+      - run: npm ci
+
+      - name: Validate the governed source registry
+        run: npm run validate-registry
+
+      - name: Typecheck ingestion contracts
+        run: npm run typecheck
+
+      - name: Replay and safety tests
+        run: npm test

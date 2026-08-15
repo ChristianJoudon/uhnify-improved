@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "support-snapshot.v1",
+  "sourceId": "SEN-005",
+  "sourceUrl": "https://www.alz.org/hawaii/support",
+  "verifiedAt": "2026-08-08T12:00:00-10:00",
+  "completeness": "COMPLETE",
+  "reviewFlags": [
+    "MANUAL_SOURCE_CAPTURE",
+    "SOURCE_PERMISSION_EVIDENCE_REQUIRED",
+    "REGISTRATION_REQUIRED",
+    "CONFIRM_BEFORE_ATTENDING",
+    "ONLINE_ACCESS_WITHHELD"
+  ],
+  "listings": [
+    {
+      "sourceItemKey": "alz-central-evening-third-thu-1715",
+      "groupKey": "alz-central-evening",
+      "name": "Central Evening",
+      "supportSubtype": "dementia_caregiver",
+      "recurrenceLabel": "Third Thursday of the month, 5:15 pm–6:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Regency at Puakea, Activity Room, 2130 Kaneka Street, Lihue",
+      "formatLabels": ["in-person"]
+    },
+    {
+      "sourceItemKey": "alz-kauai-maui-third-wed-1200",
+      "groupKey": "alz-kauai-maui-county",
+      "name": "Kauai and Maui County",
+      "supportSubtype": "dementia_caregiver",
+      "recurrenceLabel": "Third Wednesday of the month, 12:00 pm–1:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Online",
+      "formatLabels": ["virtual"]
+    },
+    {
+      "sourceItemKey": "alz-eastside-afternoon-second-mon-1200",
+      "groupKey": "alz-eastside-afternoon",
+      "name": "Eastside Afternoon",
+      "supportSubtype": "dementia_caregiver",
+      "recurrenceLabel": "Second Monday of the month, 12:00 pm–1:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Samuel Mahelona Memorial Hospital Auditorium, 4800 Kawaihau Road, Kapaʻa",
+      "formatLabels": ["in-person"]
+    }
+  ]
+}

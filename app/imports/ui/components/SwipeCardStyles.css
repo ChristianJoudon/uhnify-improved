@@ -1,0 +1,161 @@
+/* Match deck styles live with the component. The broad swipe selectors in
+   client/style.css remain the shared baseline for sizing and theme tokens. */
+
+.match-swipe-card .swipe-card-back {
+  gap: 0;
+  padding: 0.65rem;
+}
+
+/* Horizontal decisions remain draggable while a touch user can still pan the
+   page vertically or pinch-zoom over the card. */
+.match-swipe-card {
+  touch-action: pan-y pinch-zoom;
+}
+
+.match-swipe-card-back-topic {
+  position: relative;
+  flex: 0 0 42%;
+  min-height: 8.5rem;
+  overflow: hidden;
+  border-radius: calc(var(--mb-radius-feature) - 8px);
+}
+
+.match-swipe-card-back-motif {
+  position: absolute;
+  right: 7%;
+  bottom: -8%;
+  width: min(54%, 190px);
+  max-height: 94%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(48, 50, 52, 0.2));
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.match-swipe-card-back-topic-label {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.85rem;
+  z-index: 1;
+  max-width: 58%;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 254, 249, 0.9);
+  color: var(--mb-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.match-swipe-card .swipe-info-back {
+  top: auto;
+  right: 0.85rem;
+  bottom: 0.85rem;
+}
+
+.match-swipe-card-back-content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1rem 0.75rem 0.35rem;
+}
+
+.match-swipe-card-back-content h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.12;
+}
+
+.match-swipe-card-back-content .swipe-card-facts {
+  flex: 0 0 auto;
+  margin: 0.8rem 0 0;
+}
+
+.match-swipe-card-back-content .swipe-card-description {
+  margin-top: 0.75rem;
+}
+
+.match-swipe-actions {
+  gap: clamp(0.85rem, 4vw, 1.25rem);
+}
+
+.match-swipe-actions .swipe-btn-flip {
+  flex: 0 0 auto;
+}
+
+.match-swipe-utilities {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: min(100%, var(--deck-w));
+  min-height: 2.2rem;
+  margin: 0.4rem auto 0;
+}
+
+.match-swipe-utilities .swipe-hint {
+  grid-column: 2;
+  margin: 0;
+}
+
+.match-swipe-undo {
+  grid-column: 1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.3rem 0.45rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mb-match-deep);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.match-swipe-undo:not(:disabled):hover {
+  background: var(--mb-wood);
+}
+
+.match-swipe-undo:focus-visible,
+.match-swipe-actions .swipe-btn:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+.match-swipe-undo:disabled {
+  opacity: 0.38;
+}
+
+@media (max-width: 575.98px) {
+  .match-swipe-card-back-topic {
+    flex-basis: 38%;
+    min-height: 7rem;
+  }
+
+  .match-swipe-card-back-content {
+    padding-top: 0.8rem;
+  }
+
+  .match-swipe-utilities {
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem;
+  }
+
+  .match-swipe-utilities .swipe-hint {
+    grid-column: 2;
+    text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .match-swipe-undo,
+  .match-swipe-actions .swipe-btn {
+    transition: none !important;
+  }
+}

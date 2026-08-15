@@ -73,6 +73,47 @@ if (Meteor.isServer) {
       assert.instanceOf(made.updatedAt, Date);
     });
 
+    it('inherits the host group category for a locally created support meeting', function () {
+      callAs(user, 'Clubs.insert', { ...club, categories: 'support_group' });
+      const host = Clubs.collection.findOne({ name: 'Stamped' });
+      callAs(user, 'Events.insert', {
+        eventID: host.clubID,
+        title: 'Peer meeting',
+        date: new Date(Date.now() + 86400000).toISOString(),
+        location: 'Līhuʻe',
+      });
+
+      const made = Events.collection.findOne({ title: 'Peer meeting' });
+      assert.deepEqual(made.categories, ['support_group']);
+      assert.equal(made.hostName, 'Stamped');
+    });
+
+    it('preserves imported event categories when an administrator changes its host', function () {
+      callAs(user, 'Clubs.insert', { ...club, categories: 'support_group' });
+      const host = Clubs.collection.findOne({ name: 'Stamped' });
+      const importedId = Events.collection.insert({
+        eventID: 0,
+        title: 'Imported event',
+        description: 'Source-owned categories.',
+        date: new Date(Date.now() + 86400000),
+        location: 'Kapaʻa',
+        createdBy: 'register',
+        importedFrom: 'Register',
+        categories: ['arts_culture'],
+      });
+
+      callAs(admin, 'Events.update', importedId, {
+        eventID: host.clubID,
+        title: 'Imported event',
+        description: 'Source-owned categories.',
+        date: new Date(Date.now() + 86400000).toISOString(),
+        location: 'Kapaʻa',
+        createdBy: 'register',
+      });
+
+      assert.deepEqual(Events.collection.findOne(importedId).categories, ['arts_culture']);
+    });
+
     /**
      * The seeded register predates these fields, which is why both are
      * optional. A required timestamp would have rejected every imported

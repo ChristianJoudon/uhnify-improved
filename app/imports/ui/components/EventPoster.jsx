@@ -77,7 +77,7 @@ const EventPoster = ({ event, distance, going, onGoing, onOpen, tier }) => {
 
       <div className="mb-poster-foot">
         <span className="mb-poster-meta">
-          {distance || topic.label}
+          {distance || topic.activityLabel || topic.label}
         </span>
         <button
           type="button"

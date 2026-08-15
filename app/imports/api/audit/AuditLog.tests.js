@@ -15,6 +15,10 @@ import { callAs, errorFrom, makeClub, makeUser, resetAll } from '../../startup/s
  */
 if (Meteor.isServer) {
   describe('audit trail', function () {
+    // Account creation includes password hashing and can cross Mocha's 2s
+    // default on a cold Meteor test database.
+    this.timeout(10000);
+
     let member;
 
     before(function () {

@@ -1,6 +1,7 @@
 import { Mongo } from 'meteor/mongo';
 import { Meteor } from 'meteor/meteor';
 import SimpleSchema from 'simpl-schema';
+import { FRIEND_ACTIVITY_VISIBILITY } from '../privacy/FriendActivityPrivacy';
 
 /** Stores the clubs each user has joined. */
 class ProfileClubsCollection {
@@ -10,6 +11,12 @@ class ProfileClubsCollection {
     this.schema = new SimpleSchema({
       userId: String,
       clubId: String,
+      friendActivityVisibility: {
+        type: String,
+        allowedValues: Object.values(FRIEND_ACTIVITY_VISIBILITY),
+        optional: true,
+        defaultValue: FRIEND_ACTIVITY_VISIBILITY.private,
+      },
       createdAt: { type: Date, optional: true },
     });
     this.collection.attachSchema(this.schema);

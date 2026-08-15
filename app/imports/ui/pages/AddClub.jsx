@@ -86,7 +86,9 @@ const AddClub = () => {
       contactInfo: form.contactInfo.trim(),
       // Only an explicitly chosen topic becomes the category; the fallback
       // label is a display word, not a subject.
-      categories: form.topicKey ? TOPICS[form.topicKey].label : '',
+      categories: form.topicKey
+        ? (TOPICS[form.topicKey].category || TOPICS[form.topicKey].label)
+        : '',
       tags: form.tags,
       schedule: form.schedule,
     }, error => {
@@ -121,7 +123,7 @@ const AddClub = () => {
             <div className="mb-poster-foot">
               <span className="mb-poster-meta">
                 {form.location || 'Where you meet'}
-                <em>{topic.label}</em>
+                <em>{topic.activityLabel || topic.label}</em>
               </span>
             </div>
           </div>

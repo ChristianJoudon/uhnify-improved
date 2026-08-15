@@ -6,6 +6,7 @@ import { Interests } from '../../api/interests/Interests';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
 import { parseMeetingTime } from '../../api/club/schedule';
+import { ensureRecommendationScaffold } from './RecommendationScaffold';
 
 /* eslint-disable no-console */
 
@@ -148,3 +149,4 @@ syncDefaultProfiles();
 seedProfileClubs();
 seedEventClubs();
 migrateClubSchedules();
+ensureRecommendationScaffold();

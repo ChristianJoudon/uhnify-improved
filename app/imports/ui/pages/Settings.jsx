@@ -8,7 +8,7 @@ import { Camera } from 'react-bootstrap-icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Profiles } from '../../api/profiles/Profiles';
 import { normalizeCategories, profileImagePath } from '../utilities/helpers';
-import { TOPICS, TOPIC_KEYS, topicFor } from '../utilities/topics';
+import { INTEREST_TOPIC_KEYS, TOPICS, topicFor } from '../utilities/topics';
 
 /** Stored and displayed at the same size — see `shrink`. */
 const AVATAR_PX = 320;
@@ -248,7 +248,7 @@ const Settings = () => {
                 by, so picking one here visibly changes what gets surfaced. */}
             <p className="form-note">Pick a few. They decide what the walls put in front of you first.</p>
             <div className="topic-picker">
-              {TOPIC_KEYS.map(key => {
+              {INTEREST_TOPIC_KEYS.map(key => {
                 const topic = TOPICS[key];
                 const on = form.interests.includes(topic.label);
                 return (

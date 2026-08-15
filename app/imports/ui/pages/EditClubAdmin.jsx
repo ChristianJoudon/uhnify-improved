@@ -193,7 +193,7 @@ const EditClubAdmin = () => {
               {form.image && <img className="mb-poster-mark" src={imagePath(form.image)} alt="" />}
               <span className="mb-poster-meta">
                 {form.location || 'Where you meet'}
-                <em>{topic.label}</em>
+                <em>{topic.activityLabel || topic.label}</em>
               </span>
             </div>
           </div>

@@ -1,4 +1,7 @@
 {
+  "public": {
+    "communityIngestionSandbox": true
+  },
   "defaultAccounts": [
     {
       "email": "admin@foo.com",

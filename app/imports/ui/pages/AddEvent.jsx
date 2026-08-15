@@ -9,8 +9,8 @@ import PosterArt from '../components/PosterArt';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
-import { formatEventDate, normalizeCategories } from '../utilities/helpers';
-import { topicFor } from '../utilities/topics';
+import { formatEventDate } from '../utilities/helpers';
+import { topicForEvent } from '../utilities/topics';
 
 const TITLE_MAX = 80;
 const ABOUT_MAX = 300;
@@ -44,12 +44,15 @@ const AddEvent = () => {
   const set = (field, value) => setForm(current => ({ ...current, [field]: value }));
 
   const host = useMemo(() => allClubs.find(club => club._id === form.hostId), [allClubs, form.hostId]);
-  // Title first, host categories as the fallback — the exact order EventPoster
-  // and SwipeCard use. Resolving it the other way here meant the preview
-  // captioned "This is the card people swipe" showed a different colour and
-  // motif than the card that actually got created.
+  // The server copies the selected host's categories onto the new event.
+  // Preview that resulting record through the same authoritative resolver the
+  // public card uses, so the color shown here is the color people will see.
   const topic = useMemo(
-    () => topicFor(form.title, form.description, normalizeCategories(host?.categories), host?.tags),
+    () => topicForEvent({
+      title: form.title,
+      description: form.description,
+      categories: host?.categories,
+    }),
     [host, form.title, form.description],
   );
 
@@ -133,7 +136,7 @@ const AddEvent = () => {
             <div className="mb-poster-foot">
               <span className="mb-poster-meta">
                 {form.location || 'Where it happens'}
-                <em>{host ? host.name : topic.label}</em>
+                <em>{host ? host.name : (topic.activityLabel || topic.label)}</em>
               </span>
             </div>
           </div>

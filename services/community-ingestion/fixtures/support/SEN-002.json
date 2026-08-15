@@ -1,0 +1,166 @@
+{
+  "schemaVersion": "support-snapshot.v1",
+  "sourceId": "SEN-002",
+  "sourceUrl": "https://na-hawaii.org/meeting-schedules/kauai-island/",
+  "verifiedAt": "2026-08-08T12:00:00-10:00",
+  "completeness": "COMPLETE",
+  "reviewFlags": [
+    "MANUAL_SOURCE_CAPTURE",
+    "SOURCE_SCHEDULE_CHANGES_FREQUENTLY",
+    "SOURCE_DATE_ANOMALY",
+    "CONFIRM_BEFORE_ATTENDING",
+    "ONLINE_ACCESS_WITHHELD"
+  ],
+  "listings": [
+    {
+      "sourceItemKey": "na-mon-hookupono-anahola-1900",
+      "groupKey": "na-hookupono-anahola",
+      "name": "Ho’o Kupono/Anahola",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday, 7:00 pm–8:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Old Hawaiian Church next to Anahola Preschool, 4109 Kealia Road, Anahola",
+      "formatLabels": ["Open", "Wheelchair", "No Smoking", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-sat-living-clean-1930",
+      "groupKey": "na-living-clean-journey-continues",
+      "name": "Living Clean: the Journey Continues",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday, 7:30 pm–8:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hanalei Neighborhood Center, 5-5358 Kuhio Highway, Hanalei",
+      "formatLabels": ["Open", "Wheelchair", "No Smoking", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-sun-seaside-1800",
+      "groupKey": "na-seaside",
+      "name": "Seaside",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday, 6:00 pm–7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaʻa Neighborhood Center, 4491 Kou Street, Kapaʻa",
+      "formatLabels": ["Open", "Wheelchair", "A Spiritual Principle a Day"]
+    },
+    {
+      "sourceItemKey": "na-sun-owau-no-au-1900",
+      "groupKey": "na-owau-no-au",
+      "name": "Owau No Au Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday, 7:00 pm–8:15 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "All Saints Church, 1065 Kuhio Highway, Kapaʻa",
+      "formatLabels": ["Open", "Discussion", "Wheelchair", "No Smoking", "Speaker", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-thu-road-to-recovery-1900",
+      "groupKey": "na-road-to-recovery",
+      "name": "Road To Recovery",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday, 7:00 pm–8:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "All Saints Church Grounds, 1067 Kuhio Highway, Kapaʻa",
+      "formatLabels": ["Open", "Discussion", "Wheelchair", "No Smoking", "Children Welcome", "Literature Available", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-thu-clean-tide-1830",
+      "groupKey": "na-clean-tide",
+      "name": "Clean Tide",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday, 6:30 pm–7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kealia Beach, Highway 56 north of Kapaʻa, Kealia",
+      "formatLabels": ["Open", "Just for Today", "Topic"]
+    },
+    {
+      "sourceItemKey": "na-sun-ramp-it-up-0830",
+      "groupKey": "na-ramp-it-up",
+      "name": "Ramp It Up",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday, 8:30 am–9:30 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Anini Beach Park, 3727 Anini Road, Kilauea",
+      "formatLabels": ["Open", "Just for Today", "Wheelchair"]
+    },
+    {
+      "sourceItemKey": "na-wed-kilauea-sunset-1830",
+      "groupKey": "na-kilauea-sunset",
+      "name": "Kilauea Sunset",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday, 6:30 pm–7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kilauea Neighborhood Center/Gym, 2460 Keneke Street, Kilauea",
+      "formatLabels": ["Open", "Just for Today", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-sun-na-wahine-virtual-1600",
+      "groupKey": "na-na-wahine-virtual",
+      "name": "Na Wahine Virtual Women’s Meeting",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday, 4:00 pm–5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Online",
+      "formatLabels": ["Open", "Discussion", "Topic", "Women", "Speaker", "Virtual Meeting"]
+    },
+    {
+      "sourceItemKey": "na-tue-clean-on-screen-1900",
+      "groupKey": "na-clean-on-screen",
+      "name": "Clean on the Screen",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday, 7:00 pm–8:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Online",
+      "formatLabels": ["Open", "Basic Text", "Discussion", "Virtual Meeting"]
+    },
+    {
+      "sourceItemKey": "na-thu-clean-on-screen-1900",
+      "groupKey": "na-clean-on-screen",
+      "name": "Clean on the Screen",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday, 7:00 pm–8:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Online",
+      "formatLabels": ["Open", "Living Clean", "Virtual Meeting"]
+    },
+    {
+      "sourceItemKey": "na-fri-we-came-to-believe-1900",
+      "groupKey": "na-we-came-to-believe",
+      "name": "We Came To Believe",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday, 7:00 pm–8:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lihue Neighborhood Center, 3353 Eono Street, Lihue",
+      "formatLabels": ["Open", "Candlelight", "Wheelchair", "No Smoking", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-sat-into-the-light-1200",
+      "groupKey": "na-into-the-light",
+      "name": "Into the Light",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday, 12:00 pm–1:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hale Lihue, 4286 Rice Street, Lihue",
+      "formatLabels": ["Open", "Guiding Principles", "Wheelchair"]
+    },
+    {
+      "sourceItemKey": "na-tue-lets-get-it-1830",
+      "groupKey": "na-lets-get-it",
+      "name": "Let’s Get It",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday, 6:30 pm–7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Middle pavilion, 2101 Hoone Road, Poipu",
+      "formatLabels": ["Open", "Just for Today", "Wheelchair", "Physical Meeting"]
+    },
+    {
+      "sourceItemKey": "na-tue-break-the-chains-1800",
+      "groupKey": "na-break-the-chains",
+      "name": "Break The Chains",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday, 6:00 pm–7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Leho Drive, Wailua",
+      "formatLabels": ["Open", "Just for Today", "Wheelchair"]
+    }
+  ]
+}

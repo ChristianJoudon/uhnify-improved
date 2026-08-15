@@ -6,7 +6,7 @@ import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import PosterArt from './PosterArt';
 import { formatEventDate } from '../utilities/helpers';
-import { topicFor } from '../utilities/topics';
+import { topicForEvent } from '../utilities/topics';
 
 /**
  * An event on the admin dashboard — the same poster as Discover and Landing,
@@ -15,10 +15,10 @@ import { topicFor } from '../utilities/topics';
  * EventPoster whole.
  */
 const EventCardAdmin = ({ event }) => {
-  // The event's own words only. EventPoster falls back to the host club's
-  // categories, but the host is not published to this page and fetching it
-  // would be a data change, not an appearance one.
-  const topic = topicFor(event.title, event.description);
+  // Reviewed topic ids and stored categories are the event's authoritative
+  // visual assignment everywhere else, so the organizer view must use the
+  // same resolver rather than recoloring it from title text alone.
+  const topic = topicForEvent(event);
   // The seeded stock art is not this app's design and reads as clutter beside
   // a drawn poster; only an uploaded image earns the face.
   const photo = event.image && event.image.startsWith('data:') ? event.image : '';

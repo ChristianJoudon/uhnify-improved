@@ -1,11 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Container } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
 import swal from 'sweetalert';
 import { CalendarX, Stars } from 'react-bootstrap-icons';
 import { Events } from '../../api/events/Events';
@@ -14,13 +12,14 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
-import EventPoster from '../components/EventPoster';
 import TopicPosters from '../components/TopicPosters';
 import KindToggle from '../components/KindToggle';
 import Club from '../components/Club';
 import DetailsModal from '../components/DetailsModal';
+import CountFirstCalendar from '../components/CountFirstCalendar.jsx';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor, topicForEvent } from '../utilities/topics';
+import { collapseEventListings, eventListingCount } from '../utilities/eventSeries';
 import Segmented from '../components/form/Segmented';
 
 const SORTS = [
@@ -46,35 +45,6 @@ const ListEvents = () => {
   const [detail, setDetail] = useState(null);
   const navigate = useNavigate();
   const userId = Meteor.userId();
-  const calendarRef = useRef(null);
-  // A seven-column month grid on a 375px phone gives each day about 45px — the
-  // titles clip to two characters and the page reads as noise. Below this it
-  // shows one day at a time instead, which is the same information at a size
-  // it can actually be read at.
-  const [narrow, setNarrow] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 719.98px)').matches,
-  );
-
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 719.98px)');
-    const onChange = event => setNarrow(event.matches);
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
-  }, []);
-
-  // Driven rather than re-mounted: changing `initialView` alone does nothing
-  // once FullCalendar has mounted, and remounting would throw away the month
-  // the reader had navigated to.
-  useEffect(() => {
-    const api = calendarRef.current?.getApi();
-    if (!api) {
-      return;
-    }
-    const want = narrow ? 'dayGridDay' : 'dayGridMonth';
-    if (api.view.type !== want) {
-      api.changeView(want);
-    }
-  }, [narrow]);
 
   const { ready, events, clubs, goingIds, joinedIds } = useTracker(() => {
     const subscription = Meteor.subscribe(Events.userPublicationName);
@@ -98,7 +68,7 @@ const ListEvents = () => {
     const query = searchTerm.trim().toLowerCase();
     const matches = sortByDate(events)
       .filter(event => !topicKey
-        || topicFor(event.title, event.description, normalizeCategories(event.categories)).key === topicKey)
+        || topicForEvent(event).key === topicKey)
       .filter(event => query === '' || [event.title, event.description, event.location].some(value => (value || '').toLowerCase().includes(query)));
     if (sort === 'latest') {
       return [...matches].reverse();
@@ -118,12 +88,17 @@ const ListEvents = () => {
         .some(value => (value || '').toLowerCase().includes(query)));
   }, [clubs, searchTerm, topicKey]);
 
+  const filteredEventListingCount = useMemo(
+    () => eventListingCount(filteredEvents),
+    [filteredEvents],
+  );
+
   /** Counts on the covers follow whichever kind is showing. */
   const topicCounts = useMemo(() => {
     const tally = {};
     const source = kind === 'clubs'
       ? clubs.map(club => topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description).key)
-      : events.map(event => topicFor(event.title, event.description, normalizeCategories(event.categories)).key);
+      : collapseEventListings(events).map(event => topicForEvent(event).key);
     source.forEach(key => { tally[key] = (tally[key] || 0) + 1; });
     return tally;
   }, [kind, events, clubs]);
@@ -133,19 +108,12 @@ const ListEvents = () => {
   // grid drew groups, so searching "lions" in Groups mode printed "Nothing
   // matches that" above three groups it then refused to draw.
   const showing = kind === 'clubs' ? filteredClubs : filteredEvents;
-
-  const formattedEvents = filteredEvents.map(event => ({
-    title: event.title,
-    start: new Date(event.date),
-    description: event.description,
-    // The record travels with the pill so a click can open the sheet without
-    // looking it up again by title — which would pick the wrong one whenever a
-    // series repeats a name, and this register is mostly weekly series.
-    extendedProps: { record: event },
-    // The pill takes its topic's colour, so a month page and the wall beneath
-    // it are the same eight colours saying the same eight things.
-    classNames: ['calendar-event-pill', `calendar-pill--${topicForEvent(event).key}`],
-  }));
+  const eventCountText = filteredEventListingCount === filteredEvents.length
+    ? `${filteredEvents.length} ${filteredEvents.length === 1 ? 'event' : 'events'}`
+    : `${filteredEventListingCount} listings · ${filteredEvents.length} calendar dates`;
+  const toolbarCountText = kind === 'clubs'
+    ? `${filteredClubs.length} ${filteredClubs.length === 1 ? 'group' : 'groups'}`
+    : eventCountText;
 
   // This route is public, so the first thing an unsigned visitor asks of an
   // event is also the thing that needs an account.
@@ -194,33 +162,10 @@ const ListEvents = () => {
       <KindToggle
         value={kind}
         onChange={setKind}
-        counts={{ events: filteredEvents.length, clubs: filteredClubs.length }}
+        counts={{ events: filteredEventListingCount, clubs: filteredClubs.length }}
       />
 
       <TopicPosters selected={topicKey} onSelect={setTopicKey} counts={topicCounts} compact />
-
-      <div id="event-calendar" className="calendar-container">
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin]}
-          initialView={narrow ? 'dayGridDay' : 'dayGridMonth'}
-          events={formattedEvents}
-          height="auto"
-          views={{ dayGridMonth: { dayMaxEvents: 3 } }}
-          moreLinkText={count => `+${count} more`}
-          eventClick={info => {
-            // Otherwise FullCalendar treats the pill as a link and navigates.
-            info.jsEvent.preventDefault();
-            setDetail({ record: info.event.extendedProps.record, kind: 'event' });
-          }}
-          fixedWeekCount={false}
-          dayHeaderFormat={{ weekday: 'short' }}
-          eventTimeFormat={{ hour: 'numeric', minute: '2-digit', meridiem: 'narrow' }}
-          headerToolbar={narrow
-            ? { start: 'prev,next', center: 'title', end: 'today' }
-            : { start: 'today prev,next', center: 'title', end: 'dayGridMonth,dayGridWeek,dayGridDay' }}
-        />
-      </div>
 
       <div className="mb-toolbar">
         <input
@@ -232,9 +177,7 @@ const ListEvents = () => {
           onChange={event => setSearchTerm(event.target.value)}
         />
         <span className="mb-toolbar-count">
-          {kind === 'clubs'
-            ? `${filteredClubs.length} ${filteredClubs.length === 1 ? 'group' : 'groups'}`
-            : `${filteredEvents.length} ${filteredEvents.length === 1 ? 'event' : 'events'}`}
+          {toolbarCountText}
         </span>
         {/* Only the events list reads `sort`; offering it over groups would be a
             control that visibly does nothing. */}
@@ -250,7 +193,15 @@ const ListEvents = () => {
         )}
       </div>
 
-      {showing.length === 0 ? (
+      {kind === 'events' && filteredEvents.length > 0 && (
+        <CountFirstCalendar
+          events={filteredEvents}
+          sort={sort}
+          onOpen={event => setDetail({ record: event, kind: 'event' })}
+        />
+      )}
+
+      {showing.length === 0 && (
         <div className="mb-empty">
           <CalendarX className="mb-empty-glyph" aria-hidden="true" />
           <h3>
@@ -271,30 +222,21 @@ const ListEvents = () => {
               </Link>
             )}
         </div>
-      ) : (
+      )}
+
+      {showing.length > 0 && kind === 'clubs' && (
         <div className="mb-grid mb-grid--posters">
-          {kind === 'clubs'
-            ? filteredClubs.map((club, index) => (
-              <motion.div key={club._id} variants={rise} initial="hidden" animate="show" custom={index}>
-                <Club
-                  club={club}
-                  tier="md"
-                  isMember={joinedIds.has(club._id)}
-                  onAddToProfile={joinClub}
-                  onViewDetails={() => setDetail({ record: club, kind: 'club' })}
-                />
-              </motion.div>
-            ))
-            : filteredEvents.map((event, index) => (
-              <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
-                <EventPoster
-                  event={event}
-                  going={goingIds.has(event._id)}
-                  onGoing={toggleGoing}
-                  onOpen={() => setDetail({ record: event, kind: 'event' })}
-                />
-              </motion.div>
-            ))}
+          {filteredClubs.map((club, index) => (
+            <motion.div key={club._id} variants={rise} initial="hidden" animate="show" custom={index}>
+              <Club
+                club={club}
+                tier="md"
+                isMember={joinedIds.has(club._id)}
+                onAddToProfile={joinClub}
+                onViewDetails={() => setDetail({ record: club, kind: 'club' })}
+              />
+            </motion.div>
+          ))}
         </div>
       )}
 

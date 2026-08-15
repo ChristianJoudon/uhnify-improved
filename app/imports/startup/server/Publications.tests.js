@@ -3,8 +3,14 @@ import { assert } from 'chai';
 import { Meteor } from 'meteor/meteor';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
+import { EventSwipes } from '../../api/events/EventSwipes';
+import { ProfileClubs } from '../../api/profile/ProfileClubs';
+import { Profiles } from '../../api/profiles/Profiles';
 import { callAs, makeClub, makeEvent, makeUser, resetAll } from './testFixtures';
-import './Publications';
+import {
+  friendClubActivitySelector,
+  friendEventActivitySelector,
+} from './Publications';
 
 /**
  * What a stranger can see.
@@ -57,6 +63,20 @@ if (Meteor.isServer) {
       docs.forEach(doc => assert.isUndefined(doc.owner));
     });
 
+    it('keeps staged ingestion records out of public publications', function () {
+      const draftClubId = makeClub({ publicationStatus: 'draft' });
+      const draftEventId = makeEvent({ publicationStatus: 'draft' });
+
+      const publicClubIds = docsFrom(publishAs(null, Clubs.userPublicationName)).map(doc => doc._id);
+      const publicEventIds = docsFrom(publishAs(null, Events.userPublicationName)).map(doc => doc._id);
+      const adminClubIds = docsFrom(publishAs(makeUser({ admin: true }), Clubs.adminPublicationName))
+        .map(doc => doc._id);
+
+      assert.notInclude(publicClubIds, draftClubId);
+      assert.notInclude(publicEventIds, draftEventId);
+      assert.include(adminClubIds, draftClubId, 'administrators can recover a staged projection');
+    });
+
     /**
      * The admin editor is the only screen that reads `owner`, and it subscribes
      * to this one. Withholding it here would break that form, so the boundary
@@ -72,6 +92,60 @@ if (Meteor.isServer) {
     it('sends nothing to a non-administrator asking for the admin publication', function () {
       const plain = makeUser();
       assert.equal(docsFrom(publishAs(plain, Clubs.adminPublicationName)).length, 0);
+    });
+
+    it('does not publish profile interests through the people directory', function () {
+      const viewer = makeUser();
+      Profiles.collection.update({}, { $set: { interests: ['Support Groups'] } }, { multi: true });
+      const docs = docsFrom(publishAs(viewer, 'Profiles.publication.directory'));
+      assert.isAbove(docs.length, 0);
+      docs.forEach(doc => assert.isUndefined(doc.interests));
+    });
+
+    it('excludes support joins and saves from friend-activity selectors', function () {
+      const friendId = makeUser();
+      const ordinaryClubId = makeClub({ categories: ['community'] });
+      const supportClubId = makeClub({ categories: ['support_group'] });
+      const ordinaryEventId = makeEvent({ categories: ['community'] });
+      const supportEventId = makeEvent({ categories: ['support_group'] });
+      callAs(friendId, 'profileClubs.add', ordinaryClubId);
+      callAs(friendId, 'profileClubs.add', supportClubId);
+      callAs(friendId, 'eventSwipes.record', ordinaryEventId, 'interested');
+      callAs(friendId, 'eventSwipes.record', supportEventId, 'interested');
+      callAs(friendId, 'eventSwipes.record', supportClubId, 'interested', 'club');
+
+      assert.deepEqual(
+        ProfileClubs.collection.find(friendClubActivitySelector(friendId)).map(row => row.clubId),
+        [ordinaryClubId],
+      );
+      assert.deepEqual(
+        EventSwipes.collection.find(friendEventActivitySelector(friendId)).map(row => row.eventId),
+        [ordinaryEventId],
+      );
+    });
+
+    it('removes an existing membership from a live selector when its group becomes sensitive', function () {
+      const admin = makeUser({ admin: true });
+      const friendId = makeUser();
+      const clubId = makeClub({ categories: ['community'] });
+      callAs(friendId, 'profileClubs.add', clubId);
+      const selector = friendClubActivitySelector(friendId);
+      assert.deepEqual(ProfileClubs.collection.find(selector).map(row => row.clubId), [clubId]);
+
+      const club = Clubs.collection.findOne(clubId);
+      callAs(admin, 'Clubs.update', clubId, {
+        clubID: club.clubID,
+        name: club.name,
+        owner: club.owner,
+        description: club.description,
+        location: club.location,
+        meetingTime: club.meetingTime,
+        contactInfo: club.contactInfo || '',
+        categories: ['support_group'],
+        tags: club.tags || [],
+      });
+
+      assert.deepEqual(ProfileClubs.collection.find(selector).fetch(), []);
     });
   });
 

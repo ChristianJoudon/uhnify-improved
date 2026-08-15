@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "support-snapshot.v1",
+  "sourceId": "SEN-003",
+  "sourceUrl": "https://www.al-anonhawaii.org/kauai",
+  "verifiedAt": "2026-08-08T12:00:00-10:00",
+  "completeness": "COMPLETE",
+  "reviewFlags": ["MANUAL_SOURCE_CAPTURE", "OLDER_LOCATION_EVIDENCE", "ONLINE_ACCESS_WITHHELD"],
+  "listings": [
+    {
+      "sourceItemKey": "alanon-sun-sunday-afg-1100",
+      "groupKey": "alanon-sunday-afg",
+      "name": "Sunday AFG",
+      "supportSubtype": "family_addiction_support",
+      "recurrenceLabel": "Sunday at 11:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaʻa Neighborhood Center, 4491 Kou Street, Kapaʻa",
+      "formatLabels": ["In Person"]
+    },
+    {
+      "sourceItemKey": "alanon-tue-detachment-strength-hope-1730",
+      "groupKey": "alanon-detachment-strength-hope",
+      "name": "Detachment, Strength & Hope AFG",
+      "supportSubtype": "family_addiction_support",
+      "recurrenceLabel": "Tuesday at 5:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Waimea Baptist Church, 9611 Waimea Canyon Road, Waimea",
+      "formatLabels": ["In Person w/Electronic"]
+    },
+    {
+      "sourceItemKey": "alanon-wed-wednesday-noon-afg-1200",
+      "groupKey": "alanon-wednesday-noon-afg",
+      "name": "Wednesday Noon AFG",
+      "supportSubtype": "family_addiction_support",
+      "recurrenceLabel": "Wednesday at noon",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "United Church of Christ Parish Hall, 4340 Nawiliwili Road, Lihue",
+      "formatLabels": ["In Person w/Electronic"]
+    },
+    {
+      "sourceItemKey": "alanon-thu-spirituality-step-0830",
+      "groupKey": "alanon-spirituality-step",
+      "name": "Thursday Morning Spirituality and Step Meeting AFG",
+      "supportSubtype": "family_addiction_support",
+      "recurrenceLabel": "Thursday at 8:30 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach, far west pavilion near restrooms, Poipu",
+      "formatLabels": ["In Person"]
+    },
+    {
+      "sourceItemKey": "alanon-thu-one-step-at-time-1900",
+      "groupKey": "alanon-one-step-at-time",
+      "name": "One Step at a Time AFG",
+      "supportSubtype": "family_addiction_support",
+      "recurrenceLabel": "Thursday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Church of the Pacific, 4520 Kapaka Road, Princeville",
+      "formatLabels": ["In Person"]
+    },
+    {
+      "sourceItemKey": "alanon-fri-friday-noon-afg-1200",
+      "groupKey": "alanon-friday-noon-afg",
+      "name": "Friday at Noon AFG",
+      "supportSubtype": "family_addiction_support",
+      "recurrenceLabel": "Friday at noon",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Online",
+      "formatLabels": ["Electronic"]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import { Accounts } from 'meteor/accounts-base';
 import { Container } from 'react-bootstrap';
 import { ArrowLeft, ArrowRight } from 'react-bootstrap-icons';
 import PageHead from '../components/PageHead';
-import { TOPICS, TOPIC_KEYS } from '../utilities/topics';
+import { INTEREST_TOPIC_KEYS, TOPICS } from '../utilities/topics';
 
 const STEPS = ['Account', 'Your name', 'Interests'];
 
@@ -164,7 +164,7 @@ const SignUp = ({ location }) => {
                   a fallback key — so onboarding was not merely vague, it was
                   scoring a topic the user had never chosen. */}
               <div className="mb-chip-row" role="group" aria-labelledby="signup-interests-label">
-                {TOPIC_KEYS.map(key => {
+                {INTEREST_TOPIC_KEYS.map(key => {
                   const topic = TOPICS[key];
                   const on = interests.includes(topic.label);
                   return (

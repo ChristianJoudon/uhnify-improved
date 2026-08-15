@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
+import { Random } from 'meteor/random';
 import { Button, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
@@ -7,6 +8,7 @@ import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import swal from 'sweetalert';
 import {
   ArrowCounterclockwise,
+  ArrowRepeat,
   CalendarWeek,
   HeartFill,
   LightningChargeFill,
@@ -19,8 +21,11 @@ import { EventSwipes } from '../../api/events/EventSwipes';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import LoadingSpinner from '../components/LoadingSpinner';
-import SwipeCard from '../components/SwipeCard';
+// Explicit extension keeps Meteor from ever resolving a same-name style asset
+// as the component module during a hot reload.
+import SwipeCard from '../components/SwipeCard.jsx';
 import { sortByDate } from '../utilities/helpers';
+import { collapseEventListings } from '../utilities/eventSeries';
 import { useTuck } from '../utilities/useTuck';
 
 // The row scrolls, so the timeline can run further ahead than a wrapping row
@@ -39,7 +44,7 @@ const TIME_WINDOWS = [
 const DAY_MS = 24 * 60 * 60 * 1000;
 const STACK_SIZE = 4;
 
-/** Tinder-style Discover deck: swipe right to save an event, left to pass, double-tap to flip. */
+/** Tinder-style Discover deck: swipe right to save an event, left to pass, tap to flip. */
 const DiscoverEvents = () => {
   const deckTuck = useTuck();
   const [mode, setMode] = useState('upcoming');
@@ -55,6 +60,12 @@ const DiscoverEvents = () => {
   const [pinnedIds, setPinnedIds] = useState([]);
   // Re-evaluate "today"/window boundaries every minute so a long-lived tab stays honest.
   const [clockTick, setClockTick] = useState(0);
+  // Server-ranked results are an ordering overlay on the already-published
+  // records. If the call is unavailable, every calculation below naturally
+  // falls back to the deck's existing date/name order.
+  const [recommendationRuns, setRecommendationRuns] = useState({ event: null, group: null });
+  const impressionKeys = useRef(new Set());
+  const refocusCardAfterSwipe = useRef(false);
 
   useEffect(() => {
     const id = setInterval(() => setClockTick(tick => tick + 1), 60 * 1000);
@@ -75,6 +86,72 @@ const DiscoverEvents = () => {
       memberships: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch(),
     };
   }, []);
+
+  const recommendationKind = mode === 'clubs' ? 'group' : 'event';
+
+  useEffect(() => {
+    if (!Meteor.userId()) {
+      return undefined;
+    }
+    let active = true;
+    Meteor.call('recommendations.get', {
+      kind: recommendationKind,
+      surface: 'swipe_deck',
+      limit: 100,
+    }, (error, result) => {
+      if (!active) {
+        return;
+      }
+      setRecommendationRuns(current => ({
+        ...current,
+        [recommendationKind]: error || !result ? null : result,
+      }));
+    });
+    return () => {
+      active = false;
+    };
+  }, [recommendationKind, swipes.length, memberships.length]);
+
+  const recommendationRun = recommendationRuns[recommendationKind];
+  const recommendationById = useMemo(
+    () => new Map((recommendationRun?.items || []).map(item => [item._id, item])),
+    [recommendationRun],
+  );
+
+  const recommendationMetadata = record => {
+    const item = recommendationById.get(record?._id);
+    if (!item || !recommendationRun?.requestId) {
+      return null;
+    }
+    return {
+      requestId: recommendationRun.requestId,
+      position: item.position,
+      displaySize: item.displayPriority || 'standard',
+      modelVersion: recommendationRun.modelVersion,
+      selectedTier: item.selectedTier || recommendationRun.selectedTier,
+      componentsUsed: item.componentsUsed || recommendationRun.capabilitySnapshot?.availableComponents,
+    };
+  };
+
+  const compareByRecommendation = (left, right) => {
+    const leftPosition = recommendationById.get(left?._id)?.position;
+    const rightPosition = recommendationById.get(right?._id)?.position;
+    if (Number.isInteger(leftPosition) && Number.isInteger(rightPosition)) {
+      return leftPosition - rightPosition;
+    }
+    if (Number.isInteger(leftPosition)) {
+      return -1;
+    }
+    if (Number.isInteger(rightPosition)) {
+      return 1;
+    }
+    return 0;
+  };
+
+  const withRecommendation = record => {
+    const metadata = recommendationMetadata(record);
+    return metadata ? { ...record, _recommendation: metadata } : record;
+  };
 
   // The whole club, not just its name — the card needs its categories to fall
   // back on when an event's own title says nothing about the subject.
@@ -103,15 +180,16 @@ const DiscoverEvents = () => {
       // The card asks for `title`; a group calls it `name`. Normalised here so
       // nothing downstream has to know which kind it is holding.
       .map(club => ({ ...club, title: club.name }))
-      .sort((a, b) => a.title.localeCompare(b.title));
-  }, [mode, clubs, joinedClubIds, swipedIds]);
+      .sort((a, b) => compareByRecommendation(a, b) || a.title.localeCompare(b.title))
+      .map(withRecommendation);
+  }, [mode, clubs, joinedClubIds, swipedIds, recommendationById, recommendationRun]);
 
   const windowEvents = useMemo(() => {
     const now = new Date();
     const catchUpStart = new Date(now.getTime() - 2 * 60 * 60 * 1000);
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     const horizon = windowDays ? new Date(now.getTime() + windowDays * DAY_MS) : null;
-    return sortByDate(events.filter(event => {
+    const inWindowEvents = sortByDate(events.filter(event => {
       const date = event.date instanceof Date ? event.date : new Date(event.date);
       if (Number.isNaN(date.getTime())) {
         return false;
@@ -121,14 +199,17 @@ const DiscoverEvents = () => {
       }
       return date >= now && (!horizon || date <= horizon);
     }));
-  }, [events, mode, windowDays, clockTick]);
+    return collapseEventListings(inWindowEvents)
+      .sort(compareByRecommendation)
+      .map(withRecommendation);
+  }, [events, mode, windowDays, clockTick, recommendationById, recommendationRun]);
 
   // The deck: unswiped records in scope, with freshly undone cards pinned on top.
   const deck = useMemo(() => {
     const fresh = mode === 'clubs'
       ? clubDeck
       : windowEvents.filter(event => !swipedIds.has(event._id));
-    const pool = mode === 'clubs' ? clubs : events;
+    const pool = (mode === 'clubs' ? clubs : events).map(withRecommendation);
     const pinned = pinnedIds
       .filter(id => !swipedIds.has(id))
       .map(id => pool.find(record => record._id === id))
@@ -138,7 +219,7 @@ const DiscoverEvents = () => {
     }
     const pinnedSet = new Set(pinned.map(event => event._id));
     return [...pinned, ...fresh.filter(event => !pinnedSet.has(event._id))];
-  }, [mode, clubDeck, windowEvents, swipedIds, pinnedIds, events, clubs]);
+  }, [mode, clubDeck, windowEvents, swipedIds, pinnedIds, events, clubs, recommendationById, recommendationRun]);
 
   // Janitor: if a ghost's fly-off completion callback ever gets swallowed (animation
   // interrupted, tab backgrounded), sweep out ghosts whose swipe already left the deck.
@@ -160,10 +241,49 @@ const DiscoverEvents = () => {
   const topEvent = liveCards[0];
   const topEventId = topEvent?._id;
 
+  useEffect(() => {
+    const recommendation = topEvent?._recommendation;
+    if (!topEventId || !recommendation?.requestId || !Number.isInteger(recommendation.position)) {
+      return;
+    }
+    const entityType = mode === 'clubs' ? 'group' : 'event';
+    const clientEventId = `impression:${recommendation.requestId}:${entityType}:${topEventId}:${recommendation.position}`;
+    if (impressionKeys.current.has(clientEventId)) {
+      return;
+    }
+    impressionKeys.current.add(clientEventId);
+    Meteor.call('recommendationInteractions.record', {
+      entityType,
+      entityId: topEventId,
+      action: 'impression',
+      clientEventId,
+      requestId: recommendation.requestId,
+      position: recommendation.position,
+      displaySize: recommendation.displaySize,
+    });
+  }, [topEventId, topEvent?._recommendation?.requestId, mode]);
+
   // A card flipped earlier (then buried by a filter change) should not still be
   // face-down when it resurfaces at the top of the deck later.
   useEffect(() => {
     setFlippedId(null);
+  }, [topEventId]);
+
+  // When a keyboard user swipes from the focused card, keep them in the deck
+  // by moving focus to the newly exposed top card. Pointer and action-button
+  // decisions retain their existing focus naturally.
+  useEffect(() => {
+    if (!refocusCardAfterSwipe.current) {
+      return undefined;
+    }
+    const frame = window.requestAnimationFrame(() => {
+      const nextCard = document.querySelector('.match-swipe-card.is-top');
+      if (nextCard) {
+        nextCard.focus({ preventScroll: true });
+      }
+      refocusCardAfterSwipe.current = false;
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [topEventId]);
 
   // Ghosts render first (they sit above the stack); live cards fill the visible pile.
@@ -178,6 +298,7 @@ const DiscoverEvents = () => {
     if (!topEvent || exitingIds.has(topEvent._id)) {
       return;
     }
+    refocusCardAfterSwipe.current = Boolean(document.activeElement?.closest?.('.match-swipe-card.is-top'));
     const swiped = topEvent;
     setExiting(prev => [...prev, { event: swiped, dir: direction }]);
     setHistory(prev => [...prev, swiped._id]);
@@ -188,13 +309,19 @@ const DiscoverEvents = () => {
     if (mode === 'clubs' && decision === 'interested') {
       // Swiping right on a group is joining it — the deck is the join, not a
       // shortlist you have to work through again somewhere else.
-      Meteor.call('profileClubs.add', swiped._id, joinError => {
+      const joinContext = swiped._recommendation
+        ? { ...swiped._recommendation, clientEventId: `join:${Random.id()}` }
+        : {};
+      Meteor.call('profileClubs.add', swiped._id, joinContext, joinError => {
         if (joinError) {
           swal('Error', joinError.reason || joinError.message, 'error');
         }
       });
     }
-    Meteor.call('eventSwipes.record', swiped._id, decision, mode === 'clubs' ? 'club' : 'event', error => {
+    const recommendationContext = swiped._recommendation
+      ? { ...swiped._recommendation, clientEventId: `swipe:${Random.id()}` }
+      : {};
+    Meteor.call('eventSwipes.record', swiped._id, decision, mode === 'clubs' ? 'club' : 'event', recommendationContext, error => {
       if (error) {
         // Rollback: dropping the ghost lets the card spring back into the deck.
         setExiting(prev => prev.filter(item => item.event._id !== swiped._id));
@@ -245,6 +372,17 @@ const DiscoverEvents = () => {
 
   const toggleFlip = () => {
     if (topEvent) {
+      if (flippedId !== topEvent._id && topEvent._recommendation?.requestId) {
+        Meteor.call('recommendationInteractions.record', {
+          entityType: mode === 'clubs' ? 'group' : 'event',
+          entityId: topEvent._id,
+          action: 'flipped',
+          clientEventId: `flip:${Random.id()}`,
+          requestId: topEvent._recommendation.requestId,
+          position: topEvent._recommendation.position,
+          displaySize: topEvent._recommendation.displaySize,
+        });
+      }
       setFlippedId(current => (current === topEvent._id ? null : topEvent._id));
     }
   };
@@ -259,6 +397,14 @@ const DiscoverEvents = () => {
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) {
         return;
       }
+      // Let focused links and controls own their native arrow, Space and
+      // Backspace behavior. The focused top card is the one intentional
+      // exception: it supports the documented deck shortcuts.
+      const topCard = target?.closest?.('.match-swipe-card.is-top');
+      const interactiveControl = target?.closest?.('button, a, [role="button"]');
+      if (interactiveControl && !topCard) {
+        return;
+      }
       if (document.querySelector('.swal-overlay--show-modal')) {
         return;
       }
@@ -268,8 +414,7 @@ const DiscoverEvents = () => {
       } else if (keyEvent.key === 'ArrowRight') {
         keyEvent.preventDefault();
         startSwipe('right');
-      } else if (keyEvent.key === 'ArrowUp' || (keyEvent.key === ' ' && tag !== 'BUTTON')) {
-        // Space on a focused button keeps its native "click" behavior.
+      } else if (keyEvent.key === 'ArrowUp' || keyEvent.key === ' ') {
         keyEvent.preventDefault();
         toggleFlip();
       } else if (keyEvent.key === 'z' || keyEvent.key === 'Z' || keyEvent.key === 'Backspace') {
@@ -437,19 +582,7 @@ const DiscoverEvents = () => {
               ))}
             </div>
 
-            <div className="swipe-actions">
-              <motion.button
-                type="button"
-                className="swipe-btn swipe-btn-undo"
-                whileHover={{ scale: 1.1, rotate: -20 }}
-                whileTap={{ scale: 0.86 }}
-                onClick={handleUndo}
-                disabled={history.length === 0 || exiting.length > 0}
-                aria-label="Undo last swipe"
-                title="Undo last swipe (Z)"
-              >
-                <ArrowCounterclockwise />
-              </motion.button>
+            <div className="swipe-actions match-swipe-actions" role="group" aria-label="Card actions">
               <motion.button
                 type="button"
                 className="swipe-btn swipe-btn-pass"
@@ -460,7 +593,22 @@ const DiscoverEvents = () => {
                 aria-label={mode === 'clubs' ? 'Pass on this group' : 'Pass on this event'}
                 title="Pass (←)"
               >
-                <XLg />
+                <XLg aria-hidden="true" />
+              </motion.button>
+              <motion.button
+                type="button"
+                className="swipe-btn swipe-btn-flip"
+                whileHover={{ scale: 1.1, rotate: 12 }}
+                whileTap={{ scale: 0.86 }}
+                onClick={toggleFlip}
+                disabled={!topEvent}
+                aria-label={flippedId === topEvent?._id
+                  ? `Show the front of this ${mode === 'clubs' ? 'group' : 'event'}`
+                  : `Show details for this ${mode === 'clubs' ? 'group' : 'event'}`}
+                aria-pressed={Boolean(topEvent && flippedId === topEvent._id)}
+                title={flippedId === topEvent?._id ? 'Show front (↑ or Space)' : 'Show details (↑ or Space)'}
+              >
+                <ArrowRepeat aria-hidden="true" />
               </motion.button>
               <motion.button
                 type="button"
@@ -472,15 +620,34 @@ const DiscoverEvents = () => {
                 aria-label={mode === 'clubs' ? 'Save this group' : 'Save this event'}
                 title="Save (→)"
               >
-                <HeartFill />
+                <HeartFill aria-hidden="true" />
               </motion.button>
             </div>
 
-            {/* Said once, under the deck. A gesture nobody is told about is a
-                gesture nobody uses — which is what the old double-tap was. */}
-            <p className="swipe-hint">
-              {topEvent && flippedId === topEvent._id ? 'Tap the card to go back' : 'Tap the card for details'}
-            </p>
+            <div className="match-swipe-utilities">
+              {/* Undo remains keyboard- and pointer-accessible without reading
+                  as a fourth decision in the primary action group. */}
+              <motion.button
+                type="button"
+                className="match-swipe-undo"
+                whileHover={{ x: -2 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={handleUndo}
+                disabled={history.length === 0 || exiting.length > 0}
+                aria-label="Undo last swipe"
+                title="Undo last swipe (Z or Backspace)"
+              >
+                <ArrowCounterclockwise aria-hidden="true" />
+                <span>Undo</span>
+              </motion.button>
+              {/* Said once, under the deck. The explicit middle button now
+                  provides the same action for touch, mouse and keyboard users. */}
+              {topEvent && (
+                <p className="swipe-hint">
+                  {flippedId === topEvent._id ? 'Tap the card to show the front' : 'Tap the card for details'}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </Container>

@@ -10,6 +10,16 @@ import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
 import { Counters } from '../../api/counters/Counters';
 import { parseMeetingTime } from '../../api/club/schedule';
+import '../../api/recommendations/RecommendationsMethods';
+import { recordRecommendationInteraction } from '../../api/recommendations/interactionRecorder';
+import {
+  RecommendationGraphEdges,
+  RecommendationRequests,
+} from '../../api/recommendations/RecommendationData';
+import { friendActivityVisibilityFor } from '../../api/privacy/FriendActivityPrivacy';
+import { TOPICS } from '../../ui/utilities/topics';
+
+/* eslint-disable no-console */
 
 const addClubMethod = 'Clubs.insert';
 
@@ -41,6 +51,14 @@ const normalizeCategories = categories => {
   return `${categories}`.split(',').map(category => category.trim()).filter(Boolean);
 };
 
+const privateInterestLabels = new Set(
+  Object.values(TOPICS).filter(topic => topic.sensitiveParticipation).map(topic => topic.label),
+);
+
+const publicProfileInterests = interests => (interests || [])
+  .map(interest => `${interest}`.trim())
+  .filter(interest => interest && !privateInterestLabels.has(interest));
+
 const toDate = value => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -60,6 +78,85 @@ const parseNumericId = (value, label) => {
 /** Server clock. A client's is not evidence, and these fields are read as
     "when did this actually change". */
 const now = () => new Date();
+
+/** Recommendation telemetry must never break the product action it observes. */
+const captureRecommendationInteraction = payload => {
+  if (!Meteor.isServer) {
+    return null;
+  }
+  try {
+    return recordRecommendationInteraction(payload);
+  } catch (error) {
+    console.error('[recommendations] interaction capture failed:', error.message);
+    return null;
+  }
+};
+
+/** Trust model/tier details only when they belong to this user's server request. */
+const verifiedRecommendationContext = (userId, supplied = {}) => {
+  if (!Meteor.isServer) {
+    return {};
+  }
+  const request = typeof supplied.requestId === 'string'
+    ? RecommendationRequests.collection.findOne({ _id: supplied.requestId, userId })
+    : null;
+  const position = Number(supplied.position);
+  return {
+    clientEventId: typeof supplied.clientEventId === 'string' ? supplied.clientEventId.slice(0, 160) : undefined,
+    requestId: request?._id,
+    surface: request?.surface,
+    position: Number.isInteger(position) && position >= 0 ? position : undefined,
+    displaySize: ['standard', 'large', 'featured'].includes(supplied.displaySize)
+      ? supplied.displaySize
+      : undefined,
+    modelVersion: request?.modelVersion,
+    selectedTier: request?.selectedTier,
+    componentsUsed: request?.availableComponents,
+    predecessorId: typeof supplied.predecessorId === 'string' ? supplied.predecessorId.slice(0, 160) : undefined,
+  };
+};
+
+const setFriendRecommendationEdges = (leftId, rightId, acceptedAt) => {
+  if (!Meteor.isServer) {
+    return;
+  }
+  try {
+    [[leftId, rightId], [rightId, leftId]].forEach(([fromId, toId]) => {
+      RecommendationGraphEdges.collection.upsert({ edgeKey: `friend:${fromId}:${toId}` }, {
+        $set: {
+          fromType: 'user',
+          fromId,
+          toType: 'user',
+          toId,
+          relation: 'accepted_friend',
+          occurredAt: acceptedAt,
+          privacyEligibility: 'private',
+          graphVersion: 'source_projection_v1',
+        },
+        $setOnInsert: { validFrom: acceptedAt, createdAt: now() },
+        $unset: { endedAt: '', validTo: '' },
+      });
+    });
+  } catch (error) {
+    console.error('[recommendations] friend graph projection failed:', error.message);
+  }
+};
+
+const endFriendRecommendationEdges = (leftId, rightId) => {
+  if (!Meteor.isServer) {
+    return;
+  }
+  try {
+    const endedAt = now();
+    RecommendationGraphEdges.collection.update({
+      edgeKey: { $in: [`friend:${leftId}:${rightId}`, `friend:${rightId}:${leftId}`] },
+    }, {
+      $set: { endedAt, validTo: endedAt, privacyEligibility: 'excluded' },
+    }, { multi: true });
+  } catch (error) {
+    console.error('[recommendations] friend graph retirement failed:', error.message);
+  }
+};
 
 const MAX_IMAGE_LENGTH = 2800000;
 
@@ -191,7 +288,7 @@ Meteor.methods({
       bio: existingProfile?.bio || '',
       title: existingProfile?.title || 'Student',
       picture: existingProfile?.picture || '/images/defaultprofilepic.png',
-      interests: interests || [],
+      interests: publicProfileInterests(interests),
     };
 
     if (existingProfile) {
@@ -229,7 +326,7 @@ Meteor.methods({
       email: profileData.email,
       bio: profileData.bio,
       title: profileData.title,
-      interests: profileData.interests || [],
+      interests: publicProfileInterests(profileData.interests),
     };
     if (profileData.picture !== undefined) {
       fields.picture = checkPicture(profileData.picture);
@@ -300,6 +397,7 @@ Meteor.methods({
     });
     requireAdmin(this.userId);
 
+    const categories = normalizeCategories(clubData.categories);
     Clubs.collection.update(clubId, {
       $set: {
         name: clubData.name,
@@ -309,7 +407,7 @@ Meteor.methods({
         image: clubData.image,
         meetingTime: clubData.meetingTime,
         contactInfo: clubData.contactInfo || '',
-        categories: normalizeCategories(clubData.categories),
+        categories,
         ...(clubData.tags ? { tags: clubData.tags.map(normalizeTag).filter(tag => tag.length >= 2).slice(0, 20) } : {}),
         updatedAt: now(),
       },
@@ -323,6 +421,18 @@ Meteor.methods({
     } else {
       Clubs.collection.update(clubId, { $unset: { schedule: '' } });
     }
+
+    const friendActivityVisibility = friendActivityVisibilityFor({ categories });
+    ProfileClubs.collection.update(
+      { clubId },
+      { $set: { friendActivityVisibility } },
+      { multi: true },
+    );
+    EventSwipes.collection.update(
+      { eventId: clubId, kind: 'club' },
+      { $set: { friendActivityVisibility } },
+      { multi: true },
+    );
   },
 
   'Clubs.remove'(clubId) {
@@ -342,8 +452,9 @@ Meteor.methods({
     // which is what the EventClubs removal above is for.
   },
 
-  'profileClubs.add'(clubId) {
+  'profileClubs.add'(clubId, recommendationContext = {}) {
     check(clubId, Match.OneOf(String, Number));
+    check(recommendationContext, Object);
     requireLoggedIn(this.userId);
 
     const club = findClubByAnyId(clubId);
@@ -353,23 +464,50 @@ Meteor.methods({
 
     const existing = ProfileClubs.collection.findOne({ userId: this.userId, clubId: club._id });
     if (existing) {
+      ProfileClubs.collection.update(existing._id, {
+        $set: { friendActivityVisibility: friendActivityVisibilityFor(club) },
+      });
       return existing._id;
     }
 
-    return ProfileClubs.collection.insert({
+    const membershipId = ProfileClubs.collection.insert({
       userId: this.userId,
       clubId: club._id,
+      friendActivityVisibility: friendActivityVisibilityFor(club),
       createdAt: new Date(),
     });
+    captureRecommendationInteraction({
+      userId: this.userId,
+      entityType: 'group',
+      entityId: club._id,
+      action: 'joined_group',
+      occurredAt: new Date(),
+      ...verifiedRecommendationContext(this.userId, recommendationContext),
+      source: 'legacy',
+    });
+    return membershipId;
   },
 
-  'profileClubs.remove'(clubId) {
+  'profileClubs.remove'(clubId, recommendationContext = {}) {
     check(clubId, Match.OneOf(String, Number));
+    check(recommendationContext, Object);
     requireLoggedIn(this.userId);
 
     const club = findClubByAnyId(clubId);
     const normalizedClubId = club?._id || clubId;
+    const existing = ProfileClubs.collection.findOne({ userId: this.userId, clubId: normalizedClubId });
     ProfileClubs.collection.remove({ userId: this.userId, clubId: normalizedClubId });
+    if (existing) {
+      captureRecommendationInteraction({
+        userId: this.userId,
+        entityType: 'group',
+        entityId: `${normalizedClubId}`,
+        action: 'left_group',
+        occurredAt: new Date(),
+        ...verifiedRecommendationContext(this.userId, recommendationContext),
+        source: 'legacy',
+      });
+    }
   },
 
   'Events.insert'(eventData) {
@@ -386,6 +524,7 @@ Meteor.methods({
     checkImageSize(eventData.image);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
+    const hostClub = findClubByAnyId(hostClubID);
     const eventId = Events.collection.insert({
       createdAt: now(),
       updatedAt: now(),
@@ -397,9 +536,10 @@ Meteor.methods({
       createdBy: eventData.createdBy || getUsername(this.userId),
       owner: getUsername(this.userId),
       image: eventData.image || '/images/codingWorkshop.png',
+      ...(hostClub?.name ? { hostName: hostClub.name } : {}),
+      ...(hostClub?.categories?.length ? { categories: hostClub.categories } : {}),
     });
 
-    const hostClub = findClubByAnyId(hostClubID);
     if (hostClub) {
       EventClubs.collection.insert({ clubId: hostClub._id, eventId, userId: this.userId, createdAt: new Date() });
     }
@@ -421,6 +561,14 @@ Meteor.methods({
     requireAdmin(this.userId);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
+    const existingEvent = Events.collection.findOne(eventId);
+    const hostClub = findClubByAnyId(hostClubID);
+    const locallyAuthoredFields = existingEvent && !existingEvent.importedFrom
+      ? {
+        ...(hostClub?.name ? { hostName: hostClub.name } : {}),
+        ...(hostClub?.categories?.length ? { categories: hostClub.categories } : {}),
+      }
+      : {};
     Events.collection.update(eventId, {
       $set: {
         eventID: hostClubID,
@@ -431,14 +579,28 @@ Meteor.methods({
         createdBy: eventData.createdBy,
         image: eventData.image || '/images/codingWorkshop.png',
         updatedAt: now(),
+        ...locallyAuthoredFields,
       },
     });
 
+    if (existingEvent && !existingEvent.importedFrom) {
+      const unset = {};
+      if (!hostClub?.name) unset.hostName = '';
+      if (!hostClub?.categories?.length) unset.categories = '';
+      if (Object.keys(unset).length) Events.collection.update(eventId, { $unset: unset });
+    }
+
     EventClubs.collection.remove({ eventId });
-    const hostClub = findClubByAnyId(hostClubID);
     if (hostClub) {
       EventClubs.collection.insert({ clubId: hostClub._id, eventId, userId: this.userId, createdAt: new Date() });
     }
+
+    const updatedEvent = Events.collection.findOne(eventId);
+    EventSwipes.collection.update(
+      { eventId, kind: { $ne: 'club' } },
+      { $set: { friendActivityVisibility: friendActivityVisibilityFor(updatedEvent) } },
+      { multi: true },
+    );
   },
 
   'Events.remove'(eventId) {
@@ -453,10 +615,11 @@ Meteor.methods({
     EventSwipes.collection.remove({ eventId });
   },
 
-  'eventSwipes.record'(eventId, decision, kind = 'event') {
+  'eventSwipes.record'(eventId, decision, kind = 'event', recommendationContext = {}) {
     check(eventId, String);
     check(decision, String);
     check(kind, String);
+    check(recommendationContext, Object);
     requireLoggedIn(this.userId);
 
     if (!['interested', 'passed'].includes(decision)) {
@@ -468,36 +631,90 @@ Meteor.methods({
 
     // Only the server can authoritatively check existence; a client stub may
     // simply not have the record cached, which should not block the call.
+    const collection = kind === 'club' ? Clubs.collection : Events.collection;
+    const listing = collection.findOne(eventId);
     if (Meteor.isServer) {
-      const collection = kind === 'club' ? Clubs.collection : Events.collection;
-      if (!collection.findOne(eventId)) {
+      if (!listing) {
         throw new Meteor.Error('not-found', 'That listing could not be found.');
       }
     }
+    const friendActivityVisibility = friendActivityVisibilityFor(listing);
 
     const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
+    const verifiedContext = verifiedRecommendationContext(this.userId, recommendationContext);
     if (existing) {
-      EventSwipes.collection.update(existing._id, { $set: { decision, kind, createdAt: new Date() } });
+      EventSwipes.collection.update(existing._id, {
+        $set: { decision, kind, friendActivityVisibility, createdAt: new Date() },
+      });
+      captureRecommendationInteraction({
+        userId: this.userId,
+        entityType: kind === 'club' ? 'group' : 'event',
+        entityId: eventId,
+        action: decision,
+        occurredAt: new Date(),
+        ...verifiedContext,
+        source: 'legacy',
+      });
       return existing._id;
     }
 
-    return EventSwipes.collection.insert({
+    const swipeId = EventSwipes.collection.insert({
       userId: this.userId,
       eventId,
       decision,
       kind,
+      friendActivityVisibility,
       createdAt: new Date(),
     });
+    captureRecommendationInteraction({
+      userId: this.userId,
+      entityType: kind === 'club' ? 'group' : 'event',
+      entityId: eventId,
+      action: decision,
+      occurredAt: new Date(),
+      ...verifiedContext,
+      source: 'legacy',
+    });
+    return swipeId;
   },
 
-  'eventSwipes.remove'(eventId) {
+  'eventSwipes.remove'(eventId, action = 'undo', recommendationContext = {}) {
     check(eventId, String);
+    check(action, String);
+    check(recommendationContext, Object);
     requireLoggedIn(this.userId);
+    if (!['undo', 'unsaved', 'correction'].includes(action)) {
+      throw new Meteor.Error('invalid-action', 'A removed swipe must be an undo, unsave, or correction.');
+    }
+    const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
+    const verifiedContext = verifiedRecommendationContext(this.userId, recommendationContext);
     EventSwipes.collection.remove({ userId: this.userId, eventId });
+    if (existing) {
+      captureRecommendationInteraction({
+        userId: this.userId,
+        entityType: existing.kind === 'club' ? 'group' : 'event',
+        entityId: eventId,
+        action,
+        occurredAt: new Date(),
+        ...verifiedContext,
+        source: 'legacy',
+      });
+    }
   },
 
   'eventSwipes.clearPassed'() {
     requireLoggedIn(this.userId);
+    EventSwipes.collection.find({ userId: this.userId, decision: 'passed' }).forEach(swipe => {
+      captureRecommendationInteraction({
+        userId: this.userId,
+        entityType: swipe.kind === 'club' ? 'group' : 'event',
+        entityId: swipe.eventId,
+        action: 'correction',
+        occurredAt: new Date(),
+        context: { reason: 'clear_passed' },
+        source: 'legacy',
+      });
+    });
     EventSwipes.collection.remove({ userId: this.userId, decision: 'passed' });
   },
 
@@ -537,7 +754,9 @@ Meteor.methods({
     if (!edge || edge.receiverId !== this.userId) {
       throw new Meteor.Error('not-authorized', 'Only the request receiver can accept it.');
     }
-    Friends.collection.update(edgeId, { $set: { status: 'accepted', respondedAt: new Date() } });
+    const acceptedAt = now();
+    Friends.collection.update(edgeId, { $set: { status: 'accepted', respondedAt: acceptedAt } });
+    setFriendRecommendationEdges(edge.requesterId, edge.receiverId, acceptedAt);
   },
 
   'friends.decline'(edgeId) {
@@ -561,6 +780,7 @@ Meteor.methods({
         { requesterId: otherUserId, receiverId: this.userId },
       ],
     });
+    endFriendRecommendationEdges(this.userId, otherUserId);
   },
 
   'clubs.addTag'(clubId, tag) {

@@ -10,8 +10,8 @@ import PosterArt from '../components/PosterArt';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Events } from '../../api/events/Events';
 import { Clubs } from '../../api/club/Club';
-import { formatEventDate, normalizeCategories } from '../utilities/helpers';
-import { topicFor } from '../utilities/topics';
+import { formatEventDate } from '../utilities/helpers';
+import { topicForEvent } from '../utilities/topics';
 
 const MAX_IMAGE_BYTES = 2000000;
 
@@ -104,9 +104,14 @@ const EditEventAdmin = () => {
   const set = (field, value) => setForm(current => ({ ...current, [field]: value }));
 
   const host = clubs.find(club => String(club.clubID) === form.eventID);
-  // Title first, host categories as the fallback — the exact order EventPoster
-  // and SwipeCard resolve in, so the preview shows the poster that gets saved.
-  const topic = topicFor(form.title, form.description, normalizeCategories(host?.categories), host?.tags);
+  // Events.update stores the selected host's categories on the event. Resolve
+  // that exact prospective record so this preview cannot disagree with the
+  // public poster after Save.
+  const topic = topicForEvent({
+    title: form.title,
+    description: form.description,
+    categories: host?.categories,
+  });
   const when = form.date ? formatEventDate(new Date(form.date)) : '';
   // Only a genuinely uploaded photo becomes the poster face; the seeded stock
   // art is not this app's design and the event poster already ignores it.
@@ -188,7 +193,7 @@ const EditEventAdmin = () => {
             <div className="mb-poster-foot">
               <span className="mb-poster-meta">
                 {form.location || 'Where it happens'}
-                <em>{host ? host.name : topic.label}</em>
+                <em>{host ? host.name : (topic.activityLabel || topic.label)}</em>
               </span>
             </div>
           </div>

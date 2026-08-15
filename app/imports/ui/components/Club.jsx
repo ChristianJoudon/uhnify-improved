@@ -5,7 +5,6 @@ import CardFields from './CardFields';
 import { imagePath, normalizeCategories } from '../utilities/helpers';
 import { CLUB_FIELDS } from '../utilities/cardFields';
 import { topicFor } from '../utilities/topics';
-import { scheduleLabel } from '../../api/club/schedule';
 
 /**
  * A club as a printed poster: the artwork IS the card. The topic decides the
@@ -16,7 +15,6 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
   const categories = normalizeCategories(club.categories);
   // Categories and tags describe the club; its name is only a weak hint.
   const topic = topicFor(categories, club.tags, club.name, club.description);
-  const when = scheduleLabel(club.schedule) || club.meetingTime;
   // Only a genuinely uploaded photo becomes the poster face. The seeded logo
   // art stays the small footer mark — putting it back on the face is exactly
   // the busy look the poster design replaced.
@@ -29,7 +27,6 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
           stay readable text instead of being swallowed by a button's label. */}
       <PosterArt
         topic={topic}
-        eyebrow={when}
         image={photo}
         tagline={club.description}
         title={(
@@ -44,7 +41,7 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
       <div className="mb-poster-foot">
         {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />}
         <span className="mb-poster-meta">
-          {distance || topic.label}
+          {distance || topic.activityLabel || topic.label}
         </span>
         <button
           type="button"
