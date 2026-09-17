@@ -69,11 +69,12 @@ The database is future-complete. The runtime remains intentionally modest.
 
 ### Behavior capture
 
-- Append-only history for impressions, opens/flips, interests, passes, saves, RSVP changes, attendance, group joins/leaves, follows, calendar adds, undo, and corrections.
+- Append-only history for impressions, opens/flips, passes, RSVP changes, attendance, group joins/leaves, follows, calendar adds, undo, and corrections. A right swipe on an event is Going and is recorded as `rsvp_going`; taking it back is `rsvp_canceled`. `interested`, `saved` and `unsaved` remain readable as history and are refused as new writes.
+- A browser may record only `impression`, `opened`, `flipped` and `calendar_added`. Everything else is recorded by the server method that makes it true.
 - Idempotent client event keys, so network retries do not create duplicate actions.
 - Separate materialized current state for fast product reads.
 - Compatibility capture behind the existing swipe and group membership methods.
-- Recommendation telemetry is best-effort: a telemetry failure cannot break a user's save, pass, join, leave, or undo.
+- Recommendation telemetry is best-effort: a telemetry failure cannot break a user's RSVP, pass, join, leave, or undo.
 - Model, tier, and component provenance is trusted only when the recommendation request belongs to the signed-in user.
 
 ### Product surfaces
@@ -351,13 +352,23 @@ The production-like local startup was run against the current development databa
 | Legacy behaviors migrated to append-only history | 53 |
 | Model registry entries | 4 |
 | Job rows | 0, correctly empty until a job is scheduled |
-| Server tests | 58 passing |
+| Server tests | 58 passing at the time; 243 before launch phase 2 and about 400 after it |
 | Lint | Passing |
 | Live desktop feed/deck | Rendered with no browser errors |
 | Live narrow feed/deck | Rendered with no browser errors |
 | Visibility test | One feed impression and one deck impression recorded |
 
 The counts are a local development snapshot, not a claim about a deployed production database.
+
+Launch phase 2 (2026-09-16), measured by booting a copy of the development database, which by then held 1,242 events and, after that boot, 681 interactions and 5,547 graph edges:
+
+| Verification | Observed result |
+|---|---:|
+| Double-counted interactions removed (the replay described in `RecommendationScaffold.js`) | 9 of 9 live swipes had been recorded twice |
+| Going swipes given their `EventRSVPs` row | 24 |
+| Job rows after the first boot | 4: three one-time backfills and the event-projection marker |
+| Startup projection, every event on every boot (before) | 4.3 s |
+| Startup projection, only new, edited and unfinished events (after) | 0.17 s; the first boot of the new build took 5.8 s, once |
 
 ## 12. What is ready versus what is not yet claimed
 
@@ -368,13 +379,15 @@ The counts are a local development snapshot, not a claim about a deployed produc
 | Direct graph/hybrid evidence | Implemented; activates when a usable path exists |
 | Shared feed/deck server ranking | Implemented with client fallbacks |
 | Append-only behavior and real impressions | Implemented |
-| RSVP and attendance schemas | Implemented; product flows still need to use them |
-| Dataset, model, experiment, assignment, and job registries | Implemented |
+| RSVP | In use since launch phase 2: a right swipe on an event is Going, recorded as `rsvp_going` / `rsvp_canceled` and kept in `EventRSVPs` |
+| Attendance schema | Implemented; no product flow records attendance yet |
+| Server-side kill switch | Implemented since launch phase 2: `recommendations.enabled` and `recommendations.recordInteractions` |
+| Dataset, model, experiment, assignment, and job registries | Implemented; `RecommendationJobs` holds the one-time backfill markers |
 | LightGCN training pipeline/artifact | Not trained; registry slot is draft |
 | Heterogeneous graph model | Not trained; schema and activation slot are ready |
 | Temporal graph model | Not trained; timestamp/feature/model slots are ready |
 | Online model comparison UI | Not built; database support exists |
-| Production retention policy | Must be chosen before launch |
+| Production retention policy | Chosen in launch phase 2 and enforced by TTL index: 548 days for behaviour, 365 for the audit trail, both configurable. See `doc/production-environment.md` |
 
 This distinction is important: MatchBook is ready to adopt advanced models without a data migration, but it does not claim accuracy from models that do not yet exist.
 
@@ -382,11 +395,11 @@ This distinction is important: MatchBook is ready to adopt advanced models witho
 
 ### Now: make the active system honest
 
-1. Resolve Save vs Interested vs Going.
+1. ~~Resolve Save vs Interested vs Going.~~ Resolved in launch phase 2: it is Going. One stored value (`going`), one recorded action (`rsvp_going`), an event the person is going to leaves the deck, and "Not going" (`rsvp_canceled`) puts it back.
 2. Add a small preferences UI for topics, day/time, radius, price, attendance mode, and accessibility.
-3. Add a server-side feature flag and explicit pass cooldown.
+3. ~~Add a server-side feature flag~~ (resolved in launch phase 2: `recommendations.enabled`, `recommendations.recordInteractions`). An explicit pass cooldown is still open.
 4. Add an admin-only aggregate health report for requests, impressions, actions, coverage, latency, and fallbacks.
-5. Decide data retention/deletion rules.
+5. ~~Decide data retention rules.~~ Resolved in launch phase 2: `retention.behaviourDays`, `retention.auditDays`. Deleting one person's rows when an account is closed is still open; there is no account deletion yet.
 
 ### After real behavior accumulates: improve without new infrastructure
 
@@ -417,6 +430,8 @@ This distinction is important: MatchBook is ready to adopt advanced models witho
 - `app/imports/api/recommendations/adaptiveRank.js`
 - `app/imports/api/recommendations/interactionRecorder.js`
 - `app/imports/api/recommendations/RecommendationsMethods.js`
+- `app/imports/api/recommendations/recommendationSettings.js` (the kill switch)
+- `app/imports/api/retention/retention.js` (TTL limits, shared with the audit trail)
 - `app/imports/startup/server/RecommendationScaffold.js`
 
 ### Product integration
@@ -433,6 +448,9 @@ This distinction is important: MatchBook is ready to adopt advanced models witho
 
 - `app/imports/api/recommendations/adaptiveRank.tests.js`
 - `app/imports/api/recommendations/RecommendationsMethods.tests.js`
+- `app/imports/api/recommendations/RecommendationData.tests.js`
+- `app/imports/api/retention/retention.tests.js`
+- `app/imports/startup/server/RecommendationScaffold.tests.js`
 - `app/imports/startup/server/testFixtures.js`
 
 ## 15. Definition of done for this foundation

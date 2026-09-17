@@ -7,6 +7,7 @@
  * user and item, so sparse profiles and brand-new model tables cannot produce
  * NaN, an exception, or an empty result by themselves.
  */
+import { TOPICS } from '../../ui/utilities/topics';
 
 export const DEFAULT_COMPONENT_WEIGHTS = {
   baseline: 0.22,
@@ -35,6 +36,10 @@ const TIER_ORDER = [
   'temporal',
 ];
 
+// 'interested' and 'saved' are history: a Going swipe was stored as
+// 'interested' before it was called what it is, and those edges are still in
+// the graph. They keep the weight they were written under. Nothing new is
+// written with either name.
 const POSITIVE_GRAPH_RELATIONS = new Map([
   ['joined_group', 1],
   ['followed_group', 0.75],
@@ -45,6 +50,31 @@ const POSITIVE_GRAPH_RELATIONS = new Map([
   ['opened', 0.25],
   ['viewed', 0.1],
 ]);
+
+/**
+ * How the ranker reads a person's history of one card.
+ *
+ * A right swipe on an event means Going, so 'rsvp_going' is the deck's
+ * positive decision; an old 'interested' on an event is the same gesture under
+ * the name it used to have, and is read the same way. 'passed' is the negative
+ * one. A reset puts the card back to undecided: an undo, a correction, and
+ * 'rsvp_canceled' — somebody who said "Not going" has not passed on the event,
+ * they have taken back a plan, and the event may be offered again.
+ */
+const GOING_ACTIONS = ['rsvp_going', 'interested'];
+const DECISION_ACTIONS = [...GOING_ACTIONS, 'passed', 'saved'];
+const RESET_ACTIONS = ['rsvp_canceled', 'undo', 'correction', 'unsaved'];
+
+/** What a person did that says "more like this". */
+const POSITIVE_ACTIONS = ['rsvp_going', 'attendance_verified', 'interested', 'saved'];
+
+/**
+ * Every action the ranker reads. The method layer loads a bounded window of
+ * history, and impressions outnumber decisions many times over — loading only
+ * these keeps a year-old "passed" from falling out of the window behind last
+ * week's scrolling, which would put the card back in the deck.
+ */
+export const RANKING_ACTIONS = [...new Set([...DECISION_ACTIONS, ...RESET_ACTIONS, ...POSITIVE_ACTIONS])];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -75,16 +105,25 @@ const dateValue = value => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
+/**
+ * The most recent decision or reset for each card.
+ *
+ * On equal timestamps a decision outranks a reset. That tie is real: swiping
+ * left over a standing RSVP records 'rsvp_canceled' and then 'passed' from one
+ * method call, often inside the same millisecond, and read the other way round
+ * the pass would be lost and the card dealt again.
+ */
 const latestDecisionByEntity = (interactions, now) => {
   const latest = new Map();
   list(interactions)
     .filter(interaction => interaction?.entityId)
+    .filter(interaction => DECISION_ACTIONS.includes(interaction.action) || RESET_ACTIONS.includes(interaction.action))
     .filter(interaction => !dateValue(interaction?.occurredAt) || dateValue(interaction.occurredAt) <= now)
     .sort((left, right) => (dateValue(right?.occurredAt)?.getTime() || 0)
-      - (dateValue(left?.occurredAt)?.getTime() || 0))
+      - (dateValue(left?.occurredAt)?.getTime() || 0)
+      || Number(RESET_ACTIONS.includes(left.action)) - Number(RESET_ACTIONS.includes(right.action)))
     .forEach(interaction => {
-      if (!latest.has(interaction.entityId)
-        && ['interested', 'passed', 'saved', 'unsaved', 'undo', 'correction'].includes(interaction.action)) {
+      if (!latest.has(interaction.entityId)) {
         latest.set(interaction.entityId, interaction.action);
       }
     });
@@ -102,16 +141,41 @@ const tokensForCandidate = candidate => new Set([
   ...words(candidate?.description),
 ]);
 
+const TOPIC_KEY_BY_NAME = new Map(Object.entries(TOPICS).flatMap(([key, topic]) => [
+  [clean(key), key],
+  [clean(topic.label), key],
+]));
+
+/**
+ * A profile's interests, as the topic keys events are tagged with.
+ *
+ * Settings stores an interest as the topic's LABEL — "Move & Explore" — and an
+ * event carries the topic's KEY — 'outdoors'. The ranker used to split the
+ * label into words and drop them into the same bag as the keys, so that
+ * profile never matched an event on its 'outdoors' tag, while "Make & Create"
+ * matched every description containing the word "make" and was then explained
+ * to its owner as "Matches your interests". The labels that did work ("Music &
+ * Performance" against 'music') worked because a label happened to contain its
+ * own key.
+ *
+ * Interests are a closed vocabulary, so they are resolved through it: a label
+ * becomes its key, a key is already one, and anything else is dropped rather
+ * than guessed at — a string the product never offered cannot honestly be
+ * called the person's interest.
+ */
+export const topicKeysForInterests = interests => [...new Set(list(interests)
+  .map(interest => TOPIC_KEY_BY_NAME.get(clean(interest)))
+  .filter(Boolean))];
+
 const tokensForUser = (profile, preferences, interactions) => {
   const explicit = [
-    ...list(profile?.interests),
     ...list(preferences?.topicIds),
     ...list(preferences?.socialAtmospheres),
   ].flatMap(words);
   const recent = list(interactions)
-    .filter(interaction => ['saved', 'interested', 'rsvp_going', 'attendance_verified'].includes(interaction?.action))
+    .filter(interaction => POSITIVE_ACTIONS.includes(interaction?.action))
     .flatMap(interaction => list(interaction?.context?.topicIds).flatMap(words));
-  return new Set([...explicit, ...recent]);
+  return new Set([...topicKeysForInterests(profile?.interests), ...explicit, ...recent]);
 };
 
 const overlapRatio = (left, right) => {
@@ -189,7 +253,7 @@ const contentComponent = (candidate, userTokens) => {
   return available(overlap, 'Matches your interests');
 };
 
-const graphComponent = ({ candidate, entityType, userId, membershipIds, graphEdges }) => {
+const graphComponent = ({ candidate, entityType, userId, membershipIds, graphEdges, now }) => {
   const hostIds = new Set(list(candidate?._hostClubIds).map(String));
   const joinedHost = [...hostIds].some(hostId => membershipIds.has(hostId));
   const direct = list(graphEdges)
@@ -197,7 +261,10 @@ const graphComponent = ({ candidate, entityType, userId, membershipIds, graphEdg
       && edge?.fromId === userId
       && edge?.toType === entityType
       && edge?.toId === candidate?._id
-      && edge?.privacyEligibility !== 'excluded')
+      && edge?.privacyEligibility !== 'excluded'
+      // An ended edge is a plan that was cancelled or a group that was left.
+      // It is history, not a reason to put the same card first.
+      && (!dateValue(edge?.validTo) || dateValue(edge.validTo) > now))
     .map(edge => (finite(edge?.weight) ?? 1) * (POSITIVE_GRAPH_RELATIONS.get(edge?.relation) ?? 0))
     .filter(score => score > 0);
   if (!joinedHost && direct.length === 0) {
@@ -290,11 +357,22 @@ const contextAdjustment = (candidate, preferences, filters) => {
   return possible === 0 ? null : points / possible;
 };
 
-const eligibility = ({ candidate, kind, now, passedIds, membershipIds, filters }) => {
+const eligibility = ({ candidate, kind, now, passedIds, goingIds, membershipIds, filters }) => {
   if (!candidate?._id) {
     return false;
   }
   if (passedIds.has(candidate._id) && !filters?.includePassed) {
+    return false;
+  }
+  // The event counterpart of "a group you have joined": already decided, so not
+  // a recommendation. Only a pass used to be held back here, and an event the
+  // person had said yes to was ranked and dealt again, leaving it to each page
+  // to notice. A cancelled RSVP is a reset, not a decision, so it is absent
+  // from `goingIds` and the event is offered again. This is the deck's rule:
+  // 'recommendations.get' sets `includeGoing` for every other surface, because
+  // a wall that drops a card the moment it is answered moves it from under
+  // the person's thumb.
+  if (kind === 'event' && goingIds.has(candidate._id) && !filters?.includeGoing) {
     return false;
   }
   if (candidate?.publicationStatus && candidate.publicationStatus !== 'published') {
@@ -369,7 +447,7 @@ const scoreOne = ({
   const components = {
     baseline,
     content,
-    graph: graphComponent({ candidate, entityType, userId, membershipIds, graphEdges }),
+    graph: graphComponent({ candidate, entityType, userId, membershipIds, graphEdges, now }),
     collaborative: learnedEmbeddingComponent({
       tier: 'collaborative',
       candidate,
@@ -483,12 +561,16 @@ export const rankAdaptiveRecommendations = ({
   const passedIds = new Set([...latestDecisions.entries()]
     .filter(([, action]) => action === 'passed')
     .map(([entityId]) => entityId));
+  const goingIds = new Set([...latestDecisions.entries()]
+    .filter(([, action]) => GOING_ACTIONS.includes(action))
+    .map(([entityId]) => entityId));
   const userTokens = tokensForUser(profile, preferences, interactions);
   const eligible = list(candidates).filter(candidate => eligibility({
     candidate,
     kind,
     now: safeNow,
     passedIds,
+    goingIds,
     membershipIds,
     filters,
   }));
@@ -519,7 +601,7 @@ export const rankAdaptiveRecommendations = ({
     selectedTier: highestTier,
     capabilitySnapshot: {
       availableComponents,
-      explicitInterestCount: list(profile?.interests).length + list(preferences?.topicIds).length,
+      explicitInterestCount: topicKeysForInterests(profile?.interests).length + list(preferences?.topicIds).length,
       interactionCount: list(interactions).length,
       graphEdgeCount: list(graphEdges).length,
       activeModelTiers: list(models).filter(model => model?.status === 'active').map(model => model.tier),

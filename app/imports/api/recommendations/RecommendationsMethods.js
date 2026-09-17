@@ -5,7 +5,9 @@ import { EventClubs } from '../events/EventClubs';
 import { Events } from '../events/Events';
 import { ProfileClubs } from '../profile/ProfileClubs';
 import { Profiles } from '../profiles/Profiles';
+import { retentionDays } from '../retention/retention';
 import {
+  CLIENT_RECORDABLE_ACTIONS,
   RECOMMENDATION_ACTIONS,
   RECOMMENDATION_ENTITY_TYPES,
   RecommendationEmbeddings,
@@ -18,8 +20,9 @@ import {
   RecommendationRequests,
 } from './RecommendationData';
 
-import { rankAdaptiveRecommendations, stripPrivateRecommendationFields } from './adaptiveRank';
+import { RANKING_ACTIONS, rankAdaptiveRecommendations, stripPrivateRecommendationFields } from './adaptiveRank';
 import { recordRecommendationInteraction } from './interactionRecorder';
+import { interactionRecordingEnabled, recommendationsEnabled } from './recommendationSettings';
 
 /* eslint-disable no-console */
 
@@ -69,9 +72,22 @@ const PREFERENCE_FIELDS = [
   'privacy',
 ];
 
+/**
+ * The request log is behaviour too — who asked for recommendations, when, on
+ * which surface — so it stops with the rest of the log and expires on the same
+ * schedule. With no request id the pages send no impressions, opens or flips
+ * either (each needs the request it belongs to), so one switch quiets the
+ * whole pipeline rather than leaving the browsers calling into a refusal.
+ */
 const logRecommendationRequest = document => {
+  if (!interactionRecordingEnabled()) {
+    return null;
+  }
   try {
-    return RecommendationRequests.collection.insert(document);
+    return RecommendationRequests.collection.insert({
+      ...document,
+      expiresAt: new Date(Date.now() + retentionDays('behaviourDays') * 24 * 60 * 60 * 1000),
+    });
   } catch (error) {
     // Ranking is the product path; observability is important but may not turn
     // a usable baseline into an outage if its own write fails.
@@ -135,10 +151,19 @@ const recommendationOptions = options => {
   const supplied = options?.filters && typeof options.filters === 'object' && !Array.isArray(options.filters)
     ? options.filters
     : {};
+  // Holding back an event the person is going to is the deck's rule: a card
+  // that has been answered is not dealt again. Applied to every surface it took
+  // the card off the Discover wall's ranked list as well. The wall refetches
+  // after each swipe and sorts anything without a position below everything
+  // that has one, so tapping "I'm going" sent the card under up to a hundred
+  // others, out from beneath the person's thumb. A wall shows what is on; being
+  // on someone's calendar does not make an event less on.
+  const holdsBackGoing = surface === 'swipe_deck' && supplied.includeGoing !== true;
   const filters = compact({
     region: textOrUndefined(supplied.region, 80),
     pricePreference: textOrUndefined(supplied.pricePreference, 20),
     includePassed: supplied.includePassed === true ? true : undefined,
+    includeGoing: holdsBackGoing ? undefined : true,
     includeJoined: supplied.includeJoined === true ? true : undefined,
   });
   return { kind, surface, limit, filters };
@@ -153,7 +178,10 @@ const runRecommendation = ({ userId, kind, surface, limit, filters }) => {
   const profile = Profiles.collection.findOne({ userId }) || null;
   const preferences = RecommendationPreferences.collection.findOne({ userId }) || null;
   const memberships = ProfileClubs.collection.find({ userId }).fetch();
-  const interactions = RecommendationInteractions.collection.find({ userId }, {
+  const interactions = RecommendationInteractions.collection.find({
+    userId,
+    action: { $in: RANKING_ACTIONS },
+  }, {
     sort: { occurredAt: -1 },
     limit: 1000,
   }).fetch();
@@ -185,7 +213,6 @@ const runRecommendation = ({ userId, kind, surface, limit, filters }) => {
     weights: settings.weights,
     limit,
   });
-  const expiresAt = new Date(Date.now() + 400 * 24 * 60 * 60 * 1000);
   const requestId = logRecommendationRequest({
     userId,
     surface,
@@ -199,7 +226,6 @@ const runRecommendation = ({ userId, kind, surface, limit, filters }) => {
     capabilitySnapshot: result.capabilitySnapshot,
     fallbackUsed: false,
     latencyMs: Math.max(0, Date.now() - started),
-    expiresAt,
   });
   return {
     requestId,
@@ -214,7 +240,16 @@ const runRecommendation = ({ userId, kind, surface, limit, filters }) => {
   };
 };
 
-const fallbackRecommendation = ({ userId, kind, surface, limit, filters, error }) => {
+/**
+ * The baseline on its own: upcoming, complete, recently added. It reads the
+ * listings and nothing from the recommendation collections, which is what
+ * makes it safe to fall back to when those are the thing that is wrong — and
+ * what makes it the right answer when recommendations are switched off.
+ *
+ * `fallbackReason` is how a caller tells the two apart: 'disabled' is an
+ * operator's decision and not an error; 'ranking-failed' is one.
+ */
+const fallbackRecommendation = ({ userId, kind, surface, limit, filters, reason, error }) => {
   const started = Date.now();
   const candidates = kind === 'group'
     ? Clubs.collection.find(PUBLIC_LISTING_SELECTOR).fetch()
@@ -233,8 +268,7 @@ const fallbackRecommendation = ({ userId, kind, surface, limit, filters, error }
     capabilitySnapshot: fallback.capabilitySnapshot,
     fallbackUsed: true,
     latencyMs: Math.max(0, Date.now() - started),
-    errorCode: `${error?.error || error?.message || 'ranking-failed'}`.slice(0, 120),
-    expiresAt: new Date(Date.now() + 400 * 24 * 60 * 60 * 1000),
+    errorCode: `${error?.error || error?.message || reason}`.slice(0, 120),
   });
   return {
     requestId,
@@ -242,6 +276,7 @@ const fallbackRecommendation = ({ userId, kind, surface, limit, filters, error }
     selectedTier: 'baseline',
     capabilitySnapshot: fallback.capabilitySnapshot,
     fallbackUsed: true,
+    fallbackReason: reason,
     items: fallback.items.map((item, position) => ({
       ...stripPrivateRecommendationFields(item),
       position,
@@ -257,11 +292,17 @@ Meteor.methods({
     if (!Meteor.isServer) {
       return null;
     }
+    // The launch-day escape hatch: `recommendations.enabled: false` in the
+    // settings. Every page already copes with this answer, because it is the
+    // one they get when ranking throws.
+    if (!recommendationsEnabled()) {
+      return fallbackRecommendation({ userId: this.userId, ...normalized, reason: 'disabled' });
+    }
     try {
       return runRecommendation({ userId: this.userId, ...normalized });
     } catch (error) {
       console.error('[recommendations] adaptive ranking failed; using baseline:', error.message);
-      return fallbackRecommendation({ userId: this.userId, ...normalized, error });
+      return fallbackRecommendation({ userId: this.userId, ...normalized, reason: 'ranking-failed', error });
     }
   },
 
@@ -287,6 +328,12 @@ Meteor.methods({
       'invalid-action',
       'That recommendation action is not supported.',
     );
+    // A real action, but not one a browser gets to assert: an RSVP, a join or
+    // a verified attendance is recorded by the server method that makes it
+    // true. See CLIENT_RECORDABLE_ACTIONS.
+    if (!CLIENT_RECORDABLE_ACTIONS.includes(payload.action)) {
+      throw new Meteor.Error('not-authorized', 'MatchBook records that itself, when it happens.');
+    }
     if (!Meteor.isServer) {
       return payload.clientEventId;
     }
