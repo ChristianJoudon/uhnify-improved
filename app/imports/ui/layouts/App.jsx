@@ -21,6 +21,7 @@ import Agenda from '../pages/Agenda';
 import ListClubAdmin from '../pages/ListClubAdmin';
 import ClubFinder from '../pages/ClubFinder';
 import Footer from '../components/Footer';
+import ErrorBoundary from '../components/ErrorBoundary';
 import ProfileSettings from '../pages/Settings';
 import AddClub from '../pages/AddClub';
 import MyEvents from '../pages/MyEvents';
@@ -59,37 +60,42 @@ const App = () => {
       <Router>
         <div className="app-shell d-flex flex-column min-vh-100">
           <NavBar />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/signout" element={<SignOut />} />
-            <Route path="/home" element={<ProtectedRoute><Landing /></ProtectedRoute>} />
-            <Route path="/upcoming-events" element={<ListEvents />} />
-            <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
-            <Route path="/discover-events" element={<ProtectedRoute><DiscoverEvents /></ProtectedRoute>} />
-            <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
-            <Route path="/saved" element={<ProtectedRoute><ListClubs /></ProtectedRoute>} />
-            <Route path="/my-clubs" element={<ProtectedRoute><ListClubs /></ProtectedRoute>} />
-            <Route path="/search-clubs" element={<ProtectedRoute><ClubFinder /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/profilez" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
-            <Route path="/edit/:_id" element={<AdminProtectedRoute ready={ready}><EditClubAdmin /></AdminProtectedRoute>} />
-            <Route path="/edit/event/:_id" element={<AdminProtectedRoute ready={ready}><EditEventAdmin /></AdminProtectedRoute>} />
-            <Route path="/user-events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
-            {/* Was a generic "About" panel with no inbound link anywhere in the
-                app. Kept as a redirect so an old bookmark lands somewhere real
-                instead of on the 404. */}
-            <Route path="/clubdetail" element={<Navigate to="/" replace />} />
-            <Route path="/create-club" element={<ProtectedRoute><AddClub /></ProtectedRoute>} />
-            <Route path="/create-event" element={<ProtectedRoute><AddEvent /></ProtectedRoute>} />
-            <Route path="/admin" element={<AdminProtectedRoute ready={ready}><ListClubAdmin /></AdminProtectedRoute>} />
-            <Route path="/admin/event-intake" element={<AdminProtectedRoute ready={ready}><EventIntake /></AdminProtectedRoute>} />
-            <Route path="/admin/event-intake/review" element={<AdminProtectedRoute ready={ready}><EventReview /></AdminProtectedRoute>} />
-            <Route path="/notauthorized" element={<NotAuthorized />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {/* Inside the Router, so the boundary can watch the route and reset
+              on navigation; around only the page, so the nav and footer stay
+              on screen and usable when a page's render throws. */}
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/signout" element={<SignOut />} />
+              <Route path="/home" element={<ProtectedRoute><Landing /></ProtectedRoute>} />
+              <Route path="/upcoming-events" element={<ListEvents />} />
+              <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+              <Route path="/discover-events" element={<ProtectedRoute><DiscoverEvents /></ProtectedRoute>} />
+              <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
+              <Route path="/saved" element={<ProtectedRoute><ListClubs /></ProtectedRoute>} />
+              <Route path="/my-clubs" element={<ProtectedRoute><ListClubs /></ProtectedRoute>} />
+              <Route path="/search-clubs" element={<ProtectedRoute><ClubFinder /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/profilez" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+              <Route path="/edit/:_id" element={<AdminProtectedRoute ready={ready}><EditClubAdmin /></AdminProtectedRoute>} />
+              <Route path="/edit/event/:_id" element={<AdminProtectedRoute ready={ready}><EditEventAdmin /></AdminProtectedRoute>} />
+              <Route path="/user-events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
+              {/* Was a generic "About" panel with no inbound link anywhere in the
+                  app. Kept as a redirect so an old bookmark lands somewhere real
+                  instead of on the 404. */}
+              <Route path="/clubdetail" element={<Navigate to="/" replace />} />
+              <Route path="/create-club" element={<ProtectedRoute><AddClub /></ProtectedRoute>} />
+              <Route path="/create-event" element={<ProtectedRoute><AddEvent /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminProtectedRoute ready={ready}><ListClubAdmin /></AdminProtectedRoute>} />
+              <Route path="/admin/event-intake" element={<AdminProtectedRoute ready={ready}><EventIntake /></AdminProtectedRoute>} />
+              <Route path="/admin/event-intake/review" element={<AdminProtectedRoute ready={ready}><EventReview /></AdminProtectedRoute>} />
+              <Route path="/notauthorized" element={<NotAuthorized />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
           <Footer />
         </div>
       </Router>
