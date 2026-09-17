@@ -76,7 +76,6 @@ EventCardAdmin.propTypes = {
     description: PropTypes.string,
     date: PropTypes.instanceOf(Date),
     location: PropTypes.string,
-    createdBy: PropTypes.string,
     eventID: PropTypes.number,
     image: PropTypes.string,
   }).isRequired,

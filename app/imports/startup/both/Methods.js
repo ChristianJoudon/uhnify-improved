@@ -17,7 +17,8 @@ import {
   RecommendationRequests,
 } from '../../api/recommendations/RecommendationData';
 import { friendActivityVisibilityFor } from '../../api/privacy/FriendActivityPrivacy';
-import { TOPICS } from '../../ui/utilities/topics';
+import { LIST_MAX_ENTRIES, TEXT_LIMITS, imageProblem } from '../../api/listing/limits';
+import { INTEREST_TOPIC_KEYS, TOPICS } from '../../ui/utilities/topics';
 
 /* eslint-disable no-console */
 
@@ -41,23 +42,44 @@ const getUsername = (userId) => {
   return user?.username || user?.emails?.[0]?.address || userId;
 };
 
+/**
+ * A group's categories, each held to a ceiling and the list to a count.
+ *
+ * The form fills these from a chip input that stops at ten short labels, so
+ * nobody typing one meets either limit. They exist for a direct method call,
+ * which until now could store a category of any length, as many of them as it
+ * liked, and every visitor was then sent the lot with the card — the same hole
+ * the scalar fields had before checkText. Cut rather than refused, as tags
+ * are: a label past forty characters is not a category anyone meant.
+ */
 const normalizeCategories = categories => {
   if (!categories) {
     return ['Other'];
   }
-  if (Array.isArray(categories)) {
-    return categories.map(category => `${category}`.trim()).filter(Boolean);
-  }
-  return `${categories}`.split(',').map(category => category.trim()).filter(Boolean);
+  const list = Array.isArray(categories) ? categories : `${categories}`.split(',');
+  return list
+    .map(category => `${category}`.trim().slice(0, TEXT_LIMITS.category))
+    .filter(Boolean)
+    .slice(0, LIST_MAX_ENTRIES);
 };
 
-const privateInterestLabels = new Set(
-  Object.values(TOPICS).filter(topic => topic.sensitiveParticipation).map(topic => topic.label),
-);
+/**
+ * The interests a profile may publish: the labels of the public topics, once
+ * each, in the order given.
+ *
+ * Sign-up and Customize offer exactly those chips, and every reader resolves
+ * an interest back to its topic, so anything else was never an interest — it
+ * was a string of any length, stored as many times as the caller cared to
+ * repeat it, on a document the people directory sends to every signed-in
+ * user. Support Groups is a topic but not an interest: taking part can reveal
+ * health or recovery information, which is why INTEREST_TOPIC_KEYS leaves it
+ * out and it is dropped here rather than published.
+ */
+const publicInterestLabels = new Set(INTEREST_TOPIC_KEYS.map(key => TOPICS[key].label));
 
-const publicProfileInterests = interests => (interests || [])
-  .map(interest => `${interest}`.trim())
-  .filter(interest => interest && !privateInterestLabels.has(interest));
+const publicProfileInterests = interests => [...new Set(
+  (interests || []).map(interest => `${interest}`.trim()).filter(interest => publicInterestLabels.has(interest)),
+)];
 
 const toDate = value => {
   const date = value instanceof Date ? value : new Date(value);
@@ -158,30 +180,78 @@ const endFriendRecommendationEdges = (leftId, rightId) => {
   }
 };
 
-const MAX_IMAGE_LENGTH = 2800000;
-
-const checkImageSize = image => {
-  if (image && image.length > MAX_IMAGE_LENGTH) {
-    throw new Meteor.Error('image-too-large', 'Please choose a smaller image.');
+/**
+ * What a person wrote, trimmed and held to the ceiling in TEXT_LIMITS.
+ *
+ * Every method that stores text passes it through here, because until it
+ * existed no field had a length limit at all: a few pages capped their inputs
+ * with maxLength, which a direct method call never sees, and the server took
+ * whatever arrived. The label is the one the form shows, since the reason is
+ * what the person reads.
+ */
+const checkText = (value, key, label, { required = false } = {}) => {
+  if (value !== undefined && typeof value !== 'string') {
+    throw new Meteor.Error('invalid-text', `${label} must be text.`);
   }
+  const text = (value || '').trim();
+  if (required && !text) {
+    throw new Meteor.Error('required', `${label} is required.`);
+  }
+  if (text.length > TEXT_LIMITS[key]) {
+    throw new Meteor.Error('too-long', `${label} is limited to ${TEXT_LIMITS[key]} characters.`);
+  }
+  return text;
+};
+
+const IMAGE_PROBLEMS = {
+  'invalid-image': 'Please choose a JPEG, PNG or WebP photo.',
+  'image-too-large': 'That photo is too large — try a smaller one.',
 };
 
 /**
- * A profile picture, checked once for both of the things that can be wrong with
- * it. There used to be a second size ceiling here — 2,500,000 against the
- * 2,800,000 above — two numbers for one idea, and neither of them the one the
- * uploader was actually measured against.
+ * A stored image: one of the app's own, an https URL, or an inline JPEG, PNG
+ * or WebP whose first bytes agree with its label. imageProblem says why
+ * nothing else. There used to be two checks here — a 2.8 MB ceiling and a
+ * list of prefixes — and between them they accepted any content at all, at a
+ * size that was then sent to every visitor with the card.
  */
-const checkPicture = picture => {
-  checkImageSize(picture);
-  const known = ['data:image/', '/images/', 'images/', 'http'];
-  if (!known.some(prefix => picture.startsWith(prefix))) {
-    throw new Meteor.Error('invalid-image', 'Please choose a valid image file or image URL.');
+const checkImage = image => {
+  const problem = imageProblem(image);
+  if (problem) {
+    throw new Meteor.Error(problem, IMAGE_PROBLEMS[problem]);
   }
-  return picture;
+  return image;
 };
 
-const normalizeTag = tag => `${tag}`.trim().replace(/\s+/g, ' ').slice(0, 28);
+/** The listing forms send '' for "no photo", and a listing without one is
+    drawn from its topic. Only a photo that is there is checked. */
+const optionalImage = image => (image ? checkImage(image) : image);
+
+/**
+ * A contact email the organizer chose to print on the listing.
+ *
+ * Optional, and blank means "publish none" — the card then draws no mail row,
+ * the same rule as a group's contact box. What is given is trimmed and
+ * lowercased, so one address spelled two ways does not read as two, and it is
+ * checked only for the shape every address has: one @, a dotted domain, no
+ * whitespace, and the length ceiling the mail standards set. Anything stricter
+ * turns away real addresses, and the reason here is shown to the person who
+ * typed it.
+ */
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
+
+const contactEmailOf = value => {
+  const email = (value || '').trim().toLowerCase();
+  if (!email) {
+    return undefined;
+  }
+  if (email.length > TEXT_LIMITS.email || !EMAIL_SHAPE.test(email)) {
+    throw new Meteor.Error('invalid-email', 'That contact email does not look right.');
+  }
+  return email;
+};
+
+const normalizeTag = tag => `${tag}`.trim().replace(/\s+/g, ' ').slice(0, TEXT_LIMITS.tag);
 
 const normalizeSchedule = schedule => {
   if (!schedule || !Array.isArray(schedule.days) || schedule.days.length === 0) {
@@ -246,6 +316,9 @@ Meteor.methods({
     // all — the real one is `this.userId`, and it has to come first.
     requireLoggedIn(this.userId);
     const targetUserId = userId || this.userId;
+    const address = checkText(email, 'email', 'Email', { required: true });
+    const first = checkText(firstName, 'firstName', 'First name');
+    const last = checkText(lastName, 'lastName', 'Last name');
 
     const isAdmin = Roles.userIsInRole(this.userId, 'admin');
     if (this.userId !== targetUserId && !isAdmin) {
@@ -270,11 +343,11 @@ Meteor.methods({
      */
     const account = Meteor.users.findOne(targetUserId);
     const accountEmail = account?.username || account?.emails?.[0]?.address;
-    if (!isAdmin && accountEmail && email !== accountEmail) {
+    if (!isAdmin && accountEmail && address !== accountEmail) {
       throw new Meteor.Error('not-authorized', 'That email does not belong to your account.');
     }
 
-    const existingProfile = Profiles.collection.findOne({ $or: [{ userId: targetUserId }, { email }] });
+    const existingProfile = Profiles.collection.findOne({ $or: [{ userId: targetUserId }, { email: address }] });
     // Belt and braces: even matched by an email that passed the check above, a
     // profile already owned by somebody else is never adopted.
     if (existingProfile && existingProfile.userId && existingProfile.userId !== targetUserId) {
@@ -282,9 +355,9 @@ Meteor.methods({
     }
     const profileData = {
       userId: targetUserId,
-      email,
-      firstName,
-      lastName,
+      email: address,
+      firstName: first,
+      lastName: last,
       bio: existingProfile?.bio || '',
       title: existingProfile?.title || 'Student',
       picture: existingProfile?.picture || '/images/defaultprofilepic.png',
@@ -321,15 +394,15 @@ Meteor.methods({
     }
 
     const fields = {
-      firstName: profileData.firstName,
-      lastName: profileData.lastName,
-      email: profileData.email,
-      bio: profileData.bio,
-      title: profileData.title,
+      firstName: checkText(profileData.firstName, 'firstName', 'First name'),
+      lastName: checkText(profileData.lastName, 'lastName', 'Last name'),
+      email: checkText(profileData.email, 'email', 'Email', { required: true }),
+      bio: checkText(profileData.bio, 'bio', 'Bio'),
+      title: checkText(profileData.title, 'profileTitle', 'Title'),
       interests: publicProfileInterests(profileData.interests),
     };
     if (profileData.picture !== undefined) {
-      fields.picture = checkPicture(profileData.picture);
+      fields.picture = checkImage(profileData.picture);
     }
 
     Profiles.collection.update(profile._id, { $set: { ...fields, updatedAt: now() } });
@@ -354,29 +427,33 @@ Meteor.methods({
       schedule: Match.Optional(Object),
     });
     requireLoggedIn(this.userId);
-    checkImageSize(clubData.image);
-
-    const clubID = nextNumericId(Clubs.collection, 'clubID');
-    return Clubs.collection.insert({
-      clubID,
-      createdAt: now(),
-      updatedAt: now(),
-      name: clubData.name,
-      owner: getUsername(this.userId),
-      description: clubData.description,
-      location: clubData.location,
-      image: clubData.image,
-      meetingTime: clubData.meetingTime,
+    const listing = {
+      name: checkText(clubData.name, 'name', 'Name', { required: true }),
+      description: checkText(clubData.description, 'description', 'Description'),
+      location: checkText(clubData.location, 'location', 'Location', { required: true }),
+      image: optionalImage(clubData.image),
+      meetingTime: checkText(clubData.meetingTime, 'meetingTime', 'Meeting time', { required: true }),
       // Blank stays blank. This used to fall back to the creator's account
       // name, which `getUsername` resolves to their EMAIL — so leaving the
       // optional "how to reach us" box empty published your address on the
       // group's card to everyone, including signed-out visitors. An organizer
       // who types a contact has chosen to publish it; one who does not has
       // chosen the opposite, and the card simply draws no contact row.
-      contactInfo: clubData.contactInfo || '',
+      contactInfo: checkText(clubData.contactInfo, 'contactInfo', 'Contact'),
+    };
+
+    // Numbered only once everything about it has been accepted, so a refused
+    // listing does not use up a group number.
+    const clubID = nextNumericId(Clubs.collection, 'clubID');
+    return Clubs.collection.insert({
+      clubID,
+      createdAt: now(),
+      updatedAt: now(),
+      ...listing,
+      owner: getUsername(this.userId),
       categories: normalizeCategories(clubData.categories),
-      tags: (clubData.tags || []).map(normalizeTag).filter(tag => tag.length >= 2).slice(0, 20),
-      schedule: normalizeSchedule(clubData.schedule) || parseMeetingTime(clubData.meetingTime) || undefined,
+      tags: (clubData.tags || []).map(normalizeTag).filter(tag => tag.length >= 2).slice(0, LIST_MAX_ENTRIES),
+      schedule: normalizeSchedule(clubData.schedule) || parseMeetingTime(listing.meetingTime) || undefined,
     });
   },
 
@@ -396,26 +473,28 @@ Meteor.methods({
       schedule: Match.Optional(Object),
     });
     requireAdmin(this.userId);
+    const meetingTime = checkText(clubData.meetingTime, 'meetingTime', 'Meeting time', { required: true });
 
     const categories = normalizeCategories(clubData.categories);
     Clubs.collection.update(clubId, {
       $set: {
-        name: clubData.name,
-        owner: clubData.owner,
-        description: clubData.description,
-        location: clubData.location,
-        image: clubData.image,
-        meetingTime: clubData.meetingTime,
-        contactInfo: clubData.contactInfo || '',
+        name: checkText(clubData.name, 'name', 'Name', { required: true }),
+        // An account name, which is an email address, so it shares that ceiling.
+        owner: checkText(clubData.owner, 'email', 'Owner', { required: true }),
+        description: checkText(clubData.description, 'description', 'Description'),
+        location: checkText(clubData.location, 'location', 'Location', { required: true }),
+        image: optionalImage(clubData.image),
+        meetingTime,
+        contactInfo: checkText(clubData.contactInfo, 'contactInfo', 'Contact'),
         categories,
-        ...(clubData.tags ? { tags: clubData.tags.map(normalizeTag).filter(tag => tag.length >= 2).slice(0, 20) } : {}),
+        ...(clubData.tags ? { tags: clubData.tags.map(normalizeTag).filter(tag => tag.length >= 2).slice(0, LIST_MAX_ENTRIES) } : {}),
         updatedAt: now(),
       },
     });
 
     // Explicit schedule wins; otherwise re-derive from the (possibly edited) meeting
     // text — and clear it when the text no longer describes a recurring meeting.
-    const derived = normalizeSchedule(clubData.schedule) || parseMeetingTime(clubData.meetingTime);
+    const derived = normalizeSchedule(clubData.schedule) || parseMeetingTime(meetingTime);
     if (derived) {
       Clubs.collection.update(clubId, { $set: { schedule: derived } });
     } else {
@@ -517,11 +596,11 @@ Meteor.methods({
       description: Match.Optional(String),
       date: Match.OneOf(Date, String),
       location: String,
-      createdBy: Match.Optional(String),
+      email: Match.Optional(String),
       image: Match.Optional(String),
     });
     requireLoggedIn(this.userId);
-    checkImageSize(eventData.image);
+    const contactEmail = contactEmailOf(eventData.email);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const hostClub = findClubByAnyId(hostClubID);
@@ -529,13 +608,19 @@ Meteor.methods({
       createdAt: now(),
       updatedAt: now(),
       eventID: hostClubID,
-      title: eventData.title,
-      description: eventData.description || '',
+      title: checkText(eventData.title, 'title', 'Name', { required: true }),
+      description: checkText(eventData.description, 'description', 'Description'),
       date: toDate(eventData.date),
-      location: eventData.location,
-      createdBy: eventData.createdBy || getUsername(this.userId),
+      location: checkText(eventData.location, 'location', 'Location', { required: true }),
+      // `owner` is the whole record of who posted this, and the public
+      // publications withhold it. A `createdBy` used to be written beside it
+      // holding the same account email — and that one they did not withhold.
       owner: getUsername(this.userId),
-      image: eventData.image || '/images/codingWorkshop.png',
+      image: optionalImage(eventData.image) || '/images/codingWorkshop.png',
+      // Absent rather than '' when none was given: an empty string is a value
+      // the record would then carry, and every reader would have to know it
+      // means nothing.
+      ...(contactEmail ? { email: contactEmail } : {}),
       ...(hostClub?.name ? { hostName: hostClub.name } : {}),
       ...(hostClub?.categories?.length ? { categories: hostClub.categories } : {}),
     });
@@ -555,10 +640,11 @@ Meteor.methods({
       description: Match.Optional(String),
       date: Match.OneOf(Date, String),
       location: String,
-      createdBy: String,
+      email: Match.Optional(String),
       image: Match.Optional(String),
     });
     requireAdmin(this.userId);
+    const contactEmail = contactEmailOf(eventData.email);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const existingEvent = Events.collection.findOne(eventId);
@@ -572,15 +658,18 @@ Meteor.methods({
     Events.collection.update(eventId, {
       $set: {
         eventID: hostClubID,
-        title: eventData.title,
-        description: eventData.description || '',
+        title: checkText(eventData.title, 'title', 'Name', { required: true }),
+        description: checkText(eventData.description, 'description', 'Description'),
         date: toDate(eventData.date),
-        location: eventData.location,
-        createdBy: eventData.createdBy,
-        image: eventData.image || '/images/codingWorkshop.png',
+        location: checkText(eventData.location, 'location', 'Location', { required: true }),
+        image: optionalImage(eventData.image) || '/images/codingWorkshop.png',
         updatedAt: now(),
+        ...(contactEmail ? { email: contactEmail } : {}),
         ...locallyAuthoredFields,
       },
+      // Clearing the box takes the address down. A blank left in its place
+      // would print nothing and still sit on the record for anyone reading it.
+      ...(contactEmail ? {} : { $unset: { email: '' } }),
     });
 
     if (existingEvent && !existingEvent.importedFrom) {

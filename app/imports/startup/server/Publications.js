@@ -12,11 +12,14 @@ import { AuditLog } from '../../api/audit/AuditLog';
 import { FRIEND_ACTIVITY_VISIBILITY } from '../../api/privacy/FriendActivityPrivacy';
 
 // `owner` is an account name, which `getUsername` resolves to an email address,
-// and these three publications answer to anyone — no login required. It is read
-// nowhere but the admin editor, which subscribes to the admin publication
-// below, so withholding it here costs nothing and stops every creator's address
-// being one console subscription away.
-const PUBLIC_FIELDS = { fields: { owner: 0 } };
+// and `createdBy` was the same address written a second time — stripping the
+// first and not the second is how every creator's address stayed one console
+// subscription away. Three of the publications below answer to anyone, no
+// login required, and two more to any account, which sign-up makes anyone.
+// The admin editor is the only screen that reads `owner`, through the admin
+// publications, so every other cursor over a club or an event carries this
+// projection: it costs nothing and closes the gap.
+const PUBLIC_FIELDS = { fields: { owner: 0, createdBy: 0 } };
 const PUBLIC_LISTING_SELECTOR = {
   $or: [
     { publicationStatus: 'published' },
@@ -84,7 +87,7 @@ Meteor.publish(ProfileClubs.userPublicationName, function () {
     const clubIds = profileClubs.map(profileClub => profileClub.clubId);
     return Clubs.collection.find({
       $and: [{ _id: { $in: clubIds } }, PUBLIC_LISTING_SELECTOR],
-    }, { sort: { name: 1 } });
+    }, { sort: { name: 1 }, ...PUBLIC_FIELDS });
   }
   return this.ready();
 });
@@ -183,7 +186,7 @@ Meteor.publish(EventClubs.userPublicationName, function () {
       },
       PUBLIC_LISTING_SELECTOR,
     ],
-  }, { sort: { date: 1 } });
+  }, { sort: { date: 1 }, ...PUBLIC_FIELDS });
 });
 
 /**

@@ -1,5 +1,12 @@
+// First, and that order is load-bearing: the guard refuses to start a
+// production process on the development settings, and it must say so BEFORE
+// Accounts creates the default users from those settings — a refusal that
+// arrives after `admin@foo.com / changeme` is already in the database has not
+// guarded anything.
+import '/imports/startup/server/productionGuard';
 import { Meteor } from 'meteor/meteor';
 import '/imports/startup/server/Accounts';
+import '/imports/startup/server/securityHeaders';
 import '/imports/startup/server/Publications';
 import '/imports/startup/server/CommunityIngestion';
 import '/imports/startup/server/CommunityIngestionRunQueue';

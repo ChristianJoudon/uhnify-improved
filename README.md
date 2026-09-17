@@ -30,29 +30,24 @@ From the project root:
 ```bash
 cd app
 meteor npm install
-meteor npm run start
+meteor npm run start -- --port 3010
 ```
 
-The start script runs Meteor with the development settings file:
+The start script runs Meteor with the development settings file. The port is passed through with `--` because Meteor reads it only from `--port`:
 
 ```bash
-meteor --no-release-check --exclude-archs web.browser.legacy,web.cordova --settings ../config/settings.development.json
+meteor --no-release-check --exclude-archs web.browser.legacy,web.cordova --settings ../config/settings.development.json --port 3010
 ```
 
 Then open:
 
 ```text
-http://localhost:3000
+http://localhost:3010
 ```
 
-## Default accounts
+## Accounts
 
-The development settings file creates these users on first run:
-
-```text
-admin@foo.com / changeme   admin account
-john@foo.com  / changeme   regular user account
-```
+Accounts are created from the `defaultAccounts` list in the settings file passed with `--settings`, and only when the users collection is empty. Development uses `config/settings.development.json`, whose accounts are for local use only. A production deployment must supply its own settings file, with long random passwords and its own admin address (`app/.deploy/settings.sample.json` shows the shape). The server checks that file at startup and refuses to start with the development accounts, a placeholder address, or a placeholder secret in it; see `app/imports/startup/server/productionGuard.js` for exactly what it refuses.
 
 ## Main routes
 

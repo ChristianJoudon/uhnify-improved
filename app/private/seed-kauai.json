@@ -678,7 +678,6 @@
       "date": "2026-08-02T18:00:00.000Z",
       "endDate": "2026-08-03T02:00:00.000Z",
       "location": "4150 Nuhou St",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "sports",
@@ -701,7 +700,6 @@
       "date": "2026-08-02T18:00:00.000Z",
       "endDate": "2026-08-03T03:00:00.000Z",
       "location": "Kapaʻa Beach Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Heiva i Kauaʻi",
       "categories": [
@@ -732,7 +730,6 @@
       "date": "2026-08-02T18:30:00.000Z",
       "endDate": "2026-08-02T19:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anya Love",
       "categories": [
@@ -761,7 +758,6 @@
       "date": "2026-08-02T19:00:00.000Z",
       "endDate": "2026-08-02T23:00:00.000Z",
       "location": "Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -784,7 +780,6 @@
       "date": "2026-08-02T19:00:00.000Z",
       "endDate": "2026-08-03T00:00:00.000Z",
       "location": "Kauaʻi Veterans Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Veterans Center",
       "categories": [
@@ -807,7 +802,6 @@
       "date": "2026-08-02T19:00:00.000Z",
       "endDate": "2026-08-02T20:00:00.000Z",
       "location": "The Shops at Kukuiʻula",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Lululemon / The Shops at Kukuiʻula",
       "categories": [
@@ -834,7 +828,6 @@
       "date": "2026-08-02T21:30:00.000Z",
       "endDate": "2026-08-02T23:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -857,7 +850,6 @@
       "date": "2026-08-02T22:00:00.000Z",
       "endDate": "2026-08-02T23:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -884,7 +876,6 @@
       "date": "2026-08-02T22:30:00.000Z",
       "endDate": "2026-08-03T00:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -906,7 +897,6 @@
       "date": "2026-08-02T23:00:00.000Z",
       "endDate": "2026-08-03T00:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "music",
@@ -929,7 +919,6 @@
       "date": "2026-08-03T01:00:00.000Z",
       "endDate": "2026-08-03T04:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -959,7 +948,6 @@
       "date": "2026-08-03T01:00:00.000Z",
       "endDate": "2026-08-03T03:00:00.000Z",
       "location": "Kukui Grove Center Food Court",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi ʻUkulele Club",
       "categories": [
@@ -987,7 +975,6 @@
       "date": "2026-08-03T03:30:00.000Z",
       "endDate": "2026-08-03T05:30:00.000Z",
       "location": "Sheraton Kauaʻi Coconut Beach Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Sheraton Kauaʻi Coconut Beach Resort",
       "categories": [
@@ -1014,7 +1001,6 @@
       "date": "2026-08-03T04:00:00.000Z",
       "endDate": "2026-08-03T06:00:00.000Z",
       "location": "Kauaʻi Island Brewing Company",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Brewing Company",
       "categories": [
@@ -1037,7 +1023,6 @@
       "date": "2026-08-03T19:00:00.000Z",
       "endDate": "2026-08-03T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe x Hā Coffee",
       "categories": [
@@ -1064,7 +1049,6 @@
       "date": "2026-08-03T23:00:00.000Z",
       "endDate": "2026-08-04T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -1092,7 +1076,6 @@
       "date": "2026-08-04T01:00:00.000Z",
       "endDate": "2026-08-04T04:00:00.000Z",
       "location": "Anahola Marketplace",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -1118,7 +1101,6 @@
       "date": "2026-08-04T01:00:00.000Z",
       "endDate": "2026-08-04T03:30:00.000Z",
       "location": "Kukui Grove Center — South Parking Lot",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -1142,7 +1124,6 @@
       "date": "2026-08-04T02:30:00.000Z",
       "endDate": "2026-08-04T03:30:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Live Poets Society",
       "categories": [
@@ -1173,7 +1154,6 @@
       "date": "2026-08-04T03:00:00.000Z",
       "endDate": "2026-08-04T05:00:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -1201,7 +1181,6 @@
       "date": "2026-08-04T03:30:00.000Z",
       "endDate": "2026-08-04T06:30:00.000Z",
       "location": "The Porter Pavilion at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -1226,7 +1205,6 @@
       "date": "2026-08-04T20:00:00.000Z",
       "endDate": "2026-08-04T21:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -1256,7 +1234,6 @@
       "date": "2026-08-04T21:00:00.000Z",
       "endDate": "2026-08-04T21:30:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -1286,7 +1263,6 @@
       "date": "2026-08-04T23:30:00.000Z",
       "endDate": "2026-08-05T01:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "NAMI Kauaʻi",
       "categories": [
@@ -1316,7 +1292,6 @@
       "date": "2026-08-05T00:00:00.000Z",
       "endDate": "2026-08-05T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -1344,7 +1319,6 @@
       "date": "2026-08-05T00:00:00.000Z",
       "endDate": "2026-08-05T03:00:00.000Z",
       "location": "Waipā Foundation area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -1366,7 +1340,6 @@
       "date": "2026-08-05T02:00:00.000Z",
       "endDate": "2026-08-05T03:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "YWCA Kauaʻi",
       "categories": [
@@ -1396,7 +1369,6 @@
       "date": "2026-08-05T23:00:00.000Z",
       "endDate": "2026-08-06T01:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -1424,7 +1396,6 @@
       "date": "2026-08-05T23:00:00.000Z",
       "endDate": "2026-08-06T03:00:00.000Z",
       "location": "Princeville Makai Golf Club",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Makai Golf Club",
       "categories": [
@@ -1451,7 +1422,6 @@
       "date": "2026-08-06T01:00:00.000Z",
       "endDate": "2026-08-06T02:30:00.000Z",
       "location": "Kapaʻa Ball Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -1475,7 +1445,6 @@
       "date": "2026-08-06T01:00:00.000Z",
       "endDate": "2026-08-06T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -1504,7 +1473,6 @@
       "date": "2026-08-06T02:00:00.000Z",
       "endDate": "2026-08-06T04:00:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -1526,7 +1494,6 @@
       "date": "2026-08-06T03:00:00.000Z",
       "endDate": "2026-08-06T05:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -1554,7 +1521,6 @@
       "date": "2026-08-06T03:00:00.000Z",
       "endDate": "2026-08-06T05:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -1583,7 +1549,6 @@
       "date": "2026-08-06T03:30:00.000Z",
       "endDate": "2026-08-06T05:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Līhuʻe Public Library",
       "categories": [
@@ -1611,7 +1576,6 @@
       "date": "2026-08-06T03:30:00.000Z",
       "endDate": "2026-08-06T06:30:00.000Z",
       "location": "The Porter Pavilion at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -1635,7 +1599,6 @@
       "date": "2026-08-06T03:30:00.000Z",
       "endDate": "2026-08-06T05:30:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -1658,7 +1621,6 @@
       "date": "2026-08-06T19:30:00.000Z",
       "endDate": "2026-08-06T20:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Līhuʻe Public Library",
       "categories": [
@@ -1687,7 +1649,6 @@
       "date": "2026-08-06T20:00:00.000Z",
       "endDate": "2026-08-07T01:00:00.000Z",
       "location": "Kauaʻi Museum Courtyard",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Museum",
       "categories": [
@@ -1715,7 +1676,6 @@
       "date": "2026-08-06T20:00:00.000Z",
       "endDate": "2026-08-06T22:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -1745,7 +1705,6 @@
       "date": "2026-08-06T21:30:00.000Z",
       "endDate": "2026-08-06T22:30:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Līhuʻe Public Library",
       "categories": [
@@ -1773,7 +1732,6 @@
       "date": "2026-08-07T01:00:00.000Z",
       "endDate": "2026-08-07T02:00:00.000Z",
       "location": "Hanapēpē Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -1797,7 +1755,6 @@
       "date": "2026-08-07T02:00:00.000Z",
       "endDate": "2026-08-07T05:00:00.000Z",
       "location": "Hilton Garden Inn Kauaʻi Wailua Bay",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Tamatea Nui O Kauaʻi",
       "categories": [
@@ -1825,7 +1782,6 @@
       "date": "2026-08-07T04:00:00.000Z",
       "endDate": "2026-08-07T06:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -1847,7 +1803,6 @@
       "date": "2026-08-07T23:00:00.000Z",
       "endDate": "2026-08-08T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -1875,7 +1830,6 @@
       "date": "2026-08-08T01:00:00.000Z",
       "endDate": "2026-08-08T05:00:00.000Z",
       "location": "Outrigger Kauaʻi Beach Resort & Spa",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -1897,7 +1851,6 @@
       "date": "2026-08-08T03:00:00.000Z",
       "endDate": "2026-08-08T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -1925,7 +1878,6 @@
       "date": "2026-08-08T03:00:00.000Z",
       "endDate": "2026-08-08T06:00:00.000Z",
       "location": "Historic Hanapēpē town",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē merchants and community",
       "categories": [
@@ -1949,7 +1901,6 @@
       "date": "2026-08-08T04:00:00.000Z",
       "endDate": "2026-08-08T06:00:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -1973,7 +1924,6 @@
       "date": "2026-08-08T04:00:00.000Z",
       "endDate": "2026-08-08T06:00:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -2000,7 +1950,6 @@
       "date": "2026-08-08T18:30:00.000Z",
       "endDate": "2026-08-08T20:30:00.000Z",
       "location": "Lydgate Beach — Morgan’s Pond",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Friends of Kamalani and Lydgate Park",
       "categories": [
@@ -2027,7 +1976,6 @@
       "date": "2026-08-08T19:00:00.000Z",
       "endDate": "2026-08-08T23:30:00.000Z",
       "location": "Pakalana Room",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "arts_crafts",
@@ -2053,7 +2001,6 @@
       "date": "2026-08-08T19:00:00.000Z",
       "endDate": "2026-08-08T23:00:00.000Z",
       "location": "Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -2076,7 +2023,6 @@
       "date": "2026-08-08T19:00:00.000Z",
       "endDate": "2026-08-08T22:00:00.000Z",
       "location": "Hale Halawai / Hanalei Community Center area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -2099,7 +2045,6 @@
       "date": "2026-08-08T20:00:00.000Z",
       "endDate": "2026-08-08T22:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -2129,7 +2074,6 @@
       "date": "2026-08-08T20:30:00.000Z",
       "endDate": "2026-08-08T22:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -2151,7 +2095,6 @@
       "date": "2026-08-08T23:30:00.000Z",
       "endDate": "2026-08-09T00:30:00.000Z",
       "location": "Princeville Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "hula",
@@ -2177,7 +2120,6 @@
       "date": "2026-08-09T01:00:00.000Z",
       "endDate": "2026-08-09T05:00:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -2199,7 +2141,6 @@
       "date": "2026-08-09T02:00:00.000Z",
       "endDate": "2026-08-09T06:00:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kapaʻa Middle School Choir & ʻUkulele Band",
       "categories": [
@@ -2227,7 +2168,6 @@
       "date": "2026-08-09T02:00:00.000Z",
       "endDate": "2026-08-09T06:00:00.000Z",
       "location": "Kress Street",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "night_market",
@@ -2255,7 +2195,6 @@
       "date": "2026-08-09T03:00:00.000Z",
       "endDate": "2026-08-09T07:00:00.000Z",
       "location": "Naughty Rooster Irish Pub",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "fundraiser",
@@ -2280,7 +2219,6 @@
       "title": "Island Magic Mike",
       "date": "2026-08-09T04:00:00.000Z",
       "location": "Kauaʻi Community College Performing Arts Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Community College Performing Arts Center",
       "categories": [
@@ -2308,7 +2246,6 @@
       "date": "2026-08-09T18:30:00.000Z",
       "endDate": "2026-08-09T19:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anya Love",
       "categories": [
@@ -2337,7 +2274,6 @@
       "date": "2026-08-09T19:00:00.000Z",
       "endDate": "2026-08-09T23:00:00.000Z",
       "location": "Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -2360,7 +2296,6 @@
       "date": "2026-08-09T19:00:00.000Z",
       "endDate": "2026-08-09T20:00:00.000Z",
       "location": "The Shops at Kukuiʻula",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Lululemon / The Shops at Kukuiʻula",
       "categories": [
@@ -2387,7 +2322,6 @@
       "date": "2026-08-09T22:30:00.000Z",
       "endDate": "2026-08-10T00:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -2409,7 +2343,6 @@
       "date": "2026-08-09T23:00:00.000Z",
       "endDate": "2026-08-10T00:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "music",
@@ -2431,7 +2364,6 @@
       "date": "2026-08-10T02:00:00.000Z",
       "endDate": "2026-08-10T06:00:00.000Z",
       "location": "Princeville Shopping Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "night_market",
@@ -2454,7 +2386,6 @@
       "date": "2026-08-10T03:30:00.000Z",
       "endDate": "2026-08-10T05:30:00.000Z",
       "location": "Sheraton Kauaʻi Coconut Beach Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Sheraton Kauaʻi Coconut Beach Resort",
       "categories": [
@@ -2481,7 +2412,6 @@
       "date": "2026-08-10T04:00:00.000Z",
       "endDate": "2026-08-10T06:00:00.000Z",
       "location": "Kauaʻi Island Brewing Company",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Brewing Company",
       "categories": [
@@ -2504,7 +2434,6 @@
       "date": "2026-08-10T19:00:00.000Z",
       "endDate": "2026-08-14T23:00:00.000Z",
       "location": "Kauaʻi Community College — Business Building",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Community College",
       "categories": [
@@ -2533,7 +2462,6 @@
       "date": "2026-08-10T19:00:00.000Z",
       "endDate": "2026-08-10T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe x Hā Coffee",
       "categories": [
@@ -2560,7 +2488,6 @@
       "date": "2026-08-10T21:00:00.000Z",
       "endDate": "2026-08-10T23:00:00.000Z",
       "location": "Princeville Community Center — Aloha Room",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Community Center",
       "categories": [
@@ -2583,7 +2510,6 @@
       "date": "2026-08-10T23:00:00.000Z",
       "endDate": "2026-08-11T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -2611,7 +2537,6 @@
       "date": "2026-08-11T01:00:00.000Z",
       "endDate": "2026-08-11T04:00:00.000Z",
       "location": "Anahola Marketplace",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -2637,7 +2562,6 @@
       "date": "2026-08-11T01:00:00.000Z",
       "endDate": "2026-08-11T03:30:00.000Z",
       "location": "Kukui Grove Center — South Parking Lot",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -2660,7 +2584,6 @@
       "date": "2026-08-11T03:30:00.000Z",
       "endDate": "2026-08-11T06:30:00.000Z",
       "location": "The Porter Pavilion at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -2685,7 +2608,6 @@
       "date": "2026-08-11T20:00:00.000Z",
       "endDate": "2026-08-11T21:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -2715,7 +2637,6 @@
       "date": "2026-08-11T21:00:00.000Z",
       "endDate": "2026-08-11T21:30:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -2745,7 +2666,6 @@
       "date": "2026-08-11T23:30:00.000Z",
       "endDate": "2026-08-12T01:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "NAMI Kauaʻi",
       "categories": [
@@ -2775,7 +2695,6 @@
       "date": "2026-08-12T00:00:00.000Z",
       "endDate": "2026-08-12T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -2803,7 +2722,6 @@
       "date": "2026-08-12T00:00:00.000Z",
       "endDate": "2026-08-12T03:00:00.000Z",
       "location": "Waipā Foundation area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -2825,7 +2743,6 @@
       "date": "2026-08-12T02:00:00.000Z",
       "endDate": "2026-08-12T03:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "YWCA Kauaʻi",
       "categories": [
@@ -2855,7 +2772,6 @@
       "date": "2026-08-12T03:00:00.000Z",
       "endDate": "2026-08-12T05:00:00.000Z",
       "location": "Princeville Community Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Community Center",
       "categories": [
@@ -2882,7 +2798,6 @@
       "date": "2026-08-12T23:00:00.000Z",
       "endDate": "2026-08-13T01:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -2910,7 +2825,6 @@
       "date": "2026-08-12T23:00:00.000Z",
       "endDate": "2026-08-13T03:00:00.000Z",
       "location": "Princeville Makai Golf Club",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Makai Golf Club",
       "categories": [
@@ -2937,7 +2851,6 @@
       "date": "2026-08-13T01:00:00.000Z",
       "endDate": "2026-08-13T02:30:00.000Z",
       "location": "Kapaʻa Ball Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -2961,7 +2874,6 @@
       "date": "2026-08-13T01:00:00.000Z",
       "endDate": "2026-08-13T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -2990,7 +2902,6 @@
       "date": "2026-08-13T01:30:00.000Z",
       "endDate": "2026-08-13T02:30:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -3020,7 +2931,6 @@
       "date": "2026-08-13T03:30:00.000Z",
       "endDate": "2026-08-13T04:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -3048,7 +2958,6 @@
       "date": "2026-08-13T03:30:00.000Z",
       "endDate": "2026-08-13T06:30:00.000Z",
       "location": "The Porter Pavilion at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -3072,7 +2981,6 @@
       "date": "2026-08-13T03:30:00.000Z",
       "endDate": "2026-08-13T05:30:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -3095,7 +3003,6 @@
       "date": "2026-08-13T20:00:00.000Z",
       "endDate": "2026-08-13T21:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Līhuʻe Public Library",
       "categories": [
@@ -3123,7 +3030,6 @@
       "date": "2026-08-13T20:30:00.000Z",
       "endDate": "2026-08-13T21:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -3151,7 +3057,6 @@
       "date": "2026-08-14T01:00:00.000Z",
       "endDate": "2026-08-14T02:00:00.000Z",
       "location": "Hanapēpē Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -3175,7 +3080,6 @@
       "date": "2026-08-14T02:00:00.000Z",
       "endDate": "2026-08-14T05:00:00.000Z",
       "location": "Hilton Garden Inn Kauaʻi Wailua Bay",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Tamatea Nui O Kauaʻi",
       "categories": [
@@ -3204,7 +3108,6 @@
       "date": "2026-08-14T18:00:00.000Z",
       "endDate": "2026-08-15T01:00:00.000Z",
       "location": "Kauaʻi Resource Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi and Goodwill Hawaiʻi",
       "categories": [
@@ -3232,7 +3135,6 @@
       "date": "2026-08-14T20:00:00.000Z",
       "endDate": "2026-08-23T03:00:00.000Z",
       "location": "Kauaʻi Society of Artists Gallery at Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Garden Isle Quilters",
       "categories": [
@@ -3261,7 +3163,6 @@
       "date": "2026-08-14T21:00:00.000Z",
       "endDate": "2026-08-14T22:30:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Jewish Community Services of Hawaiʻi — Kauaʻi",
       "categories": [
@@ -3291,7 +3192,6 @@
       "date": "2026-08-14T23:00:00.000Z",
       "endDate": "2026-08-15T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -3319,7 +3219,6 @@
       "date": "2026-08-15T01:00:00.000Z",
       "endDate": "2026-08-15T05:00:00.000Z",
       "location": "Outrigger Kauaʻi Beach Resort & Spa",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -3342,7 +3241,6 @@
       "date": "2026-08-15T03:00:00.000Z",
       "endDate": "2026-08-15T05:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -3365,7 +3263,6 @@
       "date": "2026-08-15T03:00:00.000Z",
       "endDate": "2026-08-15T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -3393,7 +3290,6 @@
       "date": "2026-08-15T03:00:00.000Z",
       "endDate": "2026-08-15T06:00:00.000Z",
       "location": "Historic Hanapēpē town",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē merchants and community",
       "categories": [
@@ -3417,7 +3313,6 @@
       "date": "2026-08-15T18:00:00.000Z",
       "endDate": "2026-08-16T03:00:00.000Z",
       "location": "Kōloa Neighborhood Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Crafters Fair",
       "categories": [
@@ -3445,7 +3340,6 @@
       "date": "2026-08-15T18:30:00.000Z",
       "endDate": "2026-08-16T00:00:00.000Z",
       "location": "Kamokila Village",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Pihana Kai ʻIkena",
       "categories": [
@@ -3474,7 +3368,6 @@
       "date": "2026-08-15T18:30:00.000Z",
       "endDate": "2026-08-15T20:30:00.000Z",
       "location": "Lydgate Beach — Morgan’s Pond",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Friends of Kamalani and Lydgate Park",
       "categories": [
@@ -3502,7 +3395,6 @@
       "date": "2026-08-15T19:00:00.000Z",
       "endDate": "2026-08-15T23:00:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Robotics Alliance",
       "categories": [
@@ -3531,7 +3423,6 @@
       "date": "2026-08-15T19:00:00.000Z",
       "endDate": "2026-08-16T00:00:00.000Z",
       "location": "Sacred Heart of Jesus & Mary Church",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "St. Theresa Parish",
       "categories": [
@@ -3558,7 +3449,6 @@
       "date": "2026-08-15T19:00:00.000Z",
       "endDate": "2026-08-15T23:00:00.000Z",
       "location": "Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -3581,7 +3471,6 @@
       "date": "2026-08-15T19:00:00.000Z",
       "endDate": "2026-08-15T22:00:00.000Z",
       "location": "Hale Halawai / Hanalei Community Center area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -3603,7 +3492,6 @@
       "date": "2026-08-15T23:30:00.000Z",
       "endDate": "2026-08-16T00:30:00.000Z",
       "location": "Princeville Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "hula",
@@ -3629,7 +3517,6 @@
       "date": "2026-08-16T01:00:00.000Z",
       "endDate": "2026-08-16T05:00:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -3651,7 +3538,6 @@
       "date": "2026-08-16T18:30:00.000Z",
       "endDate": "2026-08-16T19:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anya Love",
       "categories": [
@@ -3680,7 +3566,6 @@
       "date": "2026-08-16T19:00:00.000Z",
       "endDate": "2026-08-16T23:00:00.000Z",
       "location": "The Beach House Restaurant",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -3702,7 +3587,6 @@
       "date": "2026-08-16T19:00:00.000Z",
       "endDate": "2026-08-16T23:00:00.000Z",
       "location": "Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -3725,7 +3609,6 @@
       "date": "2026-08-16T19:00:00.000Z",
       "endDate": "2026-08-16T20:00:00.000Z",
       "location": "The Shops at Kukuiʻula",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Lululemon / The Shops at Kukuiʻula",
       "categories": [
@@ -3752,7 +3635,6 @@
       "date": "2026-08-16T22:30:00.000Z",
       "endDate": "2026-08-17T00:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -3774,7 +3656,6 @@
       "date": "2026-08-16T23:00:00.000Z",
       "endDate": "2026-08-17T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -3802,7 +3683,6 @@
       "date": "2026-08-16T23:00:00.000Z",
       "endDate": "2026-08-17T00:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "music",
@@ -3824,7 +3704,6 @@
       "date": "2026-08-17T02:00:00.000Z",
       "endDate": "2026-08-17T05:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -3853,7 +3732,6 @@
       "date": "2026-08-17T03:30:00.000Z",
       "endDate": "2026-08-17T05:30:00.000Z",
       "location": "Sheraton Kauaʻi Coconut Beach Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Sheraton Kauaʻi Coconut Beach Resort",
       "categories": [
@@ -3880,7 +3758,6 @@
       "date": "2026-08-17T04:00:00.000Z",
       "endDate": "2026-08-17T06:00:00.000Z",
       "location": "Kauaʻi Island Brewing Company",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Brewing Company",
       "categories": [
@@ -3903,7 +3780,6 @@
       "date": "2026-08-17T19:00:00.000Z",
       "endDate": "2026-08-17T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe x Hā Coffee",
       "categories": [
@@ -3930,7 +3806,6 @@
       "date": "2026-08-17T23:00:00.000Z",
       "endDate": "2026-08-18T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -3958,7 +3833,6 @@
       "date": "2026-08-18T01:00:00.000Z",
       "endDate": "2026-08-18T04:00:00.000Z",
       "location": "Anahola Marketplace",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -3984,7 +3858,6 @@
       "date": "2026-08-18T01:00:00.000Z",
       "endDate": "2026-08-18T03:30:00.000Z",
       "location": "Kukui Grove Center — South Parking Lot",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -4008,7 +3881,6 @@
       "date": "2026-08-18T03:30:00.000Z",
       "endDate": "2026-08-18T04:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Read To Me International and Waimea Public Library",
       "categories": [
@@ -4039,7 +3911,6 @@
       "date": "2026-08-18T03:30:00.000Z",
       "endDate": "2026-08-18T06:30:00.000Z",
       "location": "The Porter Pavilion at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -4063,7 +3934,6 @@
       "date": "2026-08-18T03:30:00.000Z",
       "endDate": "2026-08-18T04:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Read To Me International and Waimea Public Library",
       "categories": [
@@ -4092,7 +3962,6 @@
       "date": "2026-08-18T20:00:00.000Z",
       "endDate": "2026-08-18T21:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -4123,7 +3992,6 @@
       "date": "2026-08-18T20:00:00.000Z",
       "endDate": "2026-08-18T21:00:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -4151,7 +4019,6 @@
       "date": "2026-08-18T21:00:00.000Z",
       "endDate": "2026-08-18T21:30:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -4181,7 +4048,6 @@
       "date": "2026-08-18T23:30:00.000Z",
       "endDate": "2026-08-19T01:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "NAMI Kauaʻi",
       "categories": [
@@ -4211,7 +4077,6 @@
       "date": "2026-08-19T00:00:00.000Z",
       "endDate": "2026-08-19T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -4239,7 +4104,6 @@
       "date": "2026-08-19T00:00:00.000Z",
       "endDate": "2026-08-19T03:00:00.000Z",
       "location": "Waipā Foundation area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -4261,7 +4125,6 @@
       "date": "2026-08-19T02:00:00.000Z",
       "endDate": "2026-08-19T03:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "YWCA Kauaʻi",
       "categories": [
@@ -4291,7 +4154,6 @@
       "date": "2026-08-19T20:00:00.000Z",
       "endDate": "2026-08-19T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -4318,7 +4180,6 @@
       "date": "2026-08-19T23:00:00.000Z",
       "endDate": "2026-08-20T01:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -4346,7 +4207,6 @@
       "date": "2026-08-19T23:00:00.000Z",
       "endDate": "2026-08-20T03:00:00.000Z",
       "location": "Princeville Makai Golf Club",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Makai Golf Club",
       "categories": [
@@ -4373,7 +4233,6 @@
       "date": "2026-08-20T01:00:00.000Z",
       "endDate": "2026-08-20T02:30:00.000Z",
       "location": "Kapaʻa Ball Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -4397,7 +4256,6 @@
       "date": "2026-08-20T01:00:00.000Z",
       "endDate": "2026-08-20T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -4426,7 +4284,6 @@
       "date": "2026-08-20T02:00:00.000Z",
       "endDate": "2026-08-20T03:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Līhuʻe Public Library",
       "categories": [
@@ -4456,7 +4313,6 @@
       "date": "2026-08-20T03:30:00.000Z",
       "endDate": "2026-08-20T06:30:00.000Z",
       "location": "The Porter Pavilion at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -4480,7 +4336,6 @@
       "date": "2026-08-20T03:30:00.000Z",
       "endDate": "2026-08-20T05:30:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -4503,7 +4358,6 @@
       "date": "2026-08-20T20:30:00.000Z",
       "endDate": "2026-08-20T21:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -4531,7 +4385,6 @@
       "date": "2026-08-21T01:00:00.000Z",
       "endDate": "2026-08-21T02:00:00.000Z",
       "location": "Hanapēpē Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -4555,7 +4408,6 @@
       "date": "2026-08-21T02:00:00.000Z",
       "endDate": "2026-08-21T05:00:00.000Z",
       "location": "Hilton Garden Inn Kauaʻi Wailua Bay",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Tamatea Nui O Kauaʻi",
       "categories": [
@@ -4582,7 +4434,6 @@
       "title": "Kauaʻi Concert Association Business Pau Hana",
       "date": "2026-08-21T03:00:00.000Z",
       "location": "Kauaʻi Concert Association",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Chamber of Commerce",
       "categories": [
@@ -4605,7 +4456,6 @@
       "date": "2026-08-21T23:00:00.000Z",
       "endDate": "2026-08-22T00:30:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -4633,7 +4483,6 @@
       "date": "2026-08-22T01:00:00.000Z",
       "endDate": "2026-08-22T05:00:00.000Z",
       "location": "Outrigger Kauaʻi Beach Resort & Spa",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -4655,7 +4504,6 @@
       "date": "2026-08-22T03:00:00.000Z",
       "endDate": "2026-08-22T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -4683,7 +4531,6 @@
       "date": "2026-08-22T03:00:00.000Z",
       "endDate": "2026-08-22T06:00:00.000Z",
       "location": "Historic Hanapēpē town",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē merchants and community",
       "categories": [
@@ -4707,7 +4554,6 @@
       "description": "One-person stage work about Duke Paoa Kahanamoku starring Moses Goods.",
       "date": "2026-08-22T04:30:00.000Z",
       "location": "Kauaʻi Community College Performing Arts Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Community College Performing Arts Center",
       "categories": [
@@ -4736,7 +4582,6 @@
       "date": "2026-08-22T18:30:00.000Z",
       "endDate": "2026-08-22T20:30:00.000Z",
       "location": "Lydgate Beach — Morgan’s Pond",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Friends of Kamalani and Lydgate Park",
       "categories": [
@@ -4763,7 +4608,6 @@
       "date": "2026-08-22T19:00:00.000Z",
       "endDate": "2026-08-22T23:00:00.000Z",
       "location": "Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -4786,7 +4630,6 @@
       "date": "2026-08-22T19:00:00.000Z",
       "endDate": "2026-08-22T22:00:00.000Z",
       "location": "Hale Halawai / Hanalei Community Center area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -4808,7 +4651,6 @@
       "date": "2026-08-22T23:30:00.000Z",
       "endDate": "2026-08-23T00:30:00.000Z",
       "location": "Princeville Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "hula",
@@ -4834,7 +4676,6 @@
       "date": "2026-08-23T01:00:00.000Z",
       "endDate": "2026-08-23T05:00:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -4856,7 +4697,6 @@
       "date": "2026-08-23T04:00:00.000Z",
       "endDate": "2026-08-23T07:00:00.000Z",
       "location": "Puhi Theatrical Warehouse",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "karaoke",
@@ -4884,7 +4724,6 @@
       "date": "2026-08-23T18:30:00.000Z",
       "endDate": "2026-08-23T19:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anya Love",
       "categories": [
@@ -4913,7 +4752,6 @@
       "date": "2026-08-23T19:00:00.000Z",
       "endDate": "2026-08-23T20:00:00.000Z",
       "location": "The Shops at Kukuiʻula",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Lululemon / The Shops at Kukuiʻula",
       "categories": [
@@ -4940,7 +4778,6 @@
       "date": "2026-08-23T22:30:00.000Z",
       "endDate": "2026-08-24T00:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -4962,7 +4799,6 @@
       "date": "2026-08-23T23:00:00.000Z",
       "endDate": "2026-08-24T00:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "music",
@@ -4984,7 +4820,6 @@
       "date": "2026-08-24T03:30:00.000Z",
       "endDate": "2026-08-24T05:30:00.000Z",
       "location": "Sheraton Kauaʻi Coconut Beach Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Sheraton Kauaʻi Coconut Beach Resort",
       "categories": [
@@ -5011,7 +4846,6 @@
       "date": "2026-08-24T04:00:00.000Z",
       "endDate": "2026-08-24T06:00:00.000Z",
       "location": "Kauaʻi Island Brewing Company",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Brewing Company",
       "categories": [
@@ -5034,7 +4868,6 @@
       "date": "2026-08-24T19:00:00.000Z",
       "endDate": "2026-08-24T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe x Hā Coffee",
       "categories": [
@@ -5061,7 +4894,6 @@
       "date": "2026-08-25T01:00:00.000Z",
       "endDate": "2026-08-25T04:00:00.000Z",
       "location": "Anahola Marketplace",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -5087,7 +4919,6 @@
       "date": "2026-08-25T01:00:00.000Z",
       "endDate": "2026-08-25T03:30:00.000Z",
       "location": "Kukui Grove Center — South Parking Lot",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -5111,7 +4942,6 @@
       "date": "2026-08-25T20:00:00.000Z",
       "endDate": "2026-08-25T21:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -5141,7 +4971,6 @@
       "date": "2026-08-25T21:00:00.000Z",
       "endDate": "2026-08-25T21:30:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -5171,7 +5000,6 @@
       "date": "2026-08-25T23:30:00.000Z",
       "endDate": "2026-08-26T01:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "NAMI Kauaʻi",
       "categories": [
@@ -5201,7 +5029,6 @@
       "date": "2026-08-26T00:00:00.000Z",
       "endDate": "2026-08-26T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -5229,7 +5056,6 @@
       "date": "2026-08-26T00:00:00.000Z",
       "endDate": "2026-08-26T03:00:00.000Z",
       "location": "Waipā Foundation area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -5251,7 +5077,6 @@
       "date": "2026-08-26T02:00:00.000Z",
       "endDate": "2026-08-26T03:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "YWCA Kauaʻi",
       "categories": [
@@ -5281,7 +5106,6 @@
       "date": "2026-08-26T23:00:00.000Z",
       "endDate": "2026-08-27T01:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -5309,7 +5133,6 @@
       "date": "2026-08-26T23:00:00.000Z",
       "endDate": "2026-08-27T03:00:00.000Z",
       "location": "Princeville Makai Golf Club",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Makai Golf Club",
       "categories": [
@@ -5337,7 +5160,6 @@
       "date": "2026-08-27T00:30:00.000Z",
       "endDate": "2026-08-27T01:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -5365,7 +5187,6 @@
       "date": "2026-08-27T01:00:00.000Z",
       "endDate": "2026-08-27T02:30:00.000Z",
       "location": "Kapaʻa Ball Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -5389,7 +5210,6 @@
       "date": "2026-08-27T01:00:00.000Z",
       "endDate": "2026-08-27T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -5418,7 +5238,6 @@
       "date": "2026-08-27T03:30:00.000Z",
       "endDate": "2026-08-27T05:30:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -5441,7 +5260,6 @@
       "date": "2026-08-27T03:30:00.000Z",
       "endDate": "2026-08-27T05:00:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -5470,7 +5288,6 @@
       "date": "2026-08-27T04:30:00.000Z",
       "endDate": "2026-08-27T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Pride",
       "categories": [
@@ -5493,7 +5310,6 @@
       "date": "2026-08-27T20:30:00.000Z",
       "endDate": "2026-08-27T21:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -5521,7 +5337,6 @@
       "date": "2026-08-28T01:00:00.000Z",
       "endDate": "2026-08-28T02:00:00.000Z",
       "location": "Hanapēpē Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -5545,7 +5360,6 @@
       "date": "2026-08-28T02:00:00.000Z",
       "endDate": "2026-08-28T05:00:00.000Z",
       "location": "Hilton Garden Inn Kauaʻi Wailua Bay",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Tamatea Nui O Kauaʻi",
       "categories": [
@@ -5573,7 +5387,6 @@
       "date": "2026-08-29T01:00:00.000Z",
       "endDate": "2026-08-29T05:00:00.000Z",
       "location": "Outrigger Kauaʻi Beach Resort & Spa",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -5595,7 +5408,6 @@
       "date": "2026-08-29T03:00:00.000Z",
       "endDate": "2026-08-29T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -5623,7 +5435,6 @@
       "date": "2026-08-29T03:00:00.000Z",
       "endDate": "2026-08-29T06:00:00.000Z",
       "location": "Historic Hanapēpē town",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē merchants and community",
       "categories": [
@@ -5647,7 +5458,6 @@
       "date": "2026-08-29T18:30:00.000Z",
       "endDate": "2026-08-29T20:30:00.000Z",
       "location": "Lydgate Beach — Morgan’s Pond",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Friends of Kamalani and Lydgate Park",
       "categories": [
@@ -5674,7 +5484,6 @@
       "date": "2026-08-29T19:00:00.000Z",
       "endDate": "2026-08-29T22:00:00.000Z",
       "location": "Hale Halawai / Hanalei Community Center area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -5697,7 +5506,6 @@
       "date": "2026-08-29T21:00:00.000Z",
       "endDate": "2026-08-30T01:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -5725,7 +5533,6 @@
       "date": "2026-08-29T23:30:00.000Z",
       "endDate": "2026-08-30T00:30:00.000Z",
       "location": "Princeville Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "hula",
@@ -5751,7 +5558,6 @@
       "date": "2026-08-30T01:00:00.000Z",
       "endDate": "2026-08-30T05:00:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -5773,7 +5579,6 @@
       "date": "2026-08-30T18:30:00.000Z",
       "endDate": "2026-08-30T19:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anya Love",
       "categories": [
@@ -5802,7 +5607,6 @@
       "date": "2026-08-30T19:00:00.000Z",
       "endDate": "2026-08-30T20:00:00.000Z",
       "location": "The Shops at Kukuiʻula",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Lululemon / The Shops at Kukuiʻula",
       "categories": [
@@ -5829,7 +5633,6 @@
       "date": "2026-08-30T22:30:00.000Z",
       "endDate": "2026-08-31T00:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -5851,7 +5654,6 @@
       "date": "2026-08-30T23:00:00.000Z",
       "endDate": "2026-08-31T00:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "music",
@@ -5873,7 +5675,6 @@
       "date": "2026-08-31T03:30:00.000Z",
       "endDate": "2026-08-31T05:30:00.000Z",
       "location": "Sheraton Kauaʻi Coconut Beach Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Sheraton Kauaʻi Coconut Beach Resort",
       "categories": [
@@ -5900,7 +5701,6 @@
       "date": "2026-08-31T04:00:00.000Z",
       "endDate": "2026-08-31T06:00:00.000Z",
       "location": "Kauaʻi Island Brewing Company",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Brewing Company",
       "categories": [
@@ -5923,7 +5723,6 @@
       "date": "2026-08-31T19:00:00.000Z",
       "endDate": "2026-08-31T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe x Hā Coffee",
       "categories": [
@@ -5950,7 +5749,6 @@
       "date": "2026-09-01T01:00:00.000Z",
       "endDate": "2026-09-01T04:00:00.000Z",
       "location": "Anahola Marketplace",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -5976,7 +5774,6 @@
       "date": "2026-09-01T01:00:00.000Z",
       "endDate": "2026-09-01T03:30:00.000Z",
       "location": "Kukui Grove Center — South Parking Lot",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -5999,7 +5796,6 @@
       "date": "2026-09-01T21:00:00.000Z",
       "endDate": "2026-09-01T21:30:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -6029,7 +5825,6 @@
       "date": "2026-09-01T23:30:00.000Z",
       "endDate": "2026-09-02T01:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "NAMI Kauaʻi",
       "categories": [
@@ -6059,7 +5854,6 @@
       "date": "2026-09-02T00:00:00.000Z",
       "endDate": "2026-09-02T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -6087,7 +5881,6 @@
       "date": "2026-09-02T00:00:00.000Z",
       "endDate": "2026-09-02T03:00:00.000Z",
       "location": "Waipā Foundation area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -6109,7 +5902,6 @@
       "date": "2026-09-02T02:00:00.000Z",
       "endDate": "2026-09-02T03:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "YWCA Kauaʻi",
       "categories": [
@@ -6139,7 +5931,6 @@
       "date": "2026-09-02T23:00:00.000Z",
       "endDate": "2026-09-03T01:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -6167,7 +5958,6 @@
       "date": "2026-09-02T23:00:00.000Z",
       "endDate": "2026-09-03T03:00:00.000Z",
       "location": "Princeville Makai Golf Club",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Makai Golf Club",
       "categories": [
@@ -6194,7 +5984,6 @@
       "date": "2026-09-03T01:00:00.000Z",
       "endDate": "2026-09-03T02:30:00.000Z",
       "location": "Kapaʻa Ball Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -6218,7 +6007,6 @@
       "date": "2026-09-03T01:00:00.000Z",
       "endDate": "2026-09-03T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -6247,7 +6035,6 @@
       "date": "2026-09-03T03:00:00.000Z",
       "endDate": "2026-09-03T05:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -6275,7 +6062,6 @@
       "date": "2026-09-03T03:00:00.000Z",
       "endDate": "2026-09-03T05:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -6303,7 +6089,6 @@
       "date": "2026-09-03T03:30:00.000Z",
       "endDate": "2026-09-03T05:30:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -6326,7 +6111,6 @@
       "date": "2026-09-03T20:00:00.000Z",
       "endDate": "2026-09-04T01:00:00.000Z",
       "location": "Kauaʻi Museum Courtyard",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Museum",
       "categories": [
@@ -6354,7 +6138,6 @@
       "date": "2026-09-03T20:00:00.000Z",
       "endDate": "2026-09-03T22:00:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -6383,7 +6166,6 @@
       "date": "2026-09-03T20:30:00.000Z",
       "endDate": "2026-09-03T21:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -6411,7 +6193,6 @@
       "date": "2026-09-04T01:00:00.000Z",
       "endDate": "2026-09-04T02:00:00.000Z",
       "location": "Hanapēpē Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -6435,7 +6216,6 @@
       "date": "2026-09-04T02:00:00.000Z",
       "endDate": "2026-09-04T05:00:00.000Z",
       "location": "Hilton Garden Inn Kauaʻi Wailua Bay",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Tamatea Nui O Kauaʻi",
       "categories": [
@@ -6462,7 +6242,6 @@
       "title": "Kauaʻi Motor Sports Business Pau Hana",
       "date": "2026-09-04T03:00:00.000Z",
       "location": "Kauaʻi Motor Sports",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Chamber of Commerce",
       "categories": [
@@ -6484,7 +6263,6 @@
       "date": "2026-09-05T01:00:00.000Z",
       "endDate": "2026-09-05T05:00:00.000Z",
       "location": "Outrigger Kauaʻi Beach Resort & Spa",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -6506,7 +6284,6 @@
       "date": "2026-09-05T03:00:00.000Z",
       "endDate": "2026-09-05T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -6534,7 +6311,6 @@
       "date": "2026-09-05T03:00:00.000Z",
       "endDate": "2026-09-05T06:00:00.000Z",
       "location": "Historic Hanapēpē town",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē merchants and community",
       "categories": [
@@ -6558,7 +6334,6 @@
       "date": "2026-09-05T04:00:00.000Z",
       "endDate": "2026-09-05T06:00:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -6585,7 +6360,6 @@
       "date": "2026-09-05T18:30:00.000Z",
       "endDate": "2026-09-05T20:30:00.000Z",
       "location": "Lydgate Beach — Morgan’s Pond",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Friends of Kamalani and Lydgate Park",
       "categories": [
@@ -6612,7 +6386,6 @@
       "date": "2026-09-05T19:00:00.000Z",
       "endDate": "2026-09-05T22:00:00.000Z",
       "location": "Hale Halawai / Hanalei Community Center area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -6635,7 +6408,6 @@
       "date": "2026-09-05T20:00:00.000Z",
       "endDate": "2026-09-05T22:00:00.000Z",
       "location": "Hā Coffee / Hale Līhuʻe",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Pride",
       "categories": [
@@ -6662,7 +6434,6 @@
       "date": "2026-09-05T23:30:00.000Z",
       "endDate": "2026-09-06T00:30:00.000Z",
       "location": "Princeville Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "hula",
@@ -6688,7 +6459,6 @@
       "date": "2026-09-06T01:00:00.000Z",
       "endDate": "2026-09-06T05:00:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -6710,7 +6480,6 @@
       "date": "2026-09-06T16:00:00.000Z",
       "endDate": "2026-09-06T23:00:00.000Z",
       "location": "Kōloa Landing Resort area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Marathon",
       "categories": [
@@ -6733,7 +6502,6 @@
       "date": "2026-09-06T18:30:00.000Z",
       "endDate": "2026-09-06T19:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anya Love",
       "categories": [
@@ -6762,7 +6530,6 @@
       "date": "2026-09-06T19:00:00.000Z",
       "endDate": "2026-09-07T00:00:00.000Z",
       "location": "Kauaʻi Veterans Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Veterans Center",
       "categories": [
@@ -6785,7 +6552,6 @@
       "date": "2026-09-06T19:00:00.000Z",
       "endDate": "2026-09-06T20:00:00.000Z",
       "location": "The Shops at Kukuiʻula",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Lululemon / The Shops at Kukuiʻula",
       "categories": [
@@ -6812,7 +6578,6 @@
       "date": "2026-09-06T22:30:00.000Z",
       "endDate": "2026-09-07T00:30:00.000Z",
       "location": "Sunset Lanai at Anaina Hou Community Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Anaina Hou Community Park",
       "categories": [
@@ -6834,7 +6599,6 @@
       "date": "2026-09-06T23:00:00.000Z",
       "endDate": "2026-09-07T00:00:00.000Z",
       "location": "Kukui Grove Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "music",
@@ -6857,7 +6621,6 @@
       "date": "2026-09-07T01:00:00.000Z",
       "endDate": "2026-09-07T03:00:00.000Z",
       "location": "Kukui Grove Center Food Court",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi ʻUkulele Club",
       "categories": [
@@ -6885,7 +6648,6 @@
       "date": "2026-09-07T03:30:00.000Z",
       "endDate": "2026-09-07T05:30:00.000Z",
       "location": "Sheraton Kauaʻi Coconut Beach Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Sheraton Kauaʻi Coconut Beach Resort",
       "categories": [
@@ -6912,7 +6674,6 @@
       "date": "2026-09-07T04:00:00.000Z",
       "endDate": "2026-09-07T06:00:00.000Z",
       "location": "Kauaʻi Island Brewing Company",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Island Brewing Company",
       "categories": [
@@ -6935,7 +6696,6 @@
       "date": "2026-09-07T19:00:00.000Z",
       "endDate": "2026-09-07T22:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe x Hā Coffee",
       "categories": [
@@ -6962,7 +6722,6 @@
       "date": "2026-09-08T01:00:00.000Z",
       "endDate": "2026-09-08T04:00:00.000Z",
       "location": "Anahola Marketplace",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -6988,7 +6747,6 @@
       "date": "2026-09-08T01:00:00.000Z",
       "endDate": "2026-09-08T03:30:00.000Z",
       "location": "Kukui Grove Center — South Parking Lot",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center and Kauaʻi County Farm Bureau",
       "categories": [
@@ -7011,7 +6769,6 @@
       "date": "2026-09-08T21:00:00.000Z",
       "endDate": "2026-09-08T21:30:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -7041,7 +6798,6 @@
       "date": "2026-09-08T23:30:00.000Z",
       "endDate": "2026-09-09T01:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "NAMI Kauaʻi",
       "categories": [
@@ -7071,7 +6827,6 @@
       "date": "2026-09-09T00:00:00.000Z",
       "endDate": "2026-09-09T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -7099,7 +6854,6 @@
       "date": "2026-09-09T00:00:00.000Z",
       "endDate": "2026-09-09T03:00:00.000Z",
       "location": "Waipā Foundation area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -7121,7 +6875,6 @@
       "date": "2026-09-09T02:00:00.000Z",
       "endDate": "2026-09-09T03:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "YWCA Kauaʻi",
       "categories": [
@@ -7151,7 +6904,6 @@
       "date": "2026-09-09T23:00:00.000Z",
       "endDate": "2026-09-10T01:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -7179,7 +6931,6 @@
       "date": "2026-09-09T23:00:00.000Z",
       "endDate": "2026-09-10T03:00:00.000Z",
       "location": "Princeville Makai Golf Club",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Makai Golf Club",
       "categories": [
@@ -7206,7 +6957,6 @@
       "date": "2026-09-10T01:00:00.000Z",
       "endDate": "2026-09-10T02:30:00.000Z",
       "location": "Kapaʻa Ball Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -7230,7 +6980,6 @@
       "date": "2026-09-10T01:00:00.000Z",
       "endDate": "2026-09-10T02:00:00.000Z",
       "location": "Hanapēpē Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē Public Library",
       "categories": [
@@ -7259,7 +7008,6 @@
       "date": "2026-09-10T01:30:00.000Z",
       "endDate": "2026-09-10T02:30:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -7288,7 +7036,6 @@
       "date": "2026-09-10T03:30:00.000Z",
       "endDate": "2026-09-10T05:30:00.000Z",
       "location": "Kukui Grove Center — Center Stage",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kukui Grove Center",
       "categories": [
@@ -7312,7 +7059,6 @@
       "date": "2026-09-10T18:15:00.000Z",
       "endDate": "2026-09-11T02:00:00.000Z",
       "location": "Kauaʻi Community College Performing Arts Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "healthcare",
@@ -7338,7 +7084,6 @@
       "date": "2026-09-10T20:00:00.000Z",
       "endDate": "2026-09-10T21:00:00.000Z",
       "location": "Līhuʻe Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Līhuʻe Public Library",
       "categories": [
@@ -7366,7 +7111,6 @@
       "date": "2026-09-10T20:30:00.000Z",
       "endDate": "2026-09-10T21:30:00.000Z",
       "location": "Waimea Public Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Waimea Public Library",
       "categories": [
@@ -7394,7 +7138,6 @@
       "date": "2026-09-11T01:00:00.000Z",
       "endDate": "2026-09-11T02:00:00.000Z",
       "location": "Hanapēpē Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi Office of Economic Development",
       "categories": [
@@ -7418,7 +7161,6 @@
       "date": "2026-09-11T02:00:00.000Z",
       "endDate": "2026-09-11T05:00:00.000Z",
       "location": "Hilton Garden Inn Kauaʻi Wailua Bay",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Tamatea Nui O Kauaʻi",
       "categories": [
@@ -7447,7 +7189,6 @@
       "date": "2026-09-11T18:00:00.000Z",
       "endDate": "2026-09-12T01:00:00.000Z",
       "location": "Kauaʻi Resource Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi and Goodwill Hawaiʻi",
       "categories": [
@@ -7475,7 +7216,6 @@
       "date": "2026-09-12T01:00:00.000Z",
       "endDate": "2026-09-12T05:00:00.000Z",
       "location": "Outrigger Kauaʻi Beach Resort & Spa",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -7497,7 +7237,6 @@
       "date": "2026-09-12T03:00:00.000Z",
       "endDate": "2026-09-12T06:00:00.000Z",
       "location": "Hale Līhuʻe / Hā Coffee",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hale Līhuʻe",
       "categories": [
@@ -7525,7 +7264,6 @@
       "date": "2026-09-12T03:00:00.000Z",
       "endDate": "2026-09-12T06:00:00.000Z",
       "location": "Historic Hanapēpē town",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Hanapēpē merchants and community",
       "categories": [
@@ -7549,7 +7287,6 @@
       "date": "2026-09-12T18:30:00.000Z",
       "endDate": "2026-09-12T20:30:00.000Z",
       "location": "Lydgate Beach — Morgan’s Pond",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Friends of Kamalani and Lydgate Park",
       "categories": [
@@ -7576,7 +7313,6 @@
       "date": "2026-09-12T19:00:00.000Z",
       "endDate": "2026-09-12T22:00:00.000Z",
       "location": "Hale Halawai / Hanalei Community Center area",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "farmers_market",
@@ -7598,7 +7334,6 @@
       "date": "2026-09-12T23:30:00.000Z",
       "endDate": "2026-09-13T00:30:00.000Z",
       "location": "Princeville Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "hula",
@@ -7624,7 +7359,6 @@
       "date": "2026-09-13T01:00:00.000Z",
       "endDate": "2026-09-13T05:00:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "market",
@@ -7646,7 +7380,6 @@
       "date": "2026-09-13T02:00:00.000Z",
       "endDate": "2026-09-13T07:00:00.000Z",
       "location": "Kauaʻi Philippine Cultural Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "American Cancer Society volunteers",
       "categories": [
@@ -7669,7 +7402,6 @@
       "date": "2026-09-13T02:00:00.000Z",
       "endDate": "2026-09-13T06:00:00.000Z",
       "location": "Kress Street",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "night_market",
@@ -7696,7 +7428,6 @@
       "date": "2026-09-14T02:00:00.000Z",
       "endDate": "2026-09-14T06:00:00.000Z",
       "location": "Princeville Shopping Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "night_market",
@@ -7719,7 +7450,6 @@
       "date": "2026-09-16T03:00:00.000Z",
       "endDate": "2026-09-16T05:00:00.000Z",
       "location": "Princeville Community Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Princeville Community Center",
       "categories": [
@@ -7745,7 +7475,6 @@
       "title": "Kauaʻi Mokihana Festival",
       "date": "2026-09-20T10:00:00.000Z",
       "location": "Multiple venues; main listed hall at 4191 Hardy St",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Mālie Foundation",
       "categories": [
@@ -7775,7 +7504,6 @@
       "date": "2026-10-03T18:00:00.000Z",
       "endDate": "2026-10-04T02:30:00.000Z",
       "location": "Kauaʻi Shores Hotel",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "yoga",
@@ -7803,7 +7531,6 @@
       "date": "2026-10-04T01:00:00.000Z",
       "endDate": "2026-10-04T04:00:00.000Z",
       "location": "Kress Street",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "beer",
@@ -7833,7 +7560,6 @@
       "date": "2026-10-09T18:00:00.000Z",
       "endDate": "2026-10-10T01:00:00.000Z",
       "location": "Kauaʻi Resource Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi and Goodwill Hawaiʻi",
       "categories": [
@@ -7861,7 +7587,6 @@
       "date": "2026-10-15T01:30:00.000Z",
       "endDate": "2026-10-15T02:30:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -7889,7 +7614,6 @@
       "title": "Kauaʻi Writers Conference",
       "date": "2026-11-02T10:00:00.000Z",
       "location": "Royal Sonesta Kauaʻi Resort",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kauaʻi Writers Conference",
       "categories": [
@@ -7919,7 +7643,6 @@
       "date": "2026-11-07T19:00:00.000Z",
       "endDate": "2026-11-08T02:00:00.000Z",
       "location": "Kōkeʻe State Park",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "culture",
@@ -7943,7 +7666,6 @@
       "date": "2026-11-13T18:00:00.000Z",
       "endDate": "2026-11-14T01:00:00.000Z",
       "location": "Kauaʻi Resource Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi and Goodwill Hawaiʻi",
       "categories": [
@@ -7971,7 +7693,6 @@
       "date": "2026-11-19T01:30:00.000Z",
       "endDate": "2026-11-19T02:30:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -8001,7 +7722,6 @@
       "date": "2026-11-21T06:30:00.000Z",
       "endDate": "2026-11-21T07:30:00.000Z",
       "location": "Kauaʻi Community College Performing Arts Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "PRISM Club at Kauaʻi Community College",
       "categories": [
@@ -8025,7 +7745,6 @@
       "date": "2026-12-10T01:30:00.000Z",
       "endDate": "2026-12-10T02:30:00.000Z",
       "location": "Kōloa Public and School Library",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "Kōloa Public and School Library",
       "categories": [
@@ -8055,7 +7774,6 @@
       "date": "2026-12-11T18:00:00.000Z",
       "endDate": "2026-12-12T01:00:00.000Z",
       "location": "Kauaʻi Resource Center",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "hostName": "County of Kauaʻi and Goodwill Hawaiʻi",
       "categories": [
@@ -8083,7 +7801,6 @@
       "date": "2026-12-20T03:00:00.000Z",
       "endDate": "2026-12-20T08:00:00.000Z",
       "location": "Hofgaard Park and Waimea town route",
-      "createdBy": "admin@foo.com",
       "owner": "admin@foo.com",
       "categories": [
         "holiday",

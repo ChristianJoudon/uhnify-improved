@@ -11,9 +11,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { Events } from '../../api/events/Events';
 import { Clubs } from '../../api/club/Club';
 import { formatEventDate } from '../utilities/helpers';
+import { shrinkImage } from '../utilities/shrinkImage';
 import { topicForEvent } from '../utilities/topics';
-
-const MAX_IMAGE_BYTES = 2000000;
+import { TEXT_LIMITS } from '../../api/listing/limits';
 
 /**
  * `datetime-local` wants wall-clock time. toISOString would hand it UTC, which
@@ -70,7 +70,7 @@ const EditEventAdmin = () => {
         date: toLocalInput(doc.date),
         location: doc.location || '',
         description: doc.description || '',
-        createdBy: doc.createdBy || '',
+        email: doc.email || '',
         image: doc.image || '',
       });
     }
@@ -116,30 +116,26 @@ const EditEventAdmin = () => {
   // Only a genuinely uploaded photo becomes the poster face; the seeded stock
   // art is not this app's design and the event poster already ignores it.
   const photo = form.image.startsWith('data:') ? form.image : '';
-  const valid = form.title.trim() && form.eventID && form.date && form.location.trim() && form.createdBy.trim();
+  const valid = form.title.trim() && form.eventID && form.date && form.location.trim();
 
-  const pickImage = event => {
+  const pickImage = async event => {
     const input = event.target;
     const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    if (!file.type.startsWith('image')) {
-      swal('Not an image', 'Please choose an image file.', 'error');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      swal('Too large', 'Please choose an image under 2 MB.', 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = e => set('image', e.target.result);
-    reader.readAsDataURL(file);
     // Clear it, or picking the same file after Remove fires no change event.
     // Held as a local first: assigning straight through `event.target` trips
     // no-param-reassign, a rule that exists to stop a handler mutating its
     // caller's data — and this is a deliberate write to a DOM node, not that.
     input.value = '';
+    if (!file) {
+      return;
+    }
+    try {
+      // Shrunk here rather than refused: a phone photo is several megabytes,
+      // and the 2 MB door that stood here turned real people away.
+      set('image', await shrinkImage(file));
+    } catch (error) {
+      swal('Could not use that photo', error.message, 'error');
+    }
   };
 
   const submit = event => {
@@ -156,7 +152,8 @@ const EditEventAdmin = () => {
       description: form.description.trim(),
       date: new Date(form.date),
       location: form.location.trim(),
-      createdBy: form.createdBy.trim(),
+      // Blank takes the address down; the server unsets it.
+      email: form.email.trim(),
       image: form.image,
     }, error => {
       setSaving(false);
@@ -209,6 +206,7 @@ const EditEventAdmin = () => {
                 id="title"
                 type="text"
                 value={form.title}
+                maxLength={TEXT_LIMITS.title}
                 onChange={e => set('title', e.target.value)}
                 required
               />
@@ -246,6 +244,7 @@ const EditEventAdmin = () => {
                   id="location"
                   type="text"
                   value={form.location}
+                  maxLength={TEXT_LIMITS.location}
                   onChange={e => set('location', e.target.value)}
                   required
                 />
@@ -261,6 +260,7 @@ const EditEventAdmin = () => {
                 id="description"
                 rows={5}
                 value={form.description}
+                maxLength={TEXT_LIMITS.description}
                 onChange={e => set('description', e.target.value)}
               />
             </label>
@@ -283,24 +283,37 @@ const EditEventAdmin = () => {
           </section>
 
           <section className="form-block">
-            <h3>Credit</h3>
-            <label htmlFor="createdBy">
-              Posted by
+            <h3>Contact</h3>
+            <label htmlFor="email">
+              Contact email
               <input
-                id="createdBy"
-                type="text"
-                value={form.createdBy}
-                onChange={e => set('createdBy', e.target.value)}
-                required
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                value={form.email}
+                maxLength={TEXT_LIMITS.email}
+                placeholder="hello@yourgroup.org"
+                onChange={e => set('email', e.target.value)}
+                aria-describedby="email-hint"
               />
             </label>
+            <span className="field-hint" id="email-hint">
+              Optional — printed on the event&apos;s card for anyone to see. Clear it to take it down.
+            </span>
+            {/* Who posted a listing is a fact about the record, not a field.
+                The editable "Posted by" box that stood here wrote a second
+                copy of the poster's address, and that copy was the one the
+                public publications did not withhold. This reads `owner`,
+                which only the admin publication sends. */}
+            {doc.owner && <p className="field-hint">Posted by {doc.owner}</p>}
           </section>
 
           <div className="create-actions">
             <button id="submit" type="submit" className="btn btn-solid-primary" disabled={!valid || saving}>
               {saving ? 'Saving…' : 'Save changes'}
             </button>
-            {!valid && <span className="field-hint">Name, host, when, where, and who posted it.</span>}
+            {!valid && <span className="field-hint">Name, host, when, and where.</span>}
           </div>
         </form>
       </div>

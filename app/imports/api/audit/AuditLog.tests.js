@@ -82,7 +82,9 @@ if (Meteor.isServer) {
      * duplicate personal data into a place with different access rules.
      */
     it('summarises an image instead of storing it', function () {
-      const bigPicture = `data:image/jpeg;base64,${'A'.repeat(40000)}`;
+      // Begins with a real JPEG header, since the method now reads the bytes
+      // and would refuse a payload that only claims to be one.
+      const bigPicture = `data:image/jpeg;base64,/9j/4${'A'.repeat(40000)}`;
       callAs(member, 'Profiles.update', {
         firstName: 'A', lastName: 'B', email: Meteor.users.findOne(member).username,
         bio: '', title: '', interests: [], picture: bigPicture,

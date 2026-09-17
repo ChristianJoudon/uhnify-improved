@@ -8,6 +8,7 @@ import { Container } from 'react-bootstrap';
 import { ArrowLeft, ArrowRight } from 'react-bootstrap-icons';
 import PageHead from '../components/PageHead';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../utilities/topics';
+import { TEXT_LIMITS } from '../../api/listing/limits';
 
 const STEPS = ['Account', 'Your name', 'Interests'];
 
@@ -86,6 +87,7 @@ const SignUp = ({ location }) => {
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
+                  maxLength={TEXT_LIMITS.email}
                   value={formData.email}
                   onChange={updateField}
                   required
@@ -122,6 +124,7 @@ const SignUp = ({ location }) => {
                     className="mb-field"
                     name="firstName"
                     autoComplete="given-name"
+                    maxLength={TEXT_LIMITS.firstName}
                     value={formData.firstName}
                     onChange={updateField}
                     required
@@ -134,6 +137,7 @@ const SignUp = ({ location }) => {
                     className="mb-field"
                     name="lastName"
                     autoComplete="family-name"
+                    maxLength={TEXT_LIMITS.lastName}
                     value={formData.lastName}
                     onChange={updateField}
                     required

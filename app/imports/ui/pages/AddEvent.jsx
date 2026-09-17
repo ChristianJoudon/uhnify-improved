@@ -10,11 +10,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { formatEventDate } from '../utilities/helpers';
+import { shrinkImage } from '../utilities/shrinkImage';
 import { topicForEvent } from '../utilities/topics';
-
-const TITLE_MAX = 80;
-const ABOUT_MAX = 300;
-const MAX_IMAGE_BYTES = 2000000;
+import { TEXT_LIMITS } from '../../api/listing/limits';
 
 const AddEvent = () => {
   const navigate = useNavigate();
@@ -26,6 +24,7 @@ const AddEvent = () => {
     date: '',
     location: '',
     description: '',
+    email: '',
     image: '',
   });
 
@@ -59,27 +58,24 @@ const AddEvent = () => {
   const when = form.date ? formatEventDate(new Date(form.date)) : '';
   const valid = form.title.trim() && form.hostId && form.date && form.location.trim();
 
-  const pickImage = event => {
+  const pickImage = async event => {
     const input = event.target;
     const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    if (!file.type.startsWith('image')) {
-      swal('Not an image', 'Please choose an image file.', 'error');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      swal('Too large', 'Please choose an image under 2 MB.', 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = e => set('image', e.target.result);
-    reader.readAsDataURL(file);
+    // Clear it, or picking the same file after Remove fires no change event.
     // Held as a local first: assigning straight through `event.target` trips
     // no-param-reassign, a rule that exists to stop a handler mutating its
     // caller's data — and this is a deliberate write to a DOM node, not that.
     input.value = '';
+    if (!file) {
+      return;
+    }
+    try {
+      // Shrunk here rather than refused: a phone photo is several megabytes,
+      // and the 2 MB door that stood here turned real people away.
+      set('image', await shrinkImage(file));
+    } catch (error) {
+      swal('Could not use that photo', error.message, 'error');
+    }
   };
 
   const submit = event => {
@@ -96,6 +92,8 @@ const AddEvent = () => {
       description: form.description.trim(),
       date: new Date(form.date),
       location: form.location.trim(),
+      // Blank means "publish none"; the server stores nothing for it.
+      email: form.email.trim(),
       // Empty string, never undefined — see AddClub.
       image: form.image,
     }, error => {
@@ -152,14 +150,12 @@ const AddEvent = () => {
                 id="title"
                 type="text"
                 value={form.title}
-                maxLength={TITLE_MAX}
+                maxLength={TEXT_LIMITS.title}
                 placeholder="Sunset Movie Night"
                 onChange={e => set('title', e.target.value)}
-                aria-describedby="title-count"
                 required
               />
             </label>
-            <span className="field-hint" id="title-count">{form.title.length}/{TITLE_MAX}</span>
 
             <label htmlFor="eventID">
               Hosted by
@@ -191,6 +187,7 @@ const AddEvent = () => {
                   id="location"
                   type="text"
                   value={form.location}
+                  maxLength={TEXT_LIMITS.location}
                   placeholder="Rooftop, 3rd floor"
                   onChange={e => set('location', e.target.value)}
                   required
@@ -207,13 +204,11 @@ const AddEvent = () => {
                 id="description"
                 rows={3}
                 value={form.description}
-                maxLength={ABOUT_MAX}
+                maxLength={TEXT_LIMITS.description}
                 placeholder="What happens, what to bring, who it's for."
                 onChange={e => set('description', e.target.value)}
-                aria-describedby="about-count"
               />
             </label>
-            <span className="field-hint" id="about-count">{form.description.length}/{ABOUT_MAX}</span>
           </section>
 
           <section className="form-block">
@@ -230,6 +225,30 @@ const AddEvent = () => {
               <Form.Control ref={fileInput} type="file" accept="image/*" onChange={pickImage} className="d-none" />
             </div>
             <span className="field-hint">Optional — without one we design a poster from the host&apos;s topic.</span>
+          </section>
+
+          <section className="form-block">
+            <h3>Contact</h3>
+            <label htmlFor="email">
+              Contact email
+              <input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                value={form.email}
+                maxLength={TEXT_LIMITS.email}
+                placeholder="hello@yourgroup.org"
+                onChange={e => set('email', e.target.value)}
+                aria-describedby="email-hint"
+              />
+            </label>
+            {/* The one thing on this form that is printed for strangers on the
+                organizer's say-so, so the form says so. Nothing else about the
+                poster — not their account — ever reaches the card. */}
+            <span className="field-hint" id="email-hint">
+              Optional — printed on the event&apos;s card for anyone to see, so people can reach you.
+            </span>
           </section>
 
           <div className="create-actions">

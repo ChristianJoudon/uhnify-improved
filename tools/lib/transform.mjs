@@ -222,7 +222,6 @@ export const transform = (reg, { horizonWeeks = 6, maxPerListing = 6 } = {}) => 
         date: start,
         endDate: s.end_time ? at(endDay, s.end_time) : undefined,
         location: venueLine(e.location) || 'Kauaʻi',
-        createdBy: 'admin@foo.com',
         owner: 'admin@foo.com',
         hostName: host,
         categories: clean(e.categories),

@@ -5156,6 +5156,64 @@ svg.mb-empty-glyph {
   height: 34px;
 }
 
+/* --- ERROR PANEL --------------------------------------------------------- */
+/* What the route-level error boundary shows in place of a page whose render
+   threw. It is built like the empty state above so it reads as one more calm
+   notice from the app rather than a crash screen — the reader did nothing
+   wrong. Solid where the empty state is dashed: this is not a space waiting
+   to be filled, and the small print offset keeps it a card. */
+.mb-error-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--mb-line-strong);
+  border-radius: var(--mb-radius-card);
+  background: var(--mb-paper-bright);
+  box-shadow: var(--mb-shadow-small);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--mb-ink-soft);
+}
+
+/* An h1 because the panel is the whole page while it is up, and every page
+   has one — but at the empty state's scale, since it is a notice, not a hero. */
+.mb-error-panel h1 {
+  font-family: "Bricolage Grotesque", "DM Sans", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+  margin: 0;
+}
+
+.mb-error-panel p {
+  margin: 0;
+  max-width: 42ch;
+}
+
+/* Development only: the thrown message, legible but plainly not the app's
+   own voice. pre-wrap because a long message must not widen the card. */
+.mb-error-panel pre {
+  width: 100%;
+  margin: 0.6rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--mb-radius-tight);
+  background: var(--mb-red-tint);
+  color: var(--mb-red-deep);
+  font-size: 0.82rem;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mb-error-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
 /* ==========================================================================
    PAGE-LOCAL RULES
    Everything the primitives do not cover,

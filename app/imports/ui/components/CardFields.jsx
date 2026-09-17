@@ -18,6 +18,36 @@ const GLYPH = {
 };
 
 /**
+ * The two rows a person acts on. An address becomes a mailto link and a
+ * number a tel link, so the card is where you reach an organizer from, not
+ * only where you read about them. The text stays exactly as the source wrote
+ * it; only the href is normalised, and only when there is something a mail
+ * client or a dialer can use — a group's contact box is free text, and
+ * "ask for Bob at the front desk" is neither.
+ */
+const CONTACT_HREF = {
+  email: value => (/^[^\s@]+@[^\s@]+$/.test(value) ? `mailto:${value}` : null),
+  phone: value => {
+    const digits = value.replace(/\D/g, '');
+    return digits ? `tel:${value.startsWith('+') ? '+' : ''}${digits}` : null;
+  },
+};
+
+const contactHref = row => {
+  const toHref = CONTACT_HREF[row.key];
+  return toHref && typeof row.value === 'string' ? toHref(row.value.trim()) : null;
+};
+
+/**
+ * A card is usually itself a hit target — the deck turns over on a tap, a
+ * poster opens its sheet — and following a link inside it must not also do
+ * that. Stopping the click here covers every React handler up the tree. The
+ * deck's gesture library listens beneath React, so the deck separately ignores
+ * a tap that lands on a link.
+ */
+const keepToTheLink = event => event.stopPropagation();
+
+/**
  * Renders a record against a field schema. Fields with nothing to say are
  * already gone by the time they get here, so there is no empty row, no "N/A",
  * and no icon standing next to a blank. A record with nothing at all renders
@@ -32,10 +62,15 @@ const CardFields = ({ record, schema, limit, className }) => {
     <ul className={`card-fields${className ? ` ${className}` : ''}`}>
       {rows.map(row => {
         const Icon = GLYPH[row.icon];
+        const href = contactHref(row);
         return (
           <li key={row.key} className="card-field">
             {Icon && <Icon size={14} aria-hidden="true" />}
-            <span>{row.value}</span>
+            {href
+              // Not draggable, or a swipe that begins on the link becomes the
+              // browser's own drag of the link and the card never moves.
+              ? <a href={href} onClick={keepToTheLink} draggable={false}>{row.value}</a>
+              : <span>{row.value}</span>}
           </li>
         );
       })}

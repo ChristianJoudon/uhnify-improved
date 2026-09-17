@@ -7,6 +7,7 @@ import { Meteor } from 'meteor/meteor';
 import { Camera } from 'react-bootstrap-icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Profiles } from '../../api/profiles/Profiles';
+import { TEXT_LIMITS } from '../../api/listing/limits';
 import { normalizeCategories, profileImagePath } from '../utilities/helpers';
 import { INTEREST_TOPIC_KEYS, TOPICS, topicFor } from '../utilities/topics';
 
@@ -217,20 +218,20 @@ const Settings = () => {
             <div className="field-row">
               <label htmlFor="cz-first">
                 First name
-                <input id="cz-first" type="text" value={form.firstName} onChange={e => set('firstName', e.target.value)} required />
+                <input id="cz-first" type="text" value={form.firstName} maxLength={TEXT_LIMITS.firstName} onChange={e => set('firstName', e.target.value)} required />
               </label>
               <label htmlFor="cz-last">
                 Last name
-                <input id="cz-last" type="text" value={form.lastName} onChange={e => set('lastName', e.target.value)} required />
+                <input id="cz-last" type="text" value={form.lastName} maxLength={TEXT_LIMITS.lastName} onChange={e => set('lastName', e.target.value)} required />
               </label>
             </div>
             <label htmlFor="cz-title">
               Title
-              <input id="cz-title" type="text" value={form.title} placeholder="Designer, student, organiser…" onChange={e => set('title', e.target.value)} />
+              <input id="cz-title" type="text" value={form.title} maxLength={TEXT_LIMITS.profileTitle} placeholder="Designer, student, organiser…" onChange={e => set('title', e.target.value)} />
             </label>
             <label htmlFor="cz-email">
               Email
-              <input id="cz-email" type="email" value={form.email} onChange={e => set('email', e.target.value)} required />
+              <input id="cz-email" type="email" value={form.email} maxLength={TEXT_LIMITS.email} onChange={e => set('email', e.target.value)} required />
             </label>
           </section>
 
@@ -238,7 +239,7 @@ const Settings = () => {
             <h3>About</h3>
             <label htmlFor="cz-bio">
               A line or two about you
-              <textarea id="cz-bio" rows={3} value={form.bio} onChange={e => set('bio', e.target.value)} />
+              <textarea id="cz-bio" rows={3} value={form.bio} maxLength={TEXT_LIMITS.bio} onChange={e => set('bio', e.target.value)} />
             </label>
           </section>
 
