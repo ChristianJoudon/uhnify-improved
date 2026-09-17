@@ -17,7 +17,13 @@ const PosterArt = ({ topic, eyebrow, title, tagline, image, placeholder, art }) 
       className="mb-poster-art"
       style={onArt ? { background: '#303234', color: '#fff9f0' } : { background: topic.field, color: topic.ink }}
     >
-      {image && <img className="mb-poster-photo" src={image} alt="" />}
+      {/* Lazy now that a photo is a URL. While it was a data: URL there was
+          nothing to defer — the bytes had already arrived inside the document —
+          so this was the one image here left eager. On a wall of posters that
+          would now be a request per card on load, seen or not. The form
+          previews and the details sheet draw through here too and lose nothing:
+          they are in view when they mount, so theirs is fetched at once. */}
+      {image && <img className="mb-poster-photo" src={image} alt="" loading="lazy" decoding="async" />}
       {cover && <img className="mb-poster-photo" src={cover} alt="" loading="lazy" />}
       <div className={`mb-poster-copy${onArt ? ' on-photo' : ''}`}>
         {eyebrow && <span className="mb-poster-eyebrow">{eyebrow}</span>}

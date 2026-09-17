@@ -11,7 +11,7 @@ import ChipInput from '../components/form/ChipInput';
 import SchedulePicker from '../components/form/SchedulePicker';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Clubs } from '../../api/club/Club';
-import { imagePath, normalizeCategories } from '../utilities/helpers';
+import { imagePath, isPhoto, normalizeCategories } from '../utilities/helpers';
 import { shrinkImage } from '../utilities/shrinkImage';
 import { topicFor } from '../utilities/topics';
 import { parseMeetingTime, scheduleLabel } from '../../api/club/schedule';
@@ -110,7 +110,7 @@ const EditClubAdmin = () => {
   const when = scheduleLabel(form.schedule) || form.meetingTime;
   // Only a genuinely uploaded photo becomes the poster face — the seeded logo
   // art stays the small footer mark, exactly as the club card decides it.
-  const photo = form.image.startsWith('data:') ? form.image : '';
+  const photo = isPhoto(form.image) ? form.image : '';
   const valid = form.name.trim() && form.description.trim() && form.location.trim() && form.owner.trim();
 
   const pickImage = async event => {

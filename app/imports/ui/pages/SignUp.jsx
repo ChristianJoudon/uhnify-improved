@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Meteor } from 'meteor/meteor';
-import PropTypes from 'prop-types';
 import swal from 'sweetalert';
 import { Link, Navigate } from 'react-router-dom';
 import { Accounts } from 'meteor/accounts-base';
@@ -9,12 +8,17 @@ import { ArrowLeft, ArrowRight } from 'react-bootstrap-icons';
 import PageHead from '../components/PageHead';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../utilities/topics';
 import { TEXT_LIMITS } from '../../api/listing/limits';
+import { takeReturnTo } from '../utilities/returnTo';
 
 const STEPS = ['Account', 'Your name', 'Interests'];
 
-const SignUp = ({ location }) => {
+const SignUp = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [redirectToReferer, setRedirectToRef] = useState(false);
+  // Where to go once the account exists; empty until then. This read a
+  // `location.state.from` that react-router stopped passing as a prop two
+  // major versions ago, so it was always '/': somebody invited to a private
+  // group made their account and landed on the front page without the link.
+  const [redirect, setRedirect] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '', firstName: '', lastName: '' });
   const [interests, setInterests] = useState([]);
 
@@ -44,15 +48,15 @@ const SignUp = ({ location }) => {
           swal('Error', profileError.reason || profileError.message, 'error');
         } else {
           swal('Welcome', "You're in. Let's find you something.", 'success');
-          setRedirectToRef(true);
+          // Taken here, once: reading it clears it. See utilities/returnTo.
+          setRedirect(takeReturnTo() || '/');
         }
       });
     });
   };
 
-  const { from } = location?.state || { from: { pathname: '/' } };
-  if (redirectToReferer) {
-    return <Navigate to={from} />;
+  if (redirect) {
+    return <Navigate to={redirect} replace />;
   }
 
   return (
@@ -202,18 +206,6 @@ const SignUp = ({ location }) => {
       </div>
     </Container>
   );
-};
-
-SignUp.propTypes = {
-  location: PropTypes.shape({
-    state: PropTypes.shape({
-      from: PropTypes.shape({ pathname: PropTypes.string }),
-    }),
-  }),
-};
-
-SignUp.defaultProps = {
-  location: { state: { from: { pathname: '/' } } },
 };
 
 export default SignUp;

@@ -26,6 +26,7 @@ import { scoreClub, sizeTier } from '../utilities/recommend';
 import { TOPIC_KEYS, topicFor, topicForEvent } from '../utilities/topics';
 import { collapseEventListings } from '../utilities/eventSeries';
 import { KAUAI, milesLabel, milesTo, positionOf } from '../utilities/geo';
+import { joinGroupAndTell, useRequestedGroupIds } from '../utilities/joinGroup';
 import { useOrigin } from '../utilities/useOrigin';
 import { useTuck } from '../utilities/useTuck';
 
@@ -76,6 +77,7 @@ const ClubFinder = () => {
   const sentinelRef = useRef(null);
   const { origin, status, locate, reset, isPrecise, isExact } = useOrigin();
   const barTuck = useTuck();
+  const requestedIds = useRequestedGroupIds();
 
   const { ready, clubs, events, joinedClubIds, goingIds, interests, friendClubIds } = useTracker(() => {
     const clubsSubscription = Meteor.subscribe(Clubs.userPublicationName);
@@ -245,13 +247,9 @@ const ClubFinder = () => {
     return () => observer.disconnect();
   }, [total, visibleCount]);
 
-  const join = clubId => {
-    Meteor.call('profileClubs.add', clubId, error => {
-      if (error) {
-        swal('Error', error.reason || error.message, 'error');
-      }
-    });
-  };
+  // Joining has three outcomes now — in, asked, refused — and the shared
+  // helper says each of them. This page read only the third.
+  const join = clubId => joinGroupAndTell(clubId);
 
   /** The card's one action, and the sheet's: say yes to an event. */
   const toggleGoing = event => {
@@ -530,6 +528,7 @@ const ClubFinder = () => {
                     tier={item.tier}
                     distance={milesLabel(item.distance)}
                     isMember={joinedClubIds.includes(item.record._id)}
+                    isRequested={requestedIds.has(item.record._id)}
                     onAddToProfile={join}
                     onViewDetails={() => setDetail({ record: item.record, kind: 'club' })}
                   />
@@ -550,6 +549,7 @@ const ClubFinder = () => {
         isIn={detail?.kind === 'event'
           ? goingIds.has(detail?.record?._id)
           : joinedClubIds.includes(detail?.record?._id)}
+        requested={detail?.kind === 'club' && requestedIds.has(detail?.record?._id)}
         onAct={detail?.kind === 'event' ? toggleGoing : record => join(record._id)}
       />
     </Container>

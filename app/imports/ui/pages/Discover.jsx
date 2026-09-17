@@ -21,6 +21,7 @@ import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicForClub, topicForEvent } from '../utilities/topics';
 import { collapseEventListings, eventListingCount } from '../utilities/eventSeries';
 import { milesLabel, milesTo } from '../utilities/geo';
+import { joinGroupAndTell, useRequestedGroupIds } from '../utilities/joinGroup';
 import { useOrigin } from '../utilities/useOrigin';
 import { scoreClub } from '../utilities/recommend';
 
@@ -193,6 +194,7 @@ const Discover = () => {
   // on the front page is what they land on.
   const [params, setParams] = useSearchParams();
   const { origin } = useOrigin();
+  const requestedIds = useRequestedGroupIds();
   const query = (params.get('q') || '').trim();
   const requested = params.get('when');
   const topicKey = params.get('topic');
@@ -409,14 +411,13 @@ const Discover = () => {
     return tally;
   }, [clubs, query]);
 
+  // In, asked, or refused: the shared helper says whichever it was. The
+  // recommender's context rides along as before — and is only recorded for a
+  // join that lands, since a request records no interaction at all.
   const join = clubId => {
     const metadata = metadataFor(clubId);
     const context = metadata ? { ...metadata, clientEventId: `join:${Random.id()}` } : {};
-    Meteor.call('profileClubs.add', clubId, context, error => {
-      if (error) {
-        swal('Error', error.reason || error.message, 'error');
-      }
-    });
+    joinGroupAndTell(clubId, { context });
   };
 
   // Taking it back from here is a person saying "not going", which is its own
@@ -525,6 +526,7 @@ const Discover = () => {
                 tier={index < 2 ? 'lg' : 'md'}
                 distance={milesLabel(milesTo(club, origin))}
                 isMember={joinedIds.has(club._id)}
+                isRequested={requestedIds.has(club._id)}
                 onAddToProfile={join}
                 onViewDetails={() => openDetail(club, 'club')}
               />
@@ -577,6 +579,7 @@ const Discover = () => {
         isIn={detail?.kind === 'event'
           ? goingIds.has(detail?.record?._id)
           : joinedIds.has(detail?.record?._id)}
+        requested={detail?.kind === 'club' && requestedIds.has(detail?.record?._id)}
         onAct={detail?.kind === 'event' ? toggleGoing : record => join(record._id)}
       />
     </main>

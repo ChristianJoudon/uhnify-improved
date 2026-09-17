@@ -235,7 +235,7 @@ const Profile = () => {
             const person = peopleById.get(edge.requesterId);
             return (
               <div key={edge._id} className="friend-row">
-                <Image src={profileImagePath(person?.picture)} alt="" className="friend-avatar" />
+                <Image src={profileImagePath(person?.picture)} alt="" className="friend-avatar" loading="lazy" decoding="async" />
                 <div>
                   <div className="friend-name">{displayName(person)}</div>
                   <div className="friend-sub">wants to be friends</div>
@@ -259,7 +259,7 @@ const Profile = () => {
             }
             return (
               <div key={friendId} className="friend-row">
-                <Image src={profileImagePath(person.picture)} alt="" className="friend-avatar" />
+                <Image src={profileImagePath(person.picture)} alt="" className="friend-avatar" loading="lazy" decoding="async" />
                 <div>
                   <div className="friend-name">{displayName(person)}</div>
                   {person.title && <div className="friend-sub">{person.title}</div>}
@@ -283,7 +283,7 @@ const Profile = () => {
           </div>
           {peopleResults.map(person => (
             <div key={person.userId} className="friend-row">
-              <Image src={profileImagePath(person.picture)} alt="" className="friend-avatar" />
+              <Image src={profileImagePath(person.picture)} alt="" className="friend-avatar" loading="lazy" decoding="async" />
               <div>
                 <div className="friend-name">{displayName(person)}</div>
                 {person.title && <div className="friend-sub">{person.title}</div>}
@@ -313,7 +313,7 @@ const Profile = () => {
           )}
           {friendActivity.map(item => (
             <div key={item.key} className="friend-row">
-              <Image src={profileImagePath(item.who.picture)} alt="" className="friend-avatar" />
+              <Image src={profileImagePath(item.who.picture)} alt="" className="friend-avatar" loading="lazy" decoding="async" />
               <div>
                 <div className="activity-text"><strong>{displayName(item.who)}</strong> {item.verb} <strong>{item.what}</strong></div>
                 {item.when && <div className="friend-sub">{formatShortDate(item.when)}</div>}

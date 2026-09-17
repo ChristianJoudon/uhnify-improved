@@ -4,6 +4,7 @@ import { Meteor } from 'meteor/meteor';
 import { Accounts } from 'meteor/accounts-base';
 import { Container } from 'react-bootstrap';
 import PageHead from '../components/PageHead';
+import { takeReturnTo } from '../utilities/returnTo';
 
 /**
  * The development accounts, when this is a development server that lists them.
@@ -19,7 +20,14 @@ const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [redirect, setRedirect] = useState(false);
+  // Where to go once signed in; empty until then. It was a boolean and the
+  // destination was always '/', which stranded anyone who had been sent here
+  // on the way to somewhere — an invite link most of all.
+  const [redirect, setRedirect] = useState('');
+
+  // Taken in the callback, once, not during render: reading it clears it, and
+  // a render can run twice.
+  const arrive = () => setRedirect(takeReturnTo() || '/');
 
   const handleSubmit = event => {
     event.preventDefault();
@@ -27,7 +35,7 @@ const SignIn = () => {
       if (err) {
         setError(err.reason);
       } else {
-        setRedirect(true);
+        arrive();
       }
     });
   };
@@ -38,12 +46,12 @@ const SignIn = () => {
   const signInAs = address => {
     Accounts.callLoginMethod({
       methodArguments: [{ devSignIn: address }],
-      userCallback: err => (err ? setError(err.reason || err.message) : setRedirect(true)),
+      userCallback: err => (err ? setError(err.reason || err.message) : arrive()),
     });
   };
 
   if (redirect) {
-    return <Navigate to="/" />;
+    return <Navigate to={redirect} replace />;
   }
 
   return (

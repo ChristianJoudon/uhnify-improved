@@ -33,8 +33,19 @@ const Agenda = () => {
     const membershipsSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
     const linksSub = Meteor.subscribe(EventClubs.linksPublicationName);
     const swipesSub = Meteor.subscribe(EventSwipes.userPublicationName);
+    // Everything above is the PUBLIC listings, and a private group is in none
+    // of them: its meetings and its events never reached the one page that is
+    // meant to hold "every group you joined". This sends what the person's
+    // own groups have on — the private groups, their events and the links
+    // between them — because membership is the test here, not visibility.
+    const memberEventsSub = Meteor.subscribe(EventClubs.userPublicationName);
+    // And what they posted themselves. Somebody who runs a private group
+    // without having joined it is sent its events by nothing else, so the one
+    // they said Going to had a swipe and no pill.
+    const ownedSub = Meteor.subscribe('Events.publication.owned');
     return {
-      ready: eventsSub.ready() && clubsSub.ready() && membershipsSub.ready() && linksSub.ready() && swipesSub.ready(),
+      ready: eventsSub.ready() && clubsSub.ready() && membershipsSub.ready() && linksSub.ready()
+        && swipesSub.ready() && memberEventsSub.ready() && ownedSub.ready(),
       events: Events.collection.find({}).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
       memberships: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch(),

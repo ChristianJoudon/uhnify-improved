@@ -36,7 +36,7 @@ const ProfileCard = ({ profile }) => {
   return (
     <article className="mb-panel admin-person">
       {/* Decorative: the name it would announce is the very next element. */}
-      <img className="admin-person-avatar" src={profileImagePath(profile.picture)} alt="" loading="lazy" />
+      <img className="admin-person-avatar" src={profileImagePath(profile.picture)} alt="" loading="lazy" decoding="async" />
       <div className="admin-person-body">
         <h3 className="admin-person-name">{name}</h3>
         <p className="admin-person-email">{profile.email}</p>

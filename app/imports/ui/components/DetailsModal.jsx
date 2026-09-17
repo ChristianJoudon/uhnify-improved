@@ -3,13 +3,17 @@ import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Badge, Button, Modal } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import swal from 'sweetalert';
 import { Plus } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
+import { isOpenToAll } from '../../api/listing/audience';
+import { isListingOwner } from '../../api/listing/ownership';
+import { isAnonymousListing, withHostSignals } from '../../api/privacy/FriendActivityPrivacy';
 import PosterArt from './PosterArt';
 import CardFields from './CardFields';
-import { normalizeCategories } from '../utilities/helpers';
+import { isPhoto, normalizeCategories } from '../utilities/helpers';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
 import { topicForClub, topicForEvent } from '../utilities/topics';
 
@@ -35,6 +39,14 @@ import { topicForClub, topicForEvent } from '../utilities/topics';
  * to an event is going to it; saying yes to a group is joining it. Both read
  * "I'm in" here once, while the deck called the same event action "Save" and
  * the list of them was headed "Saved" — one stored decision under three names.
+ *
+ * The sheet is also where a listing's privacy is said out loud: a "Private" or
+ * "Anonymous" chip when it applies, and how many people are in it. On the
+ * sheet and not on the card, because a wall of posters each wearing two chips
+ * and a number is a wall of chips. "Anonymous" is the EFFECTIVE answer — the
+ * owner's flag, a host group's, or a sensitive listing nobody flagged — asked
+ * of the same function the server asks, since a chip that read the stored flag
+ * alone would leave a recovery meeting looking like it keeps a guest list.
  */
 const KINDS = {
   event: {
@@ -44,6 +56,10 @@ const KINDS = {
     heading: record => record.title,
     joined: "You're going",
     join: "I'm going",
+    count: record => record.goingCount,
+    countLabel: count => `${count} going`,
+    anonymousMeans: 'Nobody can see who is going.',
+    managePath: record => `/manage/event/${record._id}`,
   },
   club: {
     collection: () => Clubs.collection,
@@ -52,10 +68,14 @@ const KINDS = {
     heading: record => record.name,
     joined: "You're in",
     join: 'Join',
+    count: record => record.memberCount,
+    countLabel: count => `${count} ${count === 1 ? 'member' : 'members'}`,
+    anonymousMeans: 'Nobody can see who is in this.',
+    managePath: record => `/manage/group/${record._id}`,
   },
 };
 
-const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => {
+const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, onAct }) => {
   const [newTag, setNewTag] = useState('');
   const shape = KINDS[kind];
 
@@ -66,6 +86,14 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
     [snapshot?._id, kind],
   );
   const record = live || snapshot;
+
+  // An event is as anonymous as the group that hosts it, so its hosts are read
+  // beside it — whichever of them this browser has been sent.
+  const hostNumber = kind === 'event' ? record?.eventID : undefined;
+  const hosts = useTracker(
+    () => (Number.isInteger(hostNumber) ? Clubs.collection.find({ clubID: hostNumber }).fetch() : []),
+    [hostNumber],
+  );
 
   const addTag = () => {
     const tag = newTag.trim();
@@ -105,7 +133,15 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
   const categories = normalizeCategories(record.categories);
   const tags = record.tags || [];
   // Same rule as the card: only a genuinely uploaded photo takes the face.
-  const photo = record.image && record.image.startsWith('data:') ? record.image : '';
+  const photo = isPhoto(record.image) ? record.image : '';
+  const isPrivate = !isOpenToAll(record);
+  const anonymous = isAnonymousListing(kind === 'event' ? withHostSignals(record, hosts) : record);
+  const count = shape.count(record) || 0;
+  // `owner` reaches a browser only through the owner's own publication, so
+  // this is true for the person who made the listing and for nobody else.
+  const mine = isListingOwner(Meteor.userId(), record);
+  // Asked and not yet answered. Membership wins: an approved request is one.
+  const waiting = requested && !isIn;
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="details-modal">
@@ -134,6 +170,16 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
           </div>
 
           <div>
+            {(isPrivate || anonymous || count > 0) && (
+              <div className="mb-chip-row details-status">
+                {isPrivate && <span className="mb-chip mb-chip--sm mb-chip--static">Private</span>}
+                {anonymous && (
+                  <span className="mb-chip mb-chip--sm mb-chip--static" title={shape.anonymousMeans}>Anonymous</span>
+                )}
+                {count > 0 && <span className="details-count">{shape.countLabel(count)}</span>}
+              </div>
+            )}
+
             <CardFields record={record} schema={shape.schema} className="details-fields" />
 
             {record.description && <p className="details-copy">{record.description}</p>}
@@ -171,16 +217,21 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
       </Modal.Body>
 
       <Modal.Footer>
+        {/* For the person who runs it, and quiet: the sheet is for reading, and
+            this is the way through to where the listing is changed. */}
+        {mine && <Link className="mb-section-link me-auto" to={shape.managePath(record)}>Manage</Link>}
         {/* The same one action the card carried, so the sheet is never a dead
-            end — a reader who opened it to decide can decide here. */}
+            end — a reader who opened it to decide can decide here. A request
+            already made is the one state with nothing left to press. */}
         {onAct && (
           <button
             type="button"
-            className={`btn ${isIn ? 'btn-soft-primary' : 'btn-match'}`}
+            className={`btn ${isIn || waiting ? 'btn-soft-primary' : 'btn-match'}`}
             onClick={() => onAct(record)}
             aria-pressed={isIn}
+            disabled={waiting}
           >
-            {isIn ? shape.joined : shape.join}
+            {(isIn && shape.joined) || (waiting && 'Requested') || shape.join}
           </button>
         )}
         <Button className="btn-solid-primary" onClick={onHide}>Close</Button>
@@ -197,6 +248,8 @@ DetailsModal.propTypes = {
   kind: PropTypes.oneOf(['event', 'club']),
   /** Already going / already a member — the action reads back what is true. */
   isIn: PropTypes.bool,
+  /** A group this person has asked to join and not yet heard back from. */
+  requested: PropTypes.bool,
   /** Omit to render no action, for a surface where there is nothing to join. */
   onAct: PropTypes.func,
 };
@@ -205,6 +258,7 @@ DetailsModal.defaultProps = {
   record: null,
   kind: 'club',
   isIn: false,
+  requested: false,
   onAct: null,
 };
 

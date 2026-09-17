@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import PosterArt from './PosterArt';
 import CardFields from './CardFields';
 import { EVENT_FIELDS } from '../utilities/cardFields';
+import { isPhoto } from '../utilities/helpers';
 import { topicForEvent } from '../utilities/topics';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -61,7 +62,7 @@ const EventPoster = ({ event, distance, going, undoable, onGoing, onOpen, tier }
   const topic = topicForEvent(event);
   // Only a genuinely uploaded photo becomes the poster face. The seeded stock
   // art is not this app's design and reads as clutter beside a drawn poster.
-  const photo = event.image && event.image.startsWith('data:') ? event.image : '';
+  const photo = isPhoto(event.image) ? event.image : '';
 
   return (
     <article className={`mb-poster mb-poster-${tier}`}>

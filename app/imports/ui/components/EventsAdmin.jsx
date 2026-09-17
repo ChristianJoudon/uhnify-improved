@@ -5,7 +5,7 @@ import { GeoAlt, PencilSquare, Trash } from 'react-bootstrap-icons';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import PosterArt from './PosterArt';
-import { formatEventDate } from '../utilities/helpers';
+import { formatEventDate, isPhoto } from '../utilities/helpers';
 import { topicForEvent } from '../utilities/topics';
 
 /**
@@ -21,7 +21,7 @@ const EventCardAdmin = ({ event }) => {
   const topic = topicForEvent(event);
   // The seeded stock art is not this app's design and reads as clutter beside
   // a drawn poster; only an uploaded image earns the face.
-  const photo = event.image && event.image.startsWith('data:') ? event.image : '';
+  const photo = isPhoto(event.image) ? event.image : '';
 
   const removeItem = () => {
     swal({

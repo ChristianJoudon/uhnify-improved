@@ -4,6 +4,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, GeoAlt, InfoCircle } from 'react-bootstrap-icons';
 import CardFields from './CardFields';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
+import { isPhoto } from '../utilities/helpers';
 import { topicForClub, topicForEvent } from '../utilities/topics';
 import './SwipeCardStyles.css';
 
@@ -78,10 +79,10 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
   // topic, a place and a time — so only the field schema differs.
   const fields = kind === 'club' ? CLUB_FIELDS : EVENT_FIELDS;
   const when = event.date ? dateParts(event.date) : null;
-  // Same rule as every other card: the seeded stock art is not this app's
-  // design, so only a genuinely uploaded photo becomes the card face. The
   const topic = kind === 'club' ? topicForClub(event) : topicForEvent(event);
-  const photo = event.image && event.image.startsWith('data:') ? event.image : '';
+  // Same rule as every other card: the seeded stock art is not this app's
+  // design, so only a genuinely uploaded photo becomes the card face.
+  const photo = isPhoto(event.image) ? event.image : '';
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -224,8 +225,14 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
               className={`swipe-card-media${photo ? ' has-photo' : ''}`}
               style={photo ? undefined : { background: topic.field, color: topic.ink }}
             >
+              {/* Not lazy, on purpose. The deck is the page, so its top card is
+                  above the fold by construction, and the cards under it sit in
+                  the same spot: a lazy image there would be fetched anyway, and
+                  the point of stacking them is that the next photo is already
+                  drawn when the top card flies off. Decoding is async so a big
+                  photo arriving cannot stall a drag in progress. */}
               {photo
-                ? <img src={photo} alt={event.title} draggable={false} />
+                ? <img src={photo} alt={event.title} draggable={false} decoding="async" />
                 : <img className="swipe-card-motif" src={topic.icon} alt="" />}
               {/* The subject, named once, over the picture. The title moved to
                   the foot where the rest of the listing is. */}

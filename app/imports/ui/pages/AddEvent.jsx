@@ -6,9 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Camera, Trash } from 'react-bootstrap-icons';
 import PosterArt from '../components/PosterArt';
+import PrivacyToggles from '../components/PrivacyToggles';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
+import { isOpenToAll } from '../../api/listing/audience';
+import { isListingOwner } from '../../api/listing/ownership';
+import { isAnonymousListing, isSensitiveListing } from '../../api/privacy/FriendActivityPrivacy';
 import { formatEventDate } from '../utilities/helpers';
 import { shrinkImage } from '../utilities/shrinkImage';
 import { topicForEvent } from '../utilities/topics';
@@ -27,15 +31,26 @@ const AddEvent = () => {
     email: '',
     image: '',
   });
+  // The event's OWN privacy, once somebody has set any of it by hand. Until
+  // then it is null and the event follows its host group — which is not a
+  // default value but a different thing: the server stamps such an event
+  // `privacyInherited`, and it goes on following the group afterwards.
+  const [ownPrivacy, setOwnPrivacy] = useState(null);
 
   const { ready, myClubs, allClubs } = useTracker(() => {
     const clubsSub = Meteor.subscribe(Clubs.userPublicationName);
     const memberSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
+    // The public directory has no private groups in it, by design — so with
+    // that alone, the members of a private group could not post its Thursday
+    // meeting: their own group was missing from "Hosted by". These two send a
+    // person the groups they are in and the groups they run, private or not.
+    const joinedSub = Meteor.subscribe(ProfileClubs.userPublicationName);
+    const ownedSub = Meteor.subscribe('Clubs.publication.owned');
     const joinedIds = new Set(ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch().map(m => m.clubId));
     const clubs = Clubs.collection.find({}, { sort: { name: 1 } }).fetch();
     return {
-      ready: clubsSub.ready() && memberSub.ready(),
-      myClubs: clubs.filter(club => joinedIds.has(club._id)),
+      ready: clubsSub.ready() && memberSub.ready() && joinedSub.ready() && ownedSub.ready(),
+      myClubs: clubs.filter(club => joinedIds.has(club._id) || isListingOwner(Meteor.userId(), club)),
       allClubs: clubs,
     };
   }, []);
@@ -43,6 +58,19 @@ const AddEvent = () => {
   const set = (field, value) => setForm(current => ({ ...current, [field]: value }));
 
   const host = useMemo(() => allClubs.find(club => club._id === form.hostId), [allClubs, form.hostId]);
+
+  // What the host group says, read the way the server will read it when the
+  // event is made. Shown in the switches while the event follows the group,
+  // and the starting point the moment somebody moves one.
+  const hostPrivacy = useMemo(() => ({
+    visibility: host && !isOpenToAll(host) ? 'private' : 'public',
+    anonymous: host?.anonymous === true,
+  }), [host]);
+  const privacy = ownPrivacy || hostPrivacy;
+  // An anonymous group's meeting is anonymous: who goes says who belongs. The
+  // event's own switch cannot change that, so it is drawn on and fixed.
+  const anonymousLocked = Boolean(host) && isAnonymousListing(host);
+  const lockedByHostChoice = anonymousLocked && !isSensitiveListing(host);
   // The server copies the selected host's categories onto the new event.
   // Preview that resulting record through the same authoritative resolver the
   // public card uses, so the color shown here is the color people will see.
@@ -96,15 +124,32 @@ const AddEvent = () => {
       email: form.email.trim(),
       // Empty string, never undefined — see AddClub.
       image: form.image,
+      // Both or neither. Neither is "follow the group", and the server marks
+      // the event as doing so. Both, because the switches showed both: sending
+      // only the one that was touched would leave the other to be filled in
+      // out of sight, and what is stored should be what was on screen.
+      ...(ownPrivacy ? { visibility: ownPrivacy.visibility, anonymous: ownPrivacy.anonymous } : {}),
     }, error => {
       setSaving(false);
       if (error) {
         swal('Could not create', error.reason || error.message, 'error');
-      } else {
-        swal('Created', `${form.title.trim()} is on the calendar.`, 'success').then(() => navigate('/upcoming-events'));
+        return;
       }
+      // A private event is not on the public calendar, so its poster is sent
+      // to the page that does list it rather than to one where it is missing.
+      const isPrivate = privacy.visibility === 'private';
+      swal(
+        'Created',
+        isPrivate
+          ? `${form.title.trim()} is ready. Only ${host.name} can see it.`
+          : `${form.title.trim()} is on the calendar.`,
+        'success',
+      ).then(() => navigate(isPrivate ? '/user-events' : '/upcoming-events'));
     });
   };
+
+  // One key arrives at a time; the rest is whatever the switches were showing.
+  const changePrivacy = patch => setOwnPrivacy({ ...privacy, ...patch });
 
   if (!ready) {
     return <LoadingSpinner />;
@@ -167,7 +212,7 @@ const AddEvent = () => {
               </select>
             </label>
             <span className="field-hint">
-              {myClubs.length > 0 ? 'Groups you belong to.' : 'Join a group and it will appear here first.'}
+              {myClubs.length > 0 ? 'Groups you belong to or run.' : 'Join a group and it will appear here first.'}
             </span>
 
             <div className="field-row">
@@ -249,6 +294,24 @@ const AddEvent = () => {
             <span className="field-hint" id="email-hint">
               Optional — printed on the event&apos;s card for anyone to see, so people can reach you.
             </span>
+          </section>
+
+          {/* Last, and a card of its own, as on the group form. An event starts
+              out following its group — an anonymous group's meeting is
+              anonymous without the organizer remembering to say so every
+              Thursday — and says that it is, until a switch is moved. */}
+          <section className="form-block" aria-labelledby="add-event-privacy">
+            <h3 id="add-event-privacy">Privacy</h3>
+            <PrivacyToggles
+              kind="event"
+              idPrefix="add-event"
+              value={privacy}
+              anonymousLocked={anonymousLocked}
+              lockedHelp={lockedByHostChoice ? `Always on, because ${host.name} is anonymous.` : ''}
+              following={host && !ownPrivacy ? host.name : ''}
+              onFollow={host && ownPrivacy ? () => setOwnPrivacy(null) : null}
+              onChange={changePrivacy}
+            />
           </section>
 
           <div className="create-actions">
