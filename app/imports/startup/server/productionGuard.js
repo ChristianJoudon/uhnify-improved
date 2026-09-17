@@ -128,6 +128,13 @@ export const settingsProblems = (settings, { env = {} } = {}) => {
     problems.push('public.communityIngestionSandbox is on. That is the local ingestion sandbox, a development switch, and anything under public is sent to every browser.');
   }
 
+  // Present in any form, not only as a list: the key has no business in a
+  // production file, and a value the handler would ignore today is one edit
+  // away from a value it would not.
+  if (config.public?.devSignIn) {
+    problems.push('public.devSignIn is on. That is the development one-click sign-in, which hands out a session with no password.');
+  }
+
   monitoringSecrets(config, environment).forEach(([name, secret]) => {
     if (PLACEHOLDER_SECRETS.includes(text(secret).toLowerCase())) {
       problems.push(`${name} is the placeholder "${secret}", not a key from the monitoring dashboard.`);

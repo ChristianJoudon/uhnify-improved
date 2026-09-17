@@ -6,6 +6,9 @@
 import '/imports/startup/server/productionGuard';
 import { Meteor } from 'meteor/meteor';
 import '/imports/startup/server/Accounts';
+// Registers nothing at all unless this is a development server whose settings
+// list the development accounts; see the file for the four fences around it.
+import '/imports/startup/server/devSignIn';
 import '/imports/startup/server/securityHeaders';
 import '/imports/startup/server/Publications';
 import '/imports/startup/server/CommunityIngestion';

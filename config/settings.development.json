@@ -1,6 +1,7 @@
 {
   "public": {
-    "communityIngestionSandbox": true
+    "communityIngestionSandbox": true,
+    "devSignIn": ["john@foo.com", "admin@foo.com"]
   },
   "recommendations": {
     "enabled": true,

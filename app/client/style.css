@@ -6753,3 +6753,35 @@ select.mb-field,
      A custom property cannot be beaten on specificity, only overridden. */
   color: var(--mb-match-label) !important;
 }
+
+/* ---------------------------------------------------------------------------
+   DEVELOPMENT SIGN-IN
+   Dashed and quiet on purpose: it has to read as scaffolding, not as a third
+   way into the product. Only a development server renders it.
+   --------------------------------------------------------------------------- */
+.dev-sign-in {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  border: 1.5px dashed var(--mb-line-strong);
+  border-radius: 1rem;
+  text-align: left;
+}
+
+.dev-sign-in h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dev-sign-in p {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.dev-sign-in-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
