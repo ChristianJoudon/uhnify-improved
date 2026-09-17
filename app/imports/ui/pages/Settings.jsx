@@ -317,6 +317,14 @@ const Settings = () => {
           <p id="cz-share-activity-help" className="mb-switch-help">
             Support, health, LGBTQ+ and faith listings are never shown to friends, even when this is on.
           </p>
+          {/* Read off the person's own profile, which is the only copy of it a
+              browser is ever sent. A fact and not a setting: the name is given
+              once and kept, so there is nothing here to press. */}
+          {profile.anonymousName && (
+            <p className="customize-alias">
+              In anonymous groups you appear as <strong className="made-up-name">{profile.anonymousName}</strong>.
+            </p>
+          )}
         </section>
       </div>
     </Container>

@@ -18,6 +18,23 @@ class ProfileClubsCollection {
         defaultValue: FRIEND_ACTIVITY_VISIBILITY.private,
       },
       createdAt: { type: Date, optional: true },
+      /**
+       * This person joined while the group was anonymous, and so may be shown
+       * to the person who runs it under their made-up name.
+       *
+       * It is a fact about the JOIN, written once by joinClub and never moved
+       * afterwards. 'clubs.members' first gave a made-up row to everybody in
+       * a group that is anonymous NOW — so an owner could read a named list,
+       * switch anonymity on, read the list again, and hold each person's name
+       * beside the made-up one they carry into every other anonymous group.
+       * The dates the group keeps cannot stand in for this: `anonymousUntil`
+       * is the last time anonymity ended, and says nothing of when it began
+       * or of a second time round.
+       *
+       * Absent means "not known to have", which is read as no. A membership
+       * from before the flag existed is shown under no made-up name at all.
+       */
+      joinedAnonymous: { type: Boolean, optional: true },
     });
     this.collection.attachSchema(this.schema);
 

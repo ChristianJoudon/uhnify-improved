@@ -14,7 +14,7 @@ import { Clubs } from '../../api/club/Club';
 import { imagePath, isPhoto, normalizeCategories } from '../utilities/helpers';
 import { shrinkImage } from '../utilities/shrinkImage';
 import { topicFor } from '../utilities/topics';
-import { parseMeetingTime, scheduleLabel } from '../../api/club/schedule';
+import { normalizeSchedule, parseMeetingTime, scheduleLabel } from '../../api/club/schedule';
 import { TEXT_LIMITS } from '../../api/listing/limits';
 
 /**
@@ -63,7 +63,11 @@ const EditClubAdmin = () => {
         tags: doc.tags || [],
         // Clubs older than the structured schedule carry their meeting only as
         // text, so it is read back through the parser the server itself uses.
-        schedule: doc.schedule || parseMeetingTime(doc.meetingTime) || { days: [], time: '17:00', cadence: 'weekly' },
+        // A stored one goes through the validator first: the field is a
+        // blackbox, and the picker should open on what the calendar draws, not
+        // on whatever an older version left there. A monthly schedule with no
+        // weeks comes through as exactly that, and the picker asks which week.
+        schedule: normalizeSchedule(doc.schedule) || parseMeetingTime(doc.meetingTime) || { days: [], time: '17:00', cadence: 'weekly' },
       });
     }
   }, [doc, _id]);
@@ -140,7 +144,12 @@ const EditClubAdmin = () => {
     }
     setSaving(true);
     // The payload is built key by key: the method's check() pattern rejects
-    // anything it did not ask for, including _id and schedule.
+    // anything it did not ask for, including _id. It would take a schedule and
+    // is deliberately not sent one. Once the picker has been touched the
+    // meeting text IS the schedule's label, weeks and end time included, and
+    // the method reads that back into the schedule that wrote it. Left alone,
+    // an older group's text is read again by today's parser, which is how a
+    // schedule an earlier parser got wrong is put right by an ordinary save.
     Meteor.call('Clubs.update', _id, {
       clubID: doc.clubID,
       name: form.name.trim(),

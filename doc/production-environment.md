@@ -57,6 +57,51 @@ deploy's downtime. The first start of a build that changes the topic or venue
 tables projects every event (about four seconds on 1,242 events); any other
 start projects only new and edited ones and should be well under a second.
 
+## Made-up names in anonymous groups
+
+Nothing to configure. In an anonymous group each person goes by one made-up
+name ("Sleepy Honu"), worked out from their account id with a keyed hash
+(`app/imports/api/privacy/anonymousNames.js`). The key matters: the people
+directory sends every account id to every signed-in user and the word lists are
+in the repository, so with an unkeyed hash anybody could work out everybody's
+name.
+
+The server makes the key itself the first time it needs one — 32 random bytes,
+kept in the `ServerSecrets` collection, which is never published and has no
+methods. It lives in the database so that it travels with the data: a restored
+backup still produces the same handles. **Treat a database dump as holding a
+secret**, as it already holds password hashes.
+
+| Setting | Absent means | What it does |
+| --- | --- | --- |
+| `anonymousNames.secret` | the server's own, from `ServerSecrets` | Optional. A string of 32 or more random characters that is used INSTEAD of the stored key — for an operator who wants the key in their secret manager rather than in the database. Anything shorter, or not a string, is ignored in favour of the server's own and logged once as `[anonymous names] …`: every person is shown their own id and their own name, so a key that can be guessed can be checked against that pair offline. Never put it in `settings.sample.json` or anywhere else that is committed. |
+
+What changing the key does, by either route:
+
+- **Nobody is renamed.** A name is stored on the profile (`anonymousName`, under
+  a unique index) the first time it is needed, and a stored name is never
+  worked out again. Only people named afterwards are named with the new key.
+- **Every member handle changes.** The per-group `handle` that `clubs.members`
+  returns for a made-up row is worked out on asking and stored nowhere. Anything
+  keyed by it has to be re-keyed by whoever changes the secret. Today nothing
+  is; the blocking planned for anonymous groups will be.
+
+So set `anonymousNames.secret` before the first boot or not at all.
+
+Only an administrator can trace a made-up name to an account: the admin
+Profiles list shows it on each person's card. Names are written to no log. The
+first boot after this ships logs `Gave made-up names to N profiles.` once, and
+is silent on every boot after.
+
+The person who runs a group is shown a made-up name only for a membership made
+WHILE the group was anonymous (`ProfileClubs.joinedAnonymous`, written at the
+join and never afterwards). Nobody is listed both ways: one membership seen
+once by name and once made-up would be that person's name in every other
+anonymous group. So memberships from before this shipped, which carry no flag,
+are counted and not listed in an anonymous group, and the group's page says how
+many. There is no backfill, on purpose — nothing stored can say whether an
+owner once read such a membership by name. **Do not set the flag by hand.**
+
 ## Rate limits in force
 
 Set in `app/imports/startup/server/rateLimits.js`, plus one rule the

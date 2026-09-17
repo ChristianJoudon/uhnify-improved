@@ -40,6 +40,13 @@ const ProfileCard = ({ profile }) => {
       <div className="admin-person-body">
         <h3 className="admin-person-name">{name}</h3>
         <p className="admin-person-email">{profile.email}</p>
+        {/* The one screen where a made-up name stands beside the account it
+            belongs to — which is how "Sleepy Honu has been unkind" becomes a
+            person somebody can talk to. Administrators only: no other
+            publication sends the field for anybody but the reader themself. */}
+        {profile.anonymousName && (
+          <p className="admin-person-email">Anonymous name: {profile.anonymousName}</p>
+        )}
         <span className="mb-chip mb-chip--static mb-chip--sm admin-person-role">{profile.title || 'Student'}</span>
       </div>
       <button
@@ -63,6 +70,7 @@ ProfileCard.propTypes = {
     lastName: PropTypes.string,
     title: PropTypes.string,
     picture: PropTypes.string,
+    anonymousName: PropTypes.string,
   }).isRequired,
 };
 

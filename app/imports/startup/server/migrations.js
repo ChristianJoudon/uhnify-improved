@@ -1,10 +1,12 @@
 import { AuditLog } from '../../api/audit/AuditLog';
 import { Clubs } from '../../api/club/Club';
+import { monthlyTextDays, normalizeSchedule, parseMeetingTime } from '../../api/club/schedule';
 import { Events } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
 import { isPhotoRefusal, savePhoto } from '../../api/photos/photoStore';
+import { anonymousNameFor } from '../../api/privacy/anonymousNames';
 import { PARTICIPATION_ACTIONS, PARTICIPATION_SUMMARY } from './auditTrail';
 
 /* eslint-disable no-console */
@@ -213,6 +215,49 @@ export const movePhotosOutOfDocuments = () => {
 };
 
 /**
+ * Give a made-up name to every profile that has none.
+ *
+ * A person is known inside an anonymous group by one made-up name, kept on
+ * their profile (see api/privacy/anonymousNames.js). New profiles are named
+ * as they are made; this is for the ones that were here first, and for any a
+ * boot could not name. Naming them now rather than on first need is what lets
+ * a person be told their name BEFORE they join anything — the invitation page
+ * and Settings read it straight off their own profile.
+ *
+ * Only a profile tied to an account is named. The name is a hash of the
+ * account's id, and the seed can leave a profile that no account holds yet;
+ * it is named on the boot after somebody claims it.
+ *
+ * Idempotent by construction: it selects on the name being absent. What it
+ * counts is profiles that HAVE a name afterwards, read back from the profile
+ * itself, so two profiles that somehow share one account are not reported as
+ * newly named on every boot for ever.
+ *
+ * A profile that could not be named is counted and left for the next boot.
+ * Nothing here logs, and the caller logs the two numbers and nothing else: a
+ * made-up name goes in no log line, and nor does an error's message, because
+ * the database's "that name is taken" quotes the name.
+ */
+export const assignAnonymousNames = () => {
+  const counts = { named: 0, failed: 0 };
+  // Fetched before the first write, as above.
+  Profiles.collection.find(
+    { userId: { $type: 'string' }, anonymousName: { $exists: false } },
+    { fields: { userId: 1 } },
+  ).fetch().forEach(({ _id, userId }) => {
+    try {
+      anonymousNameFor(userId);
+      if (Profiles.collection.find({ _id, anonymousName: { $exists: true } }).count() > 0) {
+        counts.named += 1;
+      }
+    } catch (error) {
+      counts.failed += 1;
+    }
+  });
+  return counts;
+};
+
+/**
  * Take the listing ids out of the trail entries that already carry them.
  *
  * The trail no longer writes down WHICH listing a join, an RSVP or a tag was
@@ -233,3 +278,81 @@ export const redactParticipationAudit = () => AuditLog.collection.update(
   { $set: { summary: PARTICIPATION_SUMMARY } },
   { multi: true },
 );
+
+/**
+ * Teach every stored schedule what its meeting text says about the week of
+ * the month.
+ *
+ * "First and third Thursdays · 6:30 PM" was stored as Thursdays, 6:30, monthly
+ * — the shape had nowhere to put "first and third" — and the calendar, which
+ * knew only weekly and every other week, drew it every Thursday. The shape can
+ * say it now (`weeks`, api/club/schedule.js) and the parser can read it, so
+ * each monthly schedule with no weeks has its text read again and is given
+ * the weeks found there, and the end time too if the text has one and agrees
+ * about the start. Only when the text names the same days the schedule
+ * stores: a schedule that disagrees with its text was not made from it, and
+ * is not this migration's to improve.
+ *
+ * The same mistake reached the database a second way. A group that arrived
+ * with text and no schedule — the register's "Coffee Time first Saturday; Book
+ * Club fourth Wednesday", every support group the ingestion publishes as
+ * "Second Wednesday of the month, …" — had one derived at the next boot by
+ * the old parser, which could not see a week at all and stored WEEKLY. So a
+ * weekly schedule beside text that is monthly is put right as well: made
+ * monthly, with the weeks if the text gives them and the week unknown if it
+ * only says "monthly"; or, where the new parser refuses the text because one
+ * schedule cannot hold what it says, removed, so the card prints the text and
+ * the calendar prints nothing. A wrong date is worse than no date. The rule
+ * about the days holds for all three: the old parser stored every weekday the
+ * text names, so a schedule on other days is not one it made.
+ *
+ * None of this can touch a schedule somebody chose. The forms store the
+ * schedule's own label as the meeting text, which reads back as exactly the
+ * schedule beside it; only imported text can say "first Saturday" next to a
+ * schedule that does not.
+ *
+ * Idempotent: a schedule that has its weeks is skipped, and one that gained
+ * nothing is not written. `updatedAt` is left alone, as above. Returns how
+ * many gained their weeks, how many became monthly with the week unknown, and
+ * how many were cleared, so the log can say so once.
+ */
+export const deriveMonthlyWeeks = () => {
+  const counts = { weeks: 0, unknown: 0, cleared: 0 };
+  // Fetched before the first write, as above, and projected to the two fields.
+  Clubs.collection.find(
+    { schedule: { $exists: true } },
+    { fields: { schedule: 1, meetingTime: 1 } },
+  ).fetch().forEach(club => {
+    const stored = normalizeSchedule(club.schedule);
+    if (!stored || stored.weeks || stored.cadence === 'biweekly') {
+      return;
+    }
+    const read = parseMeetingTime(club.meetingTime);
+    if (!read) {
+      // The same agreement about the days that the branch below asks for.
+      // This one deleted on the word of the text alone, so a weekly Tuesday
+      // beside "first Saturday; fourth Wednesday" — which the old parser
+      // would have stored as Wednesday and Saturday, and so did not make —
+      // was removed at boot all the same.
+      const named = monthlyTextDays(club.meetingTime);
+      if (stored.cadence === 'weekly' && named && named.join() === stored.days.join()) {
+        Clubs.collection.update(club._id, { $unset: { schedule: '' } });
+        counts.cleared += 1;
+      }
+      return;
+    }
+    const nothingToLearn = !read.weeks && stored.cadence === 'monthly';
+    if (read.cadence !== 'monthly' || read.days.join() !== stored.days.join() || nothingToLearn) {
+      return;
+    }
+    const schedule = normalizeSchedule({
+      ...stored,
+      cadence: 'monthly',
+      weeks: read.weeks,
+      endTime: stored.endTime || (read.time === stored.time ? read.endTime : undefined),
+    });
+    Clubs.collection.update(club._id, { $set: { schedule } });
+    counts[read.weeks ? 'weeks' : 'unknown'] += 1;
+  });
+  return counts;
+};

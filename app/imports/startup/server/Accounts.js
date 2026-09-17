@@ -2,6 +2,7 @@ import { Meteor } from 'meteor/meteor';
 import { Accounts } from 'meteor/accounts-base';
 import { Roles } from 'meteor/alanning:roles';
 import { Profiles } from '../../api/profiles/Profiles';
+import { nameNewProfile } from '../../api/privacy/anonymousNames';
 
 /* eslint-disable no-console */
 
@@ -52,6 +53,10 @@ const createOrUpdateUserProfile = (userId, email) => {
     picture: defaults.picture || '/images/defaultprofilepic.png',
     interests: defaults.interests || [],
   });
+  // Who they will be in an anonymous group, from the start, so that it can be
+  // shown to them before they join one. Never in the line below: the address
+  // and the made-up name side by side is the one pairing no log may hold.
+  nameNewProfile(userId);
   console.log(`  Profile created for ${email}.`);
   return profileId;
 };

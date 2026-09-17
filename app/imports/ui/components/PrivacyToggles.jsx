@@ -8,9 +8,11 @@ import swal from 'sweetalert';
  * in it, and — for a group — whether joining asks first.
  *
  * One component for the two create forms and the two manage pages, because
- * the sentences under these switches are promises ("Not other members, not
+ * the sentences under these switches are promises ("not other members, not
  * friends, not you") and a promise worded four times is worded four ways
- * within a month.
+ * within a month. A group's says what its owner WILL see, too — made-up names
+ * — because "nobody can see who is in this" over a list of thirty rows reads
+ * as a promise already broken.
  *
  * It holds no state and calls no method. A form keeps the values until it is
  * submitted; a manage page sends each change the moment it is made (see
@@ -32,7 +34,7 @@ const LOCKED_HELP = 'Always on for support, health, LGBTQ+ and faith listings.';
 const COPY = {
   club: {
     private: 'Only people with your invite link can find and join this.',
-    anonymous: 'Nobody can see who is in this. Not other members, not friends, not you.',
+    anonymous: 'Members appear under made-up names. Nobody sees who they are — not other members, not friends, not you.',
   },
   event: {
     private: 'Only members of the host group can see this.',

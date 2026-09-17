@@ -12,7 +12,7 @@ import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
-import { clubOccurrences } from '../../api/club/schedule';
+import { clubOccurrenceWindows } from '../../api/club/schedule';
 
 const FILTERS = [
   { key: 'all', label: 'Everything' },
@@ -71,9 +71,16 @@ const Agenda = () => {
 
     const meetings = clubs
       .filter(club => joinedClubIds.has(club._id))
-      .flatMap(club => clubOccurrences(club, 26).map(start => ({
+      .flatMap(club => clubOccurrenceWindows(club, 26).map(({ start, end }) => ({
         title: club.name,
         start,
+        // Only when the group gave one. Without it the calendar assumes an
+        // hour and prints none of it, which is as much as anybody knows. With
+        // it, the day view — the one view with the room — reads "6:30p -
+        // 8:00p"; the month and the week keep to the start, FullCalendar's own
+        // rule for a seven-column grid, where a second time would push the
+        // group's name off the pill.
+        ...(end ? { end } : {}),
         // A recurring meeting has no record of its own — every occurrence is
         // the same group, so the sheet opens the group.
         extendedProps: { record: club, kind: 'club' },

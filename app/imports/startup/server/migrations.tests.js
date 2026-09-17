@@ -14,7 +14,9 @@ import { IMAGE_DATA_URL_MAX } from '../../api/listing/limits';
 import { makeClub, makeEvent, makeUser, resetAll } from './testFixtures';
 import { PARTICIPATION_ACTIONS, PARTICIPATION_SUMMARY } from './auditTrail';
 import {
+  assignAnonymousNames,
   backfillListingCounts,
+  deriveMonthlyWeeks,
   dropRedundantCreatedBy,
   movePhotosOutOfDocuments,
   redactParticipationAudit,
@@ -350,6 +352,82 @@ if (Meteor.isServer) {
   });
 
   /**
+   * Everybody who was here before made-up names were. What matters at a boot
+   * is that it names each of them once, that a second boot changes nobody,
+   * and that nothing it says could tie a name to an account.
+   */
+  describe('assignAnonymousNames', function () {
+    this.timeout(15000);
+
+    const nameOf = userId => Profiles.collection.findOne({ userId }).anonymousName;
+
+    beforeEach(function () {
+      resetAll();
+    });
+
+    it('names every profile that belongs to an account, each differently', function () {
+      const people = [makeUser(), makeUser(), makeUser()];
+      assert.deepEqual(assignAnonymousNames(), { named: 3, failed: 0 });
+      const names = people.map(nameOf);
+      names.forEach(name => assert.match(name, /\S \S/));
+      assert.lengthOf(new Set(names), 3);
+    });
+
+    it('leaves a profile no account holds yet, and names it once somebody does', function () {
+      const seeded = Profiles.collection.insert({ email: 'seeded@test.example', firstName: 'Seeded', interests: [] });
+      assert.deepEqual(assignAnonymousNames(), { named: 0, failed: 0 });
+      assert.notProperty(Profiles.collection.findOne(seeded), 'anonymousName');
+
+      Profiles.collection.update(seeded, { $set: { userId: 'anAccountId12345x' } });
+      assert.deepEqual(assignAnonymousNames(), { named: 1, failed: 0 });
+    });
+
+    it('changes nobody the second time', function () {
+      const people = [makeUser(), makeUser()];
+      assignAnonymousNames();
+      const names = people.map(nameOf);
+      assert.deepEqual(assignAnonymousNames(), { named: 0, failed: 0 });
+      assert.deepEqual(people.map(nameOf), names);
+
+      // Nor when only some were here before.
+      const late = makeUser();
+      assert.deepEqual(assignAnonymousNames(), { named: 1, failed: 0 });
+      assert.deepEqual(people.map(nameOf), names);
+      assert.notInclude(names, nameOf(late));
+    });
+
+    it('says nothing at all, so no log can hold a name — not even when a write fails', function () {
+      const people = [makeUser(), makeUser()];
+      const said = [];
+      const original = { log: console.log, warn: console.warn, error: console.error, update: Profiles.collection.update };
+      const listen = level => {
+        console[level] = (...words) => said.push(words.join(' '));
+      };
+      let counts;
+      try {
+        ['log', 'warn', 'error'].forEach(listen);
+        Profiles.collection.update = (selector, ...rest) => {
+          if (selector._id === Profiles.collection.findOne({ userId: people[0] })._id) {
+            throw new Error('the database said no');
+          }
+          return original.update.call(Profiles.collection, selector, ...rest);
+        };
+        counts = assignAnonymousNames();
+      } finally {
+        Profiles.collection.update = original.update;
+        ['log', 'warn', 'error'].forEach(level => {
+          console[level] = original[level];
+        });
+      }
+
+      assert.deepEqual(counts, { named: 1, failed: 1 }, 'one bad write did not stop the rest');
+      assert.deepEqual(said, []);
+      // Nothing was lost by it: the next boot names them.
+      assert.deepEqual(assignAnonymousNames(), { named: 1, failed: 0 });
+    });
+  });
+
+  /**
    * The trail used to write down which listing every join, RSVP and tag was
    * about, beside who did it. New entries do not; these are the old ones.
    */
@@ -398,6 +476,134 @@ if (Meteor.isServer) {
       assert.includeMembers([...PARTICIPATION_ACTIONS], [
         'profileClubs.add', 'profileClubs.remove', 'eventSwipes.record', 'eventSwipes.remove',
       ]);
+    });
+  });
+
+  /**
+   * The register stored 'monthly' with nowhere to say which week, and the
+   * calendar drew every week. The strings below are the register's own,
+   * character for character: this migration is only as good as its reading of
+   * exactly these.
+   */
+  describe('deriveMonthlyWeeks', function () {
+    const NOTHING = { weeks: 0, unknown: 0, cleared: 0 };
+    const scheduleOf = id => Clubs.collection.findOne(id).schedule;
+    const monthlyClub = (meetingTime, days, time, extra = {}) => makeClub({ meetingTime, schedule: { days, time, cadence: 'monthly', ...extra } });
+
+    beforeEach(function () {
+      resetAll();
+    });
+
+    it('recovers the weeks of every monthly group in the register', function () {
+      const register = [
+        ['First and third Thursdays · 6:30 PM', [4], '18:30', [1, 3]],
+        ['Second and fourth Wednesdays · 6:30 PM', [3], '18:30', [2, 4]],
+        ['Second and fourth Tuesdays · 7 AM', [2], '07:00', [2, 4]],
+        ['First Sunday of every month · 3 PM', [0], '15:00', [1]],
+        ['Published first-Thursday pattern · 10 AM', [4], '10:00', [1]],
+        ['First and third Thursdays; month-end Pau Hana also held · 12 PM', [4], '12:00', [1, 3]],
+        ['Usually fourth Wednesday · 5:30 PM', [3], '17:30', [4]],
+        ['First Thursday of every month · 12 PM', [4], '12:00', [1]],
+      ].map(([meetingTime, days, time, weeks]) => ({ id: monthlyClub(meetingTime, days, time), days, time, weeks }));
+
+      assert.deepEqual(deriveMonthlyWeeks(), { ...NOTHING, weeks: register.length });
+
+      register.forEach(({ id, days, time, weeks }) => {
+        assert.deepEqual(scheduleOf(id), { days, time, cadence: 'monthly', weeks });
+      });
+    });
+
+    it('takes the end time from the text too, when the text agrees about the start', function () {
+      const agrees = monthlyClub('Second Wednesday of the month, 6:00 pm–7:30 pm', [3], '18:00');
+      const differs = monthlyClub('Second Wednesday of the month, 6:00 pm–7:30 pm', [3], '17:00');
+      const hasOne = monthlyClub('Second Wednesday of the month, 6:00 pm–7:30 pm', [3], '18:00', { endTime: '20:00' });
+
+      assert.deepEqual(deriveMonthlyWeeks(), { ...NOTHING, weeks: 3 });
+
+      assert.deepEqual(scheduleOf(agrees), { days: [3], time: '18:00', endTime: '19:30', cadence: 'monthly', weeks: [2] });
+      assert.deepEqual(scheduleOf(differs), { days: [3], time: '17:00', cadence: 'monthly', weeks: [2] }, 'a window is not moved onto another start');
+      assert.deepEqual(scheduleOf(hasOne), { days: [3], time: '18:00', endTime: '20:00', cadence: 'monthly', weeks: [2] }, 'a stored end is kept');
+    });
+
+    it('learns nothing from text that names other days, no week, or nothing at all', function () {
+      const ids = [
+        monthlyClub('First and third Thursdays · 6:30 PM', [2], '18:30'),
+        monthlyClub('First and third Thursdays · 6:30 PM', [2, 4], '18:30'),
+        monthlyClub('Monthly on Thursdays at 6pm', [4], '18:00'),
+        monthlyClub('Varies', [4], '18:00'),
+        monthlyClub('Fourth Thursday or Friday at 6:00 PM', [4, 5], '18:00'),
+      ];
+      const before = ids.map(scheduleOf);
+      assert.deepEqual(deriveMonthlyWeeks(), NOTHING);
+      assert.deepEqual(ids.map(scheduleOf), before);
+    });
+
+    /**
+     * The second way in. A group that arrived with text and no schedule had
+     * one derived by the old parser, which stored anything monthly as weekly.
+     */
+    it('puts right a weekly schedule the old parser made from monthly text', function () {
+      const old = (meetingTime, days, time) => makeClub({ meetingTime, schedule: { days, time, cadence: 'weekly' } });
+      const ingested = old('Second Wednesday of the month, 6:00 pm–7:30 pm', [3], '18:00');
+      const unknown = old('Monthly on Thursdays at 6pm', [4], '18:00');
+      const coffee = old('Coffee Time first Saturday; Book Club fourth Wednesday · 10 AM', [3, 6], '10:00');
+      const either = old('Fourth Thursday or Friday at 6:00 PM; location varies · 6 PM', [4, 5], '18:00');
+
+      assert.deepEqual(deriveMonthlyWeeks(), { weeks: 1, unknown: 1, cleared: 2 });
+
+      assert.deepEqual(scheduleOf(ingested), { days: [3], time: '18:00', endTime: '19:30', cadence: 'monthly', weeks: [2] });
+      assert.deepEqual(scheduleOf(unknown), { days: [4], time: '18:00', cadence: 'monthly' });
+      [coffee, either].forEach(id => {
+        const club = Clubs.collection.findOne(id);
+        assert.notProperty(club, 'schedule', 'no one schedule says this, so the text speaks');
+        assert.isOk(club.meetingTime);
+      });
+    });
+
+    /**
+     * Clearing is the one destructive thing this does, and it used to ask
+     * less than the branches that only add: that the text be monthly, and
+     * nothing about the days. The old parser stored EVERY weekday the text
+     * names, so a schedule on other days is somebody else's work.
+     */
+    it('clears nothing whose days are not the days the text names', function () {
+      const text = 'Coffee first Saturday; Book Club fourth Wednesday';
+      const kept = [[2], [3], [3, 5, 6]].map(days => ({ days, time: '10:00', cadence: 'weekly' }));
+      const ids = kept.map(schedule => makeClub({ meetingTime: text, schedule }));
+
+      assert.deepEqual(deriveMonthlyWeeks(), NOTHING);
+      assert.deepEqual(ids.map(scheduleOf), kept);
+    });
+
+    it('never touches a schedule somebody chose', function () {
+      const chosen = [
+        // What the forms store: the schedule's own label as the text.
+        { meetingTime: 'Thu · 6:30 PM', schedule: { days: [4], time: '18:30', cadence: 'weekly' } },
+        { meetingTime: 'Every other Wed · 7 PM', schedule: { days: [3], time: '19:00', cadence: 'biweekly' } },
+        { meetingTime: 'Monthly · Thu · 6:30 PM', schedule: { days: [4], time: '18:30', cadence: 'monthly' } },
+        { meetingTime: 'First & third Thu · 6:30 PM', schedule: { days: [4], time: '18:30', cadence: 'monthly', weeks: [1, 3] } },
+        // Weeks already there are not second-guessed, whatever the text says.
+        { meetingTime: 'Second Thursday · 6:30 PM', schedule: { days: [4], time: '18:30', cadence: 'monthly', weeks: ['last'] } },
+        { meetingTime: 'Biweekly, first Wednesday onward · 7 PM', schedule: { days: [3], time: '19:00', cadence: 'biweekly' } },
+        // Refused by the parser, but not for being monthly: these weekly dates are true ones.
+        { meetingTime: 'Monday at 7:00 am; Friday at 7:00 am; Friday at 6:30 pm', schedule: { days: [1, 5], time: '07:00', cadence: 'weekly' } },
+        { meetingTime: 'Varies', schedule: { days: [1], time: '09:00', cadence: 'weekly' } },
+      ].map(club => ({ id: makeClub(club), schedule: club.schedule }));
+
+      assert.deepEqual(deriveMonthlyWeeks(), NOTHING);
+      chosen.forEach(({ id, schedule }) => assert.deepEqual(scheduleOf(id), schedule));
+    });
+
+    it('writes nothing the second time, and leaves updatedAt meaning somebody edited it', function () {
+      const edited = new Date('2026-08-01T00:00:00Z');
+      const id = makeClub({ meetingTime: 'First and third Thursdays · 6:30 PM', schedule: { days: [4], time: '18:30', cadence: 'monthly' }, updatedAt: edited });
+      makeClub({ meetingTime: 'Coffee Time first Saturday; Book Club fourth Wednesday · 10 AM', schedule: { days: [3, 6], time: '10:00', cadence: 'weekly' } });
+      makeClub({ meetingTime: 'Schedule to come' });
+
+      assert.deepEqual(deriveMonthlyWeeks(), { ...NOTHING, weeks: 1, cleared: 1 });
+      assert.deepEqual(deriveMonthlyWeeks(), NOTHING);
+      assert.deepEqual(scheduleOf(id).weeks, [1, 3]);
+      assert.equal(Clubs.collection.findOne(id).updatedAt.getTime(), edited.getTime());
     });
   });
 }
