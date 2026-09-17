@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 import crypto from 'crypto';
 import { assert } from 'chai';
+import moment from 'moment-timezone';
 import { Meteor } from 'meteor/meteor';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
@@ -70,6 +71,21 @@ const addSource = ({
 };
 
 let sequence = 0;
+
+const HAWAII_TIME_ZONE = 'Pacific/Honolulu';
+
+/**
+ * A Honolulu wall-clock time some days from now, in the "YYYY-MM-DDTHH:mm:ss"
+ * form the register writes.
+ *
+ * The approve and approve-all METHODS read the real clock — a client cannot
+ * hand one in — so a test that goes through them has to describe its events
+ * relative to today. A hard-coded date passes right up until the calendar
+ * reaches it, and then the event is "in the past" and quietly falls outside
+ * the horizon: this file went red on its own in September 2026 for exactly
+ * that reason, with nothing in the code having changed.
+ */
+const localTimeDaysFromNow = (days, time) => `${moment.tz(HAWAII_TIME_ZONE).add(days, 'days').format('YYYY-MM-DD')}T${time}`;
 
 const addCandidate = ({
   kind = 'group',
@@ -1413,7 +1429,9 @@ if (Meteor.isServer) {
     });
 
     it('keeps approve-all to protected or high-confidence source-category classifications', function () {
-      const at = new Date('2026-08-09T22:00:00.000Z');
+      // Real clock: approve-all is a method, and the horizon is measured from
+      // whenever it is actually called.
+      const at = new Date();
       addSource({ sourceId: 'SRC-001', permission: 'PROBE_REQUIRED' });
       Meteor.settings.public.communityIngestionSandbox = true;
       const firstId = addCandidate({
@@ -1424,8 +1442,8 @@ if (Meteor.isServer) {
           title: 'Neighborhood Market',
           listingType: 'event',
           recurrenceLabel: null,
-          localStart: '2026-08-20T09:00:00',
-          localEnd: '2026-08-20T10:00:00',
+          localStart: localTimeDaysFromNow(11, '09:00:00'),
+          localEnd: localTimeDaysFromNow(11, '10:00:00'),
           location: 'Kōloa Town',
         },
       });
@@ -1437,8 +1455,8 @@ if (Meteor.isServer) {
           title: 'Community History Talk',
           listingType: 'event',
           recurrenceLabel: null,
-          localStart: '2026-08-21T18:00:00',
-          localEnd: '2026-08-21T19:00:00',
+          localStart: localTimeDaysFromNow(12, '18:00:00'),
+          localEnd: localTimeDaysFromNow(12, '19:00:00'),
           location: 'Kapaʻa Library',
         },
       });
@@ -1463,8 +1481,8 @@ if (Meteor.isServer) {
           title: 'Saturday Farmers Market',
           listingType: 'event',
           recurrenceLabel: null,
-          localStart: '2026-08-22T09:00:00',
-          localEnd: '2026-08-22T10:00:00',
+          localStart: localTimeDaysFromNow(13, '09:00:00'),
+          localEnd: localTimeDaysFromNow(13, '10:00:00'),
           location: 'Hanalei',
         },
         candidateFields: {
@@ -1492,7 +1510,10 @@ if (Meteor.isServer) {
     });
 
     it('previews and preflight-blocks missing locations and implausible event durations', function () {
-      const at = new Date('2026-08-09T22:00:00.000Z');
+      // Real clock, same reason as above. These two are blocked before the
+      // horizon is ever consulted, so a stale date would not turn this red —
+      // but it would mean the test passed for the wrong reason.
+      const at = new Date();
       addSource({ sourceId: 'SRC-001', permission: 'PROBE_REQUIRED' });
       Meteor.settings.public.communityIngestionSandbox = true;
       const missingLocationId = addCandidate({
@@ -1503,8 +1524,8 @@ if (Meteor.isServer) {
           title: 'Location Pending',
           listingType: 'event',
           recurrenceLabel: null,
-          localStart: '2026-08-20T10:00:00',
-          localEnd: '2026-08-20T11:00:00',
+          localStart: localTimeDaysFromNow(11, '10:00:00'),
+          localEnd: localTimeDaysFromNow(11, '11:00:00'),
           location: null,
         },
       });
@@ -1516,8 +1537,8 @@ if (Meteor.isServer) {
           title: 'Long Program',
           listingType: 'event',
           recurrenceLabel: null,
-          localStart: '2026-08-20T10:00:00',
-          localEnd: '2026-08-24T16:00:00',
+          localStart: localTimeDaysFromNow(11, '10:00:00'),
+          localEnd: localTimeDaysFromNow(15, '16:00:00'),
           location: 'Līhuʻe',
         },
       });
