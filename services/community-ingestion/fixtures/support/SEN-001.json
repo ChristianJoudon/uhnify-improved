@@ -1,0 +1,586 @@
+{
+  "schemaVersion": "support-snapshot.v1",
+  "sourceId": "SEN-001",
+  "sourceUrl": "https://kauaimeetings.com/locations/",
+  "verifiedAt": "2026-08-08T12:00:00-10:00",
+  "completeness": "PARTIAL",
+  "reviewFlags": ["MANUAL_SOURCE_CAPTURE", "PARTIAL_SOURCE_SNAPSHOT", "ONLINE_ACCESS_WITHHELD"],
+  "listings": [
+    {
+      "sourceItemKey": "aa-mon-princeville-hanalei-0700",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Church of the Pacific, 4520 Kapaka Street, Princeville",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-kapaa-nooners-1200",
+      "groupKey": "aa-kapaa-nooners",
+      "name": "Kapaa Nooners",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at noon",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa First Hawaiian Church, 4-1325 Kuhio Highway, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-happy-hour-1700",
+      "groupKey": "aa-happy-hour",
+      "name": "Happy Hour",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Nawiliwili Beach Park, Waapa Road, Lihue",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-na-wahine-ku-pono-1700",
+      "groupKey": "aa-na-wahine-ku-pono",
+      "name": "Na Wahine Ku Pono",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "The Church at Koloa, 3269 Poipu Road, Koloa",
+      "formatLabels": ["Closed", "Women"]
+    },
+    {
+      "sourceItemKey": "aa-mon-north-shore-aloha-1900",
+      "groupKey": "aa-north-shore-aloha",
+      "name": "North Shore Aloha",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Christ Memorial Parish Hall, 2518 Kolo Road, Kilauea",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-steps-to-freedom-1900",
+      "groupKey": "aa-steps-to-freedom",
+      "name": "Steps To Freedom",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa United Church, 1315 Ulu Street, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-mon-kauai-recovery-1900",
+      "groupKey": "aa-kauai-recovery",
+      "name": "Kauai Recovery",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Monday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lihue United Church, 4340 Nawiliwili Road, Lihue",
+      "formatLabels": ["Open"]
+    },
+
+    {
+      "sourceItemKey": "aa-tue-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-tue-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-tue-north-shore-aloha-1000",
+      "groupKey": "aa-north-shore-aloha",
+      "name": "North Shore Aloha",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 10:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Christ Memorial Parish Hall, 2518 Kolo Road, Kilauea",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-tue-big-book-step-study-1700",
+      "groupKey": "aa-big-book-step-study",
+      "name": "Big Book Step Study",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lihue Salvation Army, 4182 Hardy Street, Lihue",
+      "formatLabels": []
+    },
+    {
+      "sourceItemKey": "aa-tue-waimea-canyon-1730",
+      "groupKey": "aa-waimea-canyon",
+      "name": "Waimea Canyon",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 5:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Waimea Plantation Cottages, 9400 Kaumualii Highway, Waimea",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-tue-come-as-you-are-1800",
+      "groupKey": "aa-come-as-you-are",
+      "name": "Come As You Are",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 6:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Salvation Army Courtyard, 5348 Koloa Road, Koloa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-tue-primary-purpose-1830",
+      "groupKey": "aa-primary-purpose",
+      "name": "Primary Purpose",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 6:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lihue Lutheran Church, 4602 Hoomana Road, Lihue",
+      "formatLabels": []
+    },
+    {
+      "sourceItemKey": "aa-tue-north-shore-aloha-1900",
+      "groupKey": "aa-north-shore-aloha",
+      "name": "North Shore Aloha",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Christ Memorial Parish Hall, 2518 Kolo Road, Kilauea",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-tue-princeville-hanalei-1900",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hanalei Community Center, 5299C Kuhio Highway, Hanalei",
+      "formatLabels": ["Closed", "Men"]
+    },
+    {
+      "sourceItemKey": "aa-tue-eleventh-step-speaker-1930",
+      "groupKey": "aa-eleventh-step-speaker",
+      "name": "11th Step Speaker Meeting",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Tuesday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa First Hawaiian Church, 4-1325 Kuhio Highway, Kapaʻa",
+      "formatLabels": []
+    },
+
+    {
+      "sourceItemKey": "aa-wed-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-wed-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-wed-kapaa-nooners-1200",
+      "groupKey": "aa-kapaa-nooners",
+      "name": "Kapaa Nooners",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at noon",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa First Hawaiian Church, 4-1325 Kuhio Highway, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-wed-happy-hour-1700",
+      "groupKey": "aa-happy-hour",
+      "name": "Happy Hour",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Nawiliwili Beach Park, Waapa Road, Lihue",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-wed-anahola-jaywalkers-1900",
+      "groupKey": "aa-anahola-jaywalkers",
+      "name": "Anahola Jaywalkers",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Anahola Clubhouse, 3900 Kawelo Street",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-wed-north-shore-aloha-1900",
+      "groupKey": "aa-north-shore-aloha",
+      "name": "North Shore Aloha",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Christ Memorial Parish Hall, 2518 Kolo Road, Kilauea",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-wed-young-peoples-1930",
+      "groupKey": "aa-young-peoples",
+      "name": "Young People’s Meeting",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hanalei Community Center, old courthouse, 553 Mahimahi Road, Hanalei",
+      "formatLabels": ["English", "Young People"]
+    },
+    {
+      "sourceItemKey": "aa-wed-whiskey-and-milk-1930",
+      "groupKey": "aa-whiskey-and-milk",
+      "name": "Whiskey and Milk",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Wednesday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Salvation Army Courtyard, 5348 Koloa Road, Koloa",
+      "formatLabels": ["Open"]
+    },
+
+    {
+      "sourceItemKey": "aa-thu-princeville-hanalei-0700",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Church of the Pacific, 4520 Kapaka Street, Princeville",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-big-book-nooners-1200",
+      "groupKey": "aa-big-book-nooners",
+      "name": "Big Book Nooners",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at noon",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Koloa Neighborhood Center, 3461B Weliweli Road, Koloa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-happy-hour-1700",
+      "groupKey": "aa-happy-hour",
+      "name": "Happy Hour",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Nawiliwili Beach Park, Waapa Road, Lihue",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-waimea-canyon-1730",
+      "groupKey": "aa-waimea-canyon",
+      "name": "Waimea Canyon",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 5:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Waimea Plantation Cottages, 9400 Kaumualii Highway, Waimea",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-sobriety-in-paradise-1800",
+      "groupKey": "aa-sobriety-in-paradise",
+      "name": "Sobriety in Paradise",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 6:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Salvation Army Courtyard, 5348 Koloa Road, Koloa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-eastside-wahine-1830",
+      "groupKey": "aa-eastside-wahine",
+      "name": "Eastside Wahine",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 6:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa United Church, 1315 Ulu Street, Kapaʻa",
+      "formatLabels": ["Closed", "Women"]
+    },
+    {
+      "sourceItemKey": "aa-thu-princeville-hanalei-1930",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hanalei Community Center, old courthouse, 553 Mahimahi Road, Hanalei",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-thu-hui-lokahi-1930",
+      "groupKey": "aa-hui-lokahi",
+      "name": "Hui Lokahi",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Thursday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa United Church, 1315 Ulu Street, Kapaʻa",
+      "formatLabels": ["Closed", "Men"]
+    },
+
+    {
+      "sourceItemKey": "aa-fri-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-fri-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": []
+    },
+    {
+      "sourceItemKey": "aa-fri-princeville-hanalei-1100",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 11:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Church of the Pacific, 4520 Kapaka Street, Princeville",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-fri-kapaa-nooners-1200",
+      "groupKey": "aa-kapaa-nooners",
+      "name": "Kapaa Nooners",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at noon",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa First Hawaiian Church, 4-1325 Kuhio Highway, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-fri-waimea-canyon-1730",
+      "groupKey": "aa-waimea-canyon",
+      "name": "Waimea Canyon",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 5:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kekaha MacArthur Park, Kekaha Beach Park, Highway 50, Kekaha",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-fri-there-is-a-solution-1800",
+      "groupKey": "aa-there-is-a-solution",
+      "name": "There Is A Solution",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 6:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Salvation Army Courtyard, 5348 Koloa Road, Koloa",
+      "formatLabels": []
+    },
+    {
+      "sourceItemKey": "aa-fri-hui-ohana-1830",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 6:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-fri-princeville-hanalei-1900",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Friday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Princeville Community Center, 4334 Emmalani Drive, Princeville",
+      "formatLabels": ["Open"]
+    },
+
+    {
+      "sourceItemKey": "aa-sat-princeville-hanalei-0700",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Church of the Pacific, 4520 Kapaka Street, Princeville",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sat-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sat-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sat-princeville-hanalei-women-1700",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday at 5:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hanalei Community Center, old courthouse, 553 Mahimahi Road, Hanalei",
+      "formatLabels": ["Closed", "Women"]
+    },
+    {
+      "sourceItemKey": "aa-sat-third-tradition-1930",
+      "groupKey": "aa-third-tradition",
+      "name": "Third Tradition",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Saturday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa Library, 4-1464 Kuhio Highway, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+
+    {
+      "sourceItemKey": "aa-sun-hui-ohana-0700",
+      "groupKey": "aa-hui-ohana",
+      "name": "Hui Ohana",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lydgate Beach Park, Nalu Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sun-sunrise-sobriety-0700",
+      "groupKey": "aa-sunrise-sobriety",
+      "name": "Sunrise Sobriety",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 7:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sun-princeville-hanalei-0800",
+      "groupKey": "aa-princeville-hanalei",
+      "name": "Princeville-Hanalei Group",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 8:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Hanalei Pavilion Beach Park, 5120 Weke Road, Hanalei",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sun-koloa-aloha-0815",
+      "groupKey": "aa-koloa-aloha",
+      "name": "Koloa Aloha",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 8:15 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Poipu Beach Park, Western Pavilion, 1959 Hoone Road, Poipu",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sun-sunday-serenity-1100",
+      "groupKey": "aa-sunday-serenity",
+      "name": "Sunday Serenity",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 11:00 am",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Kapaa Neighborhood Center, 4491 Kou Street, Kapaʻa",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sun-bonfire-meeting-1900",
+      "groupKey": "aa-bonfire-meeting",
+      "name": "Bonfire Meeting",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 7:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Waioli Beach Park, Anae Road, Hanalei",
+      "formatLabels": ["Open"]
+    },
+    {
+      "sourceItemKey": "aa-sun-byobb-1930",
+      "groupKey": "aa-byobb",
+      "name": "BYOBB",
+      "supportSubtype": "addiction_recovery",
+      "recurrenceLabel": "Sunday at 7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Ohana Christian Fellowship, 4531 Pouli Road, Kapaʻa",
+      "formatLabels": ["Open"]
+    }
+  ]
+}

@@ -1,6 +1,10 @@
 import { Meteor } from 'meteor/meteor';
 import '/imports/startup/server/Accounts';
 import '/imports/startup/server/Publications';
+import '/imports/startup/server/CommunityIngestion';
+import '/imports/startup/server/CommunityIngestionRunQueue';
+import '/imports/startup/server/IngestionResearchQueue';
+import '/imports/startup/server/IngestionReviewActions';
 import '/imports/startup/server/Mongo';
 import '/imports/startup/both/Methods';
 // Last, and that order is load-bearing: this wraps the handler table Methods.js

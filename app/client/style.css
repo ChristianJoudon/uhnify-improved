@@ -28,13 +28,11 @@
   --mb-match: #eb6219;
   --mb-match-hover: #f56f28;
   --mb-match-deep: #b74b11;
-  /* On an orange button: the label in the page's own white, and the charcoal
-     that used to be its keyline, now carried by its shadow. As channels,
-     because that is the only way to reach it through rgba(). The label sits
-     at 3.3:1 on the fill — below the 4.5:1 AA wants for type this size, so
-     the shadow is what separates the button from the paper, not the label. */
+  /* Orange is the brand field; charcoal is its readable label. This keeps the
+     primary action unmistakably MatchBook while meeting normal-text contrast
+     on both the resting and hover fills. */
   --mb-match-edge-rgb: 26, 22, 20;
-  --mb-match-label: #fcfcfb;
+  --mb-match-label: #1f2123;
   --mb-match-tint: #fde7dc;
 
   /* The map's two fields.
@@ -277,10 +275,9 @@ textarea.form-control {
 }
 
 /* Match accent button — used sparingly, for the one primary discovery action.
-   White type on the bright orange field, with no keyline: the charcoal that
-   used to outline it is now its shadow, which is what separates it from the
-   paper. The border stays in place at 2px transparent so it keeps the same
-   metrics as the black button it usually sits beside. */
+   Charcoal type keeps the bright orange field legible; the border stays in
+   place at 2px transparent so it keeps the same metrics as the black button
+   it usually sits beside. */
 .btn-match {
   display: inline-flex !important;
   align-items: center;
@@ -438,24 +435,16 @@ div.btn-solid-primary button[type="submit"]:hover {
   text-decoration: none;
 }
 
-/* The wordmark is artwork, cut to the ink. Height is the only dimension worth
-   setting — the file's own ratio supplies the width.
-
-   This governs the header's cut, which is the name alone. The number is not a
-   round one: the mark it replaced spent its bottom quarter on a struck match,
-   so 1.55rem there drew a word only ~1.12rem tall. Setting the new file to
-   1.55 would have enlarged the name by half without anyone asking. 1.25 gives
-   it the room the strike used to occupy and no more. */
+/* The supplied rounded wordmark carries a small transparent safety margin.
+   Size it by width so that margin never distorts the artwork's proportions. */
 .mb-wordmark {
   display: block;
-  height: 1.25rem;
-  width: auto;
+  width: clamp(7.5rem, 13vw, 8.25rem);
+  height: auto;
 }
 
-/* The footer still carries the struck match, and that file is a quarter taller
-   than its own word — so this stays where it was. */
 .footer-brand .mb-wordmark {
-  height: 1.3rem;
+  width: clamp(7.25rem, 12vw, 7.75rem);
 }
 
 .nav-pill-group .nav-link,
@@ -729,6 +718,17 @@ div.btn-solid-primary button[type="submit"]:hover {
 .details-modal-poster .mb-poster-art {
   min-height: 260px;
   border-radius: var(--mb-radius-tight);
+}
+
+/* With no organizer photo, the detail sheet is the category's colour and
+   mark—not a small card-corner watermark enlarged into an empty canvas. */
+.details-modal-poster .mb-poster-motif {
+  width: 46%;
+  max-width: 154px;
+  right: 50%;
+  bottom: 50%;
+  transform: translate(50%, 50%);
+  filter: drop-shadow(0 2px 3px rgba(48, 50, 52, 0.22));
 }
 
 .details-fields {
@@ -1114,6 +1114,11 @@ div.btn-solid-primary button[type="submit"]:hover {
 .calendar-pill--community {
   background: #fde7db !important;
   color: #a04d28 !important;
+}
+
+.calendar-pill--support {
+  background: #eee8f4 !important;
+  color: #514166 !important;
 }
 
 .calendar-pill--wellness {
@@ -1573,6 +1578,12 @@ div.btn-solid-primary button[type="submit"]:hover {
   background: var(--mb-wood);
   border-color: transparent;
   color: var(--mb-ink);
+}
+
+.mode-toggle button:focus-visible,
+.window-chip:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
 }
 
 .swipe-deck-area {
@@ -2716,12 +2727,18 @@ div.btn-solid-primary button[type="submit"]:hover {
   border-radius: var(--mb-radius-card);
   box-shadow: var(--mb-shadow-small);
   overflow: hidden;
-  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease);
+  transition: transform var(--mb-standard) var(--mb-ease), box-shadow var(--mb-standard) var(--mb-ease),
+    border-color var(--mb-fast) var(--mb-ease);
 }
 
-.mb-poster:hover {
+.mb-poster:hover,
+.mb-poster:focus-within {
   transform: translateY(-2px);
-  box-shadow: var(--mb-shadow-feature);
+  border-color: rgba(48, 50, 52, 0.54);
+  /* A quiet echo of the selected topic cover: one charcoal press line rather
+     than the full selected double ring. It gives every event and group the
+     same hover language without turning a wall of cards into a black grid. */
+  box-shadow: 0 0 0 1px rgba(48, 50, 52, 0.24), var(--mb-shadow-feature);
 }
 
 /* Inert panel — the stretched button inside the title carries the interaction. */
@@ -4661,7 +4678,11 @@ div.btn-solid-primary button[type="submit"]:hover {
 .discover-bar::before {
   content: "";
   position: absolute;
-  inset: 0 -50vw;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
   z-index: -1;
   background: rgba(255, 255, 255, 0.86);
   backdrop-filter: blur(12px);
@@ -4673,6 +4694,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   gap: 0.4rem;
   flex: 1 1 auto;
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
   /* overflow-x:auto clips vertically too, which would shave the chips' focus
@@ -5535,17 +5557,18 @@ which no longer has a caller.
 .topic-posters {
   list-style: none;
   margin: 0 0 2rem;
-  padding: 4px 0 12px;
+  /* Keep the selected/hover keyline inside the scrollport at both ends. The
+     previous zero-inline padding clipped the first outline, while a mask
+     deliberately faded the last card even after it had been scrolled fully
+     into view. */
+  padding: 6px 6px 12px;
   display: flex;
   gap: 1rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
+  scroll-padding-inline: 6px;
   scrollbar-width: thin;
   scrollbar-color: var(--mb-line-strong) transparent;
-  /* Fades the cut-off cover at the trailing edge so the rail reads as
-     continuing rather than as ending in a sliced card. */
-  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.5rem), transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 2.5rem), transparent 100%);
 }
 
 .topic-posters > li {
@@ -5654,8 +5677,8 @@ which no longer has a caller.
 
 .topic-poster:hover {
   transform: translateY(-2px);
-  box-shadow: var(--mb-shadow-feature);
-  border-color: var(--mb-line-strong);
+  box-shadow: 0 0 0 1px rgba(48, 50, 52, 0.28), var(--mb-shadow-feature);
+  border-color: rgba(48, 50, 52, 0.54);
 }
 
 /* Selected is solid ink, like every other selected thing in the app — but only

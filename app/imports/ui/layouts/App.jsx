@@ -28,6 +28,10 @@ import AddEvent from '../pages/AddEvent';
 import Profile from '../pages/Profile';
 import EditClubAdmin from '../pages/EditClubAdmin';
 import EditEventAdmin from '../pages/EditEventAdmin';
+// Keep the extension explicit because this page has a same-basename CSS module;
+// Meteor's resolver can otherwise hand React the stylesheet module object.
+import EventIntake from '../pages/EventIntake.jsx';
+import EventReview from '../pages/EventReview.jsx';
 
 const ProtectedRoute = ({ children }) => {
   const isLogged = Meteor.userId() !== null;
@@ -81,6 +85,8 @@ const App = () => {
             <Route path="/create-club" element={<ProtectedRoute><AddClub /></ProtectedRoute>} />
             <Route path="/create-event" element={<ProtectedRoute><AddEvent /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminProtectedRoute ready={ready}><ListClubAdmin /></AdminProtectedRoute>} />
+            <Route path="/admin/event-intake" element={<AdminProtectedRoute ready={ready}><EventIntake /></AdminProtectedRoute>} />
+            <Route path="/admin/event-intake/review" element={<AdminProtectedRoute ready={ready}><EventReview /></AdminProtectedRoute>} />
             <Route path="/notauthorized" element={<NotAuthorized />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -15,6 +15,11 @@ class ClubsCollection {
       location: String,
       image: { type: String, optional: true },
       meetingTime: String,
+      publicationStatus: {
+        type: String,
+        allowedValues: ['draft', 'published', 'archived'],
+        optional: true,
+      },
       contactInfo: { type: String, optional: true },
       categories: {
         type: Array,

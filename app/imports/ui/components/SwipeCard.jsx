@@ -4,7 +4,8 @@ import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowLeft, GeoAlt, InfoCircle } from 'react-bootstrap-icons';
 import CardFields from './CardFields';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
-import { topicForEvent } from '../utilities/topics';
+import { topicForClub, topicForEvent } from '../utilities/topics';
+import './SwipeCardStyles.css';
 
 const SWIPE_DISTANCE = 130;
 const SWIPE_VELOCITY = 650;
@@ -70,7 +71,7 @@ const timeRange = (start, end) => {
 
 /**
  * One card in the Discover deck. The top card can be dragged left/right to decide,
- * double-tapped to flip over for full details, and flies off screen when a decision lands.
+ * tapped to flip over for full details, and flies off screen when a decision lands.
  */
 const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, onSwipe, onFlip, onExited }) => {
   // A group and an event are the same object to this card — a thing with a
@@ -79,7 +80,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
   const when = event.date ? dateParts(event.date) : null;
   // Same rule as every other card: the seeded stock art is not this app's
   // design, so only a genuinely uploaded photo becomes the card face. The
-  const topic = topicForEvent(event);
+  const topic = kind === 'club' ? topicForClub(event) : topicForEvent(event);
   const photo = event.image && event.image.startsWith('data:') ? event.image : '';
 
   const x = useMotionValue(0);
@@ -132,6 +133,23 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
     onFlip();
   };
 
+  /**
+   * Framer supplies Enter activation for `onTap`, but an explicit button role
+   * should not depend on that implementation detail. Capture Enter before
+   * Framer's native key listener and invoke the same guarded action once.
+   * Space remains on DiscoverEvents' existing shortcut path.
+   */
+  const handleKeyDownCapture = keyEvent => {
+    if (!isTop || keyEvent.key !== 'Enter') {
+      return;
+    }
+    keyEvent.preventDefault();
+    keyEvent.stopPropagation();
+    if (!keyEvent.repeat) {
+      handleTap();
+    }
+  };
+
   return (
     <motion.div
       className="swipe-card-slot"
@@ -140,7 +158,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
          accessibility tree. Without this a screen reader read all four stacked
          cards, both faces of each — eight headings for one visible card, one of
          them at opacity 0 — with no way to tell which the keys would act on. */
-      aria-hidden={!isTop && !exitDirection}
+      aria-hidden={!isTop}
       style={{ zIndex: exitDirection ? 30 : 20 - stackIndex }}
       initial={{ y: 30 + stackIndex * 16, scale: 0.86, opacity: 0 }}
       animate={exitDirection
@@ -149,9 +167,15 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
       transition={{ type: 'spring', stiffness: 260, damping: 24 }}
     >
       <motion.div
-        className={`swipe-card${isTop ? ' is-top' : ''}`}
+        className={`swipe-card match-swipe-card${isTop ? ' is-top' : ''}`}
+        role={isTop ? 'button' : undefined}
+        tabIndex={isTop ? 0 : -1}
+        aria-expanded={isTop ? flipped : undefined}
+        aria-label={isTop
+          ? `${event.title}. ${flipped ? 'Details shown; activate to show the front.' : 'Activate to show details.'}`
+          : undefined}
         style={{ x, y, rotate, pointerEvents: isTop ? 'auto' : 'none' }}
-        drag={isTop}
+        drag={isTop ? 'x' : false}
         dragMomentum={false}
         dragSnapToOrigin
         dragTransition={{ bounceStiffness: 480, bounceDamping: 32 }}
@@ -160,6 +184,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
         onDragStart={isTop ? handleDragStart : undefined}
         onDragEnd={isTop ? handleDragEnd : undefined}
         onTap={handleTap}
+        onKeyDownCapture={isTop ? handleKeyDownCapture : undefined}
         animate={exitDirection ? exitTarget.current : { x: 0, y: 0 }}
         transition={exitDirection
           ? { type: 'spring', stiffness: 170, damping: 26 }
@@ -189,7 +214,7 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
                 : <img className="swipe-card-motif" src={topic.icon} alt="" />}
               {/* The subject, named once, over the picture. The title moved to
                   the foot where the rest of the listing is. */}
-              <span className="swipe-pill swipe-pill-topic">{topic.label}</span>
+              <span className="swipe-pill swipe-pill-topic">{topic.activityLabel || topic.label}</span>
               {event.date && <span className="swipe-pill swipe-pill-countdown">{daysUntilLabel(event.date)}</span>}
             </div>
             {/* The foot reads as a printed listing: the date as a block on the
@@ -221,22 +246,39 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
             <span className="swipe-info" aria-hidden="true"><InfoCircle size={17} /></span>
           </div>
           <div className="swipe-card-face swipe-card-back" aria-hidden={!flipped}>
-            <span className="swipe-info swipe-info-back" aria-hidden="true"><ArrowLeft size={17} /></span>
-            <h3>{event.title}</h3>
-            {/* The back was hand-written rows with fallbacks, so a listing with
-                no host printed "Club #0" and one with no text printed "No
-                description yet." It reads the same schema as every other card
-                now: a row exists only when the listing published it. This is
-                also the surface with room for cost, audience and registration,
-                which the front has to leave out. */}
-            <CardFields record={{ ...event, hostName }} schema={fields} className="swipe-card-facts" />
-            {event.description && <p className="swipe-card-description">{event.description}</p>}
+            {/* Topic art gives the reverse a complete composition even when a
+                public listing contains only a title. It is the same resolved
+                topic already shown on the front, never generated event copy. */}
+            <div
+              className="match-swipe-card-back-topic"
+              style={{ background: topic.field, color: topic.ink }}
+            >
+              <img className="match-swipe-card-back-motif" src={topic.icon} alt="" draggable={false} />
+              <span className="match-swipe-card-back-topic-label">{topic.activityLabel || topic.label}</span>
+              <span className="swipe-info swipe-info-back" aria-hidden="true"><ArrowLeft size={17} /></span>
+            </div>
+            <div className="match-swipe-card-back-content">
+              <h3>{event.title}</h3>
+              {/* A row exists only when the listing published it. This is also
+                  the surface with room for cost, audience and registration,
+                  which the front has to leave out. */}
+              <CardFields record={{ ...event, hostName }} schema={fields} className="swipe-card-facts" />
+              {event.description && <p className="swipe-card-description">{event.description}</p>}
+            </div>
           </div>
         </motion.div>
-        <motion.div className="swipe-stamp swipe-stamp-like" style={{ opacity: exitDirection === 'right' ? 1 : likeOpacity }}>
+        <motion.div
+          className="swipe-stamp swipe-stamp-like"
+          style={{ opacity: exitDirection === 'right' ? 1 : likeOpacity }}
+          aria-hidden="true"
+        >
           Saved
         </motion.div>
-        <motion.div className="swipe-stamp swipe-stamp-pass" style={{ opacity: exitDirection === 'left' ? 1 : passOpacity }}>
+        <motion.div
+          className="swipe-stamp swipe-stamp-pass"
+          style={{ opacity: exitDirection === 'left' ? 1 : passOpacity }}
+          aria-hidden="true"
+        >
           Pass
         </motion.div>
       </motion.div>

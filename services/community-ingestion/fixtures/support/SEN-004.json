@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "support-snapshot.v1",
+  "sourceId": "SEN-004",
+  "sourceUrl": "https://kauai.namihawaii.org/",
+  "verifiedAt": "2026-08-08T12:00:00-10:00",
+  "completeness": "PARTIAL",
+  "reviewFlags": ["MANUAL_SOURCE_CAPTURE", "PARTIAL_SOURCE_SNAPSHOT", "SOURCE_CONFLICT_REVIEW", "ONLINE_ACCESS_WITHHELD"],
+  "listings": [
+    {
+      "sourceItemKey": "nami-family-second-wed-1800",
+      "groupKey": "nami-kauai-family-support",
+      "name": "NAMI Kauai Family Support Group",
+      "supportSubtype": "mental_health_family",
+      "recurrenceLabel": "Second Wednesday of the month, 6:00 pm–7:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Online",
+      "formatLabels": ["on Zoom"]
+    },
+    {
+      "sourceItemKey": "nami-family-third-thu-1700",
+      "groupKey": "nami-kauai-family-support",
+      "name": "NAMI Kauai Family Support Group",
+      "supportSubtype": "mental_health_family",
+      "recurrenceLabel": "Third Thursday of the month, 5:00 pm–6:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lihue Library, 4344 Hardy Street, Lihue",
+      "formatLabels": ["In person"]
+    },
+    {
+      "sourceItemKey": "nami-family-last-sat-1100",
+      "groupKey": "nami-kauai-family-support",
+      "name": "NAMI Kauai Family Support Group",
+      "supportSubtype": "mental_health_family",
+      "recurrenceLabel": "Last Saturday of the month, 11:00 am–12:30 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Salt Pond, Hanapepe",
+      "formatLabels": ["In person"],
+      "reviewFlags": ["SOURCE_CONFLICT_REVIEW"]
+    },
+    {
+      "sourceItemKey": "nami-connection-tue-1330",
+      "groupKey": "nami-connection-recovery",
+      "name": "Connection Recovery (Peer) Support Group",
+      "supportSubtype": "mental_health_peer",
+      "recurrenceLabel": "Every Tuesday, 1:30 pm–3:00 pm",
+      "timeZone": "Pacific/Honolulu",
+      "locationLabel": "Lihue Library, 4344 Hardy Street, Lihue",
+      "formatLabels": ["In person", "Free and confidential"]
+    }
+  ]
+}

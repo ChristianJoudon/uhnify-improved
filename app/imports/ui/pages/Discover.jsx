@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
+import { Random } from 'meteor/random';
+import PropTypes from 'prop-types';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
@@ -16,7 +18,8 @@ import KindToggle from '../components/KindToggle';
 import Club from '../components/Club';
 import DetailsModal from '../components/DetailsModal';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
-import { topicFor, topicForClub, topicForEvent } from '../utilities/topics';
+import { topicForClub, topicForEvent } from '../utilities/topics';
+import { collapseEventListings, eventListingCount } from '../utilities/eventSeries';
 import { milesLabel, milesTo } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 import { scoreClub } from '../utilities/recommend';
@@ -96,6 +99,94 @@ const rise = {
   }),
 };
 
+/** Log a feed impression only after the card is at least half visible for 1s. */
+const RecommendationMasonryItem = ({ children, entityId, entityType, index, metadata }) => {
+  const ref = useRef(null);
+  const sentKey = useRef('');
+
+  useEffect(() => {
+    if (!metadata?.requestId || !Number.isInteger(metadata.position) || !ref.current
+      || typeof IntersectionObserver === 'undefined') {
+      return undefined;
+    }
+    const key = `impression:${metadata.requestId}:${entityType}:${entityId}:${metadata.position}`;
+    let timer = null;
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.some(entry => entry.isIntersecting && entry.intersectionRatio >= 0.5);
+      if (!visible) {
+        clearTimeout(timer);
+        timer = null;
+        return;
+      }
+      if (sentKey.current === key || timer) {
+        return;
+      }
+      timer = setTimeout(() => {
+        sentKey.current = key;
+        Meteor.call('recommendationInteractions.record', {
+          entityType,
+          entityId,
+          action: 'impression',
+          clientEventId: key,
+          requestId: metadata.requestId,
+          position: metadata.position,
+          displaySize: metadata.displaySize,
+        });
+      }, 1000);
+    }, { threshold: [0.5] });
+    observer.observe(ref.current);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [entityId, entityType, metadata?.requestId, metadata?.position, metadata?.displaySize]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="masonry-item"
+      variants={rise}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: '-40px' }}
+      custom={index}
+    >
+      {children}
+    </motion.div>
+  );
+};
+
+RecommendationMasonryItem.propTypes = {
+  children: PropTypes.node.isRequired,
+  entityId: PropTypes.string.isRequired,
+  entityType: PropTypes.oneOf(['event', 'group']).isRequired,
+  index: PropTypes.number.isRequired,
+  metadata: PropTypes.shape({
+    requestId: PropTypes.string,
+    position: PropTypes.number,
+    displaySize: PropTypes.string,
+  }),
+};
+
+RecommendationMasonryItem.defaultProps = {
+  metadata: null,
+};
+
+const compareRecommendationPosition = (left, right) => {
+  const leftPosition = left.recommendationPosition;
+  const rightPosition = right.recommendationPosition;
+  if (Number.isInteger(leftPosition) && Number.isInteger(rightPosition)) {
+    return leftPosition - rightPosition;
+  }
+  if (Number.isInteger(leftPosition)) {
+    return -1;
+  }
+  if (Number.isInteger(rightPosition)) {
+    return 1;
+  }
+  return right.score - left.score;
+};
+
 const Discover = () => {
   const userId = Meteor.userId();
   // The homepage finder arrives here as ?q= and ?when=, so what someone typed
@@ -110,6 +201,7 @@ const Discover = () => {
   const kind = params.get('kind') === 'clubs' ? 'clubs' : 'events';
   // One sheet for either kind; the card that opened it says which.
   const [detail, setDetail] = useState(null);
+  const [recommendationRuns, setRecommendationRuns] = useState({ event: null, group: null });
   const when = WINDOWS.some(option => option.key === requested) ? requested : 'all';
 
   const setWhen = key => {
@@ -172,6 +264,51 @@ const Discover = () => {
     };
   }, [userId]);
 
+  const recommendationKind = kind === 'clubs' ? 'group' : 'event';
+
+  useEffect(() => {
+    if (!userId) {
+      return undefined;
+    }
+    let active = true;
+    Meteor.call('recommendations.get', {
+      kind: recommendationKind,
+      surface: 'discover_feed',
+      limit: 100,
+    }, (error, result) => {
+      if (active) {
+        setRecommendationRuns(current => ({
+          ...current,
+          [recommendationKind]: error || !result ? null : result,
+        }));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [userId, recommendationKind, swipes.length, joinedIds.size]);
+
+  const recommendationRun = recommendationRuns[recommendationKind];
+  const recommendationById = useMemo(
+    () => new Map((recommendationRun?.items || []).map(item => [item._id, item])),
+    [recommendationRun],
+  );
+
+  const metadataFor = entityId => {
+    const item = recommendationById.get(entityId);
+    if (!item || !recommendationRun?.requestId) {
+      return null;
+    }
+    return {
+      requestId: recommendationRun.requestId,
+      position: item.position,
+      displaySize: item.displayPriority || 'standard',
+      modelVersion: recommendationRun.modelVersion,
+      selectedTier: item.selectedTier || recommendationRun.selectedTier,
+      componentsUsed: item.componentsUsed || recommendationRun.capabilitySnapshot?.availableComponents,
+    };
+  };
+
   const goingIds = useMemo(
     () => new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId)),
     [swipes],
@@ -193,18 +330,28 @@ const Discover = () => {
 
     const needle = query.toLowerCase();
 
-    return upcoming
+    const inScopeEvents = upcoming
       .filter(event => inWindow(new Date(event.date), when))
       .filter(event => !needle || `${event.title} ${event.description || ''} ${event.location || ''}`
-        .toLowerCase().includes(needle))
+        .toLowerCase().includes(needle));
+
+    return collapseEventListings(inScopeEvents)
       .map(event => {
         const host = clubByNumber.get(event.eventID);
-        const topic = topicFor(event.title, event.description, normalizeCategories(event.categories));
-        return { event, host, topic, score: host ? scoreClub(host, context) : seedValue(event._id) / 997 };
+        const topic = topicForEvent(event);
+        const recommendation = recommendationById.get(event._id);
+        const metadata = metadataFor(event._id);
+        return {
+          event: metadata ? { ...event, _recommendation: metadata } : event,
+          host,
+          topic,
+          score: host ? scoreClub(host, context) : seedValue(event._id) / 997,
+          recommendationPosition: recommendation?.position,
+        };
       })
       .filter(item => !topicKey || item.topic.key === topicKey)
-      .sort((a, b) => b.score - a.score);
-  }, [upcoming, clubByNumber, interests, when, query, topicKey]);
+      .sort(compareRecommendationPosition);
+  }, [upcoming, clubByNumber, interests, when, query, topicKey, recommendationById, recommendationRun]);
 
   /** The same wall, dealing groups. Ranked by fit, filtered by the same search. */
   const clubWall = useMemo(() => {
@@ -214,12 +361,19 @@ const Discover = () => {
       .filter(club => !needle || `${club.name} ${club.description || ''} ${club.location || ''}`
         .toLowerCase().includes(needle))
       .map(club => {
-        const topic = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description);
-        return { club, topic, score: scoreClub(club, context) };
+        const topic = topicForClub(club);
+        const recommendation = recommendationById.get(club._id);
+        const metadata = metadataFor(club._id);
+        return {
+          club: metadata ? { ...club, _recommendation: metadata } : club,
+          topic,
+          score: scoreClub(club, context),
+          recommendationPosition: recommendation?.position,
+        };
       })
       .filter(item => !topicKey || item.topic.key === topicKey)
-      .sort((a, b) => b.score - a.score);
-  }, [clubs, interests, query, topicKey]);
+      .sort(compareRecommendationPosition);
+  }, [clubs, interests, query, topicKey, recommendationById, recommendationRun]);
 
   /**
    * Counted before the category filter is applied, so a cover can say how much
@@ -228,13 +382,14 @@ const Discover = () => {
   const topicCounts = useMemo(() => {
     const needle = query.toLowerCase();
     const tally = {};
-    upcoming
+    const inScopeEvents = upcoming
       .filter(event => inWindow(new Date(event.date), when))
       // Every filter the wall applies except the covers' own, search included —
       // it was counting past the search box, so a cover promised events the
       // query had already excluded.
       .filter(event => !needle || `${event.title} ${event.description || ''} ${event.location || ''}`
-        .toLowerCase().includes(needle))
+        .toLowerCase().includes(needle));
+    collapseEventListings(inScopeEvents)
       .forEach(event => {
         tally[topicForEvent(event).key] = (tally[topicForEvent(event).key] || 0) + 1;
       });
@@ -255,7 +410,9 @@ const Discover = () => {
   }, [clubs, query]);
 
   const join = clubId => {
-    Meteor.call('profileClubs.add', clubId, error => {
+    const metadata = metadataFor(clubId);
+    const context = metadata ? { ...metadata, clientEventId: `join:${Random.id()}` } : {};
+    Meteor.call('profileClubs.add', clubId, context, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       }
@@ -266,11 +423,29 @@ const Discover = () => {
     const isGoing = goingIds.has(event._id);
     const method = isGoing ? 'eventSwipes.remove' : 'eventSwipes.record';
     const args = isGoing ? [event._id] : [event._id, 'interested'];
-    Meteor.call(method, ...args, error => {
+    const context = event._recommendation
+      ? { ...event._recommendation, clientEventId: `feed-action:${Random.id()}` }
+      : {};
+    Meteor.call(method, ...args, ...(isGoing ? ['undo', context] : ['event', context]), error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       }
     });
+  };
+
+  const openDetail = (record, recordKind) => {
+    if (record?._recommendation?.requestId) {
+      Meteor.call('recommendationInteractions.record', {
+        entityType: recordKind === 'club' ? 'group' : 'event',
+        entityId: record._id,
+        action: 'opened',
+        clientEventId: `feed-open:${Random.id()}`,
+        requestId: record._recommendation.requestId,
+        position: record._recommendation.position,
+        displaySize: record._recommendation.displaySize,
+      });
+    }
+    setDetail({ record, kind: recordKind });
   };
 
   if (!ready) {
@@ -295,7 +470,7 @@ const Discover = () => {
       </header>
 
       <div className="discover-bar">
-        <KindToggle value={kind} onChange={setKind} counts={{ events: upcoming.length, clubs: clubs.length }} />
+        <KindToggle value={kind} onChange={setKind} counts={{ events: eventListingCount(upcoming), clubs: clubs.length }} />
         {kind === 'events' && (
           <div className="discover-windows" role="group" aria-label="When">
             {WINDOWS.map(option => (
@@ -334,14 +509,12 @@ const Discover = () => {
       {showingClubs && clubWall.length > 0 && (
         <div className="masonry discover-wall">
           {clubWall.map(({ club }, index) => (
-            <motion.div
+            <RecommendationMasonryItem
               key={club._id}
-              className="masonry-item"
-              variants={rise}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-40px' }}
-              custom={index}
+              entityId={club._id}
+              entityType="group"
+              index={index}
+              metadata={club._recommendation}
             >
               <Club
                 club={club}
@@ -349,9 +522,9 @@ const Discover = () => {
                 distance={milesLabel(milesTo(club, origin))}
                 isMember={joinedIds.has(club._id)}
                 onAddToProfile={join}
-                onViewDetails={() => setDetail({ record: club, kind: 'club' })}
+                onViewDetails={() => openDetail(club, 'club')}
               />
-            </motion.div>
+            </RecommendationMasonryItem>
           ))}
         </div>
       )}
@@ -369,26 +542,24 @@ const Discover = () => {
           {wall.map(({ event }, index) => {
             const miles = milesTo(event, origin);
             return (
-              <motion.div
+              <RecommendationMasonryItem
                 key={event._id}
-                className="masonry-item"
-                variants={rise}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true, margin: '-40px' }}
-                custom={index}
+                entityId={event._id}
+                entityType="event"
+                index={index}
+                metadata={event._recommendation}
               >
                 <EventPoster
                   event={event}
                   distance={milesLabel(miles)}
                   going={goingIds.has(event._id)}
                   onGoing={toggleGoing}
-                  onOpen={() => setDetail({ record: event, kind: 'event' })}
+                  onOpen={() => openDetail(event, 'event')}
                   // The top few are drawn large, so the wall has a focal point
                   // instead of reading as a uniform grid.
                   tier={index < 2 ? 'lg' : 'md'}
                 />
-              </motion.div>
+              </RecommendationMasonryItem>
             );
           })}
         </div>

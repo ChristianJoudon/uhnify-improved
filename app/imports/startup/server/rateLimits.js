@@ -21,13 +21,15 @@ import { DDPRateLimiter } from 'meteor/ddp-rate-limiter';
  */
 
 /** Everything the app owns, as a fallback for anything not named below. */
-const APP_METHOD = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.)/;
+const APP_METHOD = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.)/;
 
 /** Named limits: [calls, seconds]. Anything absent falls to GENERAL. */
 const LIMITS = {
   // The deck. Fast by design, and the one place a limit would be felt.
   'eventSwipes.record': [40, 10],
   'eventSwipes.remove': [40, 10],
+  'recommendationInteractions.record': [80, 10],
+  'recommendations.get': [30, 10],
   // Enumerable: the reply tells you whether an account exists.
   'friends.request': [10, 60],
   createUserProfile: [5, 60],
@@ -35,6 +37,13 @@ const LIMITS = {
   'Clubs.insert': [8, 60],
   'Events.insert': [8, 60],
   'Profiles.update': [20, 60],
+  // Administrator-only source collection and public projection boundaries.
+  'ingestion.runs.requestSource': [20, 60],
+  'ingestion.runs.requestAll': [5, 60],
+  'ingestion.research.request': [5, 60],
+  'ingestion.candidates.approve': [30, 60],
+  'ingestion.candidates.approveAll': [5, 60],
+  'ingestion.candidates.saveEditorialOverrides': [30, 60],
 };
 
 const GENERAL = [30, 10];

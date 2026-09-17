@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
+import { FRIEND_ACTIVITY_VISIBILITY } from '../privacy/FriendActivityPrivacy';
 
 /**
  * Each user's deck decision. The deck swipes events and, in its clubs mode,
@@ -17,6 +18,12 @@ class EventSwipesCollection {
       eventId: String,
       decision: { type: String, allowedValues: ['interested', 'passed'] },
       kind: { type: String, allowedValues: ['event', 'club'], optional: true, defaultValue: 'event' },
+      friendActivityVisibility: {
+        type: String,
+        allowedValues: Object.values(FRIEND_ACTIVITY_VISIBILITY),
+        optional: true,
+        defaultValue: FRIEND_ACTIVITY_VISIBILITY.private,
+      },
       createdAt: { type: Date, optional: true },
     });
     this.collection.attachSchema(this.schema);

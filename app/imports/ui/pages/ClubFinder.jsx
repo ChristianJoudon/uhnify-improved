@@ -24,6 +24,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { normalizeCategories } from '../utilities/helpers';
 import { scoreClub, sizeTier } from '../utilities/recommend';
 import { TOPIC_KEYS, topicFor, topicForEvent } from '../utilities/topics';
+import { collapseEventListings } from '../utilities/eventSeries';
 import { KAUAI, milesLabel, milesTo, positionOf } from '../utilities/geo';
 import { useOrigin } from '../utilities/useOrigin';
 import { useTuck } from '../utilities/useTuck';
@@ -137,7 +138,7 @@ const ClubFinder = () => {
   const eventsInScope = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     const now = new Date();
-    return events
+    const candidates = events
       .filter(event => new Date(event.date) >= now)
       .map(event => ({
         event,
@@ -147,6 +148,12 @@ const ClubFinder = () => {
       .filter(({ event, distance }) => (distance === null || distance <= radius)
         && (query === '' || `${event.title} ${event.description || ''} ${event.location || ''}`
           .toLowerCase().includes(query)))
+      .sort((a, b) => new Date(a.event.date) - new Date(b.event.date));
+    const representativeIds = new Set(
+      collapseEventListings(candidates.map(item => item.event)).map(event => event._id),
+    );
+    return candidates
+      .filter(({ event }) => representativeIds.has(event._id))
       .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
   }, [events, origin, radius, searchTerm]);
 

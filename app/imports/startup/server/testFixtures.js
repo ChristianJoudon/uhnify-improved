@@ -8,6 +8,7 @@ import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
+import { RECOMMENDATION_COLLECTIONS } from '../../api/recommendations/RecommendationData';
 /**
  * Registering the methods is this import's entire job, and it is load-bearing.
  *
@@ -41,12 +42,25 @@ import '../both/Methods';
  * fails in a suite.
  */
 
-/** Every collection a test may write, so `resetAll` cannot silently miss one. */
-const COLLECTIONS = [Clubs, Events, EventClubs, EventSwipes, Friends, ProfileClubs, Profiles];
+/** Core source collections shared by the existing backend suites. */
+const COLLECTIONS = [
+  Clubs,
+  Events,
+  EventClubs,
+  EventSwipes,
+  Friends,
+  ProfileClubs,
+  Profiles,
+];
 
 export const resetAll = () => {
   COLLECTIONS.forEach(entry => entry.collection.remove({}));
   Meteor.users.remove({});
+};
+
+/** Recommendation suites opt into the larger derived-data reset explicitly. */
+export const resetRecommendations = () => {
+  RECOMMENDATION_COLLECTIONS.forEach(entry => entry.collection.remove({}));
 };
 
 /**

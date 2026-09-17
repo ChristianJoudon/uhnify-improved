@@ -101,11 +101,22 @@ export const EVENT_FIELDS = [
 ];
 
 /** The club card's rows. Same contract. */
+export const clubMeetingLine = club => {
+  const meetingTime = typeof club?.meetingTime === 'string' ? club.meetingTime.trim() : '';
+  // The compact structured schedule stores one clock time. Protected support
+  // groups can publish several different meeting times, separated here by
+  // semicolons; preferring the compact value would silently drop the extras.
+  if (meetingTime.includes(';')) {
+    return meetingTime;
+  }
+  return scheduleLabel(club?.schedule) || meetingTime;
+};
+
 export const CLUB_FIELDS = [
   // A recurring schedule is the better answer when there is one — it is what
   // the whole schedule data layer exists to produce, and nine of the imported
   // groups publish one. Reading meetingTime alone threw all of them away.
-  { key: 'meets', icon: 'calendar', get: club => scheduleLabel(club.schedule) || club.meetingTime },
+  { key: 'meets', icon: 'calendar', get: clubMeetingLine },
   { key: 'where', icon: 'geo', get: whereLine },
   { key: 'membership', icon: 'people', get: club => club.membership },
   { key: 'phone', icon: 'phone', get: club => club.phone },

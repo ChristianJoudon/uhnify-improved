@@ -9,6 +9,7 @@ import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
 import { AuditLog } from '../../api/audit/AuditLog';
+import { FRIEND_ACTIVITY_VISIBILITY } from '../../api/privacy/FriendActivityPrivacy';
 
 // `owner` is an account name, which `getUsername` resolves to an email address,
 // and these three publications answer to anyone — no login required. It is read
@@ -16,9 +17,15 @@ import { AuditLog } from '../../api/audit/AuditLog';
 // below, so withholding it here costs nothing and stops every creator's address
 // being one console subscription away.
 const PUBLIC_FIELDS = { fields: { owner: 0 } };
+const PUBLIC_LISTING_SELECTOR = {
+  $or: [
+    { publicationStatus: 'published' },
+    { publicationStatus: { $exists: false } },
+  ],
+};
 
 Meteor.publish(Clubs.userPublicationName, function () {
-  return Clubs.collection.find({}, { sort: { name: 1 }, ...PUBLIC_FIELDS });
+  return Clubs.collection.find(PUBLIC_LISTING_SELECTOR, { sort: { name: 1 }, ...PUBLIC_FIELDS });
 });
 
 Meteor.publish(Clubs.adminPublicationName, function () {
@@ -29,7 +36,7 @@ Meteor.publish(Clubs.adminPublicationName, function () {
 });
 
 Meteor.publish(Events.userPublicationName, function () {
-  return Events.collection.find({}, { sort: { date: 1 }, ...PUBLIC_FIELDS });
+  return Events.collection.find(PUBLIC_LISTING_SELECTOR, { sort: { date: 1 }, ...PUBLIC_FIELDS });
 });
 
 Meteor.publish(Events.adminPublicationName, function () {
@@ -54,7 +61,7 @@ Meteor.publish(Profiles.adminPublicationName, function () {
 });
 
 Meteor.publish('clubs.all', function () {
-  return Clubs.collection.find({}, { sort: { name: 1 }, ...PUBLIC_FIELDS });
+  return Clubs.collection.find(PUBLIC_LISTING_SELECTOR, { sort: { name: 1 }, ...PUBLIC_FIELDS });
 });
 
 Meteor.publish(null, function () {
@@ -75,7 +82,9 @@ Meteor.publish(ProfileClubs.userPublicationName, function () {
   if (this.userId) {
     const profileClubs = ProfileClubs.collection.find({ userId: this.userId }).fetch();
     const clubIds = profileClubs.map(profileClub => profileClub.clubId);
-    return Clubs.collection.find({ _id: { $in: clubIds } }, { sort: { name: 1 } });
+    return Clubs.collection.find({
+      $and: [{ _id: { $in: clubIds } }, PUBLIC_LISTING_SELECTOR],
+    }, { sort: { name: 1 } });
   }
   return this.ready();
 });
@@ -93,7 +102,19 @@ Meteor.publish('Profiles.publication.directory', function () {
   if (!this.userId) {
     return this.ready();
   }
-  return Profiles.collection.find({}, { fields: { userId: 1, firstName: 1, lastName: 1, picture: 1, title: 1, interests: 1 } });
+  return Profiles.collection.find({}, { fields: { userId: 1, firstName: 1, lastName: 1, picture: 1, title: 1 } });
+});
+
+export const friendClubActivitySelector = userId => ({
+  userId,
+  friendActivityVisibility: FRIEND_ACTIVITY_VISIBILITY.shareable,
+});
+
+export const friendEventActivitySelector = userId => ({
+  userId,
+  decision: 'interested',
+  kind: { $ne: 'club' },
+  friendActivityVisibility: FRIEND_ACTIVITY_VISIBILITY.shareable,
 });
 
 // Accepted friends' public activity: the clubs they joined and events they saved.
@@ -114,13 +135,13 @@ publishComposite('Friends.publication.activity', function () {
       {
         find(edge) {
           const friendId = edge.requesterId === selfId ? edge.receiverId : edge.requesterId;
-          return ProfileClubs.collection.find({ userId: friendId });
+          return ProfileClubs.collection.find(friendClubActivitySelector(friendId));
         },
       },
       {
         find(edge) {
           const friendId = edge.requesterId === selfId ? edge.receiverId : edge.requesterId;
-          return EventSwipes.collection.find({ userId: friendId, decision: 'interested' });
+          return EventSwipes.collection.find(friendEventActivitySelector(friendId));
         },
       },
     ],
@@ -153,9 +174,14 @@ Meteor.publish(EventClubs.userPublicationName, function () {
   const linkedEventIds = linkedEvents.map(link => link.eventId);
 
   return Events.collection.find({
-    $or: [
-      { _id: { $in: linkedEventIds } },
-      { eventID: { $in: joinedClubNumbers } },
+    $and: [
+      {
+        $or: [
+          { _id: { $in: linkedEventIds } },
+          { eventID: { $in: joinedClubNumbers } },
+        ],
+      },
+      PUBLIC_LISTING_SELECTOR,
     ],
   }, { sort: { date: 1 } });
 });

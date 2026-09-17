@@ -23,8 +23,9 @@ import { topicForClub, topicForEvent } from '../utilities/topics';
  *
  * The card's own poster is redrawn at the top rather than the record's uploaded
  * logo: the reader clicked a poster, and the sheet should be the same object
- * they clicked, larger. This is also the one surface where the topic's cover
- * art earns its place — a single poster on screen, not a wall of twenty.
+ * they clicked, larger. An organizer-uploaded photo is preserved; otherwise
+ * the topic field and motif stay consistent with the card the reader opened.
+ * Legacy category cover art must never quietly return on this second side.
  *
  * Rows come from the card schema with no limit, so the sheet is exactly the
  * card's facts plus the ones the card had no room for. A field the record never
@@ -109,8 +110,10 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
               for unmatched records too, and printing it would assert a subject
               nothing was matched on — so an unmatched record falls back to its
               own first category, or to no eyebrow at all. */}
-          {(topic.matched ? topic.label : categories[0]) && (
-            <span className="eyebrow">{topic.matched ? topic.label : categories[0]}</span>
+          {(topic.matched ? (topic.activityLabel || topic.label) : categories[0]) && (
+            <span className="eyebrow">
+              {topic.matched ? (topic.activityLabel || topic.label) : categories[0]}
+            </span>
           )}
           {/* A real heading: react-bootstrap renders ModalTitle as a div by
               default, so the sheet's title was the one title-scale string in
@@ -122,7 +125,7 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, onAct }) => 
       <Modal.Body>
         <div className="details-modal-grid">
           <div className="details-modal-poster">
-            <PosterArt topic={topic} image={photo} placeholder="" art />
+            <PosterArt topic={topic} image={photo} placeholder="" />
           </div>
 
           <div>

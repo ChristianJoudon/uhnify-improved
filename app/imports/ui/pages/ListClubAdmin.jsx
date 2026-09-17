@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Container } from 'react-bootstrap';
-import { CalendarEvent, PeopleFill, Stars } from 'react-bootstrap-icons';
+import { ArrowRight, CalendarEvent, PeopleFill, Stars } from 'react-bootstrap-icons';
+import { Link } from 'react-router-dom';
 import { Clubs } from '../../api/club/Club';
 import ClubItemAdmin from '../components/ClubItemAdmin';
 import { Events } from '../../api/events/Events';
@@ -56,6 +57,18 @@ const ListClubAdmin = () => {
         <Stat icon={<CalendarEvent />} label="events" value={events.length} />
         <Stat icon={<PeopleFill />} label="profiles" value={profiles.length} />
       </div>
+
+      <section className="mb-panel event-intake-dashboard-link" aria-labelledby="event-intake-dashboard-title">
+        <div>
+          <span className="eyebrow">Event operations</span>
+          <h2 id="event-intake-dashboard-title">Source intake and health</h2>
+          <p>Check registered sources, collection readiness, recent runs, and event or group candidates before publication.</p>
+        </div>
+        <Link className="btn btn-soft-primary" to="/admin/event-intake">
+          View intake
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </section>
 
       <section className="admin-section">
         <h2 className="admin-section-title">Groups</h2>
