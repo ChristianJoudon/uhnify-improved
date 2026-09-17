@@ -128,10 +128,12 @@ if (Meteor.isServer) {
       assert.isOk(Clubs.collection.findOne(id), 'imported records must still validate');
     });
 
-    it('still refuses an edit from a non-administrator', function () {
+    it('still refuses an edit from someone who does not run the group', function () {
+      // The person who posted it may edit it now (see Moderation.tests.js);
+      // what stays refused is everybody else.
       callAs(user, 'Clubs.insert', club);
       const made = Clubs.collection.findOne({ name: 'Stamped' });
-      assert.equal(errorFrom(() => callAs(user, 'Clubs.update', made._id, {
+      assert.equal(errorFrom(() => callAs(makeUser(), 'Clubs.update', made._id, {
         name: 'Hijacked', owner: 'x', description: 'x', location: 'x', meetingTime: 'x',
       })), 'not-authorized');
     });

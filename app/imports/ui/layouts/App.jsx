@@ -101,8 +101,8 @@ const App = () => {
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/profilez" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
-              <Route path="/edit/:_id" element={<AdminProtectedRoute ready={ready}><EditClubAdmin /></AdminProtectedRoute>} />
-              <Route path="/edit/event/:_id" element={<AdminProtectedRoute ready={ready}><EditEventAdmin /></AdminProtectedRoute>} />
+              <Route path="/edit/:_id" element={<ProtectedRoute><EditClubAdmin /></ProtectedRoute>} />
+              <Route path="/edit/event/:_id" element={<ProtectedRoute><EditEventAdmin /></ProtectedRoute>} />
               <Route path="/user-events" element={<ProtectedRoute><MyEvents /></ProtectedRoute>} />
               {/* Was a generic "About" panel with no inbound link anywhere in the
                   app. Kept as a redirect so an old bookmark lands somewhere real

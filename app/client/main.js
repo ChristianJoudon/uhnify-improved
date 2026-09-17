@@ -5,6 +5,7 @@ import '../imports/startup/client/Startup';
 // (latency compensation): writes appear in minimongo instantly instead of
 // waiting for the server round-trip.
 import '../imports/startup/both/Methods';
+import '../imports/api/moderation/ModerationMethods';
 
 // The audit collection, so an administrator's screen has somewhere to receive
 // the trail. Defining it here does not publish anything — the publication is

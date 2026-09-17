@@ -4,6 +4,7 @@ import { Roles } from 'meteor/alanning:roles';
 import { Container } from 'react-bootstrap';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
+import swal from 'sweetalert';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import PosterArt from '../components/PosterArt';
@@ -100,6 +101,22 @@ const ManageEvent = () => {
   const topic = topicForEvent(event);
   const hostName = event.hostName || host?.name || '';
   const goingCount = event.goingCount || 0;
+  const cancelled = event.cancellationStatus === 'canceled';
+  const toggleCancelled = () => {
+    const ask = cancelled
+      ? Promise.resolve(true)
+      : swal({
+        title: 'Cancel this event?',
+        text: 'It comes off the walls and says Cancelled for everyone who was going. You can put it back on.',
+        buttons: ['Keep it on', 'Cancel the event'],
+        dangerMode: true,
+      });
+    ask.then(yes => yes && Meteor.call('Events.cancel', event._id, !cancelled, error => {
+      if (error) {
+        swal('Not changed', error.reason || error.message, 'error');
+      }
+    }));
+  };
   // Two reasons a lock can have, and the server words them differently too. A
   // sensitive listing gets the standard line; a meeting of a group that chose
   // to be anonymous is told it is the group's choice, because its owner can
@@ -115,6 +132,12 @@ const ManageEvent = () => {
         title={event.title}
         action={<Link to="/user-events" className="btn btn-soft-primary">My events</Link>}
       />
+
+      {event.moderation?.reason && (
+        <p className="moderation-note" role="status">
+          This event was taken down: {event.moderation.reason}
+        </p>
+      )}
 
       <div className="create-layout">
         <aside className="create-preview">
@@ -153,6 +176,19 @@ const ManageEvent = () => {
               onRetry={retry}
               onChange={change}
             />
+          </section>
+
+          <section className="form-block" aria-labelledby="manage-event-change">
+            <h3 id="manage-event-change">Change it</h3>
+            <div className="moderation-row-actions">
+              <Link className="btn btn-soft-primary" to={`/edit/event/${event._id}`}>Edit details</Link>
+              {/* Called off, not deleted: the people who said they were going
+                  are still shown it, saying so. */}
+              <button type="button" className="btn btn-outline-danger-soft" onClick={toggleCancelled}>
+                {cancelled ? 'Put it back on' : 'Cancel this event'}
+              </button>
+            </div>
+            {cancelled && <p className="panel-empty">Cancelled. It is off the walls, and marked for everyone who was going.</p>}
           </section>
 
           <section className="form-block" aria-labelledby="manage-event-going">

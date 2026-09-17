@@ -34,10 +34,11 @@ import {
   syncFriendActivityForEvent,
   syncFriendActivityForUser,
 } from '../../api/privacy/friendActivitySync';
-import { anonymousMemberRows, nameNewProfile } from '../../api/privacy/anonymousNames';
+import { anonymousMemberRows, anonymousNameFor, memberHandle, nameNewProfile } from '../../api/privacy/anonymousNames';
+import { ClubBlocks, isBlockedFrom } from '../../api/moderation/Moderation';
 import { EMAIL_SHAPE, LIST_MAX_ENTRIES, TEXT_LIMITS } from '../../api/listing/limits';
 import { checkImage, insertWithPhoto, photoFieldFor, removePhoto } from '../../api/photos/photoStore';
-import { OWNERSHIP_FIELDS, accountNameOf, canManageListing } from '../../api/listing/ownership';
+import { OWNERSHIP_FIELDS, accountNameOf, canManageListing, isListingOwner } from '../../api/listing/ownership';
 import { isOpenToAll } from '../../api/listing/audience';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../../ui/utilities/topics';
 
@@ -372,6 +373,14 @@ const isMemberOf = (userId, clubIds) => clubIds.length > 0 && Boolean(ProfileClu
 /** Said by both methods that can put a private group's event on the wall. */
 const PRIVATE_HOST_REASON = 'Events for a private group stay private unless the person who runs it says otherwise.';
 
+/** The groups a listing answers to: itself, or the groups that host it. */
+const hostGroupIdsOf = (kind, listing) => (kind === 'club' ? [listing._id] : Clubs.collection.find({
+  $or: [
+    { _id: { $in: EventClubs.collection.find({ eventId: listing._id }, { fields: { clubId: 1 } }).map(link => link.clubId) } },
+    ...(listing.eventID ? [{ clubID: listing.eventID }] : []),
+  ],
+}, { fields: { _id: 1 } }).map(group => group._id));
+
 /**
  * Whether a listing is this person's to swipe on.
  *
@@ -385,6 +394,12 @@ const PRIVATE_HOST_REASON = 'Events for a private group stay private unless the 
  * of the answer is not the answer.
  */
 const mayTakePartIn = (userId, kind, listing) => {
+  // Asked first, and of public listings too: a group that has shut its door on
+  // somebody has shut it on its events as well, and "public" is not a way back
+  // in. The caller answers 'not-found' either way, so the person is not told.
+  if (Meteor.isServer && isBlockedFrom(userId, hostGroupIdsOf(kind, listing))) {
+    return false;
+  }
   if (isOpenToAll(listing) || canManageListing(userId, listing)) {
     return true;
   }
@@ -447,6 +462,12 @@ const takesJoinRequests = club => club.approveMembers === true && !isAnonymousLi
  * and has nothing to gain from guessing at its own.
  */
 const joinClub = (userId, club, verifiedContext = {}) => {
+  // Every door leads here — Join, an invite link, an approved request — so
+  // this is the one place a block has to stand. The words are deliberately
+  // plain: the person is not told they were blocked, or by whom.
+  if (Meteor.isServer && isBlockedFrom(userId, [club._id])) {
+    throw new Meteor.Error('not-allowed', 'You cannot join this group.');
+  }
   const choice = { sharing: sharesFriendActivity(userId) };
   const existing = ProfileClubs.collection.findOne({ userId, clubId: club._id });
   if (existing) {
@@ -1010,7 +1031,16 @@ Meteor.methods({
       tags: Match.Optional([String]),
       schedule: Match.Optional(Object),
     });
-    requireAdmin(this.userId);
+    // Whoever runs the group, or an administrator. It was administrators only,
+    // which left the person who posted a group unable to fix its typo. Judged
+    // on the server: a browser is never sent `owner`, so a stub cannot know.
+    requireLoggedIn(this.userId);
+    const mayReassign = Roles.userIsInRole(this.userId, 'admin');
+    const standingOwner = Meteor.isServer ? Clubs.collection.findOne(clubId, { fields: OWNERSHIP_FIELDS }) : null;
+    // A group that is not there is an administrator's no-op, as it always was.
+    if (Meteor.isServer && !(standingOwner ? canManageListing(this.userId, standingOwner) : mayReassign)) {
+      throw new Meteor.Error('not-authorized', 'Only the person who runs this group can change it.');
+    }
     const meetingTime = checkText(clubData.meetingTime, 'meetingTime', 'Meeting time', { required: true });
 
     const categories = normalizeCategories(clubData.categories);
@@ -1021,7 +1051,11 @@ Meteor.methods({
       $set: {
         name: checkText(clubData.name, 'name', 'Name', { required: true }),
         // An account name, which is an email address, so it shares that ceiling.
-        owner: checkText(clubData.owner, 'email', 'Owner', { required: true }),
+        // Handing a group to somebody else is an administrator's decision; an
+        // owner's edit keeps the owner it had, whatever the form sent.
+        owner: mayReassign || !standingOwner
+          ? checkText(clubData.owner, 'email', 'Owner', { required: true })
+          : standingOwner.owner,
         description: checkText(clubData.description, 'description', 'Description'),
         location: checkText(clubData.location, 'location', 'Location', { required: true }),
         meetingTime,
@@ -1358,11 +1392,17 @@ Meteor.methods({
       email: Match.Optional(String),
       image: Match.Optional(String),
     });
-    requireAdmin(this.userId);
+    requireLoggedIn(this.userId);
     const contactEmail = contactEmailOf(eventData.email);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const existingEvent = Events.collection.findOne(eventId);
+    // The person who posted it, whoever runs the group it names, or an
+    // administrator — the same people 'Events.setPrivacy' answers to.
+    const allowed = existingEvent ? canManageEvent(this.userId, existingEvent) : Roles.userIsInRole(this.userId, 'admin');
+    if (Meteor.isServer && !allowed) {
+      throw new Meteor.Error('not-authorized', 'Only the person who posted this event can change it.');
+    }
     // As an RSVP to it is judged NOW, hosts and all, before the edit moves it
     // to another: see followEventPrivacy.
     const judgedBefore = Meteor.isServer ? eventWithHostSignals(existingEvent) : undefined;
@@ -1444,6 +1484,29 @@ Meteor.methods({
    * Sent nothing, it writes nothing and says how things stand. Not simulated,
    * for the reasons 'Clubs.setPrivacy' gives.
    */
+  /**
+   * Call an event off, or put it back on.
+   *
+   * Not a delete. People said they were going, and a listing that vanishes
+   * tells them nothing; one that says Cancelled tells them not to drive to
+   * Hanalei. It stays wherever it already was — a Going list, the calendar,
+   * its own sheet — marked, and leaves the deck and the walls, which are for
+   * finding something to do.
+   */
+  'Events.cancel'(eventId, canceled = true) {
+    check(eventId, String);
+    check(canceled, Boolean);
+    requireLoggedIn(this.userId);
+    const event = Events.collection.findOne(eventId);
+    if (Meteor.isServer && !canManageEvent(this.userId, event)) {
+      throw new Meteor.Error('not-authorized', 'Only the person who posted this event can cancel it.');
+    }
+    Events.collection.update(eventId, {
+      $set: { cancellationStatus: canceled ? 'canceled' : 'scheduled', updatedAt: now() },
+    });
+    return canceled ? 'canceled' : 'scheduled';
+  },
+
   'Events.setPrivacy'(eventId, settings) {
     check(eventId, String);
     check(settings, {
@@ -1856,6 +1919,79 @@ Meteor.methods({
    * Works on a public group too. A group that asks first may still want a
    * link that lets its own people straight in.
    */
+  /**
+   * Shut the group's door on one person.
+   *
+   * The owner points at a row of the member list: an account for a named
+   * member, the opaque `handle` for one shown under a made-up name — so
+   * somebody can be put out of an anonymous group without anybody learning who
+   * they are. The handle is matched on the server against the people actually
+   * in the group; a browser cannot turn it into an account.
+   *
+   * They are taken out, cannot come back by any door (see joinClub), cannot
+   * say Going to the group's events (see mayTakePartIn), and are not told.
+   */
+  'Clubs.block'(clubId, target) {
+    check(clubId, String);
+    check(target, Match.OneOf({ userId: String }, { handle: String }));
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return null;
+    }
+    const club = Clubs.collection.findOne(clubId, { fields: OWNERSHIP_FIELDS });
+    if (!canManageListing(this.userId, club)) {
+      throw new Meteor.Error('not-authorized', 'Only the person who runs this group can block someone from it.');
+    }
+    const userId = target.userId || ProfileClubs.collection.find({ clubId }, { fields: { userId: 1 } })
+      .map(membership => membership.userId)
+      .find(memberId => memberHandle(clubId, memberId) === target.handle);
+    if (!userId) {
+      throw new Meteor.Error('not-found', 'That person is not in this group any more.');
+    }
+    if (userId === this.userId || isListingOwner(userId, club)) {
+      throw new Meteor.Error('not-allowed', 'The person who runs a group cannot be blocked from it.');
+    }
+    if (!ClubBlocks.collection.findOne({ clubId, userId })) {
+      ClubBlocks.collection.insert({ clubId, userId, createdAt: now(), createdBy: this.userId });
+    }
+    ClubJoinRequests.collection.remove({ clubId, userId });
+    leaveClub(userId, clubId, {});
+    return true;
+  },
+
+  'Clubs.unblock'(clubId, blockId) {
+    check(clubId, String);
+    check(blockId, String);
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return null;
+    }
+    const club = Clubs.collection.findOne(clubId, { fields: OWNERSHIP_FIELDS });
+    if (!canManageListing(this.userId, club)) {
+      throw new Meteor.Error('not-authorized', 'Only the person who runs this group can do that.');
+    }
+    return ClubBlocks.collection.remove({ _id: blockId, clubId });
+  },
+
+  /** Who the door is shut on, under the name the group knows them by. */
+  'Clubs.blocks'(clubId) {
+    check(clubId, String);
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return [];
+    }
+    const club = Clubs.collection.findOne(clubId, { fields: { ...LISTING_PRIVACY_FIELDS, ...OWNERSHIP_FIELDS } });
+    if (!canManageListing(this.userId, club)) {
+      throw new Meteor.Error('not-authorized', 'Only the person who runs this group can see that.');
+    }
+    const madeUp = isAnonymousListing(club);
+    return ClubBlocks.collection.find({ clubId }, { sort: { createdAt: -1 } }).map(block => {
+      const profile = madeUp ? null : Profiles.collection.findOne({ userId: block.userId }, { fields: { firstName: 1, lastName: 1 } });
+      const named = profile && `${profile.firstName || ''} ${profile.lastName || ''}`.trim();
+      return { _id: block._id, label: named || anonymousNameFor(block.userId), createdAt: block.createdAt };
+    });
+  },
+
   'clubs.rotateInvite'(clubId) {
     check(clubId, String);
     requireLoggedIn(this.userId);

@@ -7,7 +7,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import swal from 'sweetalert';
 import { Clubs } from '../../api/club/Club';
-import { Events } from '../../api/events/Events';
+import { Events, NOT_CALLED_OFF } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
@@ -257,7 +257,7 @@ const Discover = () => {
     const profile = Profiles.collection.findOne({ userId });
     return {
       ready: subs.every(sub => sub.ready()),
-      events: Events.collection.find({}).fetch(),
+      events: Events.collection.find(NOT_CALLED_OFF).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
       swipes: EventSwipes.collection.find({ userId }).fetch(),
       joinedIds: new Set(ProfileClubs.collection.find({ userId }).map(membership => membership.clubId)),

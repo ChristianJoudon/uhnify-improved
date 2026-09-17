@@ -7,7 +7,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import { GeoAlt, GeoAltFill, Search, X } from 'react-bootstrap-icons';
 import { Clubs } from '../../api/club/Club';
-import { Events } from '../../api/events/Events';
+import { Events, NOT_CALLED_OFF } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
@@ -92,7 +92,7 @@ const ClubFinder = () => {
       .map(edge => (edge.requesterId === Meteor.userId() ? edge.receiverId : edge.requesterId));
     return {
       clubs: Clubs.collection.find({}).fetch(),
-      events: Events.collection.find({}).fetch(),
+      events: Events.collection.find(NOT_CALLED_OFF).fetch(),
       joinedClubIds: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch().map(membership => membership.clubId),
       goingIds: new Set(EventSwipes.collection
         .find({ userId: Meteor.userId(), decision: 'going' }).map(swipe => swipe.eventId)),

@@ -107,6 +107,9 @@ class EventsCollection {
        * privacy/FriendActivityPrivacy.js.
        */
       anonymousUntil: { type: Date, optional: true },
+      /** Left by a takedown — { takenDownAt, takenDownBy, reason } — so whoever
+          posted it reads why it is down instead of finding it gone. */
+      moderation: { type: Object, optional: true, blackbox: true },
       /**
        * How many people said Going, kept by the server on every swipe, undo
        * and removal. Stored for the same reason a group's memberCount is: an
@@ -180,3 +183,11 @@ class EventsCollection {
 }
 
 export const Events = new EventsCollection();
+
+/**
+ * For the places a person goes to FIND something to do — the deck, the walls,
+ * Nearby, the home page. A called-off event is not something to do. It stays
+ * on the calendar, a Going list and its own sheet, marked, because the people
+ * who planned on it need to be told.
+ */
+export const NOT_CALLED_OFF = Object.freeze({ cancellationStatus: { $ne: 'canceled' } });

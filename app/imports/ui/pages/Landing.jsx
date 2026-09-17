@@ -3,7 +3,7 @@ import { Meteor } from 'meteor/meteor';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
-import { Events } from '../../api/events/Events';
+import { Events, NOT_CALLED_OFF } from '../../api/events/Events';
 import EventPoster from '../components/EventPoster';
 import { sortByDate } from '../utilities/helpers';
 import { KAUAI, milesLabel, milesTo } from '../utilities/geo';
@@ -24,7 +24,7 @@ const Landing = () => {
 
   const { events } = useTracker(() => {
     Meteor.subscribe(Events.userPublicationName);
-    return { events: Events.collection.find({}).fetch() };
+    return { events: Events.collection.find(NOT_CALLED_OFF).fetch() };
   }, []);
 
   /**

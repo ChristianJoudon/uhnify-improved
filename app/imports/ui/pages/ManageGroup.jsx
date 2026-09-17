@@ -61,6 +61,8 @@ const ManageGroup = () => {
   const [members, setMembers] = useState(null);
   const [membersAsOf, setMembersAsOf] = useState(null);
   const [membersTrouble, setMembersTrouble] = useState('');
+  const [blocks, setBlocks] = useState([]);
+  const [blocksAsOf, setBlocksAsOf] = useState(0);
 
   const { ready, club, requests } = useTracker(() => {
     const userId = Meteor.userId();
@@ -155,6 +157,34 @@ const ManageGroup = () => {
   }, [anonymous]);
 
   useEffect(() => () => clearTimeout(copiedTimer.current), []);
+
+  // Asked again whenever a block is made or lifted, and when the count moves.
+  useEffect(() => {
+    if (!club?._id) {
+      return undefined;
+    }
+    let active = true;
+    Meteor.call('Clubs.blocks', club._id, (error, list) => active && setBlocks(error ? [] : list));
+    return () => {
+      active = false;
+    };
+  }, [club?._id, blocksAsOf, memberCount]);
+
+  const block = member => swal({
+    title: `Block ${member.handle ? (member.anonymousName || 'this person') : nameOf(member)}?`,
+    text: 'They are taken out of the group and cannot come back or say Going to its events. They are not told.',
+    buttons: ['Not now', 'Block'],
+    dangerMode: true,
+  }).then(yes => yes && Meteor.call(
+    'Clubs.block',
+    club._id,
+    member.handle ? { handle: member.handle } : { userId: member.userId },
+    error => (error ? swal('Not blocked', error.reason || error.message, 'error') : setBlocksAsOf(Date.now())),
+  ));
+
+  const unblock = blocked => Meteor.call('Clubs.unblock', club._id, blocked._id, error => (
+    error ? swal('Not changed', error.reason || error.message, 'error') : setBlocksAsOf(Date.now())
+  ));
 
   if (!ready) {
     return <LoadingSpinner />;
@@ -275,7 +305,12 @@ const ManageGroup = () => {
       <PageHead
         eyebrow="Manage group"
         title={club.name}
-        action={<Link to="/saved" className="btn btn-soft-primary">My groups</Link>}
+        action={(
+          <span className="moderation-row-actions">
+            <Link to={`/edit/${club._id}`} className="btn btn-soft-primary">Edit details</Link>
+            <Link to="/saved" className="btn btn-soft-primary">My groups</Link>
+          </span>
+        )}
       />
 
       <div className="create-layout">
@@ -407,6 +442,18 @@ const ManageGroup = () => {
                   <div className="friend-name">{member.handle ? (member.anonymousName || 'No name yet') : nameOf(member)}</div>
                   {member.joinedAt && <div className="friend-sub">Joined {formatShortDate(member.joinedAt)}</div>}
                 </div>
+                {/* By account for a named member, by the opaque handle for one
+                    under a made-up name: the server finds who that is, and this
+                    page never does. */}
+                {member.userId !== Meteor.userId() && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger-soft ms-auto"
+                    onClick={() => block(member)}
+                  >
+                    Block
+                  </button>
+                )}
               </div>
             ))}
             {unlisted > 0 && (
@@ -415,6 +462,24 @@ const ManageGroup = () => {
               </p>
             )}
           </section>
+
+          {blocks.length > 0 && (
+            <section className="form-block" aria-labelledby="manage-group-blocked">
+              <h3 id="manage-group-blocked">Blocked</h3>
+              <p className="field-hint">They cannot join or say Going to this group&apos;s events. They are not told.</p>
+              {blocks.map(blocked => (
+                <div key={blocked._id} className="friend-row">
+                  <div>
+                    <div className="friend-name">{blocked.label}</div>
+                    <div className="friend-sub">Blocked {formatShortDate(blocked.createdAt)}</div>
+                  </div>
+                  <button type="button" className="btn btn-soft-primary ms-auto" onClick={() => unblock(blocked)}>
+                    Unblock
+                  </button>
+                </div>
+              ))}
+            </section>
+          )}
         </div>
       </div>
     </Container>

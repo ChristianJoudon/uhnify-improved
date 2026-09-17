@@ -16,7 +16,7 @@ import {
   PlusCircle,
   XLg,
 } from 'react-bootstrap-icons';
-import { Events } from '../../api/events/Events';
+import { Events, NOT_CALLED_OFF } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
@@ -98,7 +98,7 @@ const DiscoverEvents = () => {
     const memberSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
     return {
       ready: eventsSub.ready() && swipesSub.ready() && clubsSub.ready() && memberSub.ready(),
-      events: Events.collection.find({}).fetch(),
+      events: Events.collection.find(NOT_CALLED_OFF).fetch(),
       // Scoped to the signed-in user: other pages may subscribe friends' swipes into this collection.
       swipes: EventSwipes.collection.find({ userId: Meteor.userId() }).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
