@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import { assert } from 'chai';
 import { Meteor } from 'meteor/meteor';
-import { AuditLog } from './AuditLog';
+import { AuditLog, ensureAuditRetention } from './AuditLog';
 import { installAuditTrail } from '../../startup/server/auditTrail';
 import { callAs, errorFrom, makeClub, makeUser, resetAll } from '../../startup/server/testFixtures';
 
@@ -96,6 +96,29 @@ if (Meteor.isServer) {
       assert.isBelow(entry.summary.length, 320, 'the summary is bounded');
       // It still says an image was involved, which is the auditable fact.
       assert.include(entry.summary, 'picture');
+    });
+
+    /**
+     * Append-only used to mean forever. Asserted on the index itself — the
+     * deleting is MongoDB's TTL monitor, which runs once a minute and is not
+     * ours to test.
+     */
+    it('expires entries on the configured schedule, and follows the setting when it changes', async function () {
+      const original = Meteor.settings.retention;
+      const expiry = async () => (await AuditLog.collection.rawCollection().indexes())
+        .find(index => index.key.at === 1)?.expireAfterSeconds;
+      try {
+        delete Meteor.settings.retention;
+        await ensureAuditRetention();
+        assert.equal(await expiry(), 365 * 24 * 60 * 60);
+
+        Meteor.settings.retention = { auditDays: 30 };
+        await ensureAuditRetention();
+        assert.equal(await expiry(), 30 * 24 * 60 * 60);
+      } finally {
+        Meteor.settings.retention = original;
+        await ensureAuditRetention();
+      }
     });
 
     it('keeps entries in the order they happened', function () {

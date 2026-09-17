@@ -3,18 +3,18 @@ import { Random } from 'meteor/random';
 import {
   EventAttendances,
   EventRSVPs,
+  RETIRED_ACTIONS,
   RecommendationGraphEdges,
   RecommendationImpressions,
   RecommendationInteractions,
   UserItemStates,
 } from './RecommendationData';
+import { interactionRecordingEnabled } from './recommendationSettings';
 
 const GRAPH_RELATION_FOR_ACTION = {
   opened: 'opened',
   flipped: 'opened',
-  interested: 'interested',
   passed: 'passed',
-  saved: 'saved',
   rsvp_going: 'rsvp_going',
   attendance_self_reported: 'attended',
   attendance_verified: 'attended',
@@ -25,9 +25,7 @@ const GRAPH_RELATION_FOR_ACTION = {
 const GRAPH_WEIGHT_FOR_ACTION = {
   opened: 0.25,
   flipped: 0.25,
-  interested: 0.7,
   passed: -0.25,
-  saved: 0.9,
   rsvp_going: 1,
   attendance_self_reported: 1,
   attendance_verified: 1,
@@ -35,14 +33,38 @@ const GRAPH_WEIGHT_FOR_ACTION = {
   followed_group: 0.75,
 };
 
+/**
+ * The relations an action brings to an end.
+ *
+ * An edge used to be written and never closed, so the graph went on saying
+ * "is going to" about a plan the person had cancelled and "joined" about a
+ * group they had left. The ranker scores a direct edge to a candidate as the
+ * strongest evidence it has, which put the event somebody had just said "Not
+ * going" to — and the group they had just left — at the very top of their
+ * deck. 'interested' is here because that is the relation a Going swipe was
+ * stored under before the rename, and cancelling it has to reach those too.
+ */
+const RELATIONS_ENDED_BY_ACTION = {
+  rsvp_canceled: ['rsvp_going', 'interested'],
+  left_group: ['joined_group'],
+  unfollowed_group: ['followed_group'],
+};
+
+/**
+ * Going is the deck's positive decision, and it lives in `rsvpStatus`, not in
+ * `interestState` — a second field saying 'interested' would be the old name
+ * for the same gesture coming back. What both RSVP actions do to
+ * `interestState` is clear it. A person can pass on an event and later say
+ * they are going; without the reset the state row says passed AND going, and
+ * whatever reads it next has to guess which one is current. Cancelling resets
+ * it for the same reason an undo does: the card is undecided again and may be
+ * offered again.
+ */
 const STATE_PATCHES = {
-  interested: { interestState: 'interested' },
   passed: { interestState: 'passed' },
-  saved: { saved: true },
-  unsaved: { saved: false },
-  rsvp_going: { rsvpStatus: 'going' },
+  rsvp_going: { rsvpStatus: 'going', interestState: 'neutral' },
   rsvp_maybe: { rsvpStatus: 'maybe' },
-  rsvp_canceled: { rsvpStatus: 'canceled' },
+  rsvp_canceled: { rsvpStatus: 'canceled', interestState: 'neutral' },
   attendance_self_reported: { attendanceStatus: 'self_reported' },
   attendance_verified: { attendanceStatus: 'verified' },
   attendance_removed: { attendanceStatus: 'none' },
@@ -92,6 +114,22 @@ const writeCurrentState = interaction => {
       [signalField]: 1,
     },
   });
+};
+
+const endGraphEdges = interaction => {
+  const relations = RELATIONS_ENDED_BY_ACTION[interaction.action];
+  if (!relations) {
+    return;
+  }
+  const endedAt = interaction.occurredAt || new Date();
+  RecommendationGraphEdges.collection.update({
+    fromType: 'user',
+    fromId: interaction.userId,
+    toType: interaction.entityType,
+    toId: interaction.entityId,
+    relation: { $in: relations },
+    validTo: { $exists: false },
+  }, { $set: { validTo: endedAt, endedAt } }, { multi: true });
 };
 
 const writeGraphEdge = interaction => {
@@ -148,10 +186,21 @@ const writeImpression = interaction => {
   }));
 };
 
+/**
+ * The one write here that is not behaviour logging.
+ *
+ * Whether somebody is going to an event, and whether they went, is a fact
+ * about their plans that the product shows back to them. It is kept even when
+ * `recordInteractions` is off: that switch stops MatchBook taking notes about
+ * people, and must not make it forget what they told it.
+ */
 const writeEventResponse = interaction => {
   if (interaction.entityType !== 'event') {
     return;
   }
+  // Both collections require `occurredAt`, and a backfilled swipe can predate
+  // the field it would be read from. The log leaves an unknown time unknown;
+  // these rows cannot, so they take the time MatchBook learned of the plan.
   const now = new Date();
   const rsvpStatus = {
     rsvp_going: 'going',
@@ -164,7 +213,7 @@ const writeEventResponse = interaction => {
         status: rsvpStatus,
         source: interaction.source,
         requestId: interaction.requestId,
-        occurredAt: interaction.occurredAt,
+        occurredAt: interaction.occurredAt || now,
         updatedAt: now,
       }),
       $setOnInsert: { createdAt: now },
@@ -181,7 +230,7 @@ const writeEventResponse = interaction => {
         status: attendanceStatus,
         verificationSource: interaction.context?.verificationSource,
         requestId: interaction.requestId,
-        occurredAt: interaction.occurredAt,
+        occurredAt: interaction.occurredAt || now,
         metadata: interaction.context?.attendanceMetadata,
         updatedAt: now,
       }),
@@ -193,6 +242,12 @@ const writeEventResponse = interaction => {
 /**
  * Server-owned append-only write used by both the new API and compatibility
  * hooks in the existing swipe, group, and friend methods.
+ *
+ * Returns the interaction's id, or null when nothing was logged — on the
+ * client, and whenever `recommendations.recordInteractions` is false. What is
+ * not logged then is not logged later either: nothing replays the gap. A retired
+ * action is refused outright, so a caller still using the old name for a
+ * gesture hears about it instead of quietly splitting one signal in two.
  */
 export const recordRecommendationInteraction = ({
   userId,
@@ -217,7 +272,32 @@ export const recordRecommendationInteraction = ({
   if (!Meteor.isServer) {
     return null;
   }
+  if (RETIRED_ACTIONS.includes(action)) {
+    throw new Meteor.Error('retired-action', `"${action}" is kept as history and is no longer recorded.`);
+  }
   const normalizedOccurredAt = safeDate(occurredAt);
+  if (!interactionRecordingEnabled()) {
+    // Two things still happen with recording off. The RSVP or attendance is
+    // kept, because it is what the person told the product. And an edge this
+    // action brings to an end is ended: that adds nothing about the person, it
+    // stops a note already taken from going on being wrong. Without it a plan
+    // cancelled, or a group left, while recording was paused kept its weight-1
+    // edge for good, and once recording was back the ranker went on putting
+    // that card first.
+    const unlogged = compact({
+      userId,
+      entityType,
+      entityId,
+      action,
+      occurredAt: normalizedOccurredAt,
+      requestId,
+      context,
+      source,
+    });
+    endGraphEdges(unlogged);
+    writeEventResponse(unlogged);
+    return null;
+  }
   const eventId = clientEventId || `${source}:${Random.id()}`;
   const existing = RecommendationInteractions.collection.findOne({ userId, clientEventId: eventId });
   if (existing) {
@@ -257,6 +337,7 @@ export const recordRecommendationInteraction = ({
   }
   const interaction = { ...document, _id: interactionId };
   writeCurrentState(interaction);
+  endGraphEdges(interaction);
   writeGraphEdge(interaction);
   writeImpression(interaction);
   writeEventResponse(interaction);

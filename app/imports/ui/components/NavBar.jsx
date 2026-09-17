@@ -39,14 +39,17 @@ const NavBar = () => {
             {currentUser && <Nav.Link id="nav-match" as={NavLink} to="/discover-events">Match</Nav.Link>}
             {currentUser && <Nav.Link id="browse-clubs" as={NavLink} to="/search-clubs">Nearby</Nav.Link>}
             {currentUser && <Nav.Link id="nav-agenda" as={NavLink} to="/upcoming-events">Calendar</Nav.Link>}
-            {currentUser && <Nav.Link id="my-clubs" as={NavLink} to="/saved">Saved</Nav.Link>}
+            {/* The events a person said yes to, one tap from anywhere. This slot
+                used to say "Saved" and open a page of groups, while the events
+                themselves were two taps deep under "Start something" — a menu
+                about making things. So the item named for what you chose showed
+                none of it. Going is the list; the menu below only starts things. */}
+            {currentUser && <Nav.Link id="nav-going" as={NavLink} to="/user-events">Going</Nav.Link>}
 
             {currentUser && (
               <NavDropdown id="club-drop" title="Start something">
                 <NavDropdown.Item id="add-clubs" as={NavLink} to="/create-club">Start a group</NavDropdown.Item>
                 <NavDropdown.Item id="create-event" as={NavLink} to="/create-event">Start an event</NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item id="my-events" as={NavLink} to="/user-events">My events</NavDropdown.Item>
               </NavDropdown>
             )}
 
@@ -82,6 +85,9 @@ const NavBar = () => {
               {currentUser ? (
                 <>
                   <NavDropdown.Item id="profile" as={NavLink} to="/profile">Profile</NavDropdown.Item>
+                  {/* Groups are part of who you are here rather than somewhere
+                      you are headed tonight, so they sit with the profile. */}
+                  <NavDropdown.Item id="my-clubs" as={NavLink} to="/saved">My groups</NavDropdown.Item>
                   <NavDropdown.Item id="nav-calendar-events" as={NavLink} to="/agenda">Agenda</NavDropdown.Item>
                   <NavDropdown.Item id="nav-customize" as={NavLink} to="/settings"><Gear /> Customize</NavDropdown.Item>
                   <NavDropdown.Divider />

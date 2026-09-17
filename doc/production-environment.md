@@ -24,6 +24,39 @@ with that file is create `admin@foo.com / changeme` as the administrator.
 | `HTTP_FORWARDED_COUNT` | `1` | Exactly one reverse proxy stands between the internet and the process, so trust exactly one `X-Forwarded-For` hop. **Without it every visitor is the proxy's address**, and the two per-address rate limits below become site-wide: the thirty-first sign-in on the whole site within a minute is refused, and because a refused session resume makes the browser discard its stored token, that visitor is logged out rather than delayed. With a value larger than the real number of proxies, a visitor can forge the address instead and the limits stop meaning anything. |
 | `NODE_ENV` | `production` | What the guard, the minifier and several packages key their production behaviour on. |
 
+## Settings an operator can change
+
+Four values in the settings file (`METEOR_SETTINGS` or `--settings`), all
+optional. Each is read when it is used, so a change takes effect at the next
+restart and nothing has to be rebuilt. `app/.deploy/settings.sample.json`
+carries them at their defaults.
+
+```json
+"recommendations": { "enabled": true, "recordInteractions": true },
+"retention": { "behaviourDays": 548, "auditDays": 365 }
+```
+
+| Setting | Absent means | What it does |
+| --- | --- | --- |
+| `recommendations.enabled` | `true` | **The launch-day escape hatch.** Set to `false` and restart, and `recommendations.get` stops ranking: every request gets the deterministic baseline (upcoming, complete, recently added), computed from the listings alone without reading a single recommendation collection. The response says so — `fallbackUsed: true`, `fallbackReason: "disabled"` — and it is the same shape the pages already receive when ranking throws, so the feed and the deck keep working and nothing needs redeploying. Use it if ranking is slow, wrong, or the suspect in an incident. The startup projection still runs: the topics, venues and friend-activity privacy it writes are read by the rest of the product. |
+| `recommendations.recordInteractions` | `true` | Set to `false` to stop the behaviour log: no interactions, impressions, item states, behaviour graph edges or request rows are written, and because a response then carries no request id the pages stop sending impressions, opens and flips. **RSVPs and attendance are still kept** — whether someone is going is what they told the product, not a note taken about them — and the graph edge of a plan that is cancelled or a group that is left is still ended, so a note already taken does not go on being wrong. Independent of `enabled`: recommendations can keep ranking on the history they have while recording is paused. **What people do while this is off is never logged afterwards.** The one-time behaviour backfill is for swipes and joins older than the log: it waits for a boot with recording on, runs once, and does not come back to fill a later pause. The ranker will not know about passes, Going or cancellations made in that window; an event someone stopped going to during it stays out of their deck, because the last thing the log heard was Going. Use it for an incident, not as a standing mode. |
+| `retention.behaviourDays` | `548` (eighteen months) | How long what a person did is kept: `RecommendationInteractions` and `RecommendationImpressions` (from when written), `RecommendationUserItemStates`, `EventRSVPs` and `EventAttendances` (from their last change), `RecommendationRequests`, and the graph edges written from an interaction. Structural graph edges — topic, venue, host, friendship — never expire; the index is partial on `sourceInteractionId` for exactly that reason. Swipes and memberships themselves are product data and are not touched. |
+| `retention.auditDays` | `365` | How long an `AuditLogCollection` entry is kept after it was written. |
+
+Retention is enforced by MongoDB TTL indexes, built at startup by
+`app/imports/api/retention/retention.js`; the TTL monitor deletes once a minute,
+so a shortened limit removes older rows within a minute or two of the restart
+and they cannot be got back. An existing index is moved to a new limit with
+`collMod` rather than recreated. A value that is not a number of days, 1 or
+more, is ignored in favour of the default and logged as `[retention] …`; a limit
+that could not be applied is logged as `[retention] <collection> has NO expiry`.
+
+Every start logs `[recommendations] scaffold ready in N ms (E events projected)`.
+That work happens before the server accepts a connection, so N is part of every
+deploy's downtime. The first start of a build that changes the topic or venue
+tables projects every event (about four seconds on 1,242 events); any other
+start projects only new and edited ones and should be well under a second.
+
 ## Rate limits in force
 
 Set in `app/imports/startup/server/rateLimits.js`, plus one rule the

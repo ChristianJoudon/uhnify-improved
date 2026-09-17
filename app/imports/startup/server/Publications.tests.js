@@ -9,6 +9,7 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
 import { callAs, makeClub, makeEvent, makeUser, resetAll } from './testFixtures';
 import {
+  friendActivityPublication,
   friendClubActivitySelector,
   friendEventActivitySelector,
 } from './Publications';
@@ -115,17 +116,21 @@ if (Meteor.isServer) {
       docs.forEach(doc => assert.isUndefined(doc.interests));
     });
 
-    it('excludes support joins and saves from friend-activity selectors', function () {
+    // In each of the next three the friend has turned sharing on first. It is
+    // off by default, and with it off every one of these selectors is empty
+    // for a reason that has nothing to do with what the test is about.
+    it('excludes support joins and RSVPs from friend-activity selectors', function () {
       const friendId = makeUser();
+      callAs(friendId, 'Profiles.setFriendActivitySharing', true);
       const ordinaryClubId = makeClub({ categories: ['community'] });
       const supportClubId = makeClub({ categories: ['support_group'] });
       const ordinaryEventId = makeEvent({ categories: ['community'] });
       const supportEventId = makeEvent({ categories: ['support_group'] });
       callAs(friendId, 'profileClubs.add', ordinaryClubId);
       callAs(friendId, 'profileClubs.add', supportClubId);
-      callAs(friendId, 'eventSwipes.record', ordinaryEventId, 'interested');
-      callAs(friendId, 'eventSwipes.record', supportEventId, 'interested');
-      callAs(friendId, 'eventSwipes.record', supportClubId, 'interested', 'club');
+      callAs(friendId, 'eventSwipes.record', ordinaryEventId, 'going');
+      callAs(friendId, 'eventSwipes.record', supportEventId, 'going');
+      callAs(friendId, 'eventSwipes.record', supportClubId, 'joined', 'club');
 
       assert.deepEqual(
         ProfileClubs.collection.find(friendClubActivitySelector(friendId)).map(row => row.clubId),
@@ -137,9 +142,43 @@ if (Meteor.isServer) {
       );
     });
 
+    /**
+     * Going is the one swipe a friend is shown. Everything in this test is on
+     * an ordinary, shareable listing, so the only thing keeping the other rows
+     * out is the decision itself: a pass is nobody's business, and a swipe that
+     * joined a group is already told by the membership.
+     */
+    it('shows friends the events a person is going to, and no other swipe', function () {
+      const friendId = makeUser();
+      callAs(friendId, 'Profiles.setFriendActivitySharing', true);
+      const goingEventId = makeEvent({ categories: ['community'] });
+      const passedEventId = makeEvent({ categories: ['community'] });
+      const joinedClubId = makeClub({ categories: ['community'] });
+      callAs(friendId, 'eventSwipes.record', goingEventId, 'going');
+      callAs(friendId, 'eventSwipes.record', passedEventId, 'passed');
+      // The join first, as the deck sends it: a 'joined' swipe with no
+      // membership behind it is refused.
+      callAs(friendId, 'profileClubs.add', joinedClubId);
+      callAs(friendId, 'eventSwipes.record', joinedClubId, 'joined', 'club');
+
+      assert.equal(friendEventActivitySelector(friendId).decision, 'going');
+      assert.deepEqual(
+        EventSwipes.collection.find(friendEventActivitySelector(friendId)).map(row => row.eventId),
+        [goingEventId],
+      );
+
+      callAs(friendId, 'eventSwipes.remove', goingEventId, 'rsvp_canceled');
+      assert.deepEqual(
+        EventSwipes.collection.find(friendEventActivitySelector(friendId)).fetch(),
+        [],
+        'an RSVP taken back is no longer shown',
+      );
+    });
+
     it('removes an existing membership from a live selector when its group becomes sensitive', function () {
       const admin = makeUser({ admin: true });
       const friendId = makeUser();
+      callAs(friendId, 'Profiles.setFriendActivitySharing', true);
       const clubId = makeClub({ categories: ['community'] });
       callAs(friendId, 'profileClubs.add', clubId);
       const selector = friendClubActivitySelector(friendId);
@@ -159,6 +198,193 @@ if (Meteor.isServer) {
       });
 
       assert.deepEqual(ProfileClubs.collection.find(selector).fetch(), []);
+    });
+  });
+
+  /**
+   * Who is told where a person goes.
+   *
+   * This publication used to send a friend every group a person had joined and
+   * every event they were going to, to every friend, with no setting anywhere.
+   * Sharing is now something a person turns on, and these tests are about the
+   * default as much as about the switch: most people will never open the page
+   * the switch is on, so what happens when nobody has touched anything is what
+   * happens to nearly everyone.
+   *
+   * Most of them walk the publication's own tree — the same cursors, handed
+   * the same arguments the composite hands them — because that is exact and
+   * has no timing in it. The last one subscribes for real, since "a friend who
+   * opts out disappears" is a claim about a live subscription and only a live
+   * subscription can show it.
+   */
+  describe('Friends.publication.activity', function () {
+    let viewer;
+    let friend;
+    let clubId;
+    let eventId;
+    let supportClubId;
+    let prideEventId;
+
+    const befriend = (requester, receiver) => {
+      const edgeId = callAs(requester, 'friends.request', receiver);
+      callAs(receiver, 'friends.accept', edgeId);
+    };
+
+    const sentFrom = (node, args = []) => docsFrom(node.find(...args)).flatMap(doc => [
+      doc,
+      ...(node.children || []).flatMap(child => sentFrom(child, [doc, ...args])),
+    ]);
+
+    /** The group ids and event ids a viewer would be sent, and whose they are. */
+    const activitySentTo = userId => {
+      const docs = sentFrom(friendActivityPublication(userId));
+      const memberships = docs.filter(doc => doc.clubId);
+      const rsvps = docs.filter(doc => doc.eventId);
+      return {
+        clubIds: memberships.map(doc => doc.clubId).sort(),
+        eventIds: rsvps.map(doc => doc.eventId).sort(),
+        userIds: [...new Set([...memberships, ...rsvps].map(doc => doc.userId))],
+      };
+    };
+
+    beforeEach(function () {
+      resetAll();
+      viewer = makeUser();
+      friend = makeUser();
+      befriend(viewer, friend);
+      clubId = makeClub({ categories: ['community'] });
+      supportClubId = makeClub({ categories: ['community'], tags: ['grief circle'] });
+      eventId = makeEvent({ categories: ['music'] });
+      prideEventId = makeEvent({ categories: ['lgbtq', 'social'] });
+      callAs(friend, 'profileClubs.add', clubId);
+      callAs(friend, 'profileClubs.add', supportClubId);
+      callAs(friend, 'eventSwipes.record', eventId, 'going');
+      callAs(friend, 'eventSwipes.record', prideEventId, 'going');
+    });
+
+    it('sends nothing about a friend who has never touched the setting', function () {
+      assert.deepEqual(activitySentTo(viewer), { clubIds: [], eventIds: [], userIds: [] });
+    });
+
+    it('sends the shareable rows of a friend who has opted in, and only those', function () {
+      callAs(friend, 'Profiles.setFriendActivitySharing', true);
+
+      assert.deepEqual(activitySentTo(viewer), { clubIds: [clubId], eventIds: [eventId], userIds: [friend] });
+    });
+
+    it('asks nothing of the viewer: a person who shares nothing still sees a friend who shares', function () {
+      callAs(friend, 'Profiles.setFriendActivitySharing', true);
+
+      assert.isUndefined(Profiles.collection.findOne({ userId: viewer }).friendActivitySharing);
+      assert.deepEqual(activitySentTo(viewer).userIds, [friend]);
+      assert.deepEqual(activitySentTo(friend).userIds, [], 'and the friend is sent nothing of theirs');
+    });
+
+    it('sends the consent level as a bare _id, never the setting itself', function () {
+      callAs(friend, 'Profiles.setFriendActivitySharing', true);
+
+      const profileId = Profiles.collection.findOne({ userId: friend })._id;
+      const gate = sentFrom(friendActivityPublication(viewer)).filter(doc => doc._id === profileId);
+      assert.deepEqual(gate, [{ _id: profileId }]);
+    });
+
+    it('stops for a friend who opts out again', function () {
+      callAs(friend, 'Profiles.setFriendActivitySharing', true);
+      callAs(friend, 'Profiles.setFriendActivitySharing', false);
+
+      assert.deepEqual(activitySentTo(viewer), { clubIds: [], eventIds: [], userIds: [] });
+    });
+
+    /**
+     * The two locks, tested apart. Rows can be left saying 'shareable' — a
+     * rewrite cut short, a row written by an older build — and the profile is
+     * what keeps them in. Written straight to the collection because no method
+     * will produce this state, which is the point of having the second lock.
+     */
+    it('holds back rows still marked shareable when the profile does not say the friend shares', function () {
+      ProfileClubs.collection.update({ userId: friend }, { $set: { friendActivityVisibility: 'shareable' } }, { multi: true });
+      EventSwipes.collection.update({ userId: friend }, { $set: { friendActivityVisibility: 'shareable' } }, { multi: true });
+
+      assert.deepEqual(activitySentTo(viewer), { clubIds: [], eventIds: [], userIds: [] });
+
+      Profiles.collection.update({ userId: friend }, { $set: { friendActivitySharing: false } });
+      assert.deepEqual(activitySentTo(viewer).userIds, [], 'an explicit no is a no as well');
+    });
+
+    it('sends nothing about somebody who is not an accepted friend, whatever they share', function () {
+      const stranger = makeUser();
+      const pending = makeUser();
+      [stranger, pending].forEach(userId => {
+        callAs(userId, 'Profiles.setFriendActivitySharing', true);
+        callAs(userId, 'profileClubs.add', clubId);
+      });
+      callAs(pending, 'friends.request', viewer);
+
+      assert.deepEqual(activitySentTo(viewer).userIds, []);
+    });
+
+    it('sends nothing to a signed-out visitor', async function () {
+      const handler = Meteor.server.publish_handlers['Friends.publication.activity'];
+      const sent = [];
+      await handler.apply({
+        userId: null,
+        added: (collection, id) => sent.push(`${collection}:${id}`),
+        changed: () => {},
+        removed: () => {},
+        ready: () => {},
+        onStop: () => {},
+      }, []);
+
+      assert.deepEqual(sent, []);
+    });
+
+    /**
+     * The real handler, a stand-in subscriber, and no sleeping: each wait is
+     * for something that must HAPPEN — a row arriving, a row being withdrawn —
+     * so a slow machine makes this slower and never wrong.
+     */
+    it('withdraws a friend’s rows from a live subscription the moment they opt out', async function () {
+      this.timeout(10000);
+      callAs(friend, 'Profiles.setFriendActivitySharing', true);
+
+      const live = new Set();
+      const stops = [];
+      const handler = Meteor.server.publish_handlers['Friends.publication.activity'];
+      await handler.apply({
+        userId: viewer,
+        added: (collection, id) => live.add(`${collection}:${id}`),
+        changed: () => {},
+        removed: (collection, id) => live.delete(`${collection}:${id}`),
+        ready: () => {},
+        onStop: stop => stops.push(stop),
+      }, []);
+
+      const eventually = async condition => {
+        const deadline = Date.now() + 8000;
+        while (!condition() && Date.now() < deadline) {
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise(resolve => { Meteor.setTimeout(resolve, 25); });
+        }
+        return condition();
+      };
+      const membership = ProfileClubs.collection.findOne({ userId: friend, clubId });
+      const rsvp = EventSwipes.collection.findOne({ userId: friend, eventId });
+      const sensitiveRsvp = EventSwipes.collection.findOne({ userId: friend, eventId: prideEventId });
+      const shown = () => live.has(`${ProfileClubs.name}:${membership._id}`) && live.has(`${EventSwipes.name}:${rsvp._id}`);
+      const withdrawn = () => !live.has(`${ProfileClubs.name}:${membership._id}`) && !live.has(`${EventSwipes.name}:${rsvp._id}`);
+
+      try {
+        assert.isTrue(await eventually(shown), 'the shareable rows arrive');
+        assert.isFalse(live.has(`${EventSwipes.name}:${sensitiveRsvp._id}`), 'the sensitive one never does');
+
+        callAs(friend, 'Profiles.setFriendActivitySharing', false);
+        assert.isTrue(await eventually(withdrawn), 'and are withdrawn without a resubscribe');
+
+        callAs(friend, 'Profiles.setFriendActivitySharing', true);
+        assert.isTrue(await eventually(shown), 'opting back in brings them back, live');
+      } finally {
+        stops.forEach(stop => stop());
+      }
     });
   });
 

@@ -15,7 +15,7 @@ import { callAs, errorFrom, makeClub, makeEvent, makeUser, resetAll } from '../.
  * Every delete in this app is a hard delete across several collections with no
  * transaction, so "what is still pointing at the thing that is gone" is not a
  * detail — it is the whole correctness question. These tests exist because two
- * of those cascades were incomplete: a deleted event kept every saved-and-passed
+ * of those cascades were incomplete: a deleted event kept every going-and-passed
  * row anyone had ever written about it, and a deleted group kept the swipes on
  * the group itself. Orphans of that kind are invisible until a count is wrong.
  */
@@ -171,9 +171,9 @@ if (Meteor.isServer) {
         assert.equal(Events.collection.find().count(), 1, 'nothing should have been removed');
       });
 
-      it('takes the saved-and-passed rows with it', function () {
+      it('takes the going-and-passed rows with it', function () {
         const eventId = makeEvent();
-        callAs(member, 'eventSwipes.record', eventId, 'interested');
+        callAs(member, 'eventSwipes.record', eventId, 'going');
         assert.equal(EventSwipes.collection.find({ eventId }).count(), 1);
 
         callAs(admin, 'Events.remove', eventId);
@@ -182,7 +182,7 @@ if (Meteor.isServer) {
         assert.equal(
           EventSwipes.collection.find({ eventId }).count(),
           0,
-          'a swipe on a deleted event still counts towards someone’s saved list',
+          'a swipe on a deleted event still counts towards someone’s Going list',
         );
       });
 
@@ -200,7 +200,7 @@ if (Meteor.isServer) {
       it('takes memberships, links and swipes on the group itself', function () {
         const clubId = makeClub();
         callAs(member, 'profileClubs.add', clubId);
-        callAs(member, 'eventSwipes.record', clubId, 'interested', 'club');
+        callAs(member, 'eventSwipes.record', clubId, 'joined', 'club');
         EventClubs.collection.insert({ clubId, eventId: makeEvent(), userId: member, createdAt: new Date() });
 
         callAs(admin, 'Clubs.remove', clubId);
@@ -232,7 +232,7 @@ if (Meteor.isServer) {
 
     describe('eventSwipes.record', function () {
       it('refuses a signed-out caller', function () {
-        assert.equal(errorFrom(() => callAs(null, 'eventSwipes.record', makeEvent(), 'interested')), 'not-logged-in');
+        assert.equal(errorFrom(() => callAs(null, 'eventSwipes.record', makeEvent(), 'going')), 'not-logged-in');
       });
 
       it('refuses a decision it does not recognise', function () {
@@ -243,12 +243,12 @@ if (Meteor.isServer) {
       });
 
       it('refuses a listing that does not exist', function () {
-        assert.equal(errorFrom(() => callAs(member, 'eventSwipes.record', 'no-such-id', 'interested')), 'not-found');
+        assert.equal(errorFrom(() => callAs(member, 'eventSwipes.record', 'no-such-id', 'going')), 'not-found');
       });
 
       it('records one row per person per listing, not one per swipe', function () {
         const eventId = makeEvent();
-        callAs(member, 'eventSwipes.record', eventId, 'interested');
+        callAs(member, 'eventSwipes.record', eventId, 'going');
         callAs(member, 'eventSwipes.record', eventId, 'passed');
         assert.equal(EventSwipes.collection.find({ userId: member, eventId }).count(), 1);
         assert.equal(EventSwipes.collection.findOne({ userId: member, eventId }).decision, 'passed');

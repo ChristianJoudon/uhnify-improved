@@ -49,7 +49,7 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
           onClick={() => onAddToProfile(club._id)}
           disabled={isMember}
         >
-          {isMember ? "You're in" : "I'm in"}
+          {isMember ? "You're in" : 'Join'}
         </button>
       </div>
     </article>

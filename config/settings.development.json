@@ -2,6 +2,14 @@
   "public": {
     "communityIngestionSandbox": true
   },
+  "recommendations": {
+    "enabled": true,
+    "recordInteractions": true
+  },
+  "retention": {
+    "behaviourDays": 548,
+    "auditDays": 365
+  },
   "defaultAccounts": [
     {
       "email": "admin@foo.com",

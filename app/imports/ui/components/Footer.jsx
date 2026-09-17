@@ -10,7 +10,8 @@ import Wordmark from './brand/Wordmark';
  * "Discover" pointed at the swipe deck, which the nav calls Match, and "Events"
  * and "Clubs" were two more names for pages the nav already calls Calendar and
  * Nearby — four labels for three destinations, none of them matching the menu
- * the reader had just been using.
+ * the reader had just been using. Going is here for the same reason: it is the
+ * nav's name for the events a person said yes to, and it opens the same page.
  *
  * There are no social links. The two that were here pointed at the University
  * of Hawaiʻi's Instagram and Twitter, inherited from what this app used to be:
@@ -27,6 +28,7 @@ const Footer = () => (
           <Link to="/discover-events" className="footer-link">Match</Link>
           <Link to="/search-clubs" className="footer-link">Nearby</Link>
           <Link to="/upcoming-events" className="footer-link">Calendar</Link>
+          <Link to="/user-events" className="footer-link">Going</Link>
           <Link to="/profile" className="footer-link">Profile</Link>
         </div>
         <p className="footer-copy">© 2026 MatchBook</p>

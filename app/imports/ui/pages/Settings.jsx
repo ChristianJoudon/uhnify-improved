@@ -147,6 +147,25 @@ const Settings = () => {
     });
   };
 
+  /**
+   * Sent the moment the switch moves, not with Save.
+   *
+   * Everything in the form above waits for Save on purpose, and this is the
+   * exception on purpose: a privacy switch that reads "off" while the server
+   * still says "on" is a lie for as long as the person takes to find the
+   * button — or for ever, if they never press it. So there is no local copy of
+   * it to drift. The switch shows the profile; the method's client stub moves
+   * the profile at once; and if the server refuses, Meteor puts the profile
+   * back, and the switch goes back with it.
+   */
+  const setSharing = enabled => {
+    Meteor.call('Profiles.setFriendActivitySharing', enabled, error => {
+      if (error) {
+        swal('Error', error.reason || error.message, 'error');
+      }
+    });
+  };
+
   if (!ready) {
     return <LoadingSpinner />;
   }
@@ -278,6 +297,27 @@ const Settings = () => {
 
           <button id="submit" type="submit" className="btn btn-solid-primary">Save changes</button>
         </form>
+
+        {/* Outside the form, and below its button, because Save has nothing to
+            do with this: the switch is stored the moment it moves. Inside, it
+            would sit above a Save that appears to govern it and does not. */}
+        <section className="form-block customize-privacy" aria-labelledby="cz-privacy">
+          <h3 id="cz-privacy">Privacy</h3>
+          <label className="mb-switch" htmlFor="cz-share-activity">
+            <input
+              id="cz-share-activity"
+              type="checkbox"
+              role="switch"
+              checked={profile.friendActivitySharing === true}
+              aria-describedby="cz-share-activity-help"
+              onChange={event => setSharing(event.target.checked)}
+            />
+            <span>Let friends see where I&apos;m going and what I join</span>
+          </label>
+          <p id="cz-share-activity-help" className="mb-switch-help">
+            Support, health, LGBTQ+ and faith listings are never shown to friends, even when this is on.
+          </p>
+        </section>
       </div>
     </Container>
   );

@@ -6,7 +6,7 @@ import { Events } from '../../api/events/Events';
 import { Profiles } from '../../api/profiles/Profiles';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
-import { EventSwipes } from '../../api/events/EventSwipes';
+import { EventSwipes, SWIPE_DECISIONS, SWIPE_KIND_FOR_DECISION } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
 import { Counters } from '../../api/counters/Counters';
 import { parseMeetingTime } from '../../api/club/schedule';
@@ -16,7 +16,14 @@ import {
   RecommendationGraphEdges,
   RecommendationRequests,
 } from '../../api/recommendations/RecommendationData';
-import { friendActivityVisibilityFor } from '../../api/privacy/FriendActivityPrivacy';
+import { friendActivityVisibilityFor, isSensitiveListing } from '../../api/privacy/FriendActivityPrivacy';
+import {
+  eventWithHostSignals,
+  sharesFriendActivity,
+  syncFriendActivityForClub,
+  syncFriendActivityForEvent,
+  syncFriendActivityForUser,
+} from '../../api/privacy/friendActivitySync';
 import { LIST_MAX_ENTRIES, TEXT_LIMITS, imageProblem } from '../../api/listing/limits';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../../ui/utilities/topics';
 
@@ -303,6 +310,98 @@ const findClubByAnyId = clubId => {
   return null;
 };
 
+/**
+ * Take a person out of a group, and tell the recommender they left.
+ *
+ * There are two ways out and they must not drift apart: "Leave" on a page
+ * ('profileClubs.remove') and rewinding a right swipe in the deck's groups
+ * mode ('eventSwipes.remove'). The rewind used to put the card back on the
+ * deck and leave the person in the group — an undo that undid the part nobody
+ * cared about. A helper rather than one method calling the other: the inner
+ * call would check a login and arguments that have just been checked, and
+ * verify a second time a recommendation context that is already verified.
+ *
+ * 'left_group' is recorded only when there was a membership to leave, so
+ * rewinding a join that never landed says nothing.
+ *
+ * The 'joined' swipe goes with the membership. Left behind after "Leave" on a
+ * page, it went on saying 'joined' about a group the person was no longer in,
+ * and because the deck never deals a group that has a swipe on it — and
+ * "bring back passed" clears only passes — the group could not be met again
+ * by any route. On the rewind path the row is already gone and this removes
+ * nothing. It records nothing either way: 'left_group' has said it.
+ */
+const leaveClub = (userId, clubId, verifiedContext) => {
+  const club = findClubByAnyId(clubId);
+  const normalizedClubId = club?._id || clubId;
+  const existing = ProfileClubs.collection.findOne({ userId, clubId: normalizedClubId });
+  ProfileClubs.collection.remove({ userId, clubId: normalizedClubId });
+  EventSwipes.collection.remove({ userId, eventId: `${normalizedClubId}`, kind: 'club', decision: 'joined' });
+  if (existing) {
+    captureRecommendationInteraction({
+      userId,
+      entityType: 'group',
+      entityId: `${normalizedClubId}`,
+      action: 'left_group',
+      occurredAt: new Date(),
+      ...verifiedContext,
+      source: 'legacy',
+    });
+  }
+};
+
+/**
+ * What the recommender is told when a swipe is recorded.
+ *
+ * Going is an RSVP and is recorded as one. 'joined' is deliberately absent: the
+ * same gesture calls 'profileClubs.add', which records 'joined_group', and the
+ * swipe used to add an 'interested' on top — one thumb movement counted as two
+ * signals, the weaker of which diluted the stronger.
+ */
+const SWIPE_INTERACTION_FOR_DECISION = { going: 'rsvp_going', passed: 'passed' };
+
+const captureSwipeInteraction = (swipe, action, verifiedContext, extra = {}) => captureRecommendationInteraction({
+  userId: swipe.userId,
+  entityType: swipe.kind === 'club' ? 'group' : 'event',
+  entityId: swipe.eventId,
+  action,
+  occurredAt: new Date(),
+  ...verifiedContext,
+  ...extra,
+  source: 'legacy',
+});
+
+/**
+ * An RSVP that stopped standing, whichever way it stopped: "Not going" on a
+ * page, a rewind in the deck, or a left swipe over the top of it. The
+ * recommender is told 'rsvp_canceled' in every case, because what it keeps is
+ * whether the person is going; HOW they took it back goes in `context.reason`
+ * for anyone who later needs to tell a changed mind from a slipped thumb.
+ */
+const captureCanceledRsvp = (swipe, reason, verifiedContext, extra = {}) => captureSwipeInteraction(
+  swipe,
+  'rsvp_canceled',
+  verifiedContext,
+  { ...extra, context: { reason } },
+);
+
+/**
+ * A tag can carry a group across the privacy line by itself — any member can
+ * add 'recovery' — and the memberships already there were judged before it
+ * arrived. They used to wait for the next restart to be judged again, which
+ * for the one case that matters is the wrong time to be late. Only a change
+ * that actually crosses the line touches the rows; most tags are 'hiking'.
+ */
+const followTagChange = clubBefore => {
+  if (!Meteor.isServer) {
+    return;
+  }
+  const clubNow = Clubs.collection.findOne(clubBefore._id);
+  if (isSensitiveListing(clubBefore) !== isSensitiveListing(clubNow)) {
+    syncFriendActivityForClub(clubBefore._id);
+  }
+};
+
 Meteor.methods({
   createUserProfile(userId, email, firstName = '', lastName = '', interests = []) {
     check(userId, Match.Maybe(String));
@@ -408,6 +507,44 @@ Meteor.methods({
     Profiles.collection.update(profile._id, { $set: { ...fields, updatedAt: now() } });
   },
 
+  /**
+   * Turn sharing with friends on or off, for the caller and nobody else.
+   *
+   * A method of its own rather than one more field on 'Profiles.update',
+   * because it is not one more field. That method saves a form, and a form
+   * that happened to be sent without this key must never be able to change who
+   * can see where somebody goes. And the flag is only half of it: what the
+   * publication selects on is stored on each membership and RSVP, so every row
+   * the person already has is rewritten here, in the same call. Off makes all
+   * of them private before this returns. On makes a row shareable only where
+   * its listing allows it, so a support group joined last year stays private.
+   *
+   * The flag is written first. The publication checks it as well as the rows,
+   * so friends stop being sent anything the moment it is off, even if the
+   * rewrite behind it were cut short.
+   */
+  'Profiles.setFriendActivitySharing'(enabled) {
+    check(enabled, Boolean);
+    requireLoggedIn(this.userId);
+
+    const profile = Profiles.collection.findOne({ userId: this.userId });
+    if (!profile) {
+      throw new Meteor.Error('profile-not-found', 'No profile exists for this account yet.');
+    }
+    // By userId rather than by the _id just found. Nothing should ever make a
+    // second profile for one account, but if something had, the copy left
+    // saying `true` would go on sharing after its owner said stop.
+    Profiles.collection.update(
+      { userId: this.userId },
+      { $set: { friendActivitySharing: enabled, updatedAt: now() } },
+      { multi: true },
+    );
+    if (Meteor.isServer) {
+      syncFriendActivityForUser(this.userId);
+    }
+    return enabled;
+  },
+
   'Profiles.remove'(profileId) {
     check(profileId, String);
     requireAdmin(this.userId);
@@ -501,17 +638,16 @@ Meteor.methods({
       Clubs.collection.update(clubId, { $unset: { schedule: '' } });
     }
 
-    const friendActivityVisibility = friendActivityVisibilityFor({ categories });
-    ProfileClubs.collection.update(
-      { clubId },
-      { $set: { friendActivityVisibility } },
-      { multi: true },
-    );
-    EventSwipes.collection.update(
-      { eventId: clubId, kind: 'club' },
-      { $set: { friendActivityVisibility } },
-      { multi: true },
-    );
+    // An edit can move a group across the line either way — filed under
+    // 'support_group', or no longer — and every member's row has to follow,
+    // along with every RSVP to an event the group hosts.
+    // This was one update stamped onto all of them, which stopped being right
+    // when sharing became each member's own choice: the caller here is an
+    // administrator, and their preference is not the members'. It also judged
+    // the new categories alone, where tags now count as well.
+    if (Meteor.isServer) {
+      syncFriendActivityForClub(clubId);
+    }
   },
 
   'Clubs.remove'(clubId) {
@@ -541,18 +677,20 @@ Meteor.methods({
       throw new Meteor.Error('club-not-found', 'That club could not be found.');
     }
 
+    // The joiner's own choice, read once. Without it the answer is 'private'.
+    const friendActivityVisibility = friendActivityVisibilityFor(club, {
+      sharing: sharesFriendActivity(this.userId),
+    });
     const existing = ProfileClubs.collection.findOne({ userId: this.userId, clubId: club._id });
     if (existing) {
-      ProfileClubs.collection.update(existing._id, {
-        $set: { friendActivityVisibility: friendActivityVisibilityFor(club) },
-      });
+      ProfileClubs.collection.update(existing._id, { $set: { friendActivityVisibility } });
       return existing._id;
     }
 
     const membershipId = ProfileClubs.collection.insert({
       userId: this.userId,
       clubId: club._id,
-      friendActivityVisibility: friendActivityVisibilityFor(club),
+      friendActivityVisibility,
       createdAt: new Date(),
     });
     captureRecommendationInteraction({
@@ -572,21 +710,7 @@ Meteor.methods({
     check(recommendationContext, Object);
     requireLoggedIn(this.userId);
 
-    const club = findClubByAnyId(clubId);
-    const normalizedClubId = club?._id || clubId;
-    const existing = ProfileClubs.collection.findOne({ userId: this.userId, clubId: normalizedClubId });
-    ProfileClubs.collection.remove({ userId: this.userId, clubId: normalizedClubId });
-    if (existing) {
-      captureRecommendationInteraction({
-        userId: this.userId,
-        entityType: 'group',
-        entityId: `${normalizedClubId}`,
-        action: 'left_group',
-        occurredAt: new Date(),
-        ...verifiedRecommendationContext(this.userId, recommendationContext),
-        source: 'legacy',
-      });
-    }
+    leaveClub(this.userId, clubId, verifiedRecommendationContext(this.userId, recommendationContext));
   },
 
   'Events.insert'(eventData) {
@@ -684,12 +808,12 @@ Meteor.methods({
       EventClubs.collection.insert({ clubId: hostClub._id, eventId, userId: this.userId, createdAt: new Date() });
     }
 
-    const updatedEvent = Events.collection.findOne(eventId);
-    EventSwipes.collection.update(
-      { eventId, kind: { $ne: 'club' } },
-      { $set: { friendActivityVisibility: friendActivityVisibilityFor(updatedEvent) } },
-      { multi: true },
-    );
+    // A new host can bring new categories, so everyone going is judged again —
+    // each against their own sharing choice, not the administrator's who made
+    // the edit. See 'Clubs.update'.
+    if (Meteor.isServer) {
+      syncFriendActivityForEvent(eventId);
+    }
   },
 
   'Events.remove'(eventId) {
@@ -697,10 +821,10 @@ Meteor.methods({
     requireAdmin(this.userId);
     Events.collection.remove(eventId);
     EventClubs.collection.remove({ eventId });
-    // Everyone who ever saved or passed this event still has a row pointing at
-    // it. Those rows are why a deleted event could go on being counted in
-    // someone's saved list and in the passed tally, for an event no page could
-    // ever render again.
+    // Everyone who ever said they were going to this event, or passed on it,
+    // still has a row pointing at it. Those rows are why a deleted event could
+    // go on being counted in someone's Going list and in the passed tally, for
+    // an event no page could ever render again.
     EventSwipes.collection.remove({ eventId });
   },
 
@@ -711,11 +835,21 @@ Meteor.methods({
     check(recommendationContext, Object);
     requireLoggedIn(this.userId);
 
-    if (!['interested', 'passed'].includes(decision)) {
-      throw new Meteor.Error('invalid-decision', 'A swipe decision must be either "interested" or "passed".');
+    if (!SWIPE_DECISIONS.includes(decision)) {
+      throw new Meteor.Error('invalid-decision', 'A swipe says you are going, that you joined, or that you passed.');
     }
     if (!['event', 'club'].includes(kind)) {
       throw new Meteor.Error('invalid-kind', 'A swipe is on either an event or a club.');
+    }
+    // Refused rather than quietly corrected. A 'going' stored against a group
+    // would be read back under the wrong list and offered to friends as an RSVP
+    // to something that has no date, and the caller that sent it has a bug
+    // worth hearing about.
+    const fittingKind = SWIPE_KIND_FOR_DECISION[decision];
+    if (fittingKind && fittingKind !== kind) {
+      throw new Meteor.Error('decision-kind-mismatch', decision === 'going'
+        ? 'Going is for events. To be part of a group, join it.'
+        : 'Joining is for groups. For an event, say you are going.');
     }
 
     // Only the server can authoritatively check existence; a client stub may
@@ -726,44 +860,66 @@ Meteor.methods({
       if (!listing) {
         throw new Meteor.Error('not-found', 'That listing could not be found.');
       }
+      // 'joined' is a fact about a membership, so it is stored only where there
+      // is one. The deck sends the join and then this swipe as two calls, and
+      // the join can fail by itself: it shares the general rate limit with
+      // every other method, where this one has its own. The swipe then landed
+      // alone, the card was hidden for good, and the row said 'joined' about
+      // someone who was not a member. Methods from one client run in order, so
+      // by the time this runs the join has finished, one way or the other.
+      if (decision === 'joined' && !ProfileClubs.collection.findOne({ userId: this.userId, clubId: listing._id })) {
+        throw new Meteor.Error('not-a-member', 'That join did not go through. Try again.');
+      }
     }
-    const friendActivityVisibility = friendActivityVisibilityFor(listing);
+    // Shareable only if this person has turned sharing on AND the listing is
+    // not a sensitive one. Their own choice, read once; without it, 'private'.
+    // An RSVP is judged with the groups that host the event, because going to
+    // a group's meeting says what belonging to the group says. Only the server
+    // holds every host, and the row a stub writes is replaced by the server's.
+    const friendActivityVisibility = friendActivityVisibilityFor(
+      Meteor.isServer && kind === 'event' ? eventWithHostSignals(listing) : listing,
+      { sharing: sharesFriendActivity(this.userId) },
+    );
 
     const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
     const verifiedContext = verifiedRecommendationContext(this.userId, recommendationContext);
+    let swipeId = existing?._id;
     if (existing) {
       EventSwipes.collection.update(existing._id, {
         $set: { decision, kind, friendActivityVisibility, createdAt: new Date() },
       });
-      captureRecommendationInteraction({
+    } else {
+      swipeId = EventSwipes.collection.insert({
         userId: this.userId,
-        entityType: kind === 'club' ? 'group' : 'event',
-        entityId: eventId,
-        action: decision,
-        occurredAt: new Date(),
-        ...verifiedContext,
-        source: 'legacy',
+        eventId,
+        decision,
+        kind,
+        friendActivityVisibility,
+        createdAt: new Date(),
       });
-      return existing._id;
     }
 
-    const swipeId = EventSwipes.collection.insert({
-      userId: this.userId,
-      eventId,
-      decision,
-      kind,
-      friendActivityVisibility,
-      createdAt: new Date(),
-    });
-    captureRecommendationInteraction({
-      userId: this.userId,
-      entityType: kind === 'club' ? 'group' : 'event',
-      entityId: eventId,
-      action: decision,
-      occurredAt: new Date(),
-      ...verifiedContext,
-      source: 'legacy',
-    });
+    // The recommender hears about a decision, not about a call. Saying "going"
+    // to an event the person is already going to — a double tap, a call resent
+    // after a dropped connection — changes nothing, and used to be counted as a
+    // second RSVP.
+    if (existing?.decision === decision) {
+      return swipeId;
+    }
+    // Swiping left over a standing RSVP really does cancel it, so that is said
+    // first and said separately: 'passed' alone would leave the recommender
+    // holding an RSVP for someone who is no longer going. It needs an id of its
+    // own, because the recorder treats a repeated clientEventId as a retry and
+    // would drop whichever of the two came second.
+    if (existing?.decision === 'going') {
+      captureCanceledRsvp(existing, decision, verifiedContext, verifiedContext.clientEventId
+        ? { clientEventId: `${verifiedContext.clientEventId}:rsvp_canceled` }
+        : {});
+    }
+    const interaction = SWIPE_INTERACTION_FOR_DECISION[decision];
+    if (interaction) {
+      captureSwipeInteraction({ userId: this.userId, eventId, kind }, interaction, verifiedContext);
+    }
     return swipeId;
   },
 
@@ -772,23 +928,41 @@ Meteor.methods({
     check(action, String);
     check(recommendationContext, Object);
     requireLoggedIn(this.userId);
-    if (!['undo', 'unsaved', 'correction'].includes(action)) {
-      throw new Meteor.Error('invalid-action', 'A removed swipe must be an undo, unsave, or correction.');
+    if (!['undo', 'rsvp_canceled', 'correction'].includes(action)) {
+      throw new Meteor.Error(
+        'invalid-action',
+        'A swipe is taken back by undoing it, by saying you are not going, or as a correction.',
+      );
     }
     const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
     const verifiedContext = verifiedRecommendationContext(this.userId, recommendationContext);
     EventSwipes.collection.remove({ userId: this.userId, eventId });
-    if (existing) {
-      captureRecommendationInteraction({
-        userId: this.userId,
-        entityType: existing.kind === 'club' ? 'group' : 'event',
-        entityId: eventId,
-        action,
-        occurredAt: new Date(),
-        ...verifiedContext,
-        source: 'legacy',
-      });
+    if (!existing) {
+      return;
     }
+    if (existing.decision === 'going') {
+      captureCanceledRsvp(existing, action, verifiedContext);
+      return;
+    }
+    if (existing.decision === 'joined') {
+      // Rewinding a right swipe on a group takes back the join it made, which
+      // is where 'left_group' comes from. The swipe row itself told the
+      // recommender nothing when it was written, so removing it for any other
+      // reason has nothing to retract — and must not end a membership the
+      // person never asked to end.
+      if (action === 'undo') {
+        leaveClub(this.userId, eventId, verifiedContext);
+      }
+      return;
+    }
+    // A passed row was never an RSVP. "Not going" arriving for one — a page
+    // that had not yet heard the row changed — is recorded as the correction it
+    // amounts to, not as the cancelling of an RSVP that was never made.
+    if (action === 'rsvp_canceled') {
+      captureSwipeInteraction(existing, 'correction', verifiedContext, { context: { reason: action } });
+      return;
+    }
+    captureSwipeInteraction(existing, action, verifiedContext);
   },
 
   'eventSwipes.clearPassed'() {
@@ -901,6 +1075,7 @@ Meteor.methods({
       throw new Meteor.Error('too-many-tags', 'This club already has 20 tags.');
     }
     Clubs.collection.update(clubId, { $push: { tags: clean } });
+    followTagChange(club);
   },
 
   'clubs.removeTag'(clubId, tag) {
@@ -917,6 +1092,7 @@ Meteor.methods({
       throw new Meteor.Error('not-authorized', 'Only the club owner or an admin can remove tags.');
     }
     Clubs.collection.update(clubId, { $pull: { tags: tag } });
+    followTagChange(club);
   },
 
   'Clubs.organizeEvent'({ clubID, eventID }) {
@@ -932,7 +1108,13 @@ Meteor.methods({
     if (exists) {
       return exists._id;
     }
-    return EventClubs.collection.insert({ clubId: club._id, eventId: eventID, userId: this.userId, createdAt: new Date() });
+    const linkId = EventClubs.collection.insert({ clubId: club._id, eventId: eventID, userId: this.userId, createdAt: new Date() });
+    // A new host is a new thing an RSVP can give away, so the people already
+    // going are judged again, as they are when 'Events.update' changes a host.
+    if (Meteor.isServer) {
+      syncFriendActivityForEvent(eventID);
+    }
+    return linkId;
   },
 });
 

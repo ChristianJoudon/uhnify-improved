@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
+import { ensureRetention } from '../retention/retention';
 
 /* eslint-disable no-console */
 
@@ -47,6 +48,34 @@ export const RECOMMENDATION_ACTIONS = [
   'undo',
   'correction',
 ];
+
+/**
+ * Words the log still holds and nothing writes any more.
+ *
+ * A right swipe on an event used to be recorded as 'interested', and the
+ * schema offered 'saved'/'unsaved' for a Save button that was never built. The
+ * owner's decision is that the gesture means Going, so it is recorded as the
+ * RSVP it is: 'rsvp_going', and 'rsvp_canceled' when it is taken back. The old
+ * rows are real history and stay readable — they remain in
+ * RECOMMENDATION_ACTIONS so the schema still describes them, and the ranker
+ * still reads an old 'interested' as the positive decision it was — but the
+ * recorder refuses to add to them, which is what keeps one gesture from going
+ * back to having two names.
+ */
+export const RETIRED_ACTIONS = ['interested', 'saved', 'unsaved'];
+
+/**
+ * What a browser may say about its own user.
+ *
+ * Only what the browser alone can know: that a card was on screen, was opened,
+ * was flipped, or was added to a calendar. 'recommendationInteractions.record'
+ * used to accept every action in the list above, so any signed-in client could
+ * write itself a verified attendance, an RSVP or a group membership — straight
+ * into the log that models are trained on, and into the RSVP and attendance
+ * collections behind it. Everything else reaches the log from server code, at
+ * the moment the product action it describes actually happens.
+ */
+export const CLIENT_RECORDABLE_ACTIONS = ['impression', 'opened', 'flipped', 'calendar_added'];
 
 export const RECOMMENDATION_TIERS = [
   'baseline',
@@ -151,6 +180,8 @@ export const UserItemStates = defineCollection({
     userId: String,
     entityType: { type: String, allowedValues: RECOMMENDATION_ENTITY_TYPES },
     entityId: String,
+    // 'interested' and `saved` are only ever found on rows written before the
+    // rename; Going is `rsvpStatus`. See RETIRED_ACTIONS.
     interestState: {
       type: String,
       allowedValues: ['neutral', 'interested', 'passed'],
@@ -578,3 +609,47 @@ export const RECOMMENDATION_COLLECTIONS = [
   EventRSVPs,
   EventAttendances,
 ];
+
+/**
+ * Everything here that records what a person did, and the date it ages by.
+ *
+ * The log and the impressions age from when they were written. The three
+ * materialized collections age from their last change, so a state, an RSVP or
+ * an attendance that is still being touched is still being kept.
+ *
+ * The graph is the one that needs care. It holds two kinds of edge in one
+ * collection: behaviour ("this person is going to that") and structure ("this
+ * event has that topic", "these two are friends"). Only the first kind is
+ * somebody's history. The partial filter limits expiry to edges written from
+ * an interaction; without it, eighteen months after launch MongoDB would start
+ * deleting the topic, venue and host edges the whole graph hangs from.
+ *
+ * These are not in the `indexes` lists above because `indexAtStartup` can only
+ * create. A retention limit has to be changeable, and creating an index that
+ * already exists with a different expiry fails — see retention.js.
+ *
+ * RecommendationRequests and FeatureSnapshots are absent because each row
+ * carries its own `expiresAt`; the request log sets it from the same setting.
+ */
+export const BEHAVIOUR_RETENTION_TARGETS = [
+  { collection: RecommendationInteractions.collection, field: 'createdAt' },
+  { collection: RecommendationImpressions.collection, field: 'createdAt' },
+  { collection: UserItemStates.collection, field: 'updatedAt' },
+  { collection: EventRSVPs.collection, field: 'updatedAt' },
+  { collection: EventAttendances.collection, field: 'updatedAt' },
+  {
+    collection: RecommendationGraphEdges.collection,
+    field: 'createdAt',
+    partialFilterExpression: { sourceInteractionId: { $exists: true } },
+  },
+];
+
+export const ensureBehaviourRetention = () => ensureRetention('behaviourDays', BEHAVIOUR_RETENTION_TARGETS);
+
+if (Meteor.isServer) {
+  Meteor.startup(() => {
+    ensureBehaviourRetention().catch(error => {
+      console.error('[retention] behaviour limits were not applied:', error.message);
+    });
+  });
+}

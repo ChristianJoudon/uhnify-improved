@@ -3,6 +3,14 @@
     "appId": "REPLACE-ME",
     "appSecret": "REPLACE-ME"
   },
+  "recommendations": {
+    "enabled": true,
+    "recordInteractions": true
+  },
+  "retention": {
+    "behaviourDays": 548,
+    "auditDays": 365
+  },
   "defaultAccounts": [
     {
       "email": "admin@your-domain.example",

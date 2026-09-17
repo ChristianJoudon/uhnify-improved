@@ -6,6 +6,8 @@ import { Meteor } from 'meteor/meteor';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
+import { EventSwipes } from '../../api/events/EventSwipes';
+import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Counters } from '../../api/counters/Counters';
 import {
   CommunitySources,
@@ -435,6 +437,41 @@ if (Meteor.isServer) {
       assert.equal(Clubs.collection.find({ importedFrom: 'MatchBook community intake' }).count(), 1);
       assert.equal(Clubs.collection.findOne(originalClub._id).name, 'Reviewed Replacement Name');
       assert.equal(IngestionCandidates.findOne(secondId).publicationState, 'COMPLETE');
+    });
+
+    /**
+     * The projection files a group under 'support_group' whatever an editor has
+     * made of it since. What friends may see is stored on each membership and
+     * RSVP, so rows written while the group was filed as something ordinary
+     * have to be judged again when it is filed back — then, not at the next
+     * restart — and that reaches the RSVPs to events the group hosts.
+     */
+    it('judges memberships and RSVPs again when a revision re-files a group an editor had moved', function () {
+      const firstId = addCandidate({ groupKey: 'privacy-refile' });
+      callAs(admin, INGESTION_REVIEW_METHODS.approve, firstId);
+      const club = Clubs.collection.findOne({ importedFrom: 'MatchBook community intake' });
+      Clubs.collection.update(club._id, { $set: { categories: ['community'] } });
+      const hostedEventId = makeEvent({ categories: ['community'] });
+      EventClubs.collection.insert({ clubId: club._id, eventId: hostedEventId, userId: member, createdAt: new Date() });
+      callAs(member, 'Profiles.setFriendActivitySharing', true);
+      callAs(member, 'profileClubs.add', club._id);
+      callAs(member, 'eventSwipes.record', hostedEventId, 'going');
+      const membershipVisibility = () => ProfileClubs.collection
+        .findOne({ userId: member, clubId: club._id }).friendActivityVisibility;
+      const rsvpVisibility = () => EventSwipes.collection
+        .findOne({ userId: member, eventId: hostedEventId }).friendActivityVisibility;
+      assert.equal(membershipVisibility(), 'shareable');
+      assert.equal(rsvpVisibility(), 'shareable');
+
+      const secondId = addCandidate({
+        groupKey: 'privacy-refile',
+        fields: { title: 'Reviewed Replacement Name' },
+      });
+      callAs(admin, INGESTION_REVIEW_METHODS.approve, secondId);
+
+      assert.deepEqual(Clubs.collection.findOne(club._id).categories, ['support_group']);
+      assert.equal(membershipVisibility(), 'private');
+      assert.equal(rsvpVisibility(), 'private');
     });
 
     it('recovers a stale approval claim before publishing idempotently', function () {

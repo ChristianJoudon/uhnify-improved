@@ -30,6 +30,11 @@ import { topicForClub, topicForEvent } from '../utilities/topics';
  * Rows come from the card schema with no limit, so the sheet is exactly the
  * card's facts plus the ones the card had no room for. A field the record never
  * published still draws nothing.
+ *
+ * The action's words are the one place the two kinds must not share. Saying yes
+ * to an event is going to it; saying yes to a group is joining it. Both read
+ * "I'm in" here once, while the deck called the same event action "Save" and
+ * the list of them was headed "Saved" — one stored decision under three names.
  */
 const KINDS = {
   event: {
@@ -37,8 +42,8 @@ const KINDS = {
     schema: EVENT_FIELDS,
     topic: topicForEvent,
     heading: record => record.title,
-    joined: "You're in",
-    join: "I'm in",
+    joined: "You're going",
+    join: "I'm going",
   },
   club: {
     collection: () => Clubs.collection,
@@ -46,7 +51,7 @@ const KINDS = {
     topic: topicForClub,
     heading: record => record.name,
     joined: "You're in",
-    join: "I'm in",
+    join: 'Join',
   },
 };
 

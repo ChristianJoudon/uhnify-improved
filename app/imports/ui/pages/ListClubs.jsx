@@ -25,19 +25,28 @@ const ListClub = () => {
   const [selectedClub, setSelectedClub] = useState(null);
 
   const { ready, clubs } = useTracker(() => {
-    const subscription = Meteor.subscribe(ProfileClubs.userPublicationName);
+    const clubsSub = Meteor.subscribe(ProfileClubs.userPublicationName);
+    // That publication works out which groups to send once, when it starts, so
+    // a group the person leaves stays in its cursor: Leave said it had worked
+    // and the card sat there until the next page load. Memberships are a live
+    // cursor. The wall is the groups both agree on, so a card goes the moment
+    // its membership does — and a group some other page left in minimongo
+    // cannot wander onto a list of groups you are in.
+    const membershipsSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
+    const joinedIds = ProfileClubs.collection.find({ userId: Meteor.userId() })
+      .map(membership => membership.clubId);
     return {
-      clubs: Clubs.collection.find({}, { sort: { name: 1 } }).fetch(),
-      ready: subscription.ready(),
+      clubs: Clubs.collection.find({ _id: { $in: joinedIds } }, { sort: { name: 1 } }).fetch(),
+      ready: clubsSub.ready() && membershipsSub.ready(),
     };
   }, []);
 
-  const onRemoveFromProfile = clubId => {
-    Meteor.call('profileClubs.remove', clubId, error => {
+  const leave = club => {
+    Meteor.call('profileClubs.remove', club._id, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       } else {
-        swal('Removed', 'Club removed from My Clubs.', 'success');
+        swal({ text: `You've left ${club.name}.`, icon: 'success' });
       }
     });
   };
@@ -51,7 +60,7 @@ const ListClub = () => {
       {/* Nothing sits beside the title when the page is empty — the empty state
           owns the invitation, and two of them would compete. */}
       <PageHead
-        title="Saved groups"
+        title="My groups"
         action={clubs.length > 0 ? <Link to="/search-clubs" className="btn btn-soft-primary">Find more</Link> : null}
       >
         {clubs.length > 0 ? `${clubs.length} ${clubs.length === 1 ? 'group' : 'groups'} you're in.` : null}
@@ -92,7 +101,7 @@ const ListClub = () => {
                 <button
                   type="button"
                   className="btn btn-outline-danger-soft mb-poster-cta saved-leave"
-                  onClick={() => onRemoveFromProfile(club._id)}
+                  onClick={() => leave(club)}
                 >
                   <DoorOpen size={14} aria-hidden="true" />
                   Leave

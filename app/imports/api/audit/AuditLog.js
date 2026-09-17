@@ -1,5 +1,9 @@
+import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import SimpleSchema from 'simpl-schema';
+import { ensureRetention } from '../retention/retention';
+
+/* eslint-disable no-console */
 
 /**
  * Every state change, in the order it happened.
@@ -50,3 +54,29 @@ class AuditLogCollection {
 }
 
 export const AuditLog = new AuditLogCollection();
+
+/**
+ * Append-only is not the same as kept forever.
+ *
+ * Every entry names a person and what they did, including the calls that were
+ * refused, and one is written for every call to one of the app's methods —
+ * each card that crosses a screen is one. With no limit this is both the
+ * fastest-growing collection in the database and a permanent record of each
+ * member's activity that nobody decided to keep.
+ * Entries expire `retention.auditDays` after they were written (a year unless
+ * the settings say otherwise). Expiry is MongoDB's own TTL deletion, which is
+ * why the rule above still holds: nothing in the APP removes an entry.
+ *
+ * The same index serves the admin publication, which sorts on `at`.
+ */
+export const ensureAuditRetention = () => ensureRetention('auditDays', [
+  { collection: AuditLog.collection, field: 'at' },
+]);
+
+if (Meteor.isServer) {
+  Meteor.startup(() => {
+    ensureAuditRetention().catch(error => {
+      console.error('[retention] the audit limit was not applied:', error.message);
+    });
+  });
+}

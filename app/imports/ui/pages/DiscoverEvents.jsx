@@ -44,7 +44,14 @@ const TIME_WINDOWS = [
 const DAY_MS = 24 * 60 * 60 * 1000;
 const STACK_SIZE = 4;
 
-/** Tinder-style Discover deck: swipe right to save an event, left to pass, tap to flip. */
+/**
+ * Tinder-style Discover deck: swipe left to pass, tap to flip, swipe right to
+ * say yes. Yes means one thing per kind — going to an event, joining a group —
+ * and the button, the stamp and the stored decision all use that word. They
+ * used to say "Save" over a value stored as 'interested', which a friend's
+ * feed then read back as "is going to": three names, and the person swiping
+ * was never told about the third.
+ */
 const DiscoverEvents = () => {
   const deckTuck = useTuck();
   const [mode, setMode] = useState('upcoming');
@@ -305,8 +312,18 @@ const DiscoverEvents = () => {
     setFlippedId(null);
     // Recorded immediately — the client stub applies it synchronously, so even if this
     // card's fly-off is interrupted (filter change, unmount), the decision is never lost.
-    const decision = direction === 'right' ? 'interested' : 'passed';
-    if (mode === 'clubs' && decision === 'interested') {
+    const kind = mode === 'clubs' ? 'club' : 'event';
+    // The stored word is the word on the stamp: 'going' for an event, 'joined'
+    // for a group. The server refuses a pair that does not fit.
+    const yes = kind === 'club' ? 'joined' : 'going';
+    const decision = direction === 'right' ? yes : 'passed';
+    // Rollback: dropping the ghost lets the card spring back into the deck.
+    const springBack = () => {
+      setExiting(prev => prev.filter(item => item.event._id !== swiped._id));
+      setHistory(prev => prev.filter(id => id !== swiped._id));
+    };
+    let joinFailed = false;
+    if (decision === 'joined') {
       // Swiping right on a group is joining it — the deck is the join, not a
       // shortlist you have to work through again somewhere else.
       const joinContext = swiped._recommendation
@@ -314,19 +331,30 @@ const DiscoverEvents = () => {
         : {};
       Meteor.call('profileClubs.add', swiped._id, joinContext, joinError => {
         if (joinError) {
-          swal('Error', joinError.reason || joinError.message, 'error');
+          // A join that failed used to show an alert and nothing else: the
+          // swipe below still landed, so the card was gone for good and the
+          // row said 'joined' about a group the person was not in. The server
+          // now refuses that swipe, and it is taken back here as well so the
+          // card returns whichever answer arrives first. 'correction' leaves
+          // no group and tells the recommender nothing.
+          joinFailed = true;
+          Meteor.call('eventSwipes.remove', swiped._id, 'correction');
+          springBack();
+          swal("That didn't go through", joinError.reason || joinError.message, 'error');
         }
       });
     }
     const recommendationContext = swiped._recommendation
       ? { ...swiped._recommendation, clientEventId: `swipe:${Random.id()}` }
       : {};
-    Meteor.call('eventSwipes.record', swiped._id, decision, mode === 'clubs' ? 'club' : 'event', recommendationContext, error => {
+    Meteor.call('eventSwipes.record', swiped._id, decision, kind, recommendationContext, error => {
       if (error) {
-        // Rollback: dropping the ghost lets the card spring back into the deck.
-        setExiting(prev => prev.filter(item => item.event._id !== swiped._id));
-        setHistory(prev => prev.filter(id => id !== swiped._id));
-        swal('Swipe not saved', error.reason || error.message, 'error');
+        springBack();
+        // One failure, one message. When the join failed this swipe is refused
+        // because of it, and the person has already been told why.
+        if (!joinFailed) {
+          swal("That didn't go through", error.reason || error.message, 'error');
+        }
       }
     });
   };
@@ -343,7 +371,9 @@ const DiscoverEvents = () => {
     setHistory(prev => prev.slice(0, -1));
     setPinnedIds(prev => [lastId, ...prev.filter(id => id !== lastId)]);
     setFlippedId(null);
-    Meteor.call('eventSwipes.remove', lastId, error => {
+    // 'undo' is the rewind alone — a swipe taken back seconds after it was
+    // made. "Not going", tapped later on a list, is 'rsvp_canceled' instead.
+    Meteor.call('eventSwipes.remove', lastId, 'undo', error => {
       if (error) {
         // Put the undo back so the next Z press targets the same swipe again.
         setHistory(prev => [...prev, lastId]);
@@ -559,8 +589,11 @@ const DiscoverEvents = () => {
                           <ArrowCounterclockwise /> Replay {passedCount} passed
                         </Button>
                       )}
-                      <Button as={Link} to="/user-events" className="btn-solid-primary">
-                        <HeartFill /> {mode === 'clubs' ? 'View your groups' : 'View saved events'}
+                      {/* Each deck ends at the list it was filling. Both used to
+                          open the events page, so "View your groups" led to a
+                          page with no groups on it. */}
+                      <Button as={Link} to={mode === 'clubs' ? '/saved' : '/user-events'} className="btn-solid-primary">
+                        <HeartFill /> {mode === 'clubs' ? 'See your groups' : "See where you're going"}
                       </Button>
                     </div>
                   </motion.div>
@@ -612,13 +645,13 @@ const DiscoverEvents = () => {
               </motion.button>
               <motion.button
                 type="button"
-                className="swipe-btn swipe-btn-save"
+                className="swipe-btn swipe-btn-yes"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.86 }}
                 onClick={() => startSwipe('right')}
                 disabled={!topEvent}
-                aria-label={mode === 'clubs' ? 'Save this group' : 'Save this event'}
-                title="Save (→)"
+                aria-label={mode === 'clubs' ? 'Join this group' : "I'm going to this event"}
+                title={mode === 'clubs' ? 'Join (→)' : 'Going (→)'}
               >
                 <HeartFill aria-hidden="true" />
               </motion.button>

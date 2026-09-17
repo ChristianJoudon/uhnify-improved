@@ -47,8 +47,14 @@ const whenLabel = date => {
  * wall of cards reads as one design. `tier` sets its footprint in the masonry,
  * and clamps how much of the description shows — every size shows some, because
  * a listing that took the trouble to describe itself is the one worth reading.
+ *
+ * The one action is going. On a wall of everything that is on, the button acts
+ * ("I'm going") and then reads the answer back ("You're going"). On the list of
+ * events the person already chose, every card would read back the same thing,
+ * so `undoable` makes it the only thing left to say there: "Not going".
  */
-const EventPoster = ({ event, distance, going, onGoing, onOpen, tier }) => {
+const EventPoster = ({ event, distance, going, undoable, onGoing, onOpen, tier }) => {
+  const offersUndo = going && undoable;
   const date = event.date instanceof Date ? event.date : new Date(event.date);
   const valid = !Number.isNaN(date.getTime());
   // One reading of an event's topic, shared with the sheet this card opens.
@@ -79,14 +85,27 @@ const EventPoster = ({ event, distance, going, onGoing, onOpen, tier }) => {
         <span className="mb-poster-meta">
           {distance || topic.activityLabel || topic.label}
         </span>
-        <button
-          type="button"
-          className={`btn ${going ? 'btn-soft-primary' : 'btn-match'} mb-poster-cta`}
-          onClick={() => onGoing(event)}
-          aria-pressed={going}
-        >
-          {going ? "You're in" : "I'm in"}
-        </button>
+        {offersUndo ? (
+          // A plain action, not a pressed toggle: "Not going, pressed" would
+          // tell a screen reader the opposite of what is true.
+          <button
+            type="button"
+            className="btn btn-outline-danger-soft mb-poster-cta"
+            onClick={() => onGoing(event)}
+          >
+            Not going
+            <span className="visually-hidden">{` to ${event.title}`}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={`btn ${going ? 'btn-soft-primary' : 'btn-match'} mb-poster-cta`}
+            onClick={() => onGoing(event)}
+            aria-pressed={going}
+          >
+            {going ? "You're going" : "I'm going"}
+          </button>
+        )}
       </div>
     </article>
   );
@@ -103,6 +122,8 @@ EventPoster.propTypes = {
   }).isRequired,
   distance: PropTypes.string,
   going: PropTypes.bool,
+  /** The wall lists only what the person chose, so a going card offers "Not going". */
+  undoable: PropTypes.bool,
   onGoing: PropTypes.func,
   onOpen: PropTypes.func,
   tier: PropTypes.oneOf(['lg', 'md', 'sm']),
@@ -111,6 +132,7 @@ EventPoster.propTypes = {
 EventPoster.defaultProps = {
   distance: '',
   going: false,
+  undoable: false,
   onGoing: () => {},
   onOpen: () => {},
   tier: 'md',

@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 import { assert } from 'chai';
-import { rankAdaptiveRecommendations } from './adaptiveRank';
+import { rankAdaptiveRecommendations, topicKeysForInterests } from './adaptiveRank';
 
 const NOW = new Date('2026-08-08T12:00:00.000Z');
 
@@ -41,10 +41,10 @@ describe('adaptive recommendation ranking', function () {
   it('activates content only when both sides have usable topic evidence', function () {
     const result = rankAdaptiveRecommendations({
       candidates: [
-        event('art', { categories: ['Arts & culture'] }),
-        event('hike', { categories: ['Outdoor hiking'] }),
+        event('art', { topicIds: ['art'] }),
+        event('hike', { topicIds: ['outdoors'] }),
       ],
-      profile: { interests: ['outdoor hiking'] },
+      profile: { interests: ['Move & Explore'] },
       now: NOW,
     });
 
@@ -52,6 +52,133 @@ describe('adaptive recommendation ranking', function () {
     assert.include(result.items[0].componentsUsed, 'content');
     assert.equal(result.items[0].selectedTier, 'content');
     assert.notInclude(result.items.find(item => item._id === 'art').componentsUsed, 'content');
+  });
+
+  /**
+   * Settings stores the LABEL a person tapped; events carry the KEY. "Music &
+   * Performance" used to match 'music' only because the label happens to
+   * contain its key — "Move & Explore" never matched 'outdoors' at all.
+   */
+  describe('profile interests', function () {
+    it('resolves a label to the key events are tagged with', function () {
+      assert.deepEqual(
+        topicKeysForInterests(['Music & Performance', 'Move & Explore', 'books', 'Knitting circles', null]),
+        ['music', 'outdoors', 'books'],
+      );
+    });
+
+    it('matches "Music & Performance" to an event tagged music, and says why as before', function () {
+      const result = rankAdaptiveRecommendations({
+        candidates: [event('gig', { topicIds: ['music'] }), event('market', { topicIds: ['food'] })],
+        profile: { interests: ['Music & Performance'] },
+        now: NOW,
+      });
+
+      assert.equal(result.items[0]._id, 'gig');
+      assert.include(result.items[0].componentsUsed, 'content');
+      assert.equal(result.items[0].reason, 'Matches your interests');
+      assert.equal(result.capabilitySnapshot.explicitInterestCount, 1);
+    });
+
+    it('does not match a label’s ordinary words against a description', function () {
+      const result = rankAdaptiveRecommendations({
+        candidates: [event('talk', { topicIds: ['books'], description: 'Make time to create a reading habit.' })],
+        profile: { interests: ['Make & Create'] },
+        now: NOW,
+      });
+
+      assert.notInclude(result.items[0].componentsUsed, 'content');
+      assert.notEqual(result.items[0].reason, 'Matches your interests');
+    });
+  });
+
+  /**
+   * A right swipe on an event means Going. An event the person is going to is
+   * decided and is not dealt again; one they cancelled is undecided and is.
+   */
+  describe('Going', function () {
+    const at = day => new Date(`2026-08-0${day}T00:00:00Z`);
+
+    it('holds back an event the person is going to', function () {
+      const result = rankAdaptiveRecommendations({
+        candidates: [event('going'), event('undecided')],
+        interactions: [{ entityId: 'going', action: 'rsvp_going', occurredAt: at(1) }],
+        now: NOW,
+      });
+      assert.deepEqual(result.items.map(item => item._id), ['undecided']);
+    });
+
+    it('offers it again once the RSVP is cancelled, exactly as an undo would', function () {
+      const result = rankAdaptiveRecommendations({
+        candidates: [event('cancelled')],
+        interactions: [
+          { entityId: 'cancelled', action: 'rsvp_going', occurredAt: at(1) },
+          { entityId: 'cancelled', action: 'rsvp_canceled', occurredAt: at(2) },
+        ],
+        now: NOW,
+      });
+      assert.lengthOf(result.items, 1);
+    });
+
+    it('returns it on request, the way includePassed returns a pass', function () {
+      const result = rankAdaptiveRecommendations({
+        candidates: [event('going')],
+        interactions: [{ entityId: 'going', action: 'rsvp_going', occurredAt: at(1) }],
+        filters: { includeGoing: true },
+        now: NOW,
+      });
+      assert.lengthOf(result.items, 1);
+    });
+
+    it('reads an old "interested" on an event as the Going it was', function () {
+      const interactions = [{ entityId: 'old', action: 'interested', occurredAt: at(1) }];
+      assert.lengthOf(rankAdaptiveRecommendations({ candidates: [event('old')], interactions, now: NOW }).items, 0);
+
+      // On a group the same old word was a join, and membership decides that.
+      const group = { _id: 'old', name: 'A group the person has since left' };
+      assert.lengthOf(
+        rankAdaptiveRecommendations({ candidates: [group], kind: 'group', interactions, now: NOW }).items,
+        1,
+      );
+    });
+
+    it('lets the pass win when a left swipe cancels an RSVP in the same millisecond', function () {
+      const interactions = [
+        { entityId: 'swapped', action: 'passed', occurredAt: at(3) },
+        { entityId: 'swapped', action: 'rsvp_canceled', occurredAt: at(3) },
+      ];
+      [interactions, [...interactions].reverse()].forEach(ordering => {
+        const result = rankAdaptiveRecommendations({ candidates: [event('swapped')], interactions: ordering, now: NOW });
+        assert.lengthOf(result.items, 0);
+      });
+    });
+
+    it('stops treating a cancelled plan as evidence for the same card', function () {
+      const edge = {
+        fromType: 'user',
+        fromId: 'user-1',
+        toType: 'event',
+        toId: 'cancelled',
+        relation: 'rsvp_going',
+        weight: 1,
+      };
+      const standing = rankAdaptiveRecommendations({
+        candidates: [event('cancelled')],
+        userId: 'user-1',
+        graphEdges: [edge],
+        filters: { includeGoing: true },
+        now: NOW,
+      });
+      const ended = rankAdaptiveRecommendations({
+        candidates: [event('cancelled')],
+        userId: 'user-1',
+        graphEdges: [{ ...edge, validTo: at(2) }],
+        now: NOW,
+      });
+
+      assert.include(standing.items[0].componentsUsed, 'graph');
+      assert.notInclude(ended.items[0].componentsUsed, 'graph');
+    });
   });
 
   it('renormalizes away an unavailable component instead of treating it as zero', function () {

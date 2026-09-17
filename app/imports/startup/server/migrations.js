@@ -1,4 +1,5 @@
 import { Events } from '../../api/events/Events';
+import { EventSwipes } from '../../api/events/EventSwipes';
 
 /**
  * Startup migrations. Each one is idempotent and cheap enough to run on every
@@ -40,4 +41,40 @@ export const dropRedundantCreatedBy = () => {
     }
   });
   return cleared;
+};
+
+/**
+ * Give every stored right swipe the name it now goes by.
+ *
+ * A right swipe used to be stored as 'interested' whatever it was on. The
+ * owner's decision is that on an event it means "Going" — an RSVP — and on a
+ * group it has always meant joining, so the one old value becomes two: 'going'
+ * for events and 'joined' for groups. A row with no `kind` predates the deck's
+ * groups mode, when there was nothing to swipe on but events, and is treated as
+ * the event swipe it was.
+ *
+ * The schema no longer allows 'interested', which is not an obstacle here:
+ * collection2 validates the modifier, not the document it lands on, so a plain
+ * `$set` to a value the schema does allow goes through with validation ON —
+ * and the new value is checked like any other write. Nothing else reads the
+ * old rows first: this runs before the recommendation scaffold, which replays
+ * every swipe and would otherwise replay a word that no longer means anything.
+ *
+ * Returns how many rows took each name, so the startup log can say so once and
+ * stay quiet on every boot after.
+ */
+export const renameInterestedSwipes = () => {
+  // Groups first, and the second selector still excludes them, so neither
+  // update depends on the other having run.
+  const joined = EventSwipes.collection.update(
+    { decision: 'interested', kind: 'club' },
+    { $set: { decision: 'joined' } },
+    { multi: true },
+  );
+  const going = EventSwipes.collection.update(
+    { decision: 'interested', kind: { $ne: 'club' } },
+    { $set: { decision: 'going' } },
+    { multi: true },
+  );
+  return { going, joined };
 };
