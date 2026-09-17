@@ -12,21 +12,22 @@ import SchedulePicker from '../components/form/SchedulePicker';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Clubs } from '../../api/club/Club';
 import { imagePath, normalizeCategories } from '../utilities/helpers';
+import { shrinkImage } from '../utilities/shrinkImage';
 import { topicFor } from '../utilities/topics';
 import { parseMeetingTime, scheduleLabel } from '../../api/club/schedule';
-
-const MAX_IMAGE_BYTES = 2000000;
+import { TEXT_LIMITS } from '../../api/listing/limits';
 
 /**
  * The same screen as Start a group, pointed at a club that already exists.
  * Editing and creating one object used to be two different applications — an
  * AutoForm in a narrow column here, a live poster and real pickers there.
  *
- * Deliberately unlike Start a group in two places, because this form repairs
- * seeded data rather than authoring new copy: there are no length caps (real
- * descriptions run past a thousand characters) and the categories stay free
- * text, since the finder's department index files clubs by those literal
- * strings and the eight-topic picker would quietly unfile them.
+ * Deliberately unlike Start a group in one place, because this form repairs
+ * seeded data rather than authoring new copy: the categories stay free text,
+ * since the finder's department index files clubs by those literal strings
+ * and the eight-topic picker would quietly unfile them. The length caps are
+ * the server's own, from TEXT_LIMITS, and they are generous — real
+ * descriptions run past a thousand characters and still fit.
  */
 const EditClubAdmin = () => {
   const { _id } = useParams();
@@ -112,28 +113,24 @@ const EditClubAdmin = () => {
   const photo = form.image.startsWith('data:') ? form.image : '';
   const valid = form.name.trim() && form.description.trim() && form.location.trim() && form.owner.trim();
 
-  const pickImage = event => {
+  const pickImage = async event => {
     const input = event.target;
     const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    if (!file.type.startsWith('image')) {
-      swal('Not an image', 'Please choose an image file.', 'error');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      swal('Too large', 'Please choose an image under 2 MB.', 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = e => set('image', e.target.result);
-    reader.readAsDataURL(file);
     // Clear it, or picking the same file after Remove fires no change event.
     // Held as a local first: assigning straight through `event.target` trips
     // no-param-reassign, a rule that exists to stop a handler mutating its
     // caller's data — and this is a deliberate write to a DOM node, not that.
     input.value = '';
+    if (!file) {
+      return;
+    }
+    try {
+      // Shrunk here rather than refused: a phone photo is several megabytes,
+      // and the 2 MB door that stood here turned real people away.
+      set('image', await shrinkImage(file));
+    } catch (error) {
+      swal('Could not use that photo', error.message, 'error');
+    }
   };
 
   const submit = event => {
@@ -209,6 +206,7 @@ const EditClubAdmin = () => {
                 id="name"
                 type="text"
                 value={form.name}
+                maxLength={TEXT_LIMITS.name}
                 onChange={e => set('name', e.target.value)}
                 required
               />
@@ -220,6 +218,7 @@ const EditClubAdmin = () => {
                 id="description"
                 rows={6}
                 value={form.description}
+                maxLength={TEXT_LIMITS.description}
                 onChange={e => set('description', e.target.value)}
                 required
               />
@@ -231,6 +230,7 @@ const EditClubAdmin = () => {
                 id="location"
                 type="text"
                 value={form.location}
+                maxLength={TEXT_LIMITS.location}
                 onChange={e => set('location', e.target.value)}
                 required
               />
@@ -292,6 +292,7 @@ const EditClubAdmin = () => {
                 id="owner"
                 type="text"
                 value={form.owner}
+                maxLength={TEXT_LIMITS.email}
                 onChange={e => set('owner', e.target.value)}
                 required
               />
@@ -303,6 +304,7 @@ const EditClubAdmin = () => {
                 id="contactInfo"
                 type="text"
                 value={form.contactInfo}
+                maxLength={TEXT_LIMITS.contactInfo}
                 placeholder="hello@yourgroup.org"
                 onChange={e => set('contactInfo', e.target.value)}
               />

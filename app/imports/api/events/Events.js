@@ -20,7 +20,18 @@ class EventsCollection {
       },
       date: Date,
       location: String,
-      createdBy: String,
+      /**
+       * Who posted it, by account name — which resolves to an email address.
+       *
+       * Optional, and no longer written by the app. On every record the app
+       * ever made it duplicated `owner`, with one difference: the public
+       * publications withheld `owner` and not this, so the copy nobody read
+       * was the one every signed-out visitor received. The publications now
+       * withhold both, and the startup migration in migrations.js clears the
+       * redundant copies. The field stays declared because the ingestion
+       * pipeline still stamps its system actor here; nothing reads it.
+       */
+      createdBy: { type: String, optional: true },
       owner: { type: String, optional: true },
       image: { type: String, optional: true },
       /** The end of the window, when the source gave one. */

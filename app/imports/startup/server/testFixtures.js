@@ -139,7 +139,6 @@ export const makeEvent = (overrides = {}) => {
     // and a fixture that quietly falls off the end of them is a confusing test.
     date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     location: 'Līhuʻe',
-    createdBy: 'test',
     ...overrides,
   });
 };

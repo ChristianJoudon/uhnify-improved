@@ -2,6 +2,7 @@
 import { assert } from 'chai';
 import { Meteor } from 'meteor/meteor';
 import { Profiles } from './Profiles';
+import { TEXT_LIMITS } from '../listing/limits';
 import { callAs, errorFrom, makeUser, resetAll } from '../../startup/server/testFixtures';
 
 /**
@@ -75,6 +76,23 @@ if (Meteor.isServer) {
           'not-authorized',
         );
       });
+
+      it('holds a name to its limit', function () {
+        Profiles.collection.remove({ userId: attacker });
+        assert.equal(
+          errorFrom(() => callAs(attacker, 'createUserProfile', attacker, 'attacker@test.example', 'A'.repeat(TEXT_LIMITS.firstName + 1), 'B', [])),
+          'too-long',
+        );
+        assert.isNotOk(Profiles.collection.findOne({ userId: attacker }), 'nothing is stored from a refused call');
+      });
+
+      it('keeps only real topics as interests, once each', function () {
+        Profiles.collection.remove({ userId: attacker });
+        callAs(attacker, 'createUserProfile', attacker, 'attacker@test.example', 'A', 'B', [
+          'Books & Ideas', 'x'.repeat(5000), 'Books & Ideas', 'Not a topic',
+        ]);
+        assert.deepEqual(Profiles.collection.findOne({ userId: attacker }).interests, ['Books & Ideas']);
+      });
     });
 
     describe('Profiles.update', function () {
@@ -92,6 +110,24 @@ if (Meteor.isServer) {
           firstName: 'Private', lastName: 'Interest', email: 'attacker@test.example',
           bio: '', title: '', interests: ['Support Groups', 'Books & Ideas'],
         });
+        assert.deepEqual(Profiles.collection.findOne({ userId: attacker }).interests, ['Books & Ideas']);
+      });
+
+      /**
+       * An interest is a topic label — the pages offer nothing else, and every
+       * reader resolves it back to its topic — so a string that is not one, or
+       * one repeated, was only ever a way to store text of any length, any
+       * number of times, on a document the people directory sends to every
+       * signed-in user.
+       */
+      it('keeps only real topics as interests, once each', function () {
+        const form = { firstName: 'X', lastName: 'Y', email: 'attacker@test.example', bio: '', title: '' };
+        callAs(attacker, 'Profiles.update', {
+          ...form,
+          interests: ['Music & Performance', 'i'.repeat(TEXT_LIMITS.description), ' Books & Ideas ', 'Music & Performance'],
+        });
+        assert.deepEqual(Profiles.collection.findOne({ userId: attacker }).interests, ['Music & Performance', 'Books & Ideas']);
+        callAs(attacker, 'Profiles.update', { ...form, interests: new Array(500).fill('Books & Ideas') });
         assert.deepEqual(Profiles.collection.findOne({ userId: attacker }).interests, ['Books & Ideas']);
       });
 
@@ -122,6 +158,37 @@ if (Meteor.isServer) {
           // rightly refuses to have that scheme typed into a source file.
           bio: '', title: '', interests: [], picture: `${'java'}${'script'}:alert(1)`,
         })), 'invalid-image');
+      });
+
+      /**
+       * The label is whatever the uploader wrote; the bytes are not. A
+       * picture that says JPEG and begins like a PNG is refused, and one
+       * whose bytes agree with it is kept.
+       */
+      it('reads the picture’s bytes, not its label', function () {
+        const form = { firstName: 'X', lastName: 'Y', email: 'attacker@test.example', bio: '', title: '', interests: [] };
+        assert.equal(errorFrom(() => callAs(attacker, 'Profiles.update', {
+          ...form, picture: 'data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUg==',
+        })), 'invalid-image');
+        const jpeg = `data:image/jpeg;base64,${Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64)]).toString('base64')}`;
+        callAs(attacker, 'Profiles.update', { ...form, picture: jpeg });
+        assert.equal(Profiles.collection.findOne({ userId: attacker }).picture, jpeg);
+      });
+
+      it('refuses a bio past its limit and keeps one exactly at it', function () {
+        const form = { firstName: 'X', lastName: 'Y', email: 'attacker@test.example', title: '', interests: [] };
+        assert.equal(errorFrom(() => callAs(attacker, 'Profiles.update', { ...form, bio: 'b'.repeat(TEXT_LIMITS.bio + 1) })), 'too-long');
+        callAs(attacker, 'Profiles.update', { ...form, bio: 'b'.repeat(TEXT_LIMITS.bio) });
+        assert.equal(Profiles.collection.findOne({ userId: attacker }).bio.length, TEXT_LIMITS.bio);
+      });
+
+      it('stores a name trimmed and refuses a blank email', function () {
+        const form = { firstName: '  Trimmed ', lastName: ' Name ', email: 'attacker@test.example', bio: '', title: '', interests: [] };
+        callAs(attacker, 'Profiles.update', form);
+        const mine = Profiles.collection.findOne({ userId: attacker });
+        assert.equal(mine.firstName, 'Trimmed');
+        assert.equal(mine.lastName, 'Name');
+        assert.equal(errorFrom(() => callAs(attacker, 'Profiles.update', { ...form, email: '   ' })), 'required');
       });
     });
   });

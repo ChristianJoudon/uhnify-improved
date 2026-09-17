@@ -8,11 +8,9 @@ import PosterArt from '../components/PosterArt';
 import ChipInput from '../components/form/ChipInput';
 import SchedulePicker from '../components/form/SchedulePicker';
 import { scheduleLabel } from '../../api/club/schedule';
+import { TEXT_LIMITS } from '../../api/listing/limits';
+import { shrinkImage } from '../utilities/shrinkImage';
 import { TOPICS, TOPIC_KEYS, topicFor } from '../utilities/topics';
-
-const NAME_MAX = 70;
-const ABOUT_MAX = 240;
-const MAX_IMAGE_BYTES = 2000000;
 
 const AddClub = () => {
   const navigate = useNavigate();
@@ -43,28 +41,24 @@ const AddClub = () => {
   const when = scheduleLabel(form.schedule);
   const valid = form.name.trim() && form.description.trim() && form.location.trim() && form.schedule.days.length > 0;
 
-  const pickImage = event => {
+  const pickImage = async event => {
     const input = event.target;
     const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    if (!file.type.startsWith('image')) {
-      swal('Not an image', 'Please choose an image file.', 'error');
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      swal('Too large', 'Please choose an image under 2 MB.', 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = e => set('image', e.target.result);
-    reader.readAsDataURL(file);
     // Clear it, or picking the same file after Remove fires no change event.
     // Held as a local first: assigning straight through `event.target` trips
     // no-param-reassign, a rule that exists to stop a handler mutating its
     // caller's data — and this is a deliberate write to a DOM node, not that.
     input.value = '';
+    if (!file) {
+      return;
+    }
+    try {
+      // Shrunk here rather than refused: a phone photo is several megabytes,
+      // and the 2 MB door that stood here turned real people away.
+      set('image', await shrinkImage(file));
+    } catch (error) {
+      swal('Could not use that photo', error.message, 'error');
+    }
   };
 
   const submit = event => {
@@ -139,14 +133,12 @@ const AddClub = () => {
                 id="name"
                 type="text"
                 value={form.name}
-                maxLength={NAME_MAX}
+                maxLength={TEXT_LIMITS.name}
                 placeholder="Sunrise Hiking Crew"
                 onChange={e => set('name', e.target.value)}
-                aria-describedby="name-count"
                 required
               />
             </label>
-            <span className="field-hint" id="name-count">{form.name.length}/{NAME_MAX}</span>
 
             <label htmlFor="description">
               What it&apos;s about
@@ -154,14 +146,12 @@ const AddClub = () => {
                 id="description"
                 rows={3}
                 value={form.description}
-                maxLength={ABOUT_MAX}
+                maxLength={TEXT_LIMITS.description}
                 placeholder="Who it's for and what you actually do."
                 onChange={e => set('description', e.target.value)}
-                aria-describedby="about-count"
                 required
               />
             </label>
-            <span className="field-hint" id="about-count">{form.description.length}/{ABOUT_MAX}</span>
 
             <label htmlFor="location">
               Where you meet
@@ -169,6 +159,7 @@ const AddClub = () => {
                 id="location"
                 type="text"
                 value={form.location}
+                maxLength={TEXT_LIMITS.location}
                 placeholder="Līhuʻe Neighborhood Center"
                 onChange={e => set('location', e.target.value)}
                 required
@@ -234,15 +225,20 @@ const AddClub = () => {
           <section className="form-block">
             <h3>Contact</h3>
             <label htmlFor="contactInfo">
-              How people reach you
+              How to reach your group
               <input
                 id="contactInfo"
                 type="text"
                 value={form.contactInfo}
+                maxLength={TEXT_LIMITS.contactInfo}
                 placeholder="hello@yourgroup.org"
                 onChange={e => set('contactInfo', e.target.value)}
+                aria-describedby="contactInfo-hint"
               />
             </label>
+            <span className="field-hint" id="contactInfo-hint">
+              Optional — printed on the group&apos;s card for anyone to see.
+            </span>
           </section>
 
           <div className="create-actions">

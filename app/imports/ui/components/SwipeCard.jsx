@@ -125,9 +125,14 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
    * gesture nobody finds — the affordance has to be the obvious one, and the
    * card itself is the biggest target on the screen. `dragging` keeps a
    * short drag that snapped back from counting as a tap.
+   *
+   * A tap that lands on a contact link on the back is for the link — the
+   * browser is opening it — not a request to turn the card over again. Framer
+   * reports a tap for any descendant, so the link is recognised here; the
+   * keyboard path calls this with no event and is unaffected.
    */
-  const handleTap = () => {
-    if (!isTop || dragging.current) {
+  const handleTap = domEvent => {
+    if (!isTop || dragging.current || domEvent?.target?.closest?.('a')) {
       return;
     }
     onFlip();
@@ -185,6 +190,16 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
         onDragEnd={isTop ? handleDragEnd : undefined}
         onTap={handleTap}
         onKeyDownCapture={isTop ? handleKeyDownCapture : undefined}
+        /* A swipe that happens to begin on a contact link ends with the
+           browser firing that link's click: pointer down and up both landed
+           on it, however far the card travelled in between. Framer does not
+           cancel it, and `dragging` is still set when it arrives, so this
+           does — or deciding on a listing from its phone row also dialled it. */
+        onClickCapture={domEvent => {
+          if (dragging.current) {
+            domEvent.preventDefault();
+          }
+        }}
         animate={exitDirection ? exitTarget.current : { x: 0, y: 0 }}
         transition={exitDirection
           ? { type: 'spring', stiffness: 170, damping: 26 }
@@ -295,7 +310,8 @@ SwipeCard.propTypes = {
     endDate: PropTypes.instanceOf(Date),
     meetingTime: PropTypes.string,
     location: PropTypes.string,
-    createdBy: PropTypes.string,
+    email: PropTypes.string,
+    phone: PropTypes.string,
     eventID: PropTypes.number,
     image: PropTypes.string,
   }).isRequired,

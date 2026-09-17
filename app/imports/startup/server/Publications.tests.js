@@ -3,6 +3,7 @@ import { assert } from 'chai';
 import { Meteor } from 'meteor/meteor';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
+import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { Profiles } from '../../api/profiles/Profiles';
@@ -43,7 +44,9 @@ if (Meteor.isServer) {
     beforeEach(function () {
       resetAll();
       makeClub({ owner: 'someone@private.example' });
-      makeEvent({ owner: 'someone@private.example' });
+      // `createdBy` is what an older record still carries: the same address,
+      // written a second time — and for a long while the copy not withheld.
+      makeEvent({ owner: 'someone@private.example', createdBy: 'someone@private.example' });
     });
 
     it('does not send club owners to a signed-out visitor', function () {
@@ -52,10 +55,13 @@ if (Meteor.isServer) {
       docs.forEach(doc => assert.isUndefined(doc.owner, 'owner is an email address'));
     });
 
-    it('does not send event owners to a signed-out visitor', function () {
+    it('does not send event owners to a signed-out visitor, under either name', function () {
       const docs = docsFrom(publishAs(null, Events.userPublicationName));
       assert.isAbove(docs.length, 0);
-      docs.forEach(doc => assert.isUndefined(doc.owner));
+      docs.forEach(doc => {
+        assert.isUndefined(doc.owner);
+        assert.isUndefined(doc.createdBy, 'the same address under another key');
+      });
     });
 
     it('does not send owners through clubs.all either', function () {
@@ -87,6 +93,13 @@ if (Meteor.isServer) {
       const docs = docsFrom(publishAs(admin, Clubs.adminPublicationName));
       assert.isAbove(docs.length, 0);
       assert.isDefined(docs[0].owner, 'the admin editor needs this field');
+    });
+
+    it('still sends who posted an event to an administrator', function () {
+      const admin = makeUser({ admin: true });
+      const docs = docsFrom(publishAs(admin, Events.adminPublicationName));
+      assert.isAbove(docs.length, 0);
+      assert.equal(docs[0].owner, 'someone@private.example', 'the admin editor prints who posted it');
     });
 
     it('sends nothing to a non-administrator asking for the admin publication', function () {
@@ -146,6 +159,43 @@ if (Meteor.isServer) {
       });
 
       assert.deepEqual(ProfileClubs.collection.find(selector).fetch(), []);
+    });
+  });
+
+  /**
+   * The member publications answer to any account, and sign-up is open, so
+   * "members only" is no boundary at all. They used to send whole documents:
+   * join a group, and the address of whoever founded it — and of whoever
+   * posted each of its events — arrived with the listing.
+   */
+  describe('member publications', function () {
+    let member;
+
+    beforeEach(function () {
+      resetAll();
+      member = makeUser();
+      const clubId = makeClub({ owner: 'founder@private.example' });
+      callAs(member, 'profileClubs.add', clubId);
+      makeEvent({
+        eventID: Clubs.collection.findOne(clubId).clubID,
+        owner: 'poster@private.example',
+        createdBy: 'poster@private.example',
+      });
+    });
+
+    it('does not send who founded a joined group', function () {
+      const docs = docsFrom(publishAs(member, ProfileClubs.userPublicationName));
+      assert.isAbove(docs.length, 0, 'the joined group itself should still be sent');
+      docs.forEach(doc => assert.isUndefined(doc.owner));
+    });
+
+    it('does not send who posted a joined group’s events', function () {
+      const docs = docsFrom(publishAs(member, EventClubs.userPublicationName));
+      assert.isAbove(docs.length, 0, 'the group’s event itself should still be sent');
+      docs.forEach(doc => {
+        assert.isUndefined(doc.owner);
+        assert.isUndefined(doc.createdBy);
+      });
     });
   });
 

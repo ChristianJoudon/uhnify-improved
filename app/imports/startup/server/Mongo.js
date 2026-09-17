@@ -7,6 +7,7 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
 import { parseMeetingTime } from '../../api/club/schedule';
 import { ensureRecommendationScaffold } from './RecommendationScaffold';
+import { dropRedundantCreatedBy } from './migrations';
 
 /* eslint-disable no-console */
 
@@ -149,4 +150,10 @@ syncDefaultProfiles();
 seedProfileClubs();
 seedEventClubs();
 migrateClubSchedules();
+// After seeding, so a database seeded before the register dropped the field
+// is cleaned on the same boot.
+const clearedCreatedBy = dropRedundantCreatedBy();
+if (clearedCreatedBy > 0) {
+  console.log(`Cleared createdBy from ${clearedCreatedBy} events.`);
+}
 ensureRecommendationScaffold();

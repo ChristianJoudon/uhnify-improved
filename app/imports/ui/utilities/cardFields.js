@@ -98,6 +98,10 @@ export const EVENT_FIELDS = [
   { key: 'host', icon: 'building', get: event => event.hostName },
   { key: 'registration', icon: 'check', get: event => event.registrationNote },
   { key: 'phone', icon: 'phone', get: event => event.phone },
+  // The address an organizer chose to print, and only that: `owner` and the
+  // old `createdBy` are the poster's account, never a contact the listing
+  // published, and neither reaches the client any more.
+  { key: 'email', icon: 'mail', get: event => event.email },
 ];
 
 /** The club card's rows. Same contract. */
