@@ -18,7 +18,10 @@ import { ensureRetention } from '../retention/retention';
  * entry, and there is no method that can. It is written by a single wrapper
  * around the method layer rather than by calls scattered through the methods
  * themselves — see startup/server/auditTrail.js — because a trail that each new
- * method has to remember to write to is a trail with holes in it.
+ * method has to remember to write to is a trail with holes in it. (One startup
+ * migration, redactParticipationAudit, rewrites the `summary` of old entries
+ * that said which listing a person joined. It removes nothing, and it is the
+ * only exception.)
  *
  * What it deliberately does NOT hold: argument values of any size. Profile
  * pictures and event images travel through these methods as multi-megabyte

@@ -5,7 +5,7 @@ import { PencilSquare, Trash } from 'react-bootstrap-icons';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import PosterArt from './PosterArt';
-import { imagePath, normalizeCategories } from '../utilities/helpers';
+import { imagePath, isPhoto, normalizeCategories } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
 import { scheduleLabel } from '../../api/club/schedule';
 
@@ -23,7 +23,7 @@ const ClubItemAdmin = ({ club }) => {
   const when = scheduleLabel(club.schedule) || club.meetingTime;
   // Only a genuinely uploaded photo becomes the poster face; the seeded logo
   // art stays the small footer mark.
-  const photo = club.image && club.image.startsWith('data:') ? club.image : '';
+  const photo = isPhoto(club.image) ? club.image : '';
 
   const removeItem = () => {
     swal({
@@ -50,7 +50,7 @@ const ClubItemAdmin = ({ club }) => {
       <PosterArt topic={topic} eyebrow={when} image={photo} title={club.name} />
 
       <div className="mb-poster-foot">
-        {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />}
+        {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" decoding="async" />}
         <span className="mb-poster-meta">{club.location}</span>
         <span className="mb-poster-tools">
           {/* Icon-only: the club's name is directly above, so a label on each

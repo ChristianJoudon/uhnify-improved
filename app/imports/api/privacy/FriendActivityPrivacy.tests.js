@@ -9,8 +9,13 @@ import { Profiles } from '../profiles/Profiles';
 import { callAs, errorFrom, makeClub, makeEvent, makeUser, resetAll } from '../../startup/server/testFixtures';
 import {
   FRIEND_ACTIVITY_VISIBILITY,
+  LISTING_PRIVACY_FIELDS,
   friendActivityVisibilityFor,
+  friendActivityVisibilityOfRow,
+  isAnonymousListing,
+  isPrivateListing,
   isSensitiveListing,
+  tookPartWhileAnonymous,
   withHostSignals,
 } from './FriendActivityPrivacy';
 import { syncFriendActivityPrivacy } from './friendActivitySync';
@@ -170,6 +175,155 @@ if (Meteor.isServer) {
       assert.equal(friendActivityVisibilityFor(undefined, { sharing: true }), hidden);
       assert.equal(friendActivityVisibilityFor(null, { sharing: true }), hidden);
     });
+
+    /**
+     * A friend is somebody. A group that shows its own organizer no names
+     * cannot go on showing them to each member's friends, however willing the
+     * member is to share.
+     */
+    it('is private for an anonymous listing even when its owner shares', function () {
+      assert.equal(friendActivityVisibilityFor({ ...ordinary, anonymous: true }, { sharing: true }), hidden);
+      assert.equal(friendActivityVisibilityFor({ ...ordinary, anonymous: false }, { sharing: true }), shareable);
+    });
+
+    /**
+     * A shared row is sent to friends whole, with the listing's _id on it. For
+     * a private listing that tells people who were never invited that it
+     * exists, who is in it, and the id its methods are called with.
+     */
+    it('is private for a private listing even when its owner shares', function () {
+      assert.equal(friendActivityVisibilityFor({ ...ordinary, visibility: 'private' }, { sharing: true }), hidden);
+      assert.equal(friendActivityVisibilityFor({ ...ordinary, visibility: 'public' }, { sharing: true }), shareable);
+    });
+  });
+
+  /**
+   * A listing that stopped being anonymous is an ordinary listing again, and
+   * judged alone it says 'shareable' about everyone in it — the people who
+   * joined because nobody could see them with the rest. The row's own date is
+   * the other half of the question.
+   */
+  describe('friendActivityVisibilityOfRow', function () {
+    const ended = new Date('2026-09-01T12:00:00Z');
+    const onceAnonymous = { categories: ['community'], anonymousUntil: ended };
+    const before = { createdAt: new Date(ended.getTime() - 1) };
+    const after = { createdAt: new Date(ended.getTime() + 1) };
+
+    it('keeps hidden a row made before the anonymity ended, however willing its owner is to share', function () {
+      assert.isTrue(tookPartWhileAnonymous(onceAnonymous, before));
+      assert.equal(friendActivityVisibilityOfRow(onceAnonymous, before, { sharing: true }), hidden);
+    });
+
+    it('counts the very moment it ended as before, and a row with no date as unable to show it came after', function () {
+      [{ createdAt: ended }, {}, undefined].forEach(row => {
+        assert.isTrue(tookPartWhileAnonymous(onceAnonymous, row));
+        assert.equal(friendActivityVisibilityOfRow(onceAnonymous, row, { sharing: true }), hidden);
+      });
+    });
+
+    it('judges a row made afterwards as any other, by the listing and the person’s choice', function () {
+      assert.isFalse(tookPartWhileAnonymous(onceAnonymous, after));
+      assert.equal(friendActivityVisibilityOfRow(onceAnonymous, after, { sharing: true }), shareable);
+      assert.equal(friendActivityVisibilityOfRow(onceAnonymous, after, { sharing: false }), hidden);
+      assert.equal(friendActivityVisibilityOfRow({ ...onceAnonymous, anonymous: true }, after, { sharing: true }), hidden);
+    });
+
+    it('changes nothing for a listing that was never anonymous', function () {
+      const ordinary = { categories: ['community'] };
+      [before, after, {}].forEach(row => {
+        assert.isFalse(tookPartWhileAnonymous(ordinary, row));
+        assert.equal(friendActivityVisibilityOfRow(ordinary, row, { sharing: true }), shareable);
+      });
+      assert.equal(friendActivityVisibilityOfRow(undefined, after, { sharing: true }), hidden, 'and a missing one still fails closed');
+    });
+  });
+
+  /**
+   * Private is read the way the publications read it, and for an event it
+   * rests on the hosts as anonymity does.
+   */
+  describe('isPrivateListing', function () {
+    const ordinary = { categories: ['community'] };
+
+    it('is false for a listing with no visibility, or a public one', function () {
+      assert.isFalse(isPrivateListing(ordinary));
+      assert.isFalse(isPrivateListing({ ...ordinary, visibility: 'public' }));
+    });
+
+    it('is true for private, and for any value it has never heard of', function () {
+      ['private', 'members', 'unlisted', 'Public', 'something-new', '', null, 1, true].forEach(visibility => {
+        assert.isTrue(isPrivateListing({ ...ordinary, visibility }), `${visibility}`);
+      });
+    });
+
+    it('is true for an event when any one group that hosts it is private, however public the event', function () {
+      const event = { categories: ['outdoors'], visibility: 'public' };
+      assert.isTrue(isPrivateListing(withHostSignals(event, [ordinary, { ...ordinary, visibility: 'private' }])));
+      assert.isTrue(isPrivateListing(withHostSignals({ ...event, visibility: 'private' }, [ordinary])), 'and by its own');
+      assert.isFalse(isPrivateListing(withHostSignals(event, [ordinary, { ...ordinary, visibility: 'public' }])));
+      assert.isFalse(isPrivateListing(withHostSignals(ordinary, [])));
+    });
+
+    it('treats a listing that cannot be found as private', function () {
+      assert.isTrue(isPrivateListing(undefined));
+      assert.isTrue(isPrivateListing(null));
+    });
+
+    it('is carried by the projection every judge loads listings with', function () {
+      assert.equal(LISTING_PRIVACY_FIELDS.visibility, 1);
+    });
+  });
+
+  /**
+   * Anonymous has three sources and one question. Each source is pinned by
+   * itself, because the way this breaks is a reader that checks the field and
+   * forgets the other two — and the two it forgets are the recovery meeting
+   * and the recovery meeting's Thursday session.
+   */
+  describe('isAnonymousListing', function () {
+    const ordinary = { categories: ['community'], tags: ['hiking'] };
+
+    it('is true when the owner said so', function () {
+      assert.isTrue(isAnonymousListing({ ...ordinary, anonymous: true }));
+    });
+
+    it('is true for a sensitive listing whatever its own flag says, including off', function () {
+      assert.isTrue(isAnonymousListing({ categories: ['support_group'] }));
+      assert.isTrue(isAnonymousListing({ categories: ['support_group'], anonymous: false }));
+      assert.isTrue(isAnonymousListing({ ...ordinary, tags: ['sober'], anonymous: false }));
+    });
+
+    it('is true for an event when any one group that hosts it is anonymous', function () {
+      const event = { categories: ['outdoors'], anonymous: false };
+      assert.isTrue(isAnonymousListing(withHostSignals(event, [ordinary, { ...ordinary, anonymous: true }])));
+      assert.isTrue(isAnonymousListing(withHostSignals(event, [{ categories: ['lgbtq'] }])), 'a sensitive host');
+    });
+
+    it('is false for an ordinary listing with ordinary hosts', function () {
+      assert.isFalse(isAnonymousListing(ordinary));
+      assert.isFalse(isAnonymousListing({ ...ordinary, anonymous: false }));
+      assert.isFalse(isAnonymousListing(withHostSignals(ordinary, [ordinary, { ...ordinary, anonymous: false }])));
+    });
+
+    it('takes only a real true as the flag', function () {
+      ['true', 'yes', 1, {}].forEach(anonymous => {
+        assert.isFalse(isAnonymousListing({ ...ordinary, anonymous }), `${anonymous}`);
+      });
+    });
+
+    it('treats a listing that cannot be found as anonymous', function () {
+      assert.isTrue(isAnonymousListing(undefined));
+      assert.isTrue(isAnonymousListing(null));
+    });
+
+    /**
+     * Every judge of a listing projects to LISTING_PRIVACY_FIELDS. A flag that
+     * is not in that list is never loaded, reads as absent, and an anonymous
+     * group is then shared with friends by a query that looked correct.
+     */
+    it('is carried by the projection every judge loads listings with', function () {
+      assert.equal(LISTING_PRIVACY_FIELDS.anonymous, 1);
+    });
   });
 
   describe('withHostSignals', function () {
@@ -285,7 +439,9 @@ if (Meteor.isServer) {
       callAs(sharer, 'eventSwipes.record', eventId, 'going');
       assert.equal(visibilityOfSwipe(sharer, eventId), shareable);
 
-      callAs(makeUser(), 'Clubs.organizeEvent', { clubID: host.clubID, eventID: eventId });
+      // By an administrator: giving an event a host is for the people who may
+      // set its privacy, because this is what it does.
+      callAs(makeUser({ admin: true }), 'Clubs.organizeEvent', { clubID: host.clubID, eventID: eventId });
 
       assert.equal(visibilityOfSwipe(sharer, eventId), hidden);
     });
@@ -459,14 +615,31 @@ if (Meteor.isServer) {
       assert.equal(visibilityOfMembership(keeper, clubId), hidden);
     });
 
-    it('hides every membership when the group becomes sensitive, and restores only the sharers’ when it stops', function () {
+    /**
+     * This used to give the sharers' rows back. But whoever was in the group
+     * while it was filed under 'faith' was in a faith group, and re-filing it
+     * is not their consent to have that told: see tookPartWhileAnonymous. What
+     * comes back is the group, for the people who join from here on.
+     */
+    it('hides every membership when the group becomes sensitive, and when it stops shows only the sharers who join afterwards', function () {
+      // One more account than the rest of these, and each is a password hashed.
+      this.timeout(10000);
       edit(clubId, { categories: ['faith'] });
       assert.equal(visibilityOfMembership(sharer, clubId), hidden);
       assert.equal(visibilityOfMembership(keeper, clubId), hidden);
 
       edit(clubId, { categories: ['community'] });
-      assert.equal(visibilityOfMembership(sharer, clubId), shareable);
+      assert.equal(visibilityOfMembership(sharer, clubId), hidden, 'they were in it while it was sensitive');
       assert.equal(visibilityOfMembership(keeper, clubId), hidden);
+
+      // A tick on, so the join is dated after the moment the group stopped.
+      Meteor._sleepForMs(3);
+      const newcomer = makeUser();
+      callAs(newcomer, 'Profiles.setFriendActivitySharing', true);
+      callAs(newcomer, 'profileClubs.add', clubId);
+      edit(clubId, { name: 'Renamed' });
+      assert.equal(visibilityOfMembership(newcomer, clubId), shareable, 'an ordinary join, and it survives being judged again');
+      assert.equal(visibilityOfMembership(sharer, clubId), hidden);
     });
 
     it('hides memberships as soon as a member adds a sensitive tag', function () {
@@ -481,6 +654,7 @@ if (Meteor.isServer) {
      * and the RSVPs to them were left showing until the next restart.
      */
     it('hides RSVPs to the group’s events when the group is re-filed as sensitive, by either link', function () {
+      this.timeout(10000);
       const linkedEventId = makeEvent({ categories: ['community'] });
       EventClubs.collection.insert({ clubId, eventId: linkedEventId, createdAt: new Date() });
       const numberedEventId = makeEvent({ eventID: Clubs.collection.findOne(clubId).clubID, categories: ['community'] });
@@ -496,9 +670,20 @@ if (Meteor.isServer) {
       assert.equal(visibilityOfSwipe(sharer, numberedEventId), hidden);
       assert.equal(visibilityOfSwipe(sharer, unrelatedEventId), shareable, 'an event the group does not host is not its business');
 
+      // Re-filed back, and the RSVPs from before stay where they were: going
+      // to its meetings said what being in it said.
       edit(clubId, { categories: ['community'] });
-      assert.equal(visibilityOfSwipe(sharer, linkedEventId), shareable);
-      assert.equal(visibilityOfSwipe(sharer, numberedEventId), shareable);
+      assert.equal(visibilityOfSwipe(sharer, linkedEventId), hidden);
+      assert.equal(visibilityOfSwipe(sharer, numberedEventId), hidden);
+      assert.equal(visibilityOfSwipe(sharer, unrelatedEventId), shareable);
+
+      Meteor._sleepForMs(3);
+      const newcomer = makeUser();
+      callAs(newcomer, 'Profiles.setFriendActivitySharing', true);
+      [linkedEventId, numberedEventId].forEach(eventId => callAs(newcomer, 'eventSwipes.record', eventId, 'going'));
+      edit(clubId, { name: 'Renamed' });
+      assert.equal(visibilityOfSwipe(newcomer, linkedEventId), shareable, 'an RSVP made afterwards is an ordinary one');
+      assert.equal(visibilityOfSwipe(newcomer, numberedEventId), shareable);
       assert.equal(visibilityOfSwipe(keeper, linkedEventId), hidden, 'and only for the people who share');
     });
 

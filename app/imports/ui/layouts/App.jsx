@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Roles } from 'meteor/alanning:roles';
-import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'framer-motion';
 import Landing from '../pages/Landing';
 import NotFound from '../pages/NotFound';
@@ -29,20 +29,41 @@ import AddEvent from '../pages/AddEvent';
 import Profile from '../pages/Profile';
 import EditClubAdmin from '../pages/EditClubAdmin';
 import EditEventAdmin from '../pages/EditEventAdmin';
+import ManageGroup from '../pages/ManageGroup';
+import ManageEvent from '../pages/ManageEvent';
+import JoinGroup from '../pages/JoinGroup';
+import { rememberReturnTo } from '../utilities/returnTo';
 // Keep the extension explicit because this page has a same-basename CSS module;
 // Meteor's resolver can otherwise hand React the stylesheet module object.
 import EventIntake from '../pages/EventIntake.jsx';
 import EventReview from '../pages/EventReview.jsx';
 
+/**
+ * To the sign-in page, leaving a note of where the person was headed.
+ *
+ * The note is what makes an invite link work for somebody with no account:
+ * `/join/<token>` bounces them here, and without it signing in landed on the
+ * front page with the link gone. Sign in and sign up both read it back (see
+ * utilities/returnTo). It is written in an effect, which runs for the render
+ * that redirects and not for one React threw away.
+ */
+const ToSignIn = () => {
+  const { pathname, search, hash } = useLocation();
+  useEffect(() => {
+    rememberReturnTo(`${pathname}${search}${hash}`);
+  }, [pathname, search, hash]);
+  return <Navigate to="/signin" />;
+};
+
 const ProtectedRoute = ({ children }) => {
   const isLogged = Meteor.userId() !== null;
-  return isLogged ? children : <Navigate to="/signin" />;
+  return isLogged ? children : <ToSignIn />;
 };
 
 const AdminProtectedRoute = ({ ready, children }) => {
   const isLogged = Meteor.userId() !== null;
   if (!isLogged) {
-    return <Navigate to="/signin" />;
+    return <ToSignIn />;
   }
   if (!ready) {
     return <LoadingSpinner />;
@@ -89,6 +110,14 @@ const App = () => {
               <Route path="/clubdetail" element={<Navigate to="/" replace />} />
               <Route path="/create-club" element={<ProtectedRoute><AddClub /></ProtectedRoute>} />
               <Route path="/create-event" element={<ProtectedRoute><AddEvent /></ProtectedRoute>} />
+              {/* A listing's own page, for the person who runs it. Signed-in is
+                  all the route can check; whether this listing is THEIRS is the
+                  page's question, because only its subscription can answer it. */}
+              <Route path="/manage/group/:_id" element={<ProtectedRoute><ManageGroup /></ProtectedRoute>} />
+              <Route path="/manage/event/:_id" element={<ProtectedRoute><ManageEvent /></ProtectedRoute>} />
+              {/* Where an invite link lands. Protected like any other page, and
+                  the reason the guard now remembers where it was asked for. */}
+              <Route path="/join/:token" element={<ProtectedRoute><JoinGroup /></ProtectedRoute>} />
               <Route path="/admin" element={<AdminProtectedRoute ready={ready}><ListClubAdmin /></AdminProtectedRoute>} />
               <Route path="/admin/event-intake" element={<AdminProtectedRoute ready={ready}><EventIntake /></AdminProtectedRoute>} />
               <Route path="/admin/event-intake/review" element={<AdminProtectedRoute ready={ready}><EventReview /></AdminProtectedRoute>} />

@@ -5,12 +5,17 @@ import { Meteor } from 'meteor/meteor';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Trash } from 'react-bootstrap-icons';
 import PosterArt from '../components/PosterArt';
+import PrivacyToggles from '../components/PrivacyToggles';
 import ChipInput from '../components/form/ChipInput';
 import SchedulePicker from '../components/form/SchedulePicker';
 import { scheduleLabel } from '../../api/club/schedule';
 import { TEXT_LIMITS } from '../../api/listing/limits';
+import { isSensitiveListing } from '../../api/privacy/FriendActivityPrivacy';
 import { shrinkImage } from '../utilities/shrinkImage';
 import { TOPICS, TOPIC_KEYS, topicFor } from '../utilities/topics';
+
+/** The category a chosen topic is stored as — see the insert below. */
+const categoryOf = topicKey => (topicKey ? (TOPICS[topicKey].category || TOPICS[topicKey].label) : '');
 
 const AddClub = () => {
   const navigate = useNavigate();
@@ -25,9 +30,23 @@ const AddClub = () => {
     tags: [],
     image: '',
     schedule: { days: [], time: '17:00', cadence: 'weekly' },
+    // Open, named and unasked: what every group was before it could be
+    // anything else, and still the right start for a hiking crew.
+    privacy: { visibility: 'public', anonymous: false, approveMembers: false },
   });
 
   const set = (field, value) => setForm(current => ({ ...current, [field]: value }));
+  const setPrivacy = patch => setForm(current => ({ ...current, privacy: { ...current.privacy, ...patch } }));
+
+  // The server's own test, run on what the form holds so far. A group filed
+  // under support, health, LGBTQ+ or faith is anonymous whatever its owner
+  // ticks, and the switch says so while the form is still open — finding out
+  // afterwards, from a member list that never appears, is finding out too late
+  // to have chosen a different word for the tag.
+  const anonymousLocked = useMemo(
+    () => isSensitiveListing({ categories: categoryOf(form.topicKey), tags: form.tags }),
+    [form.topicKey, form.tags],
+  );
 
   // Until a topic is picked, the preview shows what the club would be filed as
   // from its own words — the same resolution the finder will apply.
@@ -80,18 +99,31 @@ const AddClub = () => {
       contactInfo: form.contactInfo.trim(),
       // Only an explicitly chosen topic becomes the category; the fallback
       // label is a display word, not a subject.
-      categories: form.topicKey
-        ? (TOPICS[form.topicKey].category || TOPICS[form.topicKey].label)
-        : '',
+      categories: categoryOf(form.topicKey),
       tags: form.tags,
       schedule: form.schedule,
-    }, error => {
+      // Sent as the switches stood. The server has the last word on two of
+      // them — a sensitive group is anonymous, and an anonymous group cannot
+      // ask first — and the manage page this leads to shows what it decided.
+      visibility: form.privacy.visibility,
+      anonymous: form.privacy.anonymous,
+      approveMembers: form.privacy.approveMembers,
+    }, (error, clubId) => {
       setSaving(false);
       if (error) {
         swal('Could not create', error.reason || error.message, 'error');
-      } else {
-        swal('Created', `${form.name.trim()} is live.`, 'success').then(() => navigate('/search-clubs'));
+        return;
       }
+      // To the group's own page, not to Nearby. A private group is not ON
+      // Nearby — its invite link is the only way in, and this is the page
+      // that has it. Sending its founder off to search for it was sending
+      // them to look for something they could never find.
+      const isPrivate = form.privacy.visibility === 'private';
+      swal(
+        'Created',
+        isPrivate ? `${form.name.trim()} is ready. Its invite link is next.` : `${form.name.trim()} is live.`,
+        'success',
+      ).then(() => navigate(clubId ? `/manage/group/${clubId}` : '/saved'));
     });
   };
 
@@ -239,6 +271,20 @@ const AddClub = () => {
             <span className="field-hint" id="contactInfo-hint">
               Optional — printed on the group&apos;s card for anyone to see.
             </span>
+          </section>
+
+          {/* Last, and a card of its own: everything above describes the
+              group, and this decides who gets to read that description. All of
+              it can be changed afterwards from the group's page. */}
+          <section className="form-block" aria-labelledby="add-club-privacy">
+            <h3 id="add-club-privacy">Privacy</h3>
+            <PrivacyToggles
+              kind="club"
+              idPrefix="add-club"
+              value={form.privacy}
+              anonymousLocked={anonymousLocked}
+              onChange={setPrivacy}
+            />
           </section>
 
           <div className="create-actions">

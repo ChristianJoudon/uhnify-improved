@@ -735,6 +735,26 @@ div.btn-solid-primary button[type="submit"]:hover {
   margin-bottom: 1.1rem;
 }
 
+/* The line that says how a listing is kept — "Private", "Anonymous" — and how
+   many people are in it. Above the facts, because whether anyone can see you
+   there comes before when it starts. On the sheet only: a card stays a poster. */
+.details-status {
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+
+.details-count {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--mb-ink-soft);
+}
+
+/* After a chip the count is a second thought on the same line, not a third
+   chip, so it stands a little further off. */
+.details-status .mb-chip + .details-count {
+  margin-left: 0.25rem;
+}
+
 .details-copy {
   margin-top: 1.1rem;
 }
@@ -4242,6 +4262,83 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-ink-soft);
 }
 
+/* A switch that cannot be moved — anonymity on a recovery group, approvals on
+   an anonymous one. Faded as a whole, track and words, and the pointer stops
+   promising a click; the help line beneath stays at full strength, because it
+   is the only thing on screen saying WHY. */
+.mb-switch:has(input:disabled) {
+  cursor: default;
+}
+
+.mb-switch input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mb-switch input:disabled + span {
+  color: var(--mb-ink-soft);
+}
+
+/* Several switches in one card: a group's privacy is three of them. Each is a
+   switch and its sentence; the gap is between those pairs, not inside them. */
+.mb-switch-list {
+  display: grid;
+  gap: 1rem;
+}
+
+/* "Following the group's settings" sits under the card's heading like any
+   form note; the grid's gap is its space below, so its own goes. */
+.mb-switch-note {
+  margin-bottom: 0;
+}
+
+/* The way back to following the group, on a form that can still offer it.
+   Text, not a button shape: it is the least important thing in the card.
+   A manage page's "Try again" is the same quiet button, set at the end of the
+   sentence saying the switches could not be checked. */
+.mb-switch-follow {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: var(--mb-match-deep);
+}
+
+.mb-switch-follow:hover {
+  text-decoration: underline;
+}
+
+.mb-switch-follow:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* `.create-form label` is (0,1,1) and turns every label in a create form into
+   a block with a field's bottom margin — which dropped a switch's words UNDER
+   its track and hung 0.9rem off the end of it. A switch is a row wherever it
+   is put. */
+.create-form label.mb-switch {
+  display: flex;
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+/* The same form paints every focused input with the match-orange border and
+   an inset ring, which is right for a text box and wrong for a track: it
+   recoloured a green "on" switch the moment it was clicked. The switch keeps
+   its own colours and its own focus outline. */
+.create-form .mb-switch input:focus {
+  border-color: var(--mb-line-control);
+  box-shadow: none;
+}
+
+.create-form .mb-switch input:checked:focus {
+  border-color: var(--mb-success);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mb-switch input,
   .mb-switch input::before {
@@ -4426,6 +4523,91 @@ div.btn-solid-primary button[type="submit"]:hover {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+/* Manage pages ------------------------------------------------------------
+   A listing's own page is laid out as the form that made it — the poster on
+   the left, a column of cards on the right — so it owns almost nothing here:
+   `.create-layout`, `.form-block` and `.friend-row` do the work. */
+
+/* The invite link is long and only its start is worth reading; the field
+   keeps to one line and the Copy button is how it leaves the page. */
+.manage-link-field {
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+}
+
+.manage-link-actions {
+  margin-top: 0.6rem;
+}
+
+/* "12 members", as the first line of its card: the one number an anonymous
+   group's owner is ever given, so it is set as a fact and not as a caption. */
+.manage-count {
+  margin: 0 0 0.45rem;
+  font-size: 0.98rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+}
+
+/* The quiet way in to those pages, on a line of its own under a poster the
+   person runs. Under it, not on it: the poster's footer has one action and
+   keeps it, and nobody else's copy of the card ever shows this line. */
+.mb-manage-link {
+  display: block;
+  margin-top: 0.4rem;
+  padding-right: 0.2rem;
+  text-align: right;
+}
+
+/* Row-mates in a poster grid share a height so their feet line up, and the
+   poster is told to fill its cell. With the link beneath it, the poster takes
+   what is left of the cell instead of all of it. */
+.mb-grid--posters > .has-manage-link {
+  display: flex;
+  flex-direction: column;
+}
+
+.mb-grid--posters > .has-manage-link > .mb-poster {
+  flex: 1 1 auto;
+  height: auto;
+}
+
+/* An invitation -----------------------------------------------------------
+   The empty state's centred column on a solid panel. Not the dashed box: that
+   says "nothing here yet", and an invitation is the opposite. */
+.join-invite {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.2rem 1.5rem;
+  text-align: center;
+  color: var(--mb-ink-soft);
+}
+
+.join-invite-name {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+  color: var(--mb-ink);
+}
+
+.join-invite-facts {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.join-invite p {
+  margin: 0;
+  max-width: 42ch;
+}
+
+.join-invite .btn {
+  margin-top: 0.7rem;
+  min-width: 9rem;
 }
 
 /* Chip input ------------------------------------------------------------- */
@@ -6752,4 +6934,36 @@ select.mb-field,
      and the app sets that variable to the match orange for the plain nav links.
      A custom property cannot be beaten on specificity, only overridden. */
   color: var(--mb-match-label) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   DEVELOPMENT SIGN-IN
+   Dashed and quiet on purpose: it has to read as scaffolding, not as a third
+   way into the product. Only a development server renders it.
+   --------------------------------------------------------------------------- */
+.dev-sign-in {
+  margin-top: 1.5rem;
+  padding: 1rem 1.1rem;
+  border: 1.5px dashed var(--mb-line-strong);
+  border-radius: 1rem;
+  text-align: left;
+}
+
+.dev-sign-in h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dev-sign-in p {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.dev-sign-in-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

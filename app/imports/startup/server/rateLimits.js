@@ -33,6 +33,23 @@ const LIMITS = {
   // Enumerable: the reply tells you whether an account exists.
   'friends.request': [10, 60],
   createUserProfile: [5, 60],
+  // Enumerable, and the one that matters most: the reply says whether a guess
+  // at a private group's invite token was right, and a right guess is a way
+  // in. The token is 256 random bits, so no rate makes guessing practical;
+  // this makes it pointless to try. Ten a minute is a person opening every
+  // invitation they were ever sent. 'profileClubs.add' checks a token too, and
+  // stays on the general rule all the same: the deck joins groups through it
+  // at swiping speed, and it answers only about the one group it was given.
+  'clubs.inviteInfo': [10, 60],
+  // Replacing a link is something an owner does once, after it leaked.
+  'clubs.rotateInvite': [5, 60],
+  // A whole roster with its photos, so each call is expensive to answer.
+  'clubs.members': [10, 60],
+  // Each one re-judges every member's and attendee's row and can rewrite a
+  // group's events. Twenty a minute is somebody trying every switch on the
+  // settings page several times over; a loop gets no further than that.
+  'Clubs.setPrivacy': [20, 60],
+  'Events.setPrivacy': [20, 60],
   // Writes that carry an image, so each one is expensive to accept.
   'Clubs.insert': [8, 60],
   'Events.insert': [8, 60],

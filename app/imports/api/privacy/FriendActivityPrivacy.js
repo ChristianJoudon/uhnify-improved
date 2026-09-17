@@ -64,16 +64,23 @@ const namesSomethingSensitive = value => {
 };
 
 /**
- * Everything isSensitiveListing reads. A caller that loads listings only to
- * judge them projects to these — a listing can carry a photo inline — and the
- * list lives here so that a signal added below cannot be starved by a
- * projection written somewhere else.
+ * Everything isSensitiveListing, isAnonymousListing and isPrivateListing
+ * read. A caller that loads listings only to judge them projects to these — a
+ * listing can carry a photo inline — and the list lives here so that a signal
+ * added below cannot be starved by a projection written somewhere else.
+ *
+ * `anonymous` and `visibility` are here for the same reason the rest are:
+ * withHostSignals carries every field in this list from a host group to its
+ * events, which is how an anonymous group's Thursday meeting is anonymous
+ * too, and how an RSVP to a private group's meeting is kept from friends.
  */
 export const LISTING_PRIVACY_FIELDS = Object.freeze({
   categories: 1,
   tags: 1,
   topicIds: 1,
   supportSubtype: 1,
+  anonymous: 1,
+  visibility: 1,
 });
 
 /**
@@ -119,18 +126,109 @@ export const withHostSignals = (event, hosts = []) => event && Object.fromEntrie
 );
 
 /**
+ * Whether nobody at all may be shown who takes part in this listing — not
+ * other members, not friends, not the person who runs it. Counts only.
+ *
+ * Two ways to be one. Its owner said so (`anonymous`), or it is sensitive, in
+ * which case nobody was asked: a recovery meeting whose organizer forgot a
+ * checkbox is still a recovery meeting, so that half cannot be switched off.
+ *
+ * Every reader of "who is in this" asks HERE and never reads the `anonymous`
+ * field alone, for two reasons. The field knows nothing about sensitivity.
+ * And for an event the answer also rests on its host groups: hand over the
+ * event as withHostSignals returns it and a host's flag counts as the event's
+ * own. That shape holds each field as a list, which is why the flag is read
+ * as one; only a real `true` counts, so a stray string is not consent to
+ * anything. A listing that cannot be found is anonymous, as it is sensitive.
+ */
+export const isAnonymousListing = record => (
+  listOf(record?.anonymous).some(flag => flag === true) || isSensitiveListing(record)
+);
+
+/**
+ * Whether this listing is kept from people who were not let into it.
+ *
+ * Read the way the publications read it (see PUBLIC_LISTING_SELECTOR in
+ * listing/audience.js): absent or 'public' is public, and ANY other value is
+ * private — 'members', 'unlisted', or a word added next year — so a value
+ * nobody here has heard of hides a listing rather than showing it.
+ *
+ * Like the anonymous flag it is read as a list, because an event is judged as
+ * withHostSignals hands it over: one private host is enough. An RSVP to a
+ * private group's meeting says the person is in the group, however public the
+ * meeting itself was made. A listing that cannot be found is private.
+ *
+ * Only `undefined` is "never given one". listOf would drop a null or an empty
+ * string along with it, and the publications send neither of those to the
+ * public, so they are not public here.
+ */
+export const isPrivateListing = record => !record
+  || (Array.isArray(record.visibility) ? record.visibility : [record.visibility])
+    .some(value => value !== undefined && value !== 'public');
+
+/**
  * What a membership or an RSVP row says about itself to the friend-activity
- * publication. 'shareable' takes three things at once: the person has turned
- * sharing on, the listing exists, and the listing is not sensitive. Everything
- * else is 'private' — including a caller that forgot to pass the preference,
- * which is how a new call site fails closed instead of open.
+ * publication. 'shareable' takes four things at once: the person has turned
+ * sharing on, the listing exists, it is not anonymous — which every sensitive
+ * listing is — and it is not private. Everything else is 'private' —
+ * including a caller that forgot to pass the preference, which is how a new
+ * call site fails closed instead of open.
  *
  * It used to take the listing alone and answer 'shareable' for nearly all of
  * them, so by default every friend saw every group a person joined and every
  * event they were going to, and there was no setting anywhere to stop it.
+ *
+ * Anonymity is judged here rather than beside it because a friend is somebody:
+ * a group that shows its own organizer no names cannot go on showing them to
+ * each member's friends.
+ *
+ * Private was the one left out, and it is judged here for the same reason. A
+ * shared row is sent to friends whole — who, and the _id of what — so a
+ * sharing member of a private group told every friend that the group exists,
+ * that they are in it, and the id every method about it is called with. The
+ * public link rows are withheld for a private listing to keep exactly that
+ * from getting out; this was the way round them.
  */
 export const friendActivityVisibilityFor = (record, options) => (
-  options?.sharing === true && record && !isSensitiveListing(record)
+  options?.sharing === true && record && !isAnonymousListing(record) && !isPrivateListing(record)
     ? FRIEND_ACTIVITY_VISIBILITY.shareable
     : FRIEND_ACTIVITY_VISIBILITY.private
+);
+
+/**
+ * Whether a membership or an RSVP was made under a promise that nobody would
+ * ever see it.
+ *
+ * Anonymity can be switched off, and a listing keeps the moment it last ended
+ * (`anonymousUntil`). 'clubs.members' read it from the start, so the person
+ * who runs a group is never handed the people who joined because there was no
+ * list. The rows friends are sent did not: each was judged against the group
+ * as it is NOW, so switching anonymity off put every sharing member back in
+ * their friends' feeds, by name, beside the group's id — and the person who
+ * runs the group can be one of those friends, which walked straight round the
+ * list that would not name them.
+ *
+ * So the rule is the member list's, word for word: only a row dated AFTER the
+ * anonymity ended may be shown, and a row with no date cannot show that it
+ * came after. It reaches back past the day the anonymity began, on purpose.
+ * Whoever was already in a group when it became a recovery group was in a
+ * recovery group, and the one date that is kept cannot tell them from the
+ * people who joined the day after.
+ *
+ * An event is judged as the sync hands it over, carrying the latest such
+ * moment among itself and the groups that host it: going to an anonymous
+ * group's meeting was covered by the group's promise too.
+ */
+export const tookPartWhileAnonymous = (record, row) => Boolean(record?.anonymousUntil)
+  && !(row?.createdAt > record.anonymousUntil);
+
+/**
+ * friendActivityVisibilityFor, for a row that already stands: at a sync, at a
+ * second "Join", at a second "Going". There the listing as it is now is only
+ * half the question, and the other half is when the row was made.
+ */
+export const friendActivityVisibilityOfRow = (record, row, options) => (
+  tookPartWhileAnonymous(record, row)
+    ? FRIEND_ACTIVITY_VISIBILITY.private
+    : friendActivityVisibilityFor(record, options)
 );

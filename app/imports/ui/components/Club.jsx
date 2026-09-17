@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import PosterArt from './PosterArt';
 import CardFields from './CardFields';
-import { imagePath, normalizeCategories } from '../utilities/helpers';
+import { imagePath, isPhoto, normalizeCategories } from '../utilities/helpers';
 import { CLUB_FIELDS } from '../utilities/cardFields';
 import { topicFor } from '../utilities/topics';
 
@@ -11,14 +11,20 @@ import { topicFor } from '../utilities/topics';
  * field colour and motif; the footer carries the practical line — where, how
  * far, and the one action. `tier` sets the poster's footprint in the masonry.
  */
-const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance }) => {
+const Club = ({ club, onAddToProfile, onViewDetails, isMember, isRequested, tier, distance }) => {
+  // Three things the one button can say. "Requested" is the new one: a group
+  // whose organizer approves people takes a request instead of a member, and a
+  // button still reading "Join" over a request already made invites a second
+  // press that does nothing.
+  const settled = isMember || isRequested;
+  const ctaLabel = (isMember && "You're in") || (isRequested && 'Requested') || 'Join';
   const categories = normalizeCategories(club.categories);
   // Categories and tags describe the club; its name is only a weak hint.
   const topic = topicFor(categories, club.tags, club.name, club.description);
   // Only a genuinely uploaded photo becomes the poster face. The seeded logo
   // art stays the small footer mark — putting it back on the face is exactly
   // the busy look the poster design replaced.
-  const photo = club.image && club.image.startsWith('data:') ? club.image : '';
+  const photo = isPhoto(club.image) ? club.image : '';
 
   return (
     <article className={`mb-poster mb-poster-${tier}`}>
@@ -39,17 +45,17 @@ const Club = ({ club, onAddToProfile, onViewDetails, isMember, tier, distance })
       <CardFields record={club} schema={CLUB_FIELDS} limit={tier === 'lg' ? 4 : 2} className="mb-poster-facts" />
 
       <div className="mb-poster-foot">
-        {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" />}
+        {club.image && <img className="mb-poster-mark" src={imagePath(club.image)} alt="" loading="lazy" decoding="async" />}
         <span className="mb-poster-meta">
           {distance || topic.activityLabel || topic.label}
         </span>
         <button
           type="button"
-          className={`btn ${isMember ? 'btn-soft-primary' : 'btn-match'} mb-poster-cta`}
+          className={`btn ${settled ? 'btn-soft-primary' : 'btn-match'} mb-poster-cta`}
           onClick={() => onAddToProfile(club._id)}
-          disabled={isMember}
+          disabled={settled}
         >
-          {isMember ? "You're in" : 'Join'}
+          {ctaLabel}
         </button>
       </div>
     </article>
@@ -76,6 +82,8 @@ Club.propTypes = {
   onAddToProfile: PropTypes.func,
   onViewDetails: PropTypes.func.isRequired,
   isMember: PropTypes.bool,
+  /** Asked to join and not yet answered. Membership wins if both are true. */
+  isRequested: PropTypes.bool,
   tier: PropTypes.oneOf(['lg', 'md', 'sm']),
   distance: PropTypes.string,
 };
@@ -83,6 +91,7 @@ Club.propTypes = {
 Club.defaultProps = {
   onAddToProfile: () => {},
   isMember: false,
+  isRequested: false,
   tier: 'md',
   distance: '',
 };

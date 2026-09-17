@@ -74,11 +74,57 @@ class EventsCollection {
         allowedValues: ['scheduled', 'canceled', 'postponed'],
         optional: true,
       },
+      /**
+       * Who can find this event at all. Absent means public.
+       *
+       * The schema allows four values because the ingestion pipeline was
+       * written against them, but the product now writes only 'public' and
+       * 'private'. Anything other than absent or 'public' is treated as NOT
+       * public everywhere a listing is shown, so 'members' and 'unlisted' on
+       * an old record fail closed rather than open.
+       */
       visibility: {
         type: String,
         allowedValues: ['public', 'members', 'private', 'unlisted'],
         optional: true,
       },
+      /**
+       * Nobody sees who is going — not other attendees, not friends, and not
+       * the person who posted it. Counts only. See the same field on a group
+       * for why the owner is included.
+       *
+       * This is the owner's own choice for the event. Whether the event is
+       * anonymous in effect also depends on its host groups and on whether it
+       * is sensitive: ask isAnonymousListing in
+       * privacy/FriendActivityPrivacy.js, never this field alone.
+       */
+      anonymous: { type: Boolean, optional: true },
+      /**
+       * When this event last stopped being anonymous, if it ever was. Kept by
+       * the server for the reason a group keeps its own: an RSVP made while
+       * nobody could see it is not shown to friends because a switch moved
+       * afterwards. See tookPartWhileAnonymous in
+       * privacy/FriendActivityPrivacy.js.
+       */
+      anonymousUntil: { type: Date, optional: true },
+      /**
+       * How many people said Going, kept by the server on every swipe, undo
+       * and removal. Stored for the same reason a group's memberCount is: an
+       * anonymous event may show a number and nothing else. Recomputed from
+       * the swipes by a startup migration.
+       */
+      goingCount: { type: SimpleSchema.Integer, min: 0, optional: true },
+      /**
+       * True while the event still follows its host group's privacy.
+       *
+       * An event made without privacy settings of its own copies its host's,
+       * and keeps following them: when the group goes private or anonymous,
+       * so does every event still marked here. The first time the owner sets
+       * the event's privacy by hand this becomes false and the group stops
+       * reaching into it — otherwise a later change to the group would
+       * silently undo a decision somebody made on purpose.
+       */
+      privacyInherited: { type: Boolean, optional: true },
       capacity: { type: SimpleSchema.Integer, min: 0, optional: true },
       availabilityStatus: {
         type: String,
@@ -120,6 +166,13 @@ class EventsCollection {
         });
         this.collection.rawCollection().createIndex({ seriesId: 1, date: 1 }).catch(error => {
           console.error('[index] Events seriesId+date failed:', error.message);
+        });
+        // The public events publication sorts by date under a limit, for every
+        // page anybody opens. Each index above leads with another key, so none
+        // of them could serve it and the sort ran in memory over every event
+        // that matched, inline photos and all.
+        this.collection.rawCollection().createIndex({ date: 1 }).catch(error => {
+          console.error('[index] Events date failed:', error.message);
         });
       });
     }

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Container } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import swal from 'sweetalert';
@@ -20,6 +20,8 @@ import CountFirstCalendar from '../components/CountFirstCalendar.jsx';
 import { normalizeCategories, sortByDate } from '../utilities/helpers';
 import { topicFor, topicForEvent } from '../utilities/topics';
 import { collapseEventListings, eventListingCount } from '../utilities/eventSeries';
+import { joinGroupAndTell, useRequestedGroupIds } from '../utilities/joinGroup';
+import { rememberReturnTo } from '../utilities/returnTo';
 import Segmented from '../components/form/Segmented';
 
 const SORTS = [
@@ -44,7 +46,9 @@ const ListEvents = () => {
   // whichever page the reader met it on.
   const [detail, setDetail] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const userId = Meteor.userId();
+  const requestedIds = useRequestedGroupIds();
 
   const { ready, events, clubs, goingIds, joinedIds } = useTracker(() => {
     const subscription = Meteor.subscribe(Events.userPublicationName);
@@ -116,10 +120,17 @@ const ListEvents = () => {
     : eventCountText;
 
   // This route is public, so the first thing an unsigned visitor asks of an
-  // event is also the thing that needs an account.
+  // event is also the thing that needs an account. They are brought back here
+  // afterwards: the route guard leaves that note for a protected page, and
+  // this page is not one, so it leaves its own.
+  const toSignIn = () => {
+    rememberReturnTo(`${location.pathname}${location.search}`);
+    navigate('/signin');
+  };
+
   const toggleGoing = event => {
     if (!userId) {
-      navigate('/signin');
+      toSignIn();
       return;
     }
     const going = goingIds.has(event._id);
@@ -135,14 +146,11 @@ const ListEvents = () => {
 
   const joinClub = clubId => {
     if (!userId) {
-      navigate('/signin');
+      toSignIn();
       return;
     }
-    Meteor.call('profileClubs.add', clubId, error => {
-      if (error) {
-        swal('Error', error.reason || error.message, 'error');
-      }
-    });
+    // In, asked, or refused — the shared helper says whichever it was.
+    joinGroupAndTell(clubId);
   };
 
   if (!ready) {
@@ -234,6 +242,7 @@ const ListEvents = () => {
                 club={club}
                 tier="md"
                 isMember={joinedIds.has(club._id)}
+                isRequested={requestedIds.has(club._id)}
                 onAddToProfile={joinClub}
                 onViewDetails={() => setDetail({ record: club, kind: 'club' })}
               />
@@ -250,6 +259,7 @@ const ListEvents = () => {
         isIn={detail?.kind === 'club'
           ? joinedIds.has(detail?.record?._id)
           : goingIds.has(detail?.record?._id)}
+        requested={detail?.kind === 'club' && requestedIds.has(detail?.record?._id)}
         onAct={detail?.kind === 'club' ? record => joinClub(record._id) : toggleGoing}
       />
     </Container>

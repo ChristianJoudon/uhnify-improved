@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Meteor } from 'meteor/meteor';
+import { Accounts } from 'meteor/accounts-base';
 import { Container } from 'react-bootstrap';
 import PageHead from '../components/PageHead';
+import { takeReturnTo } from '../utilities/returnTo';
+
+/**
+ * The development accounts, when this is a development server that lists them.
+ * Production never sees this: the key is absent from any production settings
+ * file (productionGuard refuses to start otherwise), and the server-side
+ * handler these buttons call is not registered outside development.
+ */
+const devAccounts = () => (
+  Meteor.isDevelopment && Array.isArray(Meteor.settings.public?.devSignIn) ? Meteor.settings.public.devSignIn : []
+);
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [redirect, setRedirect] = useState(false);
+  // Where to go once signed in; empty until then. It was a boolean and the
+  // destination was always '/', which stranded anyone who had been sent here
+  // on the way to somewhere — an invite link most of all.
+  const [redirect, setRedirect] = useState('');
+
+  // Taken in the callback, once, not during render: reading it clears it, and
+  // a render can run twice.
+  const arrive = () => setRedirect(takeReturnTo() || '/');
 
   const handleSubmit = event => {
     event.preventDefault();
@@ -16,13 +35,23 @@ const SignIn = () => {
       if (err) {
         setError(err.reason);
       } else {
-        setRedirect(true);
+        arrive();
       }
     });
   };
 
+  // No password travels and none is typed: the server decides, from its own
+  // settings and from where the request came from, whether to hand out the
+  // session. See startup/server/devSignIn.js.
+  const signInAs = address => {
+    Accounts.callLoginMethod({
+      methodArguments: [{ devSignIn: address }],
+      userCallback: err => (err ? setError(err.reason || err.message) : arrive()),
+    });
+  };
+
   if (redirect) {
-    return <Navigate to="/" />;
+    return <Navigate to={redirect} replace />;
   }
 
   return (
@@ -71,6 +100,26 @@ const SignIn = () => {
         <p className="auth-alt">
           New here? <Link to="/signup">Create an account</Link>
         </p>
+
+        {devAccounts().length > 0 && (
+          <section className="dev-sign-in" aria-labelledby="dev-sign-in-label">
+            <h2 id="dev-sign-in-label">Development only</h2>
+            <p>One click, no password. This panel does not exist on a production server.</p>
+            <div className="dev-sign-in-actions">
+              {devAccounts().map(address => (
+                <button
+                  key={address}
+                  type="button"
+                  className="btn btn-soft-primary"
+                  data-dev-sign-in={address}
+                  onClick={() => signInAs(address)}
+                >
+                  Sign in as {address}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </Container>
   );

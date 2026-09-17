@@ -17,6 +17,7 @@ import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
+import { isListingOwner } from '../../api/listing/ownership';
 import { sortByDate } from '../utilities/helpers';
 
 const rise = {
@@ -34,8 +35,18 @@ const MyEvents = () => {
     const membershipsSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
     const linksSub = Meteor.subscribe(EventClubs.linksPublicationName);
     const swipesSub = Meteor.subscribe(EventSwipes.userPublicationName);
+    // The three above are the PUBLIC listings. A private group's Thursday
+    // meeting is in none of them, so "From your groups" left out exactly the
+    // groups that have nowhere else to announce anything. This sends what the
+    // person's own groups have on — private groups, private events, and the
+    // links between them — because membership is the test, not visibility.
+    const memberEventsSub = Meteor.subscribe(EventClubs.userPublicationName);
+    // And what they posted themselves, which is the only cursor that carries
+    // `owner` — how the Hosting wall knows what belongs on it.
+    const ownedSub = Meteor.subscribe('Events.publication.owned');
     return {
-      ready: eventsSub.ready() && clubsSub.ready() && membershipsSub.ready() && linksSub.ready() && swipesSub.ready(),
+      ready: eventsSub.ready() && clubsSub.ready() && membershipsSub.ready() && linksSub.ready()
+        && swipesSub.ready() && memberEventsSub.ready() && ownedSub.ready(),
       events: Events.collection.find({}).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
       // Scoped to the signed-in user: friend-activity subscriptions share these collections.
@@ -45,7 +56,7 @@ const MyEvents = () => {
     };
   }, []);
 
-  const { clubEvents, goingEvents, goingIds } = useMemo(() => {
+  const { clubEvents, goingEvents, hostingEvents, goingIds } = useMemo(() => {
     const joinedClubIds = new Set(memberships.map(membership => membership.clubId));
     const joinedClubNumbers = new Set(clubs.filter(club => joinedClubIds.has(club._id)).map(club => club.clubID));
     const linkedEventIds = new Set(links.filter(link => joinedClubIds.has(link.clubId)).map(link => link.eventId));
@@ -53,6 +64,10 @@ const MyEvents = () => {
     return {
       clubEvents: sortByDate(events.filter(event => linkedEventIds.has(event._id) || joinedClubNumbers.has(event.eventID))),
       goingEvents: sortByDate(events.filter(event => going.has(event._id))),
+      // Everything this person posted that is still to come, going to it or
+      // not. An organizer who never RSVPs to their own event had no card for
+      // it anywhere on this page, and so no way through to its settings.
+      hostingEvents: sortByDate(events.filter(event => isListingOwner(Meteor.userId(), event))),
       goingIds: going,
     };
   }, [events, clubs, memberships, links, swipes]);
@@ -100,10 +115,24 @@ const MyEvents = () => {
   // `undoable` is for the Going wall alone: every card on it is one the person
   // chose, so its button says "Not going" instead of repeating "You're going"
   // down the page. A group's events are a mix, and keep the ordinary toggle.
-  const posterWall = (list, undoable = false) => (
+  //
+  // `manageable` is for the Hosting wall alone, where every card is the
+  // person's own: each carries a quiet "Manage" beneath it. On that wall only,
+  // because a row of posters shares one height, and a line under some cards
+  // and not others would leave their feet at two levels. An event they host
+  // that also appears on another wall opens the same sheet, and the sheet has
+  // the link.
+  const posterWall = (list, { undoable = false, manageable = false } = {}) => (
     <div className="mb-grid mb-grid--posters">
       {list.map((event, index) => (
-        <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
+        <motion.div
+          key={event._id}
+          className={manageable ? 'has-manage-link' : undefined}
+          variants={rise}
+          initial="hidden"
+          animate="show"
+          custom={index}
+        >
           <EventPoster
             event={event}
             going={goingIds.has(event._id)}
@@ -111,6 +140,12 @@ const MyEvents = () => {
             onGoing={toggleGoing}
             onOpen={() => setDetail(event)}
           />
+          {manageable && (
+            <Link className="mb-section-link mb-manage-link" to={`/manage/event/${event._id}`}>
+              Manage
+              <span className="visually-hidden">{` ${event.title}`}</span>
+            </Link>
+          )}
         </motion.div>
       ))}
     </div>
@@ -144,8 +179,21 @@ const MyEvents = () => {
             <p>Swipe through what is on. Whatever you say yes to lands here.</p>
             <Link className="btn btn-solid-primary" to="/discover-events">Start swiping</Link>
           </div>
-        ) : posterWall(goingEvents, true)}
+        ) : posterWall(goingEvents, { undoable: true })}
       </section>
+
+      {/* Only for somebody who has posted something. Most people never will,
+          and an empty "Hosting" box on their page would be a suggestion they
+          did not ask for. */}
+      {hostingEvents.length > 0 && (
+        <section className="mb-5">
+          <div className="mb-section-head">
+            <h2>Hosting</h2>
+            <span className="mb-toolbar-count">{hostingEvents.length} {hostingEvents.length === 1 ? 'event' : 'events'}</span>
+          </div>
+          {posterWall(hostingEvents, { manageable: true })}
+        </section>
+      )}
 
       <section className="mb-5">
         <div className="mb-section-head">

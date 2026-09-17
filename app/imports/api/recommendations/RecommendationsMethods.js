@@ -7,6 +7,14 @@ import { ProfileClubs } from '../profile/ProfileClubs';
 import { Profiles } from '../profiles/Profiles';
 import { retentionDays } from '../retention/retention';
 import {
+  PUBLIC_LISTING_SELECTOR,
+  PUBLISHED_SELECTOR,
+  WITHHELD_LISTING_FIELDS,
+  eventWindow,
+  eventsWithin,
+  isOpenToAll,
+} from '../listing/audience';
+import {
   CLIENT_RECORDABLE_ACTIONS,
   RECOMMENDATION_ACTIONS,
   RECOMMENDATION_ENTITY_TYPES,
@@ -25,13 +33,6 @@ import { recordRecommendationInteraction } from './interactionRecorder';
 import { interactionRecordingEnabled, recommendationsEnabled } from './recommendationSettings';
 
 /* eslint-disable no-console */
-
-const PUBLIC_LISTING_SELECTOR = {
-  $or: [
-    { publicationStatus: 'published' },
-    { publicationStatus: { $exists: false } },
-  ],
-};
 
 const requireLoggedIn = userId => {
   if (!userId) {
@@ -117,7 +118,12 @@ const hostLinksFor = events => {
     ids.push(link.clubId);
     byEvent.set(link.eventId, ids);
   });
-  const clubsByNumber = new Map(Clubs.collection.find({}).fetch().map(club => [club.clubID, club._id]));
+  // Only the groups these events name, and only the number: this used to fetch
+  // every group whole, photo and all, on every call, to read one integer.
+  const hostNumbers = [...new Set(events.map(event => event.eventID).filter(Number.isInteger))];
+  const clubsByNumber = new Map(Clubs.collection
+    .find({ clubID: { $in: hostNumbers } }, { fields: { clubID: 1 } })
+    .map(club => [club.clubID, club._id]));
   return events.map(event => {
     const ids = byEvent.get(event._id) || [];
     const legacyId = clubsByNumber.get(event.eventID);
@@ -126,6 +132,99 @@ const hostLinksFor = events => {
     }
     return { ...event, _hostClubIds: ids };
   });
+};
+
+const membershipsOf = userId => ProfileClubs.collection.find({ userId }).fetch();
+
+/**
+ * The host numbers of the groups a person is in, which is what "hosted by a
+ * group they belong to" is asked against.
+ *
+ * The host is the group an event NAMES, in its own `eventID`, and never a row
+ * in EventClubs. It used to be either, and the row was a way in: for a long
+ * while 'Clubs.organizeEvent' wrote one for anybody signed in, between any
+ * group and any event, so a stranger could link a group of their own to a
+ * private event and be dealt it. The method asks who is calling now. The rows
+ * it wrote before are still there, and a rule that is safe only while every
+ * writer of a collection stays careful is the rule that failed here. The
+ * number is written by whoever posts the event and by the people who may edit
+ * it, which is why the privacy methods trust it and nothing weaker.
+ *
+ * Published groups only: belonging to an archived group opens nothing. A
+ * group with no number is left out, because `eventID: undefined` in a selector
+ * would match every event that lacks one.
+ */
+const joinedHostNumbers = memberships => Clubs.collection
+  .find(
+    { $and: [{ _id: { $in: memberships.map(membership => membership.clubId) } }, PUBLISHED_SELECTOR] },
+    { fields: { clubID: 1 } },
+  )
+  .map(club => club.clubID)
+  .filter(Number.isInteger);
+
+/**
+ * Which listings may be ranked for one person, as a Mongo selector.
+ *
+ * Public ones, and the ones they are inside: a private group they belong to,
+ * a private event hosted by a group they belong to. It is the publications'
+ * rule, from the same definitions (listing/audience.js), and for the same
+ * reason. What this method returns is sent to the browser as surely as a
+ * subscription is, and a private hike dealt into a stranger's deck is
+ * published, whatever the publications do.
+ *
+ * Events are held to the window the public event publication uses by default,
+ * today and the months after it, so the deck and the wall are choosing from
+ * the same events. Both paths used to load every published event there had
+ * ever been on every call, most of them long over, and leave the ranker to
+ * throw them away one at a time.
+ */
+export const recommendationCandidateSelector = ({
+  userId,
+  kind,
+  memberships = membershipsOf(userId),
+  hostNumbers = kind === 'group' ? [] : joinedHostNumbers(memberships),
+}) => {
+  const insideOrPublic = inside => ({ $or: [PUBLIC_LISTING_SELECTOR, { $and: [PUBLISHED_SELECTOR, inside] }] });
+  if (kind === 'group') {
+    return insideOrPublic({ _id: { $in: memberships.map(membership => membership.clubId) } });
+  }
+  return { $and: [insideOrPublic({ eventID: { $in: hostNumbers } }), eventsWithin(eventWindow())] };
+};
+
+/**
+ * The candidates themselves, without the fields no listing is sent with. The
+ * ranker's output goes to the browser nearly whole, and until now that was
+ * every field but `owner`: `createdBy`, the same address again, and the invite
+ * link of any group that has one.
+ *
+ * The ranker refuses anything not public unless it is marked as visible to
+ * this caller, and the mark is the second lock, so it is worked out again
+ * here from the memberships rather than taken from the selector's word: a
+ * selector loosened by mistake lets private listings in, and they arrive
+ * without it.
+ *
+ * For an event the mark reads the host it names and not `_hostClubIds`. Those
+ * are gathered from the link rows as well, for the ranker to score with, and
+ * a lock that reads a row anybody can write repeats the first lock's mistake
+ * instead of checking it.
+ */
+export const recommendationCandidates = ({ userId, kind, memberships = membershipsOf(userId) }) => {
+  const source = kind === 'group' ? Clubs : Events;
+  const hostNumbers = kind === 'group' ? [] : joinedHostNumbers(memberships);
+  const found = source.collection
+    .find(
+      recommendationCandidateSelector({ userId, kind, memberships, hostNumbers }),
+      { fields: WITHHELD_LISTING_FIELDS },
+    )
+    .fetch();
+  const joinedIds = new Set(memberships.map(membership => membership.clubId));
+  const joinedNumbers = new Set(hostNumbers);
+  const inside = kind === 'group'
+    ? candidate => joinedIds.has(candidate._id)
+    : candidate => joinedNumbers.has(candidate.eventID);
+  return (kind === 'group' ? found : hostLinksFor(found)).map(candidate => (
+    !isOpenToAll(candidate) && inside(candidate) ? { ...candidate, _visibleToCaller: true } : candidate
+  ));
 };
 
 const loadModelInputs = ({ userId, entityType, candidateIds }) => {
@@ -171,13 +270,10 @@ const recommendationOptions = options => {
 
 const runRecommendation = ({ userId, kind, surface, limit, filters }) => {
   const started = Date.now();
-  const rawCandidates = kind === 'group'
-    ? Clubs.collection.find(PUBLIC_LISTING_SELECTOR).fetch()
-    : Events.collection.find(PUBLIC_LISTING_SELECTOR).fetch();
-  const candidates = kind === 'group' ? rawCandidates : hostLinksFor(rawCandidates);
+  const memberships = membershipsOf(userId);
+  const candidates = recommendationCandidates({ userId, kind, memberships });
   const profile = Profiles.collection.findOne({ userId }) || null;
   const preferences = RecommendationPreferences.collection.findOne({ userId }) || null;
-  const memberships = ProfileClubs.collection.find({ userId }).fetch();
   const interactions = RecommendationInteractions.collection.find({
     userId,
     action: { $in: RANKING_ACTIONS },
@@ -248,12 +344,14 @@ const runRecommendation = ({ userId, kind, surface, limit, filters }) => {
  *
  * `fallbackReason` is how a caller tells the two apart: 'disabled' is an
  * operator's decision and not an error; 'ranking-failed' is one.
+ *
+ * The candidates are chosen exactly as they are for the adaptive path. Who may
+ * be shown a listing is not a ranking feature, and must not be one of the
+ * things that goes away when ranking does.
  */
 const fallbackRecommendation = ({ userId, kind, surface, limit, filters, reason, error }) => {
   const started = Date.now();
-  const candidates = kind === 'group'
-    ? Clubs.collection.find(PUBLIC_LISTING_SELECTOR).fetch()
-    : hostLinksFor(Events.collection.find(PUBLIC_LISTING_SELECTOR).fetch());
+  const candidates = recommendationCandidates({ userId, kind });
   const fallback = rankAdaptiveRecommendations({ candidates, kind, userId, filters, limit });
   const requestId = logRecommendationRequest({
     userId,

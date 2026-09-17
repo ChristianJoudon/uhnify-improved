@@ -10,7 +10,7 @@ import PosterArt from '../components/PosterArt';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Events } from '../../api/events/Events';
 import { Clubs } from '../../api/club/Club';
-import { formatEventDate } from '../utilities/helpers';
+import { formatEventDate, isPhoto } from '../utilities/helpers';
 import { shrinkImage } from '../utilities/shrinkImage';
 import { topicForEvent } from '../utilities/topics';
 import { TEXT_LIMITS } from '../../api/listing/limits';
@@ -115,7 +115,7 @@ const EditEventAdmin = () => {
   const when = form.date ? formatEventDate(new Date(form.date)) : '';
   // Only a genuinely uploaded photo becomes the poster face; the seeded stock
   // art is not this app's design and the event poster already ignores it.
-  const photo = form.image.startsWith('data:') ? form.image : '';
+  const photo = isPhoto(form.image) ? form.image : '';
   const valid = form.title.trim() && form.eventID && form.date && form.location.trim();
 
   const pickImage = async event => {

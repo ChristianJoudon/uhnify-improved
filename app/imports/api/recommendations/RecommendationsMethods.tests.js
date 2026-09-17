@@ -1,6 +1,10 @@
 /* eslint-env mocha */
 import { assert } from 'chai';
 import { Meteor } from 'meteor/meteor';
+import { Clubs } from '../club/Club';
+import { EventClubs } from '../events/EventClubs';
+import { EVENT_HORIZON_DAYS, startOfToday } from '../listing/audience';
+import { ProfileClubs } from '../profile/ProfileClubs';
 import { Profiles } from '../profiles/Profiles';
 import {
   EventAttendances,
@@ -15,6 +19,7 @@ import {
   UserItemStates,
 } from './RecommendationData';
 import { recordRecommendationInteraction } from './interactionRecorder';
+import { recommendationCandidates } from './RecommendationsMethods';
 import {
   callAs,
   errorFrom,
@@ -283,6 +288,153 @@ if (Meteor.isServer) {
         assert.instanceOf(edges[0].validTo, Date);
         assert.deepEqual(actionsFor(eventId), ['rsvp_going'], 'and nothing new is logged about the person');
         assert.equal(EventRSVPs.collection.findOne({ userId, eventId }).status, 'canceled');
+      });
+    });
+
+    /**
+     * What 'recommendations.get' returns is sent to a browser as surely as a
+     * subscription is, so who may be shown a listing is asked here the way
+     * the publications ask it. Both paths, every time: the baseline is what
+     * serves when ranking is switched off or has failed, and that is no
+     * moment for a private group to become public.
+     *
+     * Most of these read the candidates rather than the answer. The ranker
+     * throws out an event that has started and a listing that is private, so
+     * an answer without them proves nothing about what was loaded to get it.
+     */
+    describe('who may be recommended what', function () {
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      let original;
+      let member;
+      let privateClubId;
+      let privateEventId;
+      let linkedPrivateEventId;
+      let publicEventId;
+
+      const candidateIds = (forUser, kind) => recommendationCandidates({ userId: forUser, kind })
+        .map(candidate => candidate._id);
+      const dealtIds = (forUser, kind) => callAs(forUser, 'recommendations.get', {
+        kind,
+        surface: 'test',
+        filters: { includeJoined: true },
+      }).items.map(item => item._id);
+      const onBothPaths = assertions => {
+        assertions('ranked');
+        Meteor.settings.recommendations = { ...original, enabled: false };
+        assertions('baseline');
+      };
+
+      beforeEach(function () {
+        original = Meteor.settings.recommendations;
+        member = makeUser();
+        privateClubId = makeClub({ visibility: 'private', inviteToken: 'the-way-in' });
+        ProfileClubs.collection.insert({ userId: member, clubId: privateClubId });
+        privateEventId = makeEvent({ eventID: Clubs.collection.findOne(privateClubId).clubID, visibility: 'private' });
+        linkedPrivateEventId = makeEvent({ visibility: 'private' });
+        EventClubs.collection.insert({ eventId: linkedPrivateEventId, clubId: privateClubId });
+        publicEventId = makeEvent();
+      });
+
+      afterEach(function () {
+        Meteor.settings.recommendations = original;
+      });
+
+      it('keeps a private group and its events from somebody who is not in it', function () {
+        onBothPaths(path => {
+          assert.notInclude(candidateIds(userId, 'group'), privateClubId, path);
+          assert.notInclude(dealtIds(userId, 'group'), privateClubId, path);
+          assert.sameMembers(candidateIds(userId, 'event'), [publicEventId], path);
+          assert.sameMembers(dealtIds(userId, 'event'), [publicEventId], path);
+        });
+      });
+
+      // `linkedPrivateEventId` names no host and is tied to the group by a row
+      // in EventClubs alone. That used to count as being hosted by it, and
+      // the next test is why it no longer does.
+      it('deals them to a member, by the host an event names and not by a link row', function () {
+        onBothPaths(path => {
+          assert.include(dealtIds(member, 'group'), privateClubId, path);
+          assert.sameMembers(candidateIds(member, 'event'), [publicEventId, privateEventId], path);
+          assert.sameMembers(dealtIds(member, 'event'), [publicEventId, privateEventId], path);
+        });
+      });
+
+      /**
+       * The way in that a link row was. 'Clubs.organizeEvent' wrote one for
+       * anybody signed in, so anybody could tie a group of their own to any
+       * event whose id they held — and an event that was public before its
+       * group went private had its id sent to every visitor. The method asks
+       * who is calling now. The rows are written straight to the collection
+       * here, because that is where the ones from before still are, and
+       * because who is dealt what must not rest on no method slipping again.
+       */
+      it('does not deal a private event to a stranger who links a group of their own to it', function () {
+        const theirClubId = makeClub();
+        callAs(userId, 'profileClubs.add', theirClubId);
+        [privateEventId, linkedPrivateEventId].forEach(eventId => {
+          EventClubs.collection.insert({ clubId: theirClubId, eventId, userId, createdAt: new Date() });
+        });
+
+        onBothPaths(path => {
+          assert.sameMembers(candidateIds(userId, 'event'), [publicEventId], path);
+          assert.sameMembers(dealtIds(userId, 'event'), [publicEventId], path);
+        });
+      });
+
+      it('treats a visibility it does not recognise as not public', function () {
+        const membersOnlyId = makeEvent({ visibility: 'members' });
+        onBothPaths(path => {
+          assert.notInclude(candidateIds(userId, 'event'), membersOnlyId, path);
+          assert.notInclude(dealtIds(userId, 'event'), membersOnlyId, path);
+        });
+      });
+
+      // The mark that lets a private listing past the ranker is worked out
+      // from the memberships, not taken from the selector having matched.
+      it('marks a private candidate as visible only for a caller who is inside it', function () {
+        const marked = recommendationCandidates({ userId: member, kind: 'event' })
+          .filter(candidate => candidate._visibleToCaller)
+          .map(candidate => candidate._id);
+        assert.sameMembers(marked, [privateEventId]);
+
+        const response = callAs(member, 'recommendations.get', { kind: 'event' });
+        response.items.forEach(item => assert.notProperty(item, '_visibleToCaller', 'a working field, not an answer'));
+      });
+
+      it('loads no event that is over, for anyone, and still loads this morning’s', function () {
+        const floor = startOfToday().getTime();
+        const eventID = Clubs.collection.findOne(privateClubId).clubID;
+        const lastNight = makeEvent({ date: new Date(floor - 1000) });
+        const lastNightInTheGroup = makeEvent({ eventID, visibility: 'private', date: new Date(floor - 1000) });
+        const endedYesterday = makeEvent({ date: new Date(floor - 3 * DAY_MS), endDate: new Date(floor - 1000) });
+        const earlierToday = makeEvent({ date: new Date(floor + 1000) });
+        const beyondTheHorizon = makeEvent({ date: new Date(floor + (EVENT_HORIZON_DAYS + 10) * DAY_MS) });
+
+        [userId, member].forEach(forUser => {
+          const ids = candidateIds(forUser, 'event');
+          assert.include(ids, earlierToday, 'the same floor as the publications: the start of today');
+          assert.notInclude(ids, lastNight);
+          assert.notInclude(ids, lastNightInTheGroup);
+          assert.notInclude(ids, endedYesterday);
+          assert.notInclude(ids, beyondTheHorizon, 'and the same horizon');
+        });
+      });
+
+      it('returns no invite link and no address with a group, on either path', function () {
+        const clubId = makeClub({ owner: 'founder@private.example', inviteToken: 'from-when-it-was-private' });
+        makeEvent({ owner: 'poster@private.example', createdBy: 'poster@private.example' });
+        onBothPaths(path => {
+          ['group', 'event'].forEach(kind => {
+            const { items } = callAs(member, 'recommendations.get', { kind, filters: { includeJoined: true } });
+            assert.isAbove(items.length, 0, path);
+            items.forEach(item => {
+              assert.notProperty(item, 'inviteToken', path);
+              assert.notProperty(item, 'owner', path);
+              assert.notProperty(item, 'createdBy', path);
+            });
+          });
+          assert.include(dealtIds(member, 'group'), clubId, path);
+        });
       });
     });
 

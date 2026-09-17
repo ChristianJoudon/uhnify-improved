@@ -26,6 +26,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import SwipeCard from '../components/SwipeCard.jsx';
 import { sortByDate } from '../utilities/helpers';
 import { collapseEventListings } from '../utilities/eventSeries';
+import { REQUEST_SENT, joinGroup, useRequestedGroupIds } from '../utilities/joinGroup';
 import { useTuck } from '../utilities/useTuck';
 
 // The row scrolls, so the timeline can run further ahead than a wrapping row
@@ -71,6 +72,17 @@ const DiscoverEvents = () => {
   // records. If the call is unavailable, every calculation below naturally
   // falls back to the deck's existing date/name order.
   const [recommendationRuns, setRecommendationRuns] = useState({ event: null, group: null });
+  // Groups kept off the deck with no swipe row to account for it: a join still
+  // on its way to the server, or one that came back as a REQUEST. A request is
+  // not a decision — the person is not in the group, and the server refuses a
+  // 'joined' swipe from somebody who is not — so nothing is stored, and the
+  // card is simply treated as seen for as long as this page is open.
+  const [heldIds, setHeldIds] = useState(() => new Set());
+  // How many joins are waiting on the server. Undo waits with them: rewinding
+  // a swipe whose join has not landed yet would find nothing to take back,
+  // report success, and leave the person in the group.
+  const [joinsInFlight, setJoinsInFlight] = useState(0);
+  const requestedIds = useRequestedGroupIds();
   const impressionKeys = useRef(new Set());
   const refocusCardAfterSwipe = useRef(false);
 
@@ -177,19 +189,25 @@ const DiscoverEvents = () => {
    * In clubs mode the deck deals groups you have not joined and have not
    * already passed on. A group has no date, so the time windows do not apply —
    * the toolbar hides them.
+   *
+   * Nor a group the person has asked to join and is waiting to hear from:
+   * swiping right on it again would only send the same request, and there is
+   * no other answer they could be looking for. If the organizer says no, the
+   * request stops being pending and the group comes round again.
    */
   const clubDeck = useMemo(() => {
     if (mode !== 'clubs') {
       return [];
     }
     return clubs
-      .filter(club => !joinedClubIds.has(club._id) && !swipedIds.has(club._id))
+      .filter(club => !joinedClubIds.has(club._id) && !swipedIds.has(club._id)
+        && !heldIds.has(club._id) && !requestedIds.has(club._id))
       // The card asks for `title`; a group calls it `name`. Normalised here so
       // nothing downstream has to know which kind it is holding.
       .map(club => ({ ...club, title: club.name }))
       .sort((a, b) => compareByRecommendation(a, b) || a.title.localeCompare(b.title))
       .map(withRecommendation);
-  }, [mode, clubs, joinedClubIds, swipedIds, recommendationById, recommendationRun]);
+  }, [mode, clubs, joinedClubIds, swipedIds, heldIds, requestedIds, recommendationById, recommendationRun]);
 
   const windowEvents = useMemo(() => {
     const now = new Date();
@@ -310,8 +328,6 @@ const DiscoverEvents = () => {
     setExiting(prev => [...prev, { event: swiped, dir: direction }]);
     setHistory(prev => [...prev, swiped._id]);
     setFlippedId(null);
-    // Recorded immediately — the client stub applies it synchronously, so even if this
-    // card's fly-off is interrupted (filter change, unmount), the decision is never lost.
     const kind = mode === 'clubs' ? 'club' : 'event';
     // The stored word is the word on the stamp: 'going' for an event, 'joined'
     // for a group. The server refuses a pair that does not fit.
@@ -322,40 +338,71 @@ const DiscoverEvents = () => {
       setExiting(prev => prev.filter(item => item.event._id !== swiped._id));
       setHistory(prev => prev.filter(id => id !== swiped._id));
     };
-    let joinFailed = false;
-    if (decision === 'joined') {
-      // Swiping right on a group is joining it — the deck is the join, not a
-      // shortlist you have to work through again somewhere else.
-      const joinContext = swiped._recommendation
-        ? { ...swiped._recommendation, clientEventId: `join:${Random.id()}` }
+    // For an event, and for any pass, this is sent at once — the client stub
+    // applies it synchronously, so even if the card's fly-off is interrupted
+    // (filter change, unmount), the decision is never lost.
+    const recordSwipe = () => {
+      const recommendationContext = swiped._recommendation
+        ? { ...swiped._recommendation, clientEventId: `swipe:${Random.id()}` }
         : {};
-      Meteor.call('profileClubs.add', swiped._id, joinContext, joinError => {
-        if (joinError) {
-          // A join that failed used to show an alert and nothing else: the
-          // swipe below still landed, so the card was gone for good and the
-          // row said 'joined' about a group the person was not in. The server
-          // now refuses that swipe, and it is taken back here as well so the
-          // card returns whichever answer arrives first. 'correction' leaves
-          // no group and tells the recommender nothing.
-          joinFailed = true;
-          Meteor.call('eventSwipes.remove', swiped._id, 'correction');
+      Meteor.call('eventSwipes.record', swiped._id, decision, kind, recommendationContext, error => {
+        if (error) {
           springBack();
-          swal("That didn't go through", joinError.reason || joinError.message, 'error');
-        }
-      });
-    }
-    const recommendationContext = swiped._recommendation
-      ? { ...swiped._recommendation, clientEventId: `swipe:${Random.id()}` }
-      : {};
-    Meteor.call('eventSwipes.record', swiped._id, decision, kind, recommendationContext, error => {
-      if (error) {
-        springBack();
-        // One failure, one message. When the join failed this swipe is refused
-        // because of it, and the person has already been told why.
-        if (!joinFailed) {
           swal("That didn't go through", error.reason || error.message, 'error');
         }
+      });
+    };
+    if (decision !== 'joined') {
+      recordSwipe();
+      return;
+    }
+
+    // Swiping right on a group is joining it — the deck is the join, not a
+    // shortlist you have to work through again somewhere else.
+    //
+    // The join goes first and the swipe waits for its answer. They used to be
+    // sent together, which was sound while a join could only work or fail:
+    // the server refuses a 'joined' swipe without a membership, so a failed
+    // join took its swipe down with it. A join can now come back as a REQUEST
+    // — the organizer approves people — and that is not a failure. Sent
+    // together, the swipe would be refused, the card would spring back and the
+    // person would be shown an error about a request that had gone through.
+    // So nothing is written until the server has said which it was, and the
+    // card is held off the deck by hand in the meantime.
+    const hold = on => setHeldIds(prev => {
+      const next = new Set(prev);
+      if (on) {
+        next.add(swiped._id);
+      } else {
+        next.delete(swiped._id);
       }
+      return next;
+    });
+    const joinContext = swiped._recommendation
+      ? { ...swiped._recommendation, clientEventId: `join:${Random.id()}` }
+      : {};
+    hold(true);
+    setJoinsInFlight(count => count + 1);
+    joinGroup(swiped._id, { context: joinContext }).then(result => {
+      setJoinsInFlight(count => count - 1);
+      if (result?.status === 'requested') {
+        // No swipe, so nothing for Undo to rewind: it comes out of the
+        // history and stays held. The request itself stands.
+        setHistory(prev => prev.filter(id => id !== swiped._id));
+        swal({ text: REQUEST_SENT, icon: 'success' });
+        return;
+      }
+      // In. The swipe row is what Undo takes back, along with the membership.
+      // The hold is left on: the membership keeps the card off the deck from
+      // here anyway, and letting go a render before the page has heard about
+      // it would flash the card back. Undo deals a rewound card from its own
+      // list, which the hold does not touch.
+      recordSwipe();
+    }, joinError => {
+      setJoinsInFlight(count => count - 1);
+      hold(false);
+      springBack();
+      swal("That didn't go through", joinError.reason || joinError.message, 'error');
     });
   };
 
@@ -364,7 +411,7 @@ const DiscoverEvents = () => {
   };
 
   const handleUndo = () => {
-    if (history.length === 0 || exiting.length > 0) {
+    if (history.length === 0 || exiting.length > 0 || joinsInFlight > 0) {
       return;
     }
     const lastId = history[history.length - 1];
@@ -666,7 +713,7 @@ const DiscoverEvents = () => {
                 whileHover={{ x: -2 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={handleUndo}
-                disabled={history.length === 0 || exiting.length > 0}
+                disabled={history.length === 0 || exiting.length > 0 || joinsInFlight > 0}
                 aria-label="Undo last swipe"
                 title="Undo last swipe (Z or Backspace)"
               >

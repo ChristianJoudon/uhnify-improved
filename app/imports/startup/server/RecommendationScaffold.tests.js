@@ -224,7 +224,8 @@ if (Meteor.isServer) {
       assert.deepEqual(lastWalk().counts, { events: 0, complete: false });
       assert.equal(hostEdges(), 0);
 
-      callAs(makeUser(), 'Clubs.organizeEvent', { clubID: clubId, eventID: eventId });
+      // An administrator, because the method is no longer open to a passer-by.
+      callAs(makeUser({ admin: true }), 'Clubs.organizeEvent', { clubID: clubId, eventID: eventId });
 
       ensureRecommendationScaffold();
       assert.deepEqual(lastWalk().counts, { events: 1, complete: false });

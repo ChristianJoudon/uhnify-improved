@@ -50,7 +50,7 @@ const stubLog = () => {
  * drift without a test saying so.
  */
 const DEVELOPMENT_SETTINGS = {
-  public: { communityIngestionSandbox: true },
+  public: { communityIngestionSandbox: true, devSignIn: ['john@foo.com', 'admin@foo.com'] },
   defaultAccounts: [
     { email: 'admin@foo.com', password: 'changeme', role: 'admin' },
     { email: 'john@foo.com', password: 'changeme' },
@@ -80,15 +80,29 @@ if (Meteor.isServer) {
         assert.deepEqual(settingsProblems({ defaultAccounts: [] }, { env: {} }), []);
       });
 
-      it('refuses the development file for exactly its three problems', function () {
+      it('refuses the development file for exactly its four problems', function () {
         const problems = settingsProblems(DEVELOPMENT_SETTINGS, { env: {} });
 
-        assert.lengthOf(problems, 3);
+        assert.lengthOf(problems, 4);
         assert.include(problems[0], 'defaultAccounts[0] (admin@foo.com)');
         assert.include(problems[0], 'the password is one everyone tries first');
         assert.include(problems[0], 'foo.com, which is a placeholder domain');
         assert.include(problems[1], 'defaultAccounts[1] (john@foo.com)');
         assert.include(problems[2], 'public.communityIngestionSandbox is on');
+        assert.include(problems[3], 'public.devSignIn is on');
+      });
+
+      it('refuses the development sign-in in any form, and says nothing when it is absent', function () {
+        [['john@foo.com'], true, 'yes', []].forEach(value => {
+          const problems = settingsProblems({ ...SAFE, public: { devSignIn: value } });
+          // An empty list is truthy in JavaScript, and that is the right answer
+          // here: the key itself is what does not belong.
+          assert.lengthOf(problems, 1, JSON.stringify(value));
+          assert.include(problems[0], 'public.devSignIn is on', JSON.stringify(value));
+        });
+        [undefined, null, false, 0, ''].forEach(value => {
+          assert.deepEqual(settingsProblems({ ...SAFE, public: { devSignIn: value } }), [], String(value));
+        });
       });
 
       it('refuses the sample file deployed without being edited', function () {
@@ -241,11 +255,12 @@ if (Meteor.isServer) {
           () => enforceSettings(DEVELOPMENT_SETTINGS, { isProduction: true, env: ENV, log }),
           /Production settings are unsafe/,
         );
-        assert.lengthOf(log.lines.error, 3);
+        assert.lengthOf(log.lines.error, 4);
         log.lines.error.forEach(line => assert.match(line, /^\[settings\] refusing to start: /));
         assert.include(log.lines.error[0], 'admin@foo.com');
         assert.include(log.lines.error[1], 'john@foo.com');
         assert.include(log.lines.error[2], 'public.communityIngestionSandbox is on');
+        assert.include(log.lines.error[3], 'public.devSignIn is on');
         assert.deepEqual(log.lines.warn, [], 'nothing is softened to a warning in production');
       });
 
@@ -256,9 +271,9 @@ if (Meteor.isServer) {
         assert.doesNotThrow(() => {
           problems = enforceSettings(DEVELOPMENT_SETTINGS, { isProduction: false, env: ENV, log });
         });
-        assert.lengthOf(problems, 3);
+        assert.lengthOf(problems, 4);
         assert.deepEqual(log.lines.error, []);
-        assert.lengthOf(log.lines.warn, 3);
+        assert.lengthOf(log.lines.warn, 4);
         log.lines.warn.forEach((line, index) => {
           assert.equal(line, `[settings] production would refuse to start: ${problems[index]}`);
         });
@@ -292,6 +307,11 @@ if (Meteor.isServer) {
           Meteor.settings.defaultAccounts,
           DEVELOPMENT_SETTINGS.defaultAccounts,
           'config/settings.development.json and DEVELOPMENT_SETTINGS in this test have drifted apart; update the copy so the guard is tested against what the file really says',
+        );
+        assert.deepEqual(
+          Meteor.settings.public?.devSignIn,
+          DEVELOPMENT_SETTINGS.public.devSignIn,
+          'public.devSignIn in config/settings.development.json and in this test have drifted apart',
         );
       });
     });

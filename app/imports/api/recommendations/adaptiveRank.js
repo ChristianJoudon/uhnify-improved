@@ -381,7 +381,14 @@ const eligibility = ({ candidate, kind, now, passedIds, goingIds, membershipIds,
   if (candidate?.cancellationStatus === 'canceled') {
     return false;
   }
-  if (['private', 'unlisted'].includes(candidate?.visibility)) {
+  // Not public is not ranked, unless whoever gathered the candidates has
+  // worked out that this person is inside it — a member of the private group,
+  // or of a group hosting the private event — and marked it so (see
+  // recommendationCandidates). This used to name 'private' and 'unlisted' and
+  // let 'members' through to everyone; it now reads "absent or 'public'" like
+  // every other test of the field, so the next value added fails closed too.
+  const openToAll = candidate.visibility === undefined || candidate.visibility === 'public';
+  if (!openToAll && candidate._visibleToCaller !== true) {
     return false;
   }
   if (candidate?.availabilityStatus === 'sold_out') {
@@ -614,6 +621,6 @@ export const rankAdaptiveRecommendations = ({
 export const stripPrivateRecommendationFields = item => {
   // Match the public listing publications: account-derived owner values stay
   // server-side, as do ranker-only working fields.
-  const { _componentScores, _hostClubIds, owner, ...safe } = item;
+  const { _componentScores, _hostClubIds, _visibleToCaller, owner, ...safe } = item;
   return safe;
 };
