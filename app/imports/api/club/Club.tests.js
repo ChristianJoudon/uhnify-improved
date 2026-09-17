@@ -221,8 +221,10 @@ if (Meteor.isServer) {
     });
 
     it('takes a real photo, no photo, and nothing else', function () {
-      callAs(user, 'Clubs.insert', { ...club, image: jpeg });
-      assert.equal(Clubs.collection.findOne().image, jpeg);
+      // Kept, but not on the group: the group holds the path the photo is
+      // served from. Where the bytes went is photoStore.tests.js's subject.
+      const id = callAs(user, 'Clubs.insert', { ...club, image: jpeg });
+      assert.match(Clubs.collection.findOne(id).image, new RegExp(`^/photo/club/${id}\\?v=\\d+$`));
       callAs(user, 'Clubs.insert', { ...club, name: 'Unillustrated', image: '' });
       // The form sends '' for "no photo"; collection2 strips an empty string
       // on the way in, so none is stored as no field, which is what the card

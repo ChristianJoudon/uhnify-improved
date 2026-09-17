@@ -7,7 +7,13 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
 import { parseMeetingTime } from '../../api/club/schedule';
 import { ensureRecommendationScaffold } from './RecommendationScaffold';
-import { dropRedundantCreatedBy, renameInterestedSwipes } from './migrations';
+import {
+  backfillListingCounts,
+  dropRedundantCreatedBy,
+  movePhotosOutOfDocuments,
+  redactParticipationAudit,
+  renameInterestedSwipes,
+} from './migrations';
 
 /* eslint-disable no-console */
 
@@ -150,6 +156,28 @@ syncDefaultProfiles();
 seedProfileClubs();
 seedEventClubs();
 migrateClubSchedules();
+// Nothing below depends on this, but the recommendation scaffold reads every
+// group and event whole, and a listing still carrying its photo is half a
+// megabyte of that reading — so the photos are out of the way before it runs.
+// One line, and only when there is something to say. A photo that could not
+// be moved is still stored inline and still sent to every visitor, which is
+// worth a line on every boot until somebody replaces it. The migration has
+// already named each one, and said apart which were refused as photos and
+// which hit an error; this is the total, in the same two halves.
+const movedPhotos = movePhotosOutOfDocuments();
+if (Object.values(movedPhotos).some(count => count > 0)) {
+  const stillInline = movedPhotos.left + movedPhotos.failed > 0
+    ? ` Still inline: ${movedPhotos.left} refused as photos and left as they are, ${movedPhotos.failed} stopped by an error; each is named above.`
+    : '';
+  console.log(`Moved photos out of documents: ${movedPhotos.clubs} groups, ${movedPhotos.events} events, `
+    + `${movedPhotos.profiles} profiles.${stillInline}`);
+}
+// No order to keep: it rewrites what the trail already holds and reads
+// nothing else. Once, in effect — after the first boot it finds nothing.
+const redactedAuditEntries = redactParticipationAudit();
+if (redactedAuditEntries > 0) {
+  console.log(`Took listing ids out of ${redactedAuditEntries} audit entries.`);
+}
 // After seeding, so a database seeded before the register dropped the field
 // is cleaned on the same boot.
 const clearedCreatedBy = dropRedundantCreatedBy();
@@ -162,5 +190,12 @@ if (clearedCreatedBy > 0) {
 const renamedSwipes = renameInterestedSwipes();
 if (renamedSwipes.going + renamedSwipes.joined > 0) {
   console.log(`Renamed right swipes: ${renamedSwipes.going} to going, ${renamedSwipes.joined} to joined.`);
+}
+// After the rename, because Going is counted by that name; and after the
+// seeded memberships above, which are written around the methods that keep
+// the counts and so were never counted.
+const correctedCounts = backfillListingCounts();
+if (correctedCounts.clubs + correctedCounts.events > 0) {
+  console.log(`Corrected counts: ${correctedCounts.clubs} groups' members, ${correctedCounts.events} events' going.`);
 }
 ensureRecommendationScaffold();

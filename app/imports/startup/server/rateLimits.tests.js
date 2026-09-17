@@ -32,6 +32,18 @@ if (Meteor.isServer) {
       assert.isAtLeast(calls / seconds, 2);
     });
 
+    /**
+     * 'clubs.inviteInfo' says whether a guessed invite token is real, and a
+     * real one is a way into a private group. Left unnamed it would fall to
+     * the general rule — three guesses a second, for ever.
+     */
+    it('holds guesses at an invite link far below the general rule', function () {
+      const [calls, seconds] = rateLimitFor('clubs.inviteInfo');
+      const [generalCalls, generalSeconds] = rateLimitFor('Profiles.somethingNew');
+      assert.isAtMost(calls / seconds, 0.25);
+      assert.isBelow(calls / seconds, generalCalls / generalSeconds / 10);
+    });
+
     it('falls back to the general rule for anything unnamed', function () {
       assert.deepEqual(rateLimitFor('Profiles.somethingNew'), [30, 10]);
     });

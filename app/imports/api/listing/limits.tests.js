@@ -1,7 +1,16 @@
 /* eslint-env mocha */
 import { assert } from 'chai';
 import { Meteor } from 'meteor/meteor';
-import { IMAGE_DATA_URL_MAX, IMAGE_URL_MAX, imageProblem } from './limits';
+import {
+  IMAGE_DATA_URL_MAX,
+  IMAGE_URL_MAX,
+  PHOTO_KINDS,
+  imageProblem,
+  isPhotoPath,
+  parsePhotoPath,
+  photoPathFor,
+  splitImageDataUrl,
+} from './limits';
 
 /**
  * What may be stored as a listing's image, decided from the bytes.
@@ -58,6 +67,58 @@ if (Meteor.isServer) {
       assert.equal(imageProblem(''), 'invalid-image');
       assert.equal(imageProblem(undefined), 'invalid-image');
       assert.equal(imageProblem(42), 'invalid-image');
+    });
+
+    /**
+     * A form that was opened on a listing with a photo sends the photo's path
+     * back when it is saved, so the path has to pass. On its shape only: whose
+     * photo it names is not something this module can know, and the tests for
+     * that are beside photoFieldFor.
+     */
+    it('accepts the path of an uploaded photo, and only a well-formed one', function () {
+      assert.isNull(imageProblem('/photo/event/Qx7bTnGm2kLp9wZa4?v=1789603200000'));
+      assert.isNull(imageProblem('/photo/club/Qx7bTnGm2kLp9wZa4?v=1'));
+      assert.isNull(imageProblem('/photo/profile/Qx7bTnGm2kLp9wZa4'), 'the version is a cache key, not part of the name');
+      assert.equal(imageProblem('/photo/poster/Qx7bTnGm2kLp9wZa4?v=1'), 'invalid-image', 'a kind there is not');
+      assert.equal(imageProblem('/photo/event/../club/abc?v=1'), 'invalid-image');
+      assert.equal(imageProblem('/photo/event/abc?v=1&next=https://elsewhere.example'), 'invalid-image');
+      assert.equal(imageProblem(`/photo/event/${'a'.repeat(41)}?v=1`), 'invalid-image');
+      assert.equal(imageProblem('/photo/event/'), 'invalid-image');
+      assert.equal(imageProblem('/photos/event/abc?v=1'), 'invalid-image', 'a near miss is not an app path either');
+    });
+  });
+
+  describe('photo paths', function () {
+    const updatedAt = new Date(1789603200000);
+
+    it('writes the path the contract names', function () {
+      assert.equal(photoPathFor({ kind: 'event', ownerId: 'Qx7bTnGm2kLp9wZa4', updatedAt }), '/photo/event/Qx7bTnGm2kLp9wZa4?v=1789603200000');
+    });
+
+    it('reads back whose photo a path names', function () {
+      PHOTO_KINDS.forEach(kind => {
+        assert.deepEqual(parsePhotoPath(photoPathFor({ kind, ownerId: 'abc123', updatedAt })), { kind, ownerId: 'abc123' });
+      });
+      assert.isNull(parsePhotoPath('/photo/event/has-a-hyphen?v=1'));
+      assert.isNull(parsePhotoPath('https://example.org/photo/event/abc123'));
+      assert.isNull(parsePhotoPath(undefined));
+    });
+
+    it('calls anything under /photo/ a photo path, which is what the UI’s isPhoto does', function () {
+      assert.isTrue(isPhotoPath('/photo/event/abc?v=1'));
+      assert.isTrue(isPhotoPath('/photo/nonsense'), 'meant as one; imageProblem is what says it is a bad one');
+      assert.isFalse(isPhotoPath('/photos/event/abc'));
+      assert.isFalse(isPhotoPath('/images/codingWorkshop.png'));
+      assert.isFalse(isPhotoPath('data:image/jpeg;base64,/9j/4AAQ'));
+      [undefined, null, '', 0, {}].forEach(value => assert.isFalse(isPhotoPath(value)));
+    });
+
+    it('takes an inline image apart, and nothing else', function () {
+      assert.deepEqual(splitImageDataUrl('data:image/png;base64,iVBORw0KGgo='), { contentType: 'image/png', data: 'iVBORw0KGgo=' });
+      assert.isNull(splitImageDataUrl('data:image/gif;base64,R0lGODlhAQABAAAAACw='));
+      assert.isNull(splitImageDataUrl('data:text/html;base64,PGI+'));
+      assert.isNull(splitImageDataUrl('/photo/event/abc?v=1'));
+      assert.isNull(splitImageDataUrl(undefined));
     });
   });
 }

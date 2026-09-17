@@ -140,7 +140,10 @@ if (Meteor.isServer) {
     });
 
     it('takes a real photo and draws the stock one when there is none', function () {
-      assert.equal(Events.collection.findOne(callAs(user, 'Events.insert', listing({ image: jpeg }))).image, jpeg);
+      // Kept, but not on the event: the event holds the path the photo is
+      // served from. Where the bytes went is photoStore.tests.js's subject.
+      const id = callAs(user, 'Events.insert', listing({ image: jpeg }));
+      assert.match(Events.collection.findOne(id).image, new RegExp(`^/photo/event/${id}\\?v=\\d+$`));
       assert.equal(Events.collection.findOne(callAs(user, 'Events.insert', listing({ image: '' }))).image, '/images/codingWorkshop.png');
     });
 

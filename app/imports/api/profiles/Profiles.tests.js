@@ -172,7 +172,9 @@ if (Meteor.isServer) {
         })), 'invalid-image');
         const jpeg = `data:image/jpeg;base64,${Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(64)]).toString('base64')}`;
         callAs(attacker, 'Profiles.update', { ...form, picture: jpeg });
-        assert.equal(Profiles.collection.findOne({ userId: attacker }).picture, jpeg);
+        // Kept, as the path it is now served from rather than on the profile.
+        const profile = Profiles.collection.findOne({ userId: attacker });
+        assert.match(profile.picture, new RegExp(`^/photo/profile/${profile._id}\\?v=\\d+$`));
       });
 
       it('refuses a bio past its limit and keeps one exactly at it', function () {

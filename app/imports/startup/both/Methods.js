@@ -1,7 +1,9 @@
 import { Meteor } from 'meteor/meteor';
 import { check, Match } from 'meteor/check';
 import { Roles } from 'meteor/alanning:roles';
+import { Random } from 'meteor/random';
 import { Clubs } from '../../api/club/Club';
+import { ClubJoinRequests, JOIN_REQUEST_COOLDOWN_MS } from '../../api/club/ClubJoinRequests';
 import { Events } from '../../api/events/Events';
 import { Profiles } from '../../api/profiles/Profiles';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
@@ -16,15 +18,25 @@ import {
   RecommendationGraphEdges,
   RecommendationRequests,
 } from '../../api/recommendations/RecommendationData';
-import { friendActivityVisibilityFor, isSensitiveListing } from '../../api/privacy/FriendActivityPrivacy';
 import {
+  LISTING_PRIVACY_FIELDS,
+  friendActivityVisibilityFor,
+  friendActivityVisibilityOfRow,
+  isAnonymousListing,
+  isSensitiveListing,
+} from '../../api/privacy/FriendActivityPrivacy';
+import {
+  eventIdsHostedBy,
   eventWithHostSignals,
   sharesFriendActivity,
   syncFriendActivityForClub,
   syncFriendActivityForEvent,
   syncFriendActivityForUser,
 } from '../../api/privacy/friendActivitySync';
-import { LIST_MAX_ENTRIES, TEXT_LIMITS, imageProblem } from '../../api/listing/limits';
+import { EMAIL_SHAPE, LIST_MAX_ENTRIES, TEXT_LIMITS } from '../../api/listing/limits';
+import { checkImage, insertWithPhoto, photoFieldFor, removePhoto } from '../../api/photos/photoStore';
+import { OWNERSHIP_FIELDS, accountNameOf, canManageListing } from '../../api/listing/ownership';
+import { isOpenToAll } from '../../api/listing/audience';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../../ui/utilities/topics';
 
 /* eslint-disable no-console */
@@ -44,9 +56,19 @@ const requireAdmin = (userId) => {
   }
 };
 
-const getUsername = (userId) => {
-  const user = Meteor.users.findOne(userId);
-  return user?.username || user?.emails?.[0]?.address || userId;
+/** What a new listing's `owner` is stamped with. See api/listing/ownership.js,
+    which is also where the question "is this theirs?" is answered. */
+const getUsername = accountNameOf;
+
+/**
+ * The owner, or an administrator. The reason is the caller's to give, because
+ * it is what the person reads and "you cannot do that" tells them nothing
+ * about who can.
+ */
+const requireListingManager = (userId, record, reason) => {
+  if (!canManageListing(userId, record)) {
+    throw new Meteor.Error('not-authorized', reason);
+  }
 };
 
 /**
@@ -210,29 +232,33 @@ const checkText = (value, key, label, { required = false } = {}) => {
   return text;
 };
 
-const IMAGE_PROBLEMS = {
-  'invalid-image': 'Please choose a JPEG, PNG or WebP photo.',
-  'image-too-large': 'That photo is too large — try a smaller one.',
-};
+/** The listing forms send '' for "no photo", and a listing without one is
+    drawn from its topic. Only a photo that is there is checked. What may be
+    an image at all is checkImage's to say: api/photos/photoStore.js. */
+const optionalImage = image => (image ? checkImage(image) : image);
 
 /**
- * A stored image: one of the app's own, an https URL, or an inline JPEG, PNG
- * or WebP whose first bytes agree with its label. imageProblem says why
- * nothing else. There used to be two checks here — a 2.8 MB ceiling and a
- * list of prefixes — and between them they accepted any content at all, at a
- * size that was then sent to every visitor with the card.
+ * What an edit stores in a listing's `image`, or a profile's `picture`.
+ *
+ * On the server that is photoFieldFor's answer. An upload used to be written
+ * onto the document as it arrived — up to 700,000 characters that every
+ * publication then sent to every visitor with the card. It goes to the photo
+ * store now and the document keeps the path it is served from; a photo taken
+ * down is removed from the store, not just from the form; and a path that
+ * names some other listing's photo is refused.
+ *
+ * A browser's stub has no store to put anything in, so it only checks the
+ * value, and the person sees what they sent until the server's record
+ * replaces it. The same goes for an edit aimed at a record that is not there:
+ * nothing is kept on behalf of a listing that does not exist.
+ *
+ * Call it LAST, after every other field has been accepted. It writes, and a
+ * new photo stored for an edit that was then refused over its title would be
+ * a change the person was told had not happened.
  */
-const checkImage = image => {
-  const problem = imageProblem(image);
-  if (problem) {
-    throw new Meteor.Error(problem, IMAGE_PROBLEMS[problem]);
-  }
-  return image;
-};
-
-/** The listing forms send '' for "no photo", and a listing without one is
-    drawn from its topic. Only a photo that is there is checked. */
-const optionalImage = image => (image ? checkImage(image) : image);
+const editedImage = (kind, record, value, field = 'image') => (Meteor.isServer && record
+  ? photoFieldFor({ kind, ownerId: record._id, value, previous: record[field] })
+  : optionalImage(value));
 
 /**
  * A contact email the organizer chose to print on the listing.
@@ -240,13 +266,10 @@ const optionalImage = image => (image ? checkImage(image) : image);
  * Optional, and blank means "publish none" — the card then draws no mail row,
  * the same rule as a group's contact box. What is given is trimmed and
  * lowercased, so one address spelled two ways does not read as two, and it is
- * checked only for the shape every address has: one @, a dotted domain, no
- * whitespace, and the length ceiling the mail standards set. Anything stricter
- * turns away real addresses, and the reason here is shown to the person who
- * typed it.
+ * checked only for the shape every address has (EMAIL_SHAPE) and the length
+ * ceiling the mail standards set. Anything stricter turns away real
+ * addresses, and the reason here is shown to the person who typed it.
  */
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
-
 const contactEmailOf = value => {
   const email = (value || '').trim().toLowerCase();
   if (!email) {
@@ -310,6 +333,304 @@ const findClubByAnyId = clubId => {
   return null;
 };
 
+/** The two values the product writes. The events schema allows more, from the
+    ingestion pipeline's first draft; see visibilityOf for how those are read. */
+const VISIBILITY = Match.OneOf('public', 'private');
+
+/**
+ * Public or private, and nothing in between. Absent is public, because that
+ * is what every listing made before the field existed is. Any OTHER value is
+ * private — an old 'members' or 'unlisted', or a word added next year — so
+ * that a value this code has never heard of hides a listing rather than
+ * showing it. The test itself is the publications' own (isOpenToAll), so the
+ * methods and the wall cannot come to disagree about what "public" means.
+ */
+const visibilityOf = record => (isOpenToAll(record) ? 'public' : 'private');
+
+/**
+ * Whether anonymity is out of the owner's hands: it would still hold with
+ * their own flag off. For a group that means it is sensitive. An event is
+ * judged with its hosts (pass eventWithHostSignals), so for one it also means
+ * a group that hosts it is anonymous — going to an anonymous group's meeting
+ * says who is in the group. The event's own flag is put down BEFORE the
+ * hosts' are gathered in, or it would be indistinguishable from theirs.
+ */
+const anonymityIsLocked = (record, withHosts = listing => listing) => isAnonymousListing(
+  withHosts({ ...record, anonymous: false }),
+);
+
+/** The group an event NAMES as its host, in its own `eventID`; 0 is none. */
+const namedHostOf = event => (event?.eventID ? Clubs.collection.findOne({ clubID: event.eventID }) : undefined);
+
+/**
+ * Whoever may decide things about an event: the person who posted it, the
+ * person who runs the group it names as its host, or an administrator.
+ *
+ * One answer, because two methods ask and they must not come apart. Setting
+ * an event's privacy is the obvious one. Giving it a host is the other, and
+ * is the same power by another door: an RSVP is judged with every group that
+ * hosts the event, and the members of a hosting group are sent the event even
+ * when it is private.
+ */
+const canManageEvent = (userId, event, namedHost = namedHostOf(event)) => canManageListing(userId, event)
+  || canManageListing(userId, namedHost);
+
+const isMemberOf = (userId, clubIds) => clubIds.length > 0 && Boolean(ProfileClubs.collection.findOne(
+  { userId, clubId: { $in: clubIds } },
+  { fields: { _id: 1 } },
+));
+
+/** Said by both methods that can put a private group's event on the wall. */
+const PRIVATE_HOST_REASON = 'Events for a private group stay private unless the person who runs it says otherwise.';
+
+/**
+ * Whether a listing is this person's to swipe on.
+ *
+ * A public one is anybody's. A private one belongs to the people it is sent
+ * to, and the test is the member publication's own: a private group to the
+ * people in it, a private event to the members of a group that hosts it, by
+ * either of the two links an event has to a group — and to whoever runs any of
+ * them, who may not have joined their own group.
+ *
+ * For the server. A browser holds some memberships and some links, and part
+ * of the answer is not the answer.
+ */
+const mayTakePartIn = (userId, kind, listing) => {
+  if (isOpenToAll(listing) || canManageListing(userId, listing)) {
+    return true;
+  }
+  const groups = kind === 'club' ? [listing] : Clubs.collection.find({
+    $or: [
+      { _id: { $in: EventClubs.collection.find({ eventId: listing._id }, { fields: { clubId: 1 } }).map(link => link.clubId) } },
+      ...(listing.eventID ? [{ clubID: listing.eventID }] : []),
+    ],
+  }, { fields: OWNERSHIP_FIELDS }).fetch();
+  return groups.some(group => canManageListing(userId, group))
+    || isMemberOf(userId, groups.map(group => group._id));
+};
+
+/**
+ * A stored count, moved by one.
+ *
+ * Down is conditional on there being something left to take, inside the same
+ * update, so the floor at zero is the database's. A read followed by a write
+ * is passed by two people leaving at once, and a count that has gone negative
+ * is refused by the schema on every later write to it. A count that has
+ * drifted the other way heals at the next boot: see backfillListingCounts.
+ */
+const adjustCount = (collection, _id, field, by) => {
+  if (by > 0) {
+    collection.update(_id, { $inc: { [field]: 1 } });
+    return;
+  }
+  collection.update({ _id, [field]: { $gt: 0 } }, { $inc: { [field]: -1 } });
+};
+
+/** A group asks first only when its owner said so AND it is not anonymous:
+    a request is a name handed to the owner, which an anonymous group — by
+    choice or because it is sensitive — has promised nobody will be given. */
+const takesJoinRequests = club => club.approveMembers === true && !isAnonymousListing(club);
+
+/**
+ * Put a person in a group. The ONE way in.
+ *
+ * There are three doors — "Join" on a public group, an invite link, and an
+ * owner approving a request — and they used to be one, so nothing could
+ * disagree. Written three times, the third copy is the one that forgets the
+ * member count, or judges friend visibility by the OWNER's sharing choice
+ * because the owner happens to be the caller. So `userId` here is always the
+ * person joining, never `this.userId` by habit.
+ *
+ * Joining twice is not an error and not a second row: the membership that is
+ * there has its friend visibility re-judged, and nothing else happens.
+ *
+ * A request the person still had open is settled on the way in. They may have
+ * come through an invite link while the owner was deciding, and a request left
+ * pending would sit in the owner's list asking about somebody already here —
+ * or, left declined, would refuse them for a month the next time they ask.
+ * Only the server settles it: a browser does not hold other people's requests
+ * and has nothing to gain from guessing at its own.
+ */
+const joinClub = (userId, club, verifiedContext = {}) => {
+  const choice = { sharing: sharesFriendActivity(userId) };
+  const existing = ProfileClubs.collection.findOne({ userId, clubId: club._id });
+  if (existing) {
+    // Judged as the row it is, by when it was made. Somebody who joined while
+    // the group was anonymous and opens the invite link a second time has not
+    // agreed to anything new, and this used to be one more place that put them
+    // back in their friends' feeds once the anonymity had ended.
+    ProfileClubs.collection.update(existing._id, {
+      $set: { friendActivityVisibility: friendActivityVisibilityOfRow(club, existing, choice) },
+    });
+    return existing._id;
+  }
+
+  const membershipId = ProfileClubs.collection.insert({
+    userId,
+    clubId: club._id,
+    friendActivityVisibility: friendActivityVisibilityFor(club, choice),
+    createdAt: now(),
+  });
+  adjustCount(Clubs.collection, club._id, 'memberCount', 1);
+  if (Meteor.isServer) {
+    ClubJoinRequests.collection.update(
+      { clubId: club._id, userId, status: { $ne: 'approved' } },
+      { $set: { status: 'approved', respondedAt: now() } },
+    );
+  }
+  captureRecommendationInteraction({
+    userId,
+    entityType: 'group',
+    entityId: club._id,
+    action: 'joined_group',
+    occurredAt: now(),
+    ...verifiedContext,
+    source: 'legacy',
+  });
+  return membershipId;
+};
+
+/**
+ * Ask to join, or find out that the asking is already done.
+ *
+ * One row per person per group, reused. A second ask while the first is
+ * pending changes nothing, so pressing the button twice does not put the name
+ * in front of the owner twice. A declined request holds for
+ * JOIN_REQUEST_COOLDOWN_MS from the moment it was answered — see that constant
+ * for why — and after that the same row goes back to pending, as new.
+ */
+const requestToJoin = (userId, club) => {
+  const existing = ClubJoinRequests.collection.findOne({ clubId: club._id, userId });
+  if (!existing) {
+    return ClubJoinRequests.collection.insert({ clubId: club._id, userId, status: 'pending', createdAt: now() });
+  }
+  if (existing.status === 'declined') {
+    const waitMs = (existing.respondedAt?.getTime() || 0) + JOIN_REQUEST_COOLDOWN_MS - Date.now();
+    if (waitMs > 0) {
+      const days = Math.ceil(waitMs / (24 * 60 * 60 * 1000));
+      throw new Meteor.Error(
+        'request-declined',
+        `This group said no for now. You can ask again in ${days} day${days === 1 ? '' : 's'}.`,
+      );
+    }
+    ClubJoinRequests.collection.update(existing._id, {
+      $set: { status: 'pending', createdAt: now() },
+      $unset: { respondedAt: '', respondedBy: '' },
+    });
+  }
+  return existing._id;
+};
+
+/**
+ * A group's privacy changed, or something that decides it did: every stored
+ * answer that rests on it is brought up to date before the caller hears back.
+ *
+ * First, the moment anonymity ENDED, if this was it. The owner's decisions are
+ * that every switch goes both ways and that an anonymous group's members are
+ * shown to nobody, the owner included — and those two met here: anonymous
+ * off, read the member list, anonymous back on, and everyone who joined
+ * because there was no list had been put on one without a word. The switch
+ * still moves. What it cannot do is reach backwards: `anonymousUntil` marks
+ * where the promise stopped, and 'clubs.members' names only people who joined
+ * after it. It is taken from the group as it WAS and as it IS, judged the way
+ * everything else judges, so the other two ways out of anonymity are covered
+ * without being listed — an owner removing the 'recovery' tag, an editor
+ * re-filing the group — and it is why this is handed the group from before
+ * the change rather than its _id.
+ *
+ * It is stamped BEFORE the rows are judged, because the rows are judged by
+ * it. It used to come last, and the sync ahead of it saw a group that was no
+ * longer anonymous and had never been: every sharing member went back into
+ * their friends' feeds, the people who joined under the promise with the
+ * rest, and the person who runs the group could read there the names the
+ * member list would not give them.
+ *
+ * Then friend visibility — the members' rows, and the RSVPs to everything
+ * the group hosts — because "who can see I am in this" is the promise being
+ * made, and a group that turns anonymous has to be gone from friends' feeds
+ * at once, not at the next restart. Then the waiting requests: a group that
+ * no longer takes them (it went anonymous, or its owner stopped asking first)
+ * has no business holding a list of names, and the people on it can now
+ * simply join.
+ *
+ * For the server, like everything that judges other people's rows.
+ */
+const followClubPrivacy = clubBefore => {
+  if (!Meteor.isServer || !clubBefore) {
+    return;
+  }
+  const clubId = clubBefore._id;
+  const club = Clubs.collection.findOne(clubId, { fields: { ...LISTING_PRIVACY_FIELDS, approveMembers: 1 } });
+  if (club && isAnonymousListing(clubBefore) && !isAnonymousListing(club)) {
+    Clubs.collection.update(clubId, { $set: { anonymousUntil: now() } });
+  }
+  syncFriendActivityForClub(clubId);
+  if (club && !takesJoinRequests(club)) {
+    ClubJoinRequests.collection.remove({ clubId, status: 'pending' });
+  }
+};
+
+/**
+ * The same for an event, whose RSVPs are its members. It is anonymous by its
+ * own switch, by its own words, or by a group that hosts it, so it is judged
+ * with its hosts both times — hand over what eventWithHostSignals made of it
+ * BEFORE the change, links and all. A group that stops being anonymous needs
+ * nothing from here: its own stamp reaches the RSVPs to everything it hosts.
+ */
+const followEventPrivacy = (eventId, judgedBefore) => {
+  if (!Meteor.isServer) {
+    return;
+  }
+  const event = Events.collection.findOne(eventId, { fields: { ...LISTING_PRIVACY_FIELDS, eventID: 1 } });
+  if (event && judgedBefore && isAnonymousListing(judgedBefore) && !isAnonymousListing(eventWithHostSignals(event))) {
+    Events.collection.update(eventId, { $set: { anonymousUntil: now() } });
+  }
+  syncFriendActivityForEvent(eventId);
+};
+
+/**
+ * A group that is being removed takes its signals with it, and its events stay.
+ *
+ * An RSVP is judged with the groups that host the event: going to a recovery
+ * group's Thursday meeting is private because the GROUP is, and the meeting's
+ * own record often says nothing. Remove the group and that reason is gone —
+ * the next time the rows are re-judged (any boot does it), every sharing
+ * member's RSVP to those meetings would turn shareable, and their friends
+ * would be told. Removing a group is what an administrator does to a listing
+ * that should not be up; it must not be the act that publishes who went.
+ *
+ * So what the group knew is written onto the events before it goes: anonymous
+ * if the group was (by its switch or by what it is), and otherwise the date
+ * its anonymity ended, where that is later than the event's own. Stamped by
+ * hand, so the events stop following a group that no longer exists.
+ */
+const keepHostedEventsPrivate = clubId => {
+  if (!Meteor.isServer) {
+    return;
+  }
+  const club = Clubs.collection.findOne(clubId, { fields: { ...LISTING_PRIVACY_FIELDS, anonymousUntil: 1 } });
+  const eventIds = club ? eventIdsHostedBy(clubId) : [];
+  if (eventIds.length === 0) {
+    return;
+  }
+  if (isAnonymousListing(club)) {
+    Events.collection.update(
+      { _id: { $in: eventIds }, anonymous: { $ne: true } },
+      { $set: { anonymous: true, privacyInherited: false } },
+      { multi: true },
+    );
+  } else if (club.anonymousUntil) {
+    Events.collection.update(
+      {
+        _id: { $in: eventIds },
+        $or: [{ anonymousUntil: { $exists: false } }, { anonymousUntil: { $lt: club.anonymousUntil } }],
+      },
+      { $set: { anonymousUntil: club.anonymousUntil } },
+      { multi: true },
+    );
+  }
+};
+
 /**
  * Take a person out of a group, and tell the recommender they left.
  *
@@ -330,12 +651,29 @@ const findClubByAnyId = clubId => {
  * "bring back passed" clears only passes — the group could not be met again
  * by any route. On the rewind path the row is already gone and this removes
  * nothing. It records nothing either way: 'left_group' has said it.
+ *
+ * The member count comes down only if a row really went — counted from what
+ * the remove reports, not from the read before it, so two "Leave" calls
+ * racing each other take one off the count between them.
+ *
+ * The person's join request goes too, unless it was declined. An approved
+ * one is a standing pass back into a private group, and leaving hands it in:
+ * coming back means being invited or asking again. A pending one is simply
+ * withdrawn, which is what "Leave" on a group you only asked to join means.
+ * A declined one stays, because it is the owner's answer and not the
+ * requester's to delete — removing it here would reset the wait.
  */
 const leaveClub = (userId, clubId, verifiedContext) => {
   const club = findClubByAnyId(clubId);
   const normalizedClubId = club?._id || clubId;
   const existing = ProfileClubs.collection.findOne({ userId, clubId: normalizedClubId });
-  ProfileClubs.collection.remove({ userId, clubId: normalizedClubId });
+  const removed = ProfileClubs.collection.remove({ userId, clubId: normalizedClubId });
+  if (removed > 0) {
+    adjustCount(Clubs.collection, normalizedClubId, 'memberCount', -1);
+  }
+  if (Meteor.isServer) {
+    ClubJoinRequests.collection.remove({ clubId: normalizedClubId, userId, status: { $ne: 'declined' } });
+  }
   EventSwipes.collection.remove({ userId, eventId: `${normalizedClubId}`, kind: 'club', decision: 'joined' });
   if (existing) {
     captureRecommendationInteraction({
@@ -391,6 +729,10 @@ const captureCanceledRsvp = (swipe, reason, verifiedContext, extra = {}) => capt
  * arrived. They used to wait for the next restart to be judged again, which
  * for the one case that matters is the wrong time to be late. Only a change
  * that actually crosses the line touches the rows; most tags are 'hiking'.
+ *
+ * Crossing it also makes the group anonymous, so what follows is everything
+ * a privacy change is followed by — including letting go of the requests it
+ * was holding, which name people to an owner who may no longer be told.
  */
 const followTagChange = clubBefore => {
   if (!Meteor.isServer) {
@@ -398,7 +740,7 @@ const followTagChange = clubBefore => {
   }
   const clubNow = Clubs.collection.findOne(clubBefore._id);
   if (isSensitiveListing(clubBefore) !== isSensitiveListing(clubNow)) {
-    syncFriendActivityForClub(clubBefore._id);
+    followClubPrivacy(clubBefore);
   }
 };
 
@@ -459,6 +801,9 @@ Meteor.methods({
       lastName: last,
       bio: existingProfile?.bio || '',
       title: existingProfile?.title || 'Student',
+      // Carried over as it stands. An uploaded photo is keyed by the
+      // profile's _id, not the account's, and the profile below is updated in
+      // place — so a path it already holds still names its own photo.
       picture: existingProfile?.picture || '/images/defaultprofilepic.png',
       interests: publicProfileInterests(interests),
     };
@@ -500,8 +845,13 @@ Meteor.methods({
       title: checkText(profileData.title, 'profileTitle', 'Title'),
       interests: publicProfileInterests(profileData.interests),
     };
+    // After the text, because this one writes: see editedImage. A new photo
+    // goes to the photo store under the profile's _id and the profile keeps
+    // its path, so the people directory sends every member a short string
+    // where it used to send every member's avatar. '' takes the photo down,
+    // and the profile is then drawn with the default one.
     if (profileData.picture !== undefined) {
-      fields.picture = checkImage(profileData.picture);
+      fields.picture = editedImage('profile', profile, profileData.picture, 'picture');
     }
 
     Profiles.collection.update(profile._id, { $set: { ...fields, updatedAt: now() } });
@@ -549,6 +899,12 @@ Meteor.methods({
     check(profileId, String);
     requireAdmin(this.userId);
     Profiles.collection.remove(profileId);
+    // The photo is kept apart from the profile now, so it has to be taken
+    // down apart from it too. Left behind it would still be served, to anyone
+    // holding its address, as the face of a profile that no longer exists.
+    if (Meteor.isServer) {
+      removePhoto({ kind: 'profile', ownerId: profileId });
+    }
   },
 
   'Clubs.insert'(clubData) {
@@ -562,13 +918,15 @@ Meteor.methods({
       categories: Match.Optional(Match.OneOf(String, [String])),
       tags: Match.Optional([String]),
       schedule: Match.Optional(Object),
+      visibility: Match.Optional(VISIBILITY),
+      anonymous: Match.Optional(Boolean),
+      approveMembers: Match.Optional(Boolean),
     });
     requireLoggedIn(this.userId);
     const listing = {
       name: checkText(clubData.name, 'name', 'Name', { required: true }),
       description: checkText(clubData.description, 'description', 'Description'),
       location: checkText(clubData.location, 'location', 'Location', { required: true }),
-      image: optionalImage(clubData.image),
       meetingTime: checkText(clubData.meetingTime, 'meetingTime', 'Meeting time', { required: true }),
       // Blank stays blank. This used to fall back to the creator's account
       // name, which `getUsername` resolves to their EMAIL — so leaving the
@@ -578,19 +936,53 @@ Meteor.methods({
       // chosen the opposite, and the card simply draws no contact row.
       contactInfo: checkText(clubData.contactInfo, 'contactInfo', 'Contact'),
     };
+    // Checked here with everything else, so that a refused photo does not use
+    // up a group number. It is not part of the record: an upload is stored
+    // apart from the group, under an _id the group does not have yet, which
+    // is insertWithPhoto's business below.
+    const image = optionalImage(clubData.image);
+
+    const categories = normalizeCategories(clubData.categories);
+    const tags = (clubData.tags || []).map(normalizeTag).filter(tag => tag.length >= 2).slice(0, LIST_MAX_ENTRIES);
+    // The owner's choices, stored as they made them. `anonymous` is only ever
+    // their own flag: a sensitive group is anonymous whatever it says, and is
+    // not stamped `true` here, because a flag the app set would go on holding
+    // after an editor re-filed the group and nobody had chosen it. Asking
+    // first is the one that has to give way now — there is no approving a
+    // request without reading a name.
+    const anonymous = clubData.anonymous === true;
+    const privacy = {
+      visibility: clubData.visibility || 'public',
+      anonymous,
+      approveMembers: clubData.approveMembers === true && !isAnonymousListing({ categories, tags, anonymous }),
+    };
 
     // Numbered only once everything about it has been accepted, so a refused
     // listing does not use up a group number.
     const clubID = nextNumericId(Clubs.collection, 'clubID');
-    return Clubs.collection.insert({
-      clubID,
-      createdAt: now(),
-      updatedAt: now(),
-      ...listing,
-      owner: getUsername(this.userId),
-      categories: normalizeCategories(clubData.categories),
-      tags: (clubData.tags || []).map(normalizeTag).filter(tag => tag.length >= 2).slice(0, LIST_MAX_ENTRIES),
-      schedule: normalizeSchedule(clubData.schedule) || parseMeetingTime(listing.meetingTime) || undefined,
+    return insertWithPhoto({
+      kind: 'club',
+      collection: Clubs.collection,
+      field: 'image',
+      value: image,
+      record: {
+        clubID,
+        createdAt: now(),
+        updatedAt: now(),
+        ...listing,
+        owner: getUsername(this.userId),
+        categories,
+        tags,
+        schedule: normalizeSchedule(clubData.schedule) || parseMeetingTime(listing.meetingTime) || undefined,
+        ...privacy,
+        memberCount: 0,
+        // A private group is reached by its link and by nothing else, so it
+        // has one from its first moment. Minted on the server only: a
+        // browser's guess at the secret would be replaced a moment later
+        // anyway, and a capability should not exist anywhere it does not
+        // have to.
+        ...(Meteor.isServer && privacy.visibility === 'private' ? { inviteToken: Random.secret() } : {}),
+      },
     });
   },
 
@@ -613,6 +1005,9 @@ Meteor.methods({
     const meetingTime = checkText(clubData.meetingTime, 'meetingTime', 'Meeting time', { required: true });
 
     const categories = normalizeCategories(clubData.categories);
+    // The group as it stands: its photo, for editedImage, and what it is
+    // judged by, for followClubPrivacy, which has to know what it WAS.
+    const stored = Clubs.collection.findOne(clubId, { fields: { ...LISTING_PRIVACY_FIELDS, image: 1 } });
     Clubs.collection.update(clubId, {
       $set: {
         name: checkText(clubData.name, 'name', 'Name', { required: true }),
@@ -620,12 +1015,16 @@ Meteor.methods({
         owner: checkText(clubData.owner, 'email', 'Owner', { required: true }),
         description: checkText(clubData.description, 'description', 'Description'),
         location: checkText(clubData.location, 'location', 'Location', { required: true }),
-        image: optionalImage(clubData.image),
         meetingTime,
         contactInfo: checkText(clubData.contactInfo, 'contactInfo', 'Contact'),
         categories,
         ...(clubData.tags ? { tags: clubData.tags.map(normalizeTag).filter(tag => tag.length >= 2).slice(0, LIST_MAX_ENTRIES) } : {}),
         updatedAt: now(),
+        // Last in the list because it writes: see editedImage. An edit sent
+        // without the key leaves the photo alone, which is what it always
+        // did — the driver drops an undefined — and is why the stored photo
+        // is only touched when the form actually said something about it.
+        ...(clubData.image !== undefined ? { image: editedImage('club', stored, clubData.image) } : {}),
       },
     });
 
@@ -645,17 +1044,125 @@ Meteor.methods({
     // when sharing became each member's own choice: the caller here is an
     // administrator, and their preference is not the members'. It also judged
     // the new categories alone, where tags now count as well.
-    if (Meteor.isServer) {
-      syncFriendActivityForClub(clubId);
+    followClubPrivacy(stored);
+  },
+
+  /**
+   * Who can find a group, who can see its members, and whether joining asks
+   * first. Every one of them can be changed at any time, in either direction,
+   * by the person who runs the group — with one exception, below.
+   *
+   * Only what is named changes; a key left out is left alone, so a page with
+   * one toggle sends one key. Sent nothing, this writes nothing and answers
+   * with how things stand, which is how a settings page learns about the lock
+   * without working it out for itself.
+   *
+   * The exception is a sensitive group. It is anonymous because of what it is
+   * and not because anybody ticked a box, so turning anonymity OFF is refused
+   * — out loud, because quietly keeping it on would leave the owner believing
+   * they had a member list coming.
+   *
+   * Anonymous wins over asking first. An approval is somebody reading a name,
+   * so `approveMembers` is written false whenever the group is anonymous,
+   * whatever was sent, and the answer says so.
+   *
+   * Anonymity switched off is off from then on, not from the beginning. The
+   * people who joined while nobody could see them stay unseen: see
+   * followClubPrivacy, and 'clubs.members'.
+   *
+   * The group's events follow it while they are still marked
+   * `privacyInherited`, and only those: an event whose privacy somebody set by
+   * hand keeps that decision. The ones that follow are the ones that NAME this
+   * group as their host (`eventID`). A link row in EventClubs is not enough.
+   * It says the group is one of an event's hosts, and is written from the
+   * event's side — by ingestion, by an editor, by whoever posted the event —
+   * which does not hand the event to the person running each group it was
+   * linked to. 'Clubs.organizeEvent' once let anyone at all write one, and an
+   * event that whoever linked a group to it could take private could be taken
+   * down by anybody.
+   *
+   * Nothing here is simulated. The browser does not hold the owner field, the
+   * members' rows or the token, and a guess at any of them helps nobody.
+   */
+  'Clubs.setPrivacy'(clubId, settings) {
+    check(clubId, String);
+    check(settings, {
+      visibility: Match.Optional(VISIBILITY),
+      anonymous: Match.Optional(Boolean),
+      approveMembers: Match.Optional(Boolean),
+    });
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return undefined;
     }
+
+    const club = Clubs.collection.findOne(clubId);
+    if (!club) {
+      throw new Meteor.Error('club-not-found', 'That group could not be found.');
+    }
+    requireListingManager(this.userId, club, 'Only the person who runs this group can change its privacy.');
+
+    const anonymousLocked = anonymityIsLocked(club);
+    if (settings.anonymous === false && anonymousLocked) {
+      throw new Meteor.Error(
+        'anonymous-locked',
+        'Groups like this one are always anonymous, so nobody can see who is in them.',
+      );
+    }
+
+    const visibility = settings.visibility || visibilityOf(club);
+    const anonymous = settings.anonymous ?? club.anonymous === true;
+    const approveMembers = !(anonymous || anonymousLocked) && (settings.approveMembers ?? club.approveMembers === true);
+    const next = { visibility, anonymous, approveMembers };
+    const current = {
+      visibility: visibilityOf(club),
+      anonymous: club.anonymous === true,
+      approveMembers: club.approveMembers === true,
+    };
+    const answer = { ...next, anonymous: anonymous || anonymousLocked, anonymousLocked };
+    // The link exists from the moment there is something for it to open. One
+    // already handed out keeps working: going public and back should not
+    // break every invitation the owner ever sent.
+    const needsInvite = visibility === 'private' && !club.inviteToken;
+    const unchanged = Object.keys(next).every(key => next[key] === current[key]);
+    if (Object.keys(settings).length === 0 || (unchanged && !needsInvite)) {
+      return answer;
+    }
+
+    Clubs.collection.update(clubId, {
+      $set: {
+        ...next,
+        updatedAt: now(),
+        ...(needsInvite ? { inviteToken: Random.secret() } : {}),
+      },
+    });
+    if (club.clubID && (visibility !== current.visibility || anonymous !== current.anonymous)) {
+      Events.collection.update(
+        { eventID: club.clubID, privacyInherited: true },
+        { $set: { visibility, anonymous, updatedAt: now() } },
+        { multi: true },
+      );
+    }
+    followClubPrivacy(club);
+    return answer;
   },
 
   'Clubs.remove'(clubId) {
     check(clubId, String);
     requireAdmin(this.userId);
+    // Before anything is taken away, because it reads the group and its links.
+    keepHostedEventsPrivate(clubId);
     Clubs.collection.remove(clubId);
     ProfileClubs.collection.remove({ clubId });
     EventClubs.collection.remove({ clubId });
+    // Requests to join a group that is gone are names kept for no reason.
+    ClubJoinRequests.collection.remove({ clubId });
+    // Its photo is stored apart from it, and would otherwise go on being
+    // served to anyone holding the address — for a private group, the one
+    // thing about it that was ever reachable without being a member.
+    if (Meteor.isServer) {
+      removePhoto({ kind: 'club', ownerId: clubId });
+    }
     // A group can be swiped on just as an event can — `EventSwipes.eventId`
     // holds whichever kind of _id was swiped. Left behind, these are rows that
     // point at nothing, and they count towards the "passed" tally the deck
@@ -667,42 +1174,67 @@ Meteor.methods({
     // which is what the EventClubs removal above is for.
   },
 
-  'profileClubs.add'(clubId, recommendationContext = {}) {
+  /**
+   * "Join", and what it turns into on a group that is not simply open.
+   *
+   * The answer says which of two things happened, because the page has to
+   * draw them differently: { status: 'joined', membershipId } or
+   * { status: 'requested', requestId }. It used to return a bare membership
+   * id, which left "you are in" and "you have asked" looking the same.
+   *
+   * In the order they are asked:
+   *   - Someone already in is in. Nothing below can put a member out.
+   *   - The person who runs the group, or an administrator, walks in. Asking
+   *     an owner for the invitation to their own group would be absurd, and
+   *     they are the one holding it anyway.
+   *   - A valid invite token joins, always — past "private", past "ask
+   *     first", past an earlier "no". The owner handed it out; that was the
+   *     approval. It rides in an options object rather than as an argument
+   *     of its own because the audit trail records a method's bare strings
+   *     and only the KEYS of its objects, and a capability does not belong
+   *     in an operations log.
+   *   - A request the owner already approved joins. It is normally used up
+   *     the moment it is approved; this is for the join that did not land.
+   *   - A private group stops there: without its link there is no way in.
+   *   - A group that asks first takes a request instead — unless it is
+   *     anonymous, where nobody may be shown the name a request carries, so
+   *     there is nothing to ask and the person simply joins.
+   *
+   * The browser simulates only the open case. For every other it holds too
+   * little to know the outcome — not the token, not the requests — and an
+   * optimistic "joined" that the server then takes back is worse than a
+   * moment's wait.
+   */
+  'profileClubs.add'(clubId, recommendationContext = {}, options = {}) {
     check(clubId, Match.OneOf(String, Number));
     check(recommendationContext, Object);
+    check(options, { inviteToken: Match.Optional(String) });
     requireLoggedIn(this.userId);
 
     const club = findClubByAnyId(clubId);
     if (!club) {
       throw new Meteor.Error('club-not-found', 'That club could not be found.');
     }
-
-    // The joiner's own choice, read once. Without it the answer is 'private'.
-    const friendActivityVisibility = friendActivityVisibilityFor(club, {
-      sharing: sharesFriendActivity(this.userId),
-    });
-    const existing = ProfileClubs.collection.findOne({ userId: this.userId, clubId: club._id });
-    if (existing) {
-      ProfileClubs.collection.update(existing._id, { $set: { friendActivityVisibility } });
-      return existing._id;
+    const open = visibilityOf(club) === 'public' && !takesJoinRequests(club);
+    if (!Meteor.isServer && !open) {
+      return undefined;
     }
 
-    const membershipId = ProfileClubs.collection.insert({
-      userId: this.userId,
-      clubId: club._id,
-      friendActivityVisibility,
-      createdAt: new Date(),
+    const join = () => ({
+      status: 'joined',
+      membershipId: joinClub(this.userId, club, verifiedRecommendationContext(this.userId, recommendationContext)),
     });
-    captureRecommendationInteraction({
-      userId: this.userId,
-      entityType: 'group',
-      entityId: club._id,
-      action: 'joined_group',
-      occurredAt: new Date(),
-      ...verifiedRecommendationContext(this.userId, recommendationContext),
-      source: 'legacy',
-    });
-    return membershipId;
+    if (open
+      || ProfileClubs.collection.findOne({ userId: this.userId, clubId: club._id }, { fields: { _id: 1 } })
+      || canManageListing(this.userId, club)
+      || (Boolean(club.inviteToken) && options.inviteToken === club.inviteToken)
+      || ClubJoinRequests.collection.findOne({ clubId: club._id, userId: this.userId, status: 'approved' }, { fields: { _id: 1 } })) {
+      return join();
+    }
+    if (visibilityOf(club) === 'private') {
+      throw new Meteor.Error('invite-required', 'This group is private. You need an invite link from the person who runs it.');
+    }
+    return { status: 'requested', requestId: requestToJoin(this.userId, club) };
   },
 
   'profileClubs.remove'(clubId, recommendationContext = {}) {
@@ -722,31 +1254,81 @@ Meteor.methods({
       location: String,
       email: Match.Optional(String),
       image: Match.Optional(String),
+      visibility: Match.Optional(VISIBILITY),
+      anonymous: Match.Optional(Boolean),
     });
     requireLoggedIn(this.userId);
     const contactEmail = contactEmailOf(eventData.email);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const hostClub = findClubByAnyId(hostClubID);
-    const eventId = Events.collection.insert({
-      createdAt: now(),
-      updatedAt: now(),
-      eventID: hostClubID,
-      title: checkText(eventData.title, 'title', 'Name', { required: true }),
-      description: checkText(eventData.description, 'description', 'Description'),
-      date: toDate(eventData.date),
-      location: checkText(eventData.location, 'location', 'Location', { required: true }),
-      // `owner` is the whole record of who posted this, and the public
-      // publications withhold it. A `createdBy` used to be written beside it
-      // holding the same account email — and that one they did not withhold.
-      owner: getUsername(this.userId),
-      image: optionalImage(eventData.image) || '/images/codingWorkshop.png',
-      // Absent rather than '' when none was given: an empty string is a value
-      // the record would then carry, and every reader would have to know it
-      // means nothing.
-      ...(contactEmail ? { email: contactEmail } : {}),
-      ...(hostClub?.name ? { hostName: hostClub.name } : {}),
-      ...(hostClub?.categories?.length ? { categories: hostClub.categories } : {}),
+    // Anyone can post, and anyone can name a public group as the host. A
+    // private one is different: the event copies its host's name, and group
+    // numbers count up from one, so without this a stranger could post an
+    // event against each number in turn and read the name of every private
+    // group on the island off their own listings. Only the server can tell —
+    // a browser does not reliably hold the caller's memberships.
+    if (Meteor.isServer && hostClub && !isOpenToAll(hostClub) && !canManageListing(this.userId, hostClub)) {
+      if (!isMemberOf(this.userId, [hostClub._id])) {
+        throw new Meteor.Error('not-a-member', 'Only its members can post an event for a private group.');
+      }
+      // A member may post for the group. What a member may not do is publish
+      // it: the event carries the group's name and categories, and "the owner
+      // can override" means the person who runs the group, not everyone they
+      // invited. Without this the guard above kept strangers from reading a
+      // private group's name, and let any one member print it on the wall.
+      if (eventData.visibility === 'public') {
+        throw new Meteor.Error('private-host', PRIVATE_HOST_REASON);
+      }
+    }
+
+    /**
+     * An event made without privacy settings of its own takes its host
+     * group's, and is marked as still following them, so that an anonymous
+     * group's meetings are anonymous without the organizer remembering to say
+     * so each Thursday — and stay in step when the group changes its mind.
+     *
+     * Given either setting, the event is the poster's own decision and follows
+     * nothing. The half they did not give still STARTS from the host, because
+     * the other default would be 'public', and "I only ticked anonymous" must
+     * not be what puts a private group's meeting on the public wall.
+     */
+    const ownPrivacy = eventData.visibility !== undefined || eventData.anonymous !== undefined;
+    const privacy = {
+      visibility: eventData.visibility || (hostClub ? visibilityOf(hostClub) : 'public'),
+      anonymous: eventData.anonymous ?? hostClub?.anonymous === true,
+      privacyInherited: Boolean(hostClub) && !ownPrivacy,
+    };
+
+    // An uploaded photo is stored apart from the event, under the _id the
+    // event is about to be given; insertWithPhoto makes the two in that order
+    // and takes the event back out if the photo cannot be kept.
+    const eventId = insertWithPhoto({
+      kind: 'event',
+      collection: Events.collection,
+      field: 'image',
+      value: eventData.image || '/images/codingWorkshop.png',
+      record: {
+        createdAt: now(),
+        updatedAt: now(),
+        eventID: hostClubID,
+        ...privacy,
+        goingCount: 0,
+        title: checkText(eventData.title, 'title', 'Name', { required: true }),
+        description: checkText(eventData.description, 'description', 'Description'),
+        date: toDate(eventData.date),
+        location: checkText(eventData.location, 'location', 'Location', { required: true }),
+        // `owner` is the whole record of who posted this, and the public
+        // publications withhold it. A `createdBy` used to be written beside it
+        // holding the same account email — and that one they did not withhold.
+        owner: getUsername(this.userId),
+        // Absent rather than '' when none was given: an empty string is a
+        // value the record would then carry, and every reader would have to
+        // know it means nothing.
+        ...(contactEmail ? { email: contactEmail } : {}),
+        ...(hostClub?.name ? { hostName: hostClub.name } : {}),
+        ...(hostClub?.categories?.length ? { categories: hostClub.categories } : {}),
+      },
     });
 
     if (hostClub) {
@@ -772,6 +1354,9 @@ Meteor.methods({
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');
     const existingEvent = Events.collection.findOne(eventId);
+    // As an RSVP to it is judged NOW, hosts and all, before the edit moves it
+    // to another: see followEventPrivacy.
+    const judgedBefore = Meteor.isServer ? eventWithHostSignals(existingEvent) : undefined;
     const hostClub = findClubByAnyId(hostClubID);
     const locallyAuthoredFields = existingEvent && !existingEvent.importedFrom
       ? {
@@ -786,10 +1371,19 @@ Meteor.methods({
         description: checkText(eventData.description, 'description', 'Description'),
         date: toDate(eventData.date),
         location: checkText(eventData.location, 'location', 'Location', { required: true }),
-        image: optionalImage(eventData.image) || '/images/codingWorkshop.png',
+        // After every field that can be refused, because it writes: see
+        // editedImage. No photo — cleared, or not sent — is the stock image,
+        // as it always was, and an upload the event had is taken down.
+        image: editedImage('event', existingEvent, eventData.image) || '/images/codingWorkshop.png',
         updatedAt: now(),
         ...(contactEmail ? { email: contactEmail } : {}),
         ...locallyAuthoredFields,
+        // An event that follows its host follows it to a new one. Without
+        // this, moving a meeting under an anonymous group left it saying
+        // whatever the old host had said until the new one next changed.
+        ...(existingEvent?.privacyInherited && hostClub
+          ? { visibility: visibilityOf(hostClub), anonymous: hostClub.anonymous === true }
+          : {}),
       },
       // Clearing the box takes the address down. A blank left in its place
       // would print nothing and still sit on the record for anyone reading it.
@@ -810,10 +1404,90 @@ Meteor.methods({
 
     // A new host can bring new categories, so everyone going is judged again —
     // each against their own sharing choice, not the administrator's who made
-    // the edit. See 'Clubs.update'.
-    if (Meteor.isServer) {
-      syncFriendActivityForEvent(eventId);
+    // the edit. See 'Clubs.update'. Moved out from under an anonymous group,
+    // the event keeps hidden the people who said Going while it was there.
+    followEventPrivacy(eventId, judgedBefore);
+  },
+
+  /**
+   * An event's own privacy, set by hand. From this call on the event stops
+   * following its host group (`privacyInherited` goes false), so a later
+   * change to the group does not quietly undo what somebody decided here.
+   *
+   * Three people may: whoever posted the event, whoever runs the group it
+   * NAMES as its host, and an administrator (canManageEvent). The host is the
+   * one in the event's own `eventID` and not any group with a link row to it,
+   * for the reason given on 'Clubs.setPrivacy': a link says a group is one of
+   * the hosts, and must not be a way to take somebody else's event off the
+   * wall.
+   *
+   * One of the three is held back in one direction. Whoever posted an event
+   * for a PRIVATE group, and does not run that group, cannot make it public:
+   * the event carries the group's name, and publishing that is for the person
+   * who runs the group. They can still make it private again, or anonymous.
+   *
+   * Anonymity can be locked from two directions. The event is sensitive —
+   * judged, as an RSVP to it is, with its hosts' signals — or a group that
+   * hosts it is anonymous. Either way who is going says who is in the group,
+   * so it stays hidden whatever the event itself would prefer, and being told
+   * so beats a switch that moves and does nothing.
+   *
+   * Sent nothing, it writes nothing and says how things stand. Not simulated,
+   * for the reasons 'Clubs.setPrivacy' gives.
+   */
+  'Events.setPrivacy'(eventId, settings) {
+    check(eventId, String);
+    check(settings, {
+      visibility: Match.Optional(VISIBILITY),
+      anonymous: Match.Optional(Boolean),
+    });
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return undefined;
     }
+
+    const event = Events.collection.findOne(eventId);
+    if (!event) {
+      throw new Meteor.Error('event-not-found', 'That event could not be found.');
+    }
+    const namedHost = namedHostOf(event);
+    if (!canManageEvent(this.userId, event, namedHost)) {
+      throw new Meteor.Error(
+        'not-authorized',
+        'Only the person who posted this event, or who runs its group, can change its privacy.',
+      );
+    }
+    // Only a change that would WIDEN it: a page that sends 'public' for an
+    // event the group's owner already made public is not refused for it.
+    if (settings.visibility === 'public' && visibilityOf(event) !== 'public'
+      && namedHost && !isOpenToAll(namedHost) && !canManageListing(this.userId, namedHost)) {
+      throw new Meteor.Error('private-host', PRIVATE_HOST_REASON);
+    }
+
+    const anonymousLocked = anonymityIsLocked(event, eventWithHostSignals);
+    if (settings.anonymous === false && anonymousLocked) {
+      throw new Meteor.Error('anonymous-locked', isSensitiveListing(eventWithHostSignals(event))
+        ? 'Events like this one are always anonymous, so nobody can see who is going.'
+        : 'This event belongs to an anonymous group, so who is going stays hidden too.');
+    }
+
+    const visibility = settings.visibility || visibilityOf(event);
+    const anonymous = settings.anonymous ?? event.anonymous === true;
+    const answer = { visibility, anonymous: anonymous || anonymousLocked, anonymousLocked };
+    if (Object.keys(settings).length === 0) {
+      return answer;
+    }
+
+    const judgedBefore = eventWithHostSignals(event);
+    Events.collection.update(eventId, {
+      $set: { visibility, anonymous, privacyInherited: false, updatedAt: now() },
+    });
+    // Everyone going is judged again, at once: an event that has just turned
+    // anonymous must be gone from their friends' feeds before this returns.
+    // And one that has just stopped keeps hidden whoever said Going while it
+    // was: anonymous off is off from then on, for an event as for a group.
+    followEventPrivacy(eventId, judgedBefore);
+    return answer;
   },
 
   'Events.remove'(eventId) {
@@ -826,6 +1500,10 @@ Meteor.methods({
     // go on being counted in someone's Going list and in the passed tally, for
     // an event no page could ever render again.
     EventSwipes.collection.remove({ eventId });
+    // And its photo, which is stored apart from it: see 'Clubs.remove'.
+    if (Meteor.isServer) {
+      removePhoto({ kind: 'event', ownerId: eventId });
+    }
   },
 
   'eventSwipes.record'(eventId, decision, kind = 'event', recommendationContext = {}) {
@@ -857,7 +1535,12 @@ Meteor.methods({
     const collection = kind === 'club' ? Clubs.collection : Events.collection;
     const listing = collection.findOne(eventId);
     if (Meteor.isServer) {
-      if (!listing) {
+      // A private listing the caller was never let into is answered exactly
+      // as one that is not there, so the reply cannot be used to find out
+      // which ids are real. It used to be enough to hold the _id — which a
+      // former member does, and anyone a link was once shown to — and "Going"
+      // then counted on an event the person had never been invited to.
+      if (!listing || !mayTakePartIn(this.userId, kind, listing)) {
         throw new Meteor.Error('not-found', 'That listing could not be found.');
       }
       // 'joined' is a fact about a membership, so it is stored only where there
@@ -872,21 +1555,29 @@ Meteor.methods({
       }
     }
     // Shareable only if this person has turned sharing on AND the listing is
-    // not a sensitive one. Their own choice, read once; without it, 'private'.
+    // neither anonymous — which a sensitive one always is — nor private.
+    // Their own choice, read once; without it, 'private'.
     // An RSVP is judged with the groups that host the event, because going to
     // a group's meeting says what belonging to the group says. Only the server
     // holds every host, and the row a stub writes is replaced by the server's.
-    const friendActivityVisibility = friendActivityVisibilityFor(
-      Meteor.isServer && kind === 'event' ? eventWithHostSignals(listing) : listing,
-      { sharing: sharesFriendActivity(this.userId) },
-    );
-
+    //
+    // The same decision said twice is the same decision: it keeps its date,
+    // and is judged as the row that stands. A second "Going" used to stamp
+    // the RSVP with today, which carried one made while the event was
+    // anonymous across the line that keeps those from friends for good.
     const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
+    const standing = existing?.decision === decision ? existing : undefined;
+    const judged = Meteor.isServer && kind === 'event' ? eventWithHostSignals(listing) : listing;
+    const choice = { sharing: sharesFriendActivity(this.userId) };
+    const friendActivityVisibility = standing
+      ? friendActivityVisibilityOfRow(judged, standing, choice)
+      : friendActivityVisibilityFor(judged, choice);
+
     const verifiedContext = verifiedRecommendationContext(this.userId, recommendationContext);
     let swipeId = existing?._id;
     if (existing) {
       EventSwipes.collection.update(existing._id, {
-        $set: { decision, kind, friendActivityVisibility, createdAt: new Date() },
+        $set: { decision, kind, friendActivityVisibility, ...(standing ? {} : { createdAt: new Date() }) },
       });
     } else {
       swipeId = EventSwipes.collection.insert({
@@ -897,6 +1588,14 @@ Meteor.methods({
         friendActivityVisibility,
         createdAt: new Date(),
       });
+    }
+
+    // The event's Going count follows the decision, not the call: it moves
+    // only when this write turned somebody into going or out of it. A second
+    // "going" counts nothing, and a left swipe over a standing RSVP takes one
+    // off. After the write, so a swipe the database refused never counted.
+    if (kind === 'event' && (existing?.decision === 'going') !== (decision === 'going')) {
+      adjustCount(Events.collection, eventId, 'goingCount', decision === 'going' ? 1 : -1);
     }
 
     // The recommender hears about a decision, not about a call. Saying "going"
@@ -936,11 +1635,16 @@ Meteor.methods({
     }
     const existing = EventSwipes.collection.findOne({ userId: this.userId, eventId });
     const verifiedContext = verifiedRecommendationContext(this.userId, recommendationContext);
-    EventSwipes.collection.remove({ userId: this.userId, eventId });
+    const removed = EventSwipes.collection.remove({ userId: this.userId, eventId });
     if (!existing) {
       return;
     }
     if (existing.decision === 'going') {
+      // Counted from what the remove reports: two "Not going" calls racing
+      // each other both read the row, and only one of them took it away.
+      if (removed > 0) {
+        adjustCount(Events.collection, eventId, 'goingCount', -1);
+      }
       captureCanceledRsvp(existing, action, verifiedContext);
       return;
     }
@@ -1087,14 +1791,200 @@ Meteor.methods({
     if (!club) {
       throw new Meteor.Error('club-not-found', 'That club could not be found.');
     }
-    const isOwner = club.owner === getUsername(this.userId);
-    if (!isOwner && !Roles.userIsInRole(this.userId, 'admin')) {
-      throw new Meteor.Error('not-authorized', 'Only the club owner or an admin can remove tags.');
-    }
+    requireListingManager(this.userId, club, 'Only the club owner or an admin can remove tags.');
     Clubs.collection.update(clubId, { $pull: { tags: tag } });
     followTagChange(club);
   },
 
+  /**
+   * The owner's answer to somebody asking to join.
+   *
+   * Yes goes through joinClub like every other way in, judged by the
+   * REQUESTER's sharing choice and counted once. The status is written before
+   * the join, so that if the join were cut short the person holds an approved
+   * request — which 'profileClubs.add' honours — rather than a pending one the
+   * owner has to find and answer again.
+   *
+   * Only a pending request is answered. One that is already settled is left
+   * as it is and its status handed back: the owner's list was a moment stale,
+   * the person came in by invite link meanwhile, and "approve" on somebody
+   * already here is not a mistake worth an error.
+   */
+  'clubs.respondToRequest'(requestId, approve) {
+    check(requestId, String);
+    check(approve, Boolean);
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return undefined;
+    }
+
+    const request = ClubJoinRequests.collection.findOne(requestId);
+    const club = request && Clubs.collection.findOne(request.clubId);
+    if (!club) {
+      throw new Meteor.Error('request-not-found', 'That request is not there any more.');
+    }
+    requireListingManager(this.userId, club, 'Only the person who runs this group can answer its requests.');
+    if (request.status !== 'pending') {
+      return { status: request.status };
+    }
+
+    const status = approve ? 'approved' : 'declined';
+    ClubJoinRequests.collection.update(requestId, {
+      $set: { status, respondedAt: now(), respondedBy: this.userId },
+    });
+    if (approve) {
+      joinClub(request.userId, club);
+    }
+    return { status };
+  },
+
+  /**
+   * A new invite link, and the end of the old one. For when a link has
+   * travelled further than the owner meant: there is no list of who holds it
+   * to strike a name from, so the only revocation is to replace it. People who
+   * already joined stay — the token opens the door, it is not the membership.
+   *
+   * Works on a public group too. A group that asks first may still want a
+   * link that lets its own people straight in.
+   */
+  'clubs.rotateInvite'(clubId) {
+    check(clubId, String);
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return undefined;
+    }
+
+    const club = Clubs.collection.findOne(clubId, { fields: OWNERSHIP_FIELDS });
+    if (!club) {
+      throw new Meteor.Error('club-not-found', 'That group could not be found.');
+    }
+    requireListingManager(this.userId, club, 'Only the person who runs this group can change its invite link.');
+    const inviteToken = Random.secret();
+    Clubs.collection.update(clubId, { $set: { inviteToken, updatedAt: now() } });
+    return inviteToken;
+  },
+
+  /**
+   * What an invite link leads to, for the page that asks "join this?".
+   *
+   * A private group is in no publication the holder of a link can reach, so
+   * this is the one place they learn its name — and its name, its size and
+   * whether it is anonymous are ALL they learn. Not the owner, not the
+   * description, not where it meets: the link is an invitation to join, and
+   * the rest is what joining shows.
+   *
+   * A wrong token and no token get one and the same answer, and the method is
+   * tightly rate limited (see rateLimits.js), because its reply is the only
+   * thing in the app that says whether a guess was right. Signed-in only, so
+   * the guessing at least costs a verified account.
+   */
+  'clubs.inviteInfo'(token) {
+    check(token, String);
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return undefined;
+    }
+
+    const club = token
+      ? Clubs.collection.findOne({ inviteToken: token }, { fields: { ...LISTING_PRIVACY_FIELDS, name: 1, memberCount: 1 } })
+      : undefined;
+    if (!club) {
+      throw new Meteor.Error('not-found', 'That invite link does not work any more. Ask for a new one.');
+    }
+    return {
+      clubId: club._id,
+      name: club.name,
+      anonymous: isAnonymousListing(club),
+      memberCount: club.memberCount || 0,
+    };
+  },
+
+  /**
+   * Who is in a group, for the person who runs it.
+   *
+   * Refused for an anonymous group — to its owner and to an administrator as
+   * much as to anyone. That is what anonymous means here: not "hidden from
+   * the public" but "there is no list". A roster the organizer can open is
+   * one that can be asked for, photographed or left on a bus, and the people
+   * a recovery meeting is for know that. They get the count.
+   *
+   * A group that WAS anonymous keeps that promise to the people it was made
+   * to. Whoever joined before anonymity ended (`anonymousUntil`, stamped by
+   * followClubPrivacy) is left off this list for good, and so is a membership
+   * with no date on it, which cannot show that it came after. Otherwise the
+   * refusal above was a switch away from meaning nothing: off, read, on
+   * again. The answer stays a plain list; the group's memberCount still
+   * counts everyone, and the difference between the two is the people who
+   * are in it and not shown.
+   *
+   * Authorization is checked first, so a stranger learns nothing from which
+   * refusal they got.
+   */
+  'clubs.members'(clubId) {
+    check(clubId, String);
+    requireLoggedIn(this.userId);
+    if (!Meteor.isServer) {
+      return undefined;
+    }
+
+    const club = Clubs.collection.findOne(
+      clubId,
+      { fields: { ...LISTING_PRIVACY_FIELDS, ...OWNERSHIP_FIELDS, anonymousUntil: 1 } },
+    );
+    if (!club) {
+      throw new Meteor.Error('club-not-found', 'That group could not be found.');
+    }
+    requireListingManager(this.userId, club, 'Only the person who runs this group can see its members.');
+    if (isAnonymousListing(club)) {
+      throw new Meteor.Error('anonymous-group', 'This group is anonymous, so nobody can see who is in it — not even you.');
+    }
+
+    const memberships = ProfileClubs.collection.find(
+      { clubId, ...(club.anonymousUntil ? { createdAt: { $gt: club.anonymousUntil } } : {}) },
+      { fields: { userId: 1, createdAt: 1 }, sort: { createdAt: 1 } },
+    ).fetch();
+    const profiles = new Map(Profiles.collection.find(
+      { userId: { $in: memberships.map(membership => membership.userId) } },
+      { fields: { userId: 1, firstName: 1, lastName: 1, picture: 1 } },
+    ).map(profile => [profile.userId, profile]));
+    return memberships.map(({ userId, createdAt }) => {
+      const profile = profiles.get(userId);
+      return {
+        userId,
+        firstName: profile?.firstName || '',
+        lastName: profile?.lastName || '',
+        picture: profile?.picture,
+        joinedAt: createdAt,
+      };
+    });
+  },
+
+  /**
+   * Say that a group is one of an event's hosts.
+   *
+   * This took any group and any event id from anyone signed in, and a link
+   * row is not a label. The members of a hosting group are SENT the event,
+   * private or not — so: start a group, link it to a private event, and read
+   * the event. An RSVP is judged with every host — so: link an anonymous
+   * group to somebody else's event, and its owner is told, falsely, that it
+   * "belongs to an anonymous group" and cannot be switched back, while every
+   * friend stops seeing who is going. And it walked round the rule in
+   * 'Events.insert' that only a private group's own people may name it.
+   *
+   * So a host is given to an event by the people who may set the event's
+   * privacy (canManageEvent), because that is what it does. Not by the
+   * group's side alone, even for a public event: a group can turn anonymous,
+   * or be tagged 'recovery' by any member, AFTER the link is made, and the
+   * event would follow it.
+   * And a private group is named only by its own people, as it is when an
+   * event is posted.
+   *
+   * Refused before the link is looked for, so that the answer does not say
+   * whether one exists. Only the server can tell: a browser holds neither the
+   * event's owner nor, reliably, the caller's memberships. Who may CLAIM an
+   * event for a group they run is a question for the ownership work still to
+   * come; nothing here stands in its way.
+   */
   'Clubs.organizeEvent'({ clubID, eventID }) {
     check(clubID, Match.OneOf(Number, String));
     check(eventID, String);
@@ -1103,6 +1993,21 @@ Meteor.methods({
     const club = findClubByAnyId(clubID);
     if (!club) {
       throw new Meteor.Error('club-not-found', 'That club could not be found.');
+    }
+    if (Meteor.isServer) {
+      const event = Events.collection.findOne(eventID, { fields: { ...OWNERSHIP_FIELDS, eventID: 1 } });
+      if (!event) {
+        throw new Meteor.Error('event-not-found', 'That event could not be found.');
+      }
+      if (!canManageEvent(this.userId, event)) {
+        throw new Meteor.Error(
+          'not-authorized',
+          'Only the person who posted this event, or who runs its group, can link it to a group.',
+        );
+      }
+      if (!isOpenToAll(club) && !canManageListing(this.userId, club) && !isMemberOf(this.userId, [club._id])) {
+        throw new Meteor.Error('not-a-member', 'Only its members can link an event to a private group.');
+      }
     }
     const exists = EventClubs.collection.findOne({ clubId: club._id, eventId: eventID });
     if (exists) {

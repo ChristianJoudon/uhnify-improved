@@ -7,7 +7,7 @@ import { Profiles } from '../profiles/Profiles';
 import {
   FRIEND_ACTIVITY_VISIBILITY,
   LISTING_PRIVACY_FIELDS,
-  friendActivityVisibilityFor,
+  friendActivityVisibilityOfRow,
   withHostSignals,
 } from './FriendActivityPrivacy';
 
@@ -19,11 +19,16 @@ import {
  * select on it and never has to judge a listing while it is publishing. The
  * price of storing an answer is that it can go stale, and it depends on two
  * things that both change: the listing (an editor files a group under
- * 'support_group', a member tags it 'recovery') and the person (they turn
- * sharing on or off). Each function here recomputes the rows one of those
- * changes can reach, and writes only the rows whose answer actually differs.
+ * 'support_group', a member tags it 'recovery', its owner makes it anonymous)
+ * and the person (they turn sharing on or off). Each function here recomputes
+ * the rows one of those changes can reach, and writes only the rows whose
+ * answer actually differs.
  * A group reaches further than its own members: an RSVP is judged with the
  * groups that host the event, so a change to a group reaches those rows too.
+ *
+ * One answer does not come back. A row written while its listing was
+ * anonymous stays private after the anonymity ends, which is why every row is
+ * settled by friendActivityVisibilityOfRow and its own date is read with it.
  *
  * The functions that write are for the server, and every caller keeps them
  * there. They read other people's profiles, which a browser never holds, so a
@@ -31,9 +36,13 @@ import {
  * about to mark shareable.
  */
 
-const ROW_FIELDS = { fields: { userId: 1, clubId: 1, eventId: 1, kind: 1, friendActivityVisibility: 1 } };
+const ROW_FIELDS = {
+  fields: { userId: 1, clubId: 1, eventId: 1, kind: 1, friendActivityVisibility: 1, createdAt: 1 },
+};
 
 const distinct = values => [...new Set(values)];
+
+const latestOf = dates => dates.filter(Boolean).reduce((latest, date) => (latest > date ? latest : date), undefined);
 
 /** Only `true` is consent. No profile, no field and `false` all mean no. */
 export const sharesFriendActivity = userId => Boolean(userId) && Profiles.collection.findOne(
@@ -48,7 +57,7 @@ const sharingAmong = userIds => new Set(Profiles.collection.find(
 
 const clubsById = ids => new Map(Clubs.collection.find(
   { _id: { $in: ids } },
-  { fields: LISTING_PRIVACY_FIELDS },
+  { fields: { ...LISTING_PRIVACY_FIELDS, anonymousUntil: 1 } },
 ).map(club => [club._id, club]));
 
 /**
@@ -59,6 +68,10 @@ const clubsById = ids => new Map(Clubs.collection.find(
  * `eventID` holds the host's clubID, and 0 where there is no host; the pages
  * still read it, so it is read here. A link to a group that has since gone
  * finds nothing, and the event is then judged by what is left.
+ *
+ * `anonymousUntil` is carried beside the signals and is not one of them: it
+ * is the latest moment that the event, or any group hosting it, stopped being
+ * anonymous, which is the moment an RSVP has to come after to be shown.
  */
 const withHosts = events => {
   const links = EventClubs.collection.find(
@@ -70,22 +83,28 @@ const withHosts = events => {
       { _id: { $in: distinct(links.map(link => link.clubId)) } },
       { clubID: { $in: distinct(events.map(event => event.eventID).filter(Boolean)) } },
     ],
-  }, { fields: { ...LISTING_PRIVACY_FIELDS, clubID: 1 } }).fetch();
+  }, { fields: { ...LISTING_PRIVACY_FIELDS, clubID: 1, anonymousUntil: 1 } }).fetch();
 
   const hostById = new Map(hosts.map(host => [host._id, host]));
   const hostByNumber = new Map(hosts.map(host => [host.clubID, host]));
   const linkedTo = new Map();
   links.forEach(link => linkedTo.set(link.eventId, [...(linkedTo.get(link.eventId) || []), hostById.get(link.clubId)]));
 
-  return new Map(events.map(event => [event._id, withHostSignals(event, distinct([
-    ...(linkedTo.get(event._id) || []),
-    event.eventID ? hostByNumber.get(event.eventID) : undefined,
-  ]).filter(Boolean))]));
+  return new Map(events.map(event => {
+    const hostsOfEvent = distinct([
+      ...(linkedTo.get(event._id) || []),
+      event.eventID ? hostByNumber.get(event.eventID) : undefined,
+    ]).filter(Boolean);
+    return [event._id, {
+      ...withHostSignals(event, hostsOfEvent),
+      anonymousUntil: latestOf([event, ...hostsOfEvent].map(record => record.anonymousUntil)),
+    }];
+  }));
 };
 
 const eventsById = ids => withHosts(Events.collection.find(
   { _id: { $in: ids } },
-  { fields: { ...LISTING_PRIVACY_FIELDS, eventID: 1 } },
+  { fields: { ...LISTING_PRIVACY_FIELDS, eventID: 1, anonymousUntil: 1 } },
 ).fetch());
 
 /**
@@ -96,7 +115,7 @@ const eventsById = ids => withHosts(Events.collection.find(
 export const eventWithHostSignals = event => event && withHosts([event]).get(event._id);
 
 /** Every event a group hosts, by either of the two links. */
-const eventIdsHostedBy = clubId => {
+export const eventIdsHostedBy = clubId => {
   const club = Clubs.collection.findOne(clubId, { fields: { clubID: 1 } });
   return distinct([
     ...EventClubs.collection.find({ clubId }, { fields: { eventId: 1 } }).map(link => link.eventId),
@@ -126,7 +145,7 @@ const syncRows = ({ memberships, swipes }) => {
 
   let changed = 0;
   const settle = (collection, row, listing) => {
-    const friendActivityVisibility = friendActivityVisibilityFor(listing, { sharing: sharing.has(row.userId) });
+    const friendActivityVisibility = friendActivityVisibilityOfRow(listing, row, { sharing: sharing.has(row.userId) });
     if (row.friendActivityVisibility !== friendActivityVisibility) {
       collection.update(row._id, { $set: { friendActivityVisibility } });
       changed += 1;

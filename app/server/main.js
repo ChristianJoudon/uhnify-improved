@@ -5,11 +5,17 @@
 // guarded anything.
 import '/imports/startup/server/productionGuard';
 import { Meteor } from 'meteor/meteor';
+// Before Accounts, so the rule about what an account may be called is already
+// in force for the first account that file creates.
+import '/imports/startup/server/accountRules';
 import '/imports/startup/server/Accounts';
 // Registers nothing at all unless this is a development server whose settings
 // list the development accounts; see the file for the four fences around it.
 import '/imports/startup/server/devSignIn';
 import '/imports/startup/server/securityHeaders';
+// Serves uploaded photos from /photo/…, which is where every listing's image
+// path now points. Without it each of those is a broken image.
+import '/imports/startup/server/photoRoute';
 import '/imports/startup/server/Publications';
 import '/imports/startup/server/CommunityIngestion';
 import '/imports/startup/server/CommunityIngestionRunQueue';

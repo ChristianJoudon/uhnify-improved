@@ -54,6 +54,58 @@ const describe = value => {
 
 const summarise = args => args.map(describe).join(', ').slice(0, 300);
 
+/**
+ * Methods whose bare arguments are secrets, and are not described at all.
+ *
+ * `describe` keeps a short string because a short string is usually an id. A
+ * private group's invite token is a short string too, and it is a capability:
+ * whoever reads it can join. 'clubs.inviteInfo' takes one as its only
+ * argument, so its entry would have put every link anybody opened into the
+ * operations log, in the clear. That the call happened, by whom and how it
+ * ended is still recorded. ('profileClubs.add' carries its token inside an
+ * options object, of which only the keys are kept.)
+ */
+const SECRET_ARGUMENTS = new Set(['clubs.inviteInfo']);
+
+/**
+ * Methods whose entry would say who takes part in what, and so does not say
+ * what.
+ *
+ * Every entry names its actor, and the first bare string of each of these is
+ * a listing's _id. Put together that is a membership roll: 'person@…
+ * profileClubs.add <the recovery meeting's id> ok', one line per member, in a
+ * log every administrator is sent. 'clubs.members' refuses an anonymous group
+ * to an administrator in so many words, and this was the same list one page
+ * over. 'clubs.addTag' is here because only a member may add a tag, so a tag
+ * that went through says the same thing a join does; the answer to a request
+ * is here because it names, by its id, somebody who asked.
+ *
+ * It is every listing and not only the anonymous ones, on purpose. Judging
+ * anonymity per call would miss the group that turns anonymous next month,
+ * with its members already written down. What is kept is what probing looks
+ * like — who called, which method, how it ended and with what error — and
+ * none of that needs the id.
+ */
+export const PARTICIPATION_ACTIONS = Object.freeze([
+  'profileClubs.add',
+  'profileClubs.remove',
+  'eventSwipes.record',
+  'eventSwipes.remove',
+  'clubs.addTag',
+  'clubs.respondToRequest',
+]);
+
+export const PARTICIPATION_SUMMARY = '<listing>';
+
+const PARTICIPATION = new Set(PARTICIPATION_ACTIONS);
+
+const summaryFor = (name, args) => {
+  if (SECRET_ARGUMENTS.has(name)) {
+    return '<secret>';
+  }
+  return PARTICIPATION.has(name) ? PARTICIPATION_SUMMARY : summarise(args);
+};
+
 /** Methods the app owns. Meteor's own account methods are excluded — they carry
     passwords and tokens, and logging them would be the leak this file exists to
     avoid. */
@@ -82,7 +134,7 @@ export const installAuditTrail = () => {
         at: new Date(),
         actorId: this.userId || undefined,
         action: name,
-        summary: summarise(args),
+        summary: summaryFor(name, args),
       };
       try {
         const result = original.apply(this, args);
