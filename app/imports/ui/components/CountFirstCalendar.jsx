@@ -188,7 +188,10 @@ const CountFirstCalendar = ({ events, onOpen, sort }) => {
                   >
                     <time dateTime={date.toISOString()}>{TIME_LABEL.format(date)}</time>
                     <span className="count-first-calendar__agenda-copy">
-                      <strong>{event.title || 'Untitled event'}</strong>
+                      <strong className={event.cancellationStatus === 'canceled' ? 'is-cancelled' : undefined}>
+                        {event.title || 'Untitled event'}
+                      </strong>
+                      {event.cancellationStatus === 'canceled' && <em className="calendar-cancelled">Cancelled</em>}
                       <span>{[event.location, topic.activityLabel || topic.label].filter(Boolean).join(' · ')}</span>
                     </span>
                     <span className="count-first-calendar__agenda-action">View details</span>

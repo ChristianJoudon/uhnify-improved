@@ -20,6 +20,7 @@ import { RECOMMENDATION_COLLECTIONS } from '../../api/recommendations/Recommenda
  * the methods registered by construction.
  */
 import '../both/Methods';
+import '../../api/moderation/ModerationMethods';
 
 /**
  * What every backend test needs before it can say anything.

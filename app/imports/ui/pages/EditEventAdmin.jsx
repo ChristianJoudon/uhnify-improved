@@ -4,6 +4,7 @@ import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import { Link, useParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
+import { Roles } from 'meteor/alanning:roles';
 import { Camera, Trash } from 'react-bootstrap-icons';
 import PageHead from '../components/PageHead';
 import PosterArt from '../components/PosterArt';
@@ -45,13 +46,17 @@ const EditEventAdmin = () => {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const { doc, clubs, ready } = useTracker(() => {
+  const { doc, clubs, isAdmin, ready } = useTracker(() => {
+    // An administrator, or whoever posted it: see EditClubAdmin.
     const eventSub = Meteor.subscribe(Events.adminPublicationName);
+    const ownedSub = Meteor.subscribe('Events.publication.owned');
     const clubSub = Meteor.subscribe(Clubs.userPublicationName);
+    const found = Events.collection.findOne(_id);
     return {
-      doc: Events.collection.findOne(_id),
+      doc: found?.owner ? found : null,
+      isAdmin: Roles.userIsInRole(Meteor.userId(), 'admin'),
       clubs: Clubs.collection.find({}, { sort: { name: 1 } }).fetch(),
-      ready: eventSub.ready() && clubSub.ready(),
+      ready: eventSub.ready() && ownedSub.ready() && clubSub.ready(),
     };
   }, [_id]);
 
@@ -170,7 +175,7 @@ const EditEventAdmin = () => {
       <PageHead
         title="Edit event"
         eyebrow="Admin"
-        action={<Link className="btn btn-soft-primary" to="/admin">All events</Link>}
+        action={<Link className="btn btn-soft-primary" to={isAdmin ? '/admin' : `/manage/event/${_id}`}>{isAdmin ? 'All events' : 'Back'}</Link>}
       >
         Saved changes are live on the wall straight away.
       </PageHead>

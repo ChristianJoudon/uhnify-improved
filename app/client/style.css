@@ -7081,3 +7081,39 @@ select.mb-field,
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+/* ---------------------------------------------------------------------------
+   CALLED OFF, REPORTS, AND THE MODERATION QUEUE
+   A cancelled event is muted and says so; it is never hidden from someone who
+   planned on it.
+   --------------------------------------------------------------------------- */
+.mb-poster.is-cancelled { opacity: 0.72; }
+.mb-poster.is-cancelled .mb-poster-title,
+.count-first-calendar__agenda-copy strong.is-cancelled { text-decoration: line-through; }
+.calendar-cancelled,
+.mb-chip--cancelled { color: #8a2f1f; font-style: normal; font-weight: 700; }
+.mb-chip--cancelled { background: #fbe4dd; }
+
+.report-listing-open {
+  margin-top: 1.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  opacity: 0.7;
+}
+.report-listing { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--mb-line-soft); }
+.report-listing fieldset { border: 0; padding: 0; margin: 0 0 0.75rem; }
+.report-listing legend { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.4rem; }
+.report-listing-reason { display: flex; gap: 0.5rem; align-items: center; padding: 0.2rem 0; font-weight: 400; }
+.report-listing textarea { width: 100%; margin-top: 0.3rem; border-radius: 0.75rem; border: 1px solid var(--mb-line-control); padding: 0.5rem 0.7rem; font-size: 16px; }
+.report-listing-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.report-listing-done { margin-top: 1.25rem; font-size: 0.9rem; opacity: 0.8; }
+
+.moderation-row { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; padding: 0.75rem 0; border-bottom: 1px solid var(--mb-line-soft); }
+.moderation-row:last-child { border-bottom: 0; }
+.moderation-row-main { flex: 1 1 16rem; min-width: 0; }
+.moderation-row-main p { margin: 0.15rem 0 0; font-size: 0.9rem; opacity: 0.8; }
+.moderation-row-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.moderation-note { margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: 0.9rem; background: #fbe4dd; color: #5c2014; }

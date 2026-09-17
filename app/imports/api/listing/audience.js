@@ -76,6 +76,8 @@ export const WITHHELD_LISTING_FIELDS = Object.freeze({
   // promise. The organizer's page reads it from the owned publication; nobody
   // else has a use for it.
   anonymousUntil: 0,
+  // Names the administrator who took a listing down. For its owner's eyes.
+  moderation: 0,
 });
 
 /**

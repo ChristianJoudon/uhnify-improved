@@ -13,6 +13,7 @@ import { isListingOwner } from '../../api/listing/ownership';
 import { isAnonymousListing, withHostSignals } from '../../api/privacy/FriendActivityPrivacy';
 import PosterArt from './PosterArt';
 import CardFields from './CardFields';
+import ReportListing from './ReportListing';
 import { isPhoto, normalizeCategories } from '../utilities/helpers';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
 import { topicForClub, topicForEvent } from '../utilities/topics';
@@ -142,6 +143,9 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
   const mine = isListingOwner(Meteor.userId(), record);
   // Asked and not yet answered. Membership wins: an approved request is one.
   const waiting = requested && !isIn;
+  // Called off, not taken away: whoever said they were going still finds it
+  // here, saying so. There is nothing left to say yes to, so the action goes.
+  const cancelled = kind === 'event' && record.cancellationStatus === 'canceled';
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="details-modal">
@@ -170,8 +174,9 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
           </div>
 
           <div>
-            {(isPrivate || anonymous || count > 0) && (
+            {(cancelled || isPrivate || anonymous || count > 0) && (
               <div className="mb-chip-row details-status">
+                {cancelled && <span className="mb-chip mb-chip--sm mb-chip--static mb-chip--cancelled">Cancelled</span>}
                 {isPrivate && <span className="mb-chip mb-chip--sm mb-chip--static">Private</span>}
                 {anonymous && (
                   <span className="mb-chip mb-chip--sm mb-chip--static" title={shape.anonymousMeans}>Anonymous</span>
@@ -214,6 +219,7 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
             )}
           </div>
         </div>
+        {!mine && <ReportListing kind={kind} listingId={record._id} />}
       </Modal.Body>
 
       <Modal.Footer>
@@ -223,7 +229,7 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
         {/* The same one action the card carried, so the sheet is never a dead
             end — a reader who opened it to decide can decide here. A request
             already made is the one state with nothing left to press. */}
-        {onAct && (
+        {onAct && !(cancelled && !isIn) && (
           <button
             type="button"
             className={`btn ${isIn || waiting ? 'btn-soft-primary' : 'btn-match'}`}

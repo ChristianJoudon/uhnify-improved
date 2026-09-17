@@ -21,7 +21,7 @@ import { DDPRateLimiter } from 'meteor/ddp-rate-limiter';
  */
 
 /** Everything the app owns, as a fallback for anything not named below. */
-const APP_METHOD = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.)/;
+const APP_METHOD = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.|moderation\.)/;
 
 /** Named limits: [calls, seconds]. Anything absent falls to GENERAL. */
 const LIMITS = {
@@ -51,6 +51,9 @@ const LIMITS = {
   'Clubs.setPrivacy': [20, 60],
   'Events.setPrivacy': [20, 60],
   // Writes that carry an image, so each one is expensive to accept.
+  // A report is cheap to send and costs a person's attention to read.
+  'moderation.flag': [6, 60],
+  'Clubs.block': [20, 60],
   'Clubs.insert': [8, 60],
   'Events.insert': [8, 60],
   'Profiles.update': [20, 60],

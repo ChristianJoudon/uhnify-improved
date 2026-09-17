@@ -64,11 +64,17 @@ const EventPoster = ({ event, distance, going, undoable, onGoing, onOpen, tier }
   // art is not this app's design and reads as clutter beside a drawn poster.
   const photo = isPhoto(event.image) ? event.image : '';
 
+  // Still drawn — it is on somebody's Going list — but it says so where the
+  // date was, and there is nothing left to say yes to.
+  const cancelled = event.cancellationStatus === 'canceled';
+  const when = valid ? whenLabel(date) : '';
+  const eyebrow = cancelled ? 'Cancelled' : when;
+
   return (
-    <article className={`mb-poster mb-poster-${tier}`}>
+    <article className={`mb-poster mb-poster-${tier}${cancelled ? ' is-cancelled' : ''}`}>
       <PosterArt
         topic={topic}
-        eyebrow={valid ? whenLabel(date) : ''}
+        eyebrow={eyebrow}
         image={photo}
         tagline={event.description}
         title={(
@@ -103,6 +109,7 @@ const EventPoster = ({ event, distance, going, undoable, onGoing, onOpen, tier }
             className={`btn ${going ? 'btn-soft-primary' : 'btn-match'} mb-poster-cta`}
             onClick={() => onGoing(event)}
             aria-pressed={going}
+            hidden={cancelled && !going}
           >
             {going ? "You're going" : "I'm going"}
           </button>
@@ -114,6 +121,7 @@ const EventPoster = ({ event, distance, going, undoable, onGoing, onOpen, tier }
 
 EventPoster.propTypes = {
   event: PropTypes.shape({
+    cancellationStatus: PropTypes.string,
     _id: PropTypes.string,
     title: PropTypes.string,
     description: PropTypes.string,

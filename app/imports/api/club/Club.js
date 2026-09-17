@@ -92,6 +92,9 @@ class ClubsCollection {
        * never anonymous, where there is no promise to keep.
        */
       anonymousUntil: { type: Date, optional: true },
+      /** Left by a takedown — { takenDownAt, takenDownBy, reason } — so whoever
+          posted it reads why it is down instead of finding it gone. */
+      moderation: { type: Object, optional: true, blackbox: true },
       /**
        * Joining asks first: a request the owner approves or declines.
        *

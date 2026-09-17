@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     # A Meteor build plus the suite takes a few minutes; past this it is a hang,
     # and a hung job holds a runner until GitHub's own six-hour ceiling.
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v3
@@ -77,7 +77,10 @@ jobs:
           rm -f test.log
           meteor npm test > test.log 2>&1 &
           RUNNER=$!
-          for _ in $(seq 1 150); do
+          # Up to fourteen minutes. It was five, set when the suite was 43 tests;
+          # at 900-odd the runner was still mid-suite when the wait ran out, and
+          # the step failed with "no result" on a run that had not failed at all.
+          for _ in $(seq 1 420); do
             grep -qE "[0-9]+ (passing|failing)" test.log && break
             kill -0 $RUNNER 2>/dev/null || break
             sleep 2

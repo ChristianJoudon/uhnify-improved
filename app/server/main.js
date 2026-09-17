@@ -23,6 +23,8 @@ import '/imports/startup/server/IngestionResearchQueue';
 import '/imports/startup/server/IngestionReviewActions';
 import '/imports/startup/server/Mongo';
 import '/imports/startup/both/Methods';
+import '/imports/api/moderation/ModerationMethods';
+import '/imports/startup/server/bans';
 // Last, and that order is load-bearing: this wraps the handler table Methods.js
 // has just filled in. Imported earlier it would wrap nothing.
 import { installAuditTrail } from '/imports/startup/server/auditTrail';

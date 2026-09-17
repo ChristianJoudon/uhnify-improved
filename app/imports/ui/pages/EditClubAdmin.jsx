@@ -4,6 +4,7 @@ import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import { Link, useParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
+import { Roles } from 'meteor/alanning:roles';
 import { Camera, Trash } from 'react-bootstrap-icons';
 import PageHead from '../components/PageHead';
 import PosterArt from '../components/PosterArt';
@@ -36,11 +37,18 @@ const EditClubAdmin = () => {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const { doc, ready } = useTracker(() => {
+  const { doc, isAdmin, ready } = useTracker(() => {
+    // Two ways to be allowed here: an administrator, who is sent every group,
+    // or the person who runs this one, who is sent their own. Both carry
+    // `owner`, which no public publication does — so a record without it came
+    // from a wall, and whoever is looking at it may not edit it.
     const subscription = Meteor.subscribe(Clubs.adminPublicationName);
+    const owned = Meteor.subscribe('Clubs.publication.owned');
+    const found = Clubs.collection.findOne(_id);
     return {
-      doc: Clubs.collection.findOne(_id),
-      ready: subscription.ready(),
+      doc: found?.owner ? found : null,
+      isAdmin: Roles.userIsInRole(Meteor.userId(), 'admin'),
+      ready: subscription.ready() && owned.ready(),
     };
   }, [_id]);
 
@@ -178,7 +186,7 @@ const EditClubAdmin = () => {
       <PageHead
         title="Edit group"
         eyebrow="Admin"
-        action={<Link className="btn btn-soft-primary" to="/admin">All groups</Link>}
+        action={<Link className="btn btn-soft-primary" to={isAdmin ? '/admin' : `/manage/group/${_id}`}>{isAdmin ? 'All groups' : 'Back'}</Link>}
       >
         Saved changes are live on the wall straight away.
       </PageHead>
@@ -295,17 +303,21 @@ const EditClubAdmin = () => {
 
           <section className="form-block">
             <h3>Who runs it</h3>
-            <label htmlFor="owner">
-              Owner
-              <input
-                id="owner"
-                type="text"
-                value={form.owner}
-                maxLength={TEXT_LIMITS.email}
-                onChange={e => set('owner', e.target.value)}
-                required
-              />
-            </label>
+            {/* Handing a group to somebody else is an administrator's call;
+                the server keeps the owner it had for anyone else. */}
+            {isAdmin && (
+              <label htmlFor="owner">
+                Owner
+                <input
+                  id="owner"
+                  type="text"
+                  value={form.owner}
+                  maxLength={TEXT_LIMITS.email}
+                  onChange={e => set('owner', e.target.value)}
+                  required
+                />
+              </label>
+            )}
 
             <label htmlFor="contactInfo">
               How people reach them

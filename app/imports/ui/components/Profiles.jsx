@@ -10,7 +10,7 @@ import { profileImagePath } from '../utilities/helpers';
  * artwork to be the card — so this is a plain panel with a face on it, which
  * also keeps it visually subordinate to the club and event posters above.
  */
-const ProfileCard = ({ profile }) => {
+const ProfileCard = ({ profile, banned }) => {
   const name = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.email;
 
   const removeItem = () => {
@@ -33,6 +33,21 @@ const ProfileCard = ({ profile }) => {
     });
   };
 
+  const toggleBan = () => {
+    const done = error => error && swal('Not done', error.reason || error.message, 'error');
+    if (banned) {
+      Meteor.call('moderation.unban', profile.userId, done);
+      return;
+    }
+    swal({
+      title: `Ban ${name}?`,
+      text: 'They cannot sign in, their open sessions end, and what they posted comes down. Say why — it is the record of the decision.',
+      content: { element: 'input', attributes: { placeholder: 'Why' } },
+      buttons: ['Not now', 'Ban'],
+      dangerMode: true,
+    }).then(reason => typeof reason === 'string' && Meteor.call('moderation.ban', profile.userId, reason, done));
+  };
+
   return (
     <article className="mb-panel admin-person">
       {/* Decorative: the name it would announce is the very next element. */}
@@ -48,6 +63,13 @@ const ProfileCard = ({ profile }) => {
           <p className="admin-person-email">Anonymous name: {profile.anonymousName}</p>
         )}
         <span className="mb-chip mb-chip--static mb-chip--sm admin-person-role">{profile.title || 'Student'}</span>
+        {/* Suspends the ACCOUNT: no sign-in, open sessions ended, their
+            listings taken down. Lifting it does not put the listings back. */}
+        {profile.userId && profile.userId !== Meteor.userId() && (
+          <button type="button" className="btn btn-link admin-person-ban" onClick={toggleBan}>
+            {banned ? 'Lift the ban' : 'Ban this account'}
+          </button>
+        )}
       </div>
       <button
         type="button"
@@ -62,7 +84,9 @@ const ProfileCard = ({ profile }) => {
 };
 
 ProfileCard.propTypes = {
+  banned: PropTypes.bool,
   profile: PropTypes.shape({
+    userId: PropTypes.string,
     _id: PropTypes.string,
     UH_ID: PropTypes.number,
     email: PropTypes.string,
@@ -72,6 +96,10 @@ ProfileCard.propTypes = {
     picture: PropTypes.string,
     anonymousName: PropTypes.string,
   }).isRequired,
+};
+
+ProfileCard.defaultProps = {
+  banned: false,
 };
 
 export default ProfileCard;

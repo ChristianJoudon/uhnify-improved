@@ -13,6 +13,8 @@ import EventCardAdmin from '../components/EventsAdmin';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import ProfileCard from '../components/Profiles';
+import ModerationQueue from '../components/ModerationQueue';
+import { Flags } from '../../api/moderation/Moderation';
 
 /** The count reads first and the noun second — the number is the whole point. */
 const Stat = ({ icon, label, value }) => (
@@ -30,11 +32,15 @@ Stat.propTypes = {
 };
 
 const ListClubAdmin = () => {
-  const { clubs, events, profiles, ready } = useTracker(() => {
+  const { clubs, events, profiles, flags, bannedIds, ready } = useTracker(() => {
     const clubSubscription = Meteor.subscribe(Clubs.adminPublicationName);
     const eventSubscription = Meteor.subscribe(Events.adminPublicationName);
     const profileSubscription = Meteor.subscribe(Profiles.adminPublicationName);
+    Meteor.subscribe(Flags.openPublicationName);
+    Meteor.subscribe('moderation.banned');
     return {
+      flags: Flags.collection.find({ status: 'open' }, { sort: { createdAt: -1 } }).fetch(),
+      bannedIds: new Set(Meteor.users.find({ banned: { $exists: true } }).map(user => user._id)),
       clubs: Clubs.collection.find({}, { sort: { name: 1 } }).fetch(),
       events: Events.collection.find({}, { sort: { date: 1 } }).fetch(),
       profiles: Profiles.collection.find({}, { sort: { lastName: 1, firstName: 1 } }).fetch(),
@@ -99,6 +105,11 @@ const ListClubAdmin = () => {
       </section>
 
       <section className="admin-section">
+        <h2 className="admin-section-title">Reported{flags.length > 0 ? ` · ${flags.length}` : ''}</h2>
+        <ModerationQueue flags={flags} />
+      </section>
+
+      <section className="admin-section">
         <h2 className="admin-section-title">People</h2>
         {profiles.length === 0 ? (
           <div className="mb-empty">
@@ -107,7 +118,7 @@ const ListClubAdmin = () => {
           </div>
         ) : (
           <div className="mb-grid">
-            {profiles.map(profile => <ProfileCard key={profile._id} profile={profile} />)}
+            {profiles.map(profile => <ProfileCard key={profile._id} profile={profile} banned={bannedIds.has(profile.userId)} />)}
           </div>
         )}
       </section>
