@@ -4,6 +4,26 @@ import SimpleSchema from 'simpl-schema';
 import { FRIEND_ACTIVITY_VISIBILITY } from '../privacy/FriendActivityPrivacy';
 
 /**
+ * What a swipe can say. A right swipe has a different name for each kind of
+ * listing because it IS a different act: on an event it is an RSVP — "I'm
+ * going", something friends may be shown — and on a group it is joining.
+ *
+ * Both used to be stored as 'interested', a word that promised neither. The
+ * pages built on it disagreed about what it meant — one list called it Saved,
+ * a button called it Going — and the recommender scored a join as mild
+ * curiosity on top of the 'joined_group' it had already been told about. One
+ * name for one thing: the stored value is the word the person reads.
+ */
+export const SWIPE_DECISIONS = ['going', 'joined', 'passed'];
+
+/**
+ * The only kind each right swipe fits. Nobody is "going" to a group or has
+ * "joined" an event, and a row that said so would be read back to the person
+ * under the wrong list. 'passed' is absent because it fits either kind.
+ */
+export const SWIPE_KIND_FOR_DECISION = { going: 'event', joined: 'club' };
+
+/**
  * Each user's deck decision. The deck swipes events and, in its clubs mode,
  * groups — one collection rather than two, because a decision is a decision and
  * the unique index below already keys on the record id, which is distinct
@@ -16,7 +36,9 @@ class EventSwipesCollection {
     this.schema = new SimpleSchema({
       userId: String,
       eventId: String,
-      decision: { type: String, allowedValues: ['interested', 'passed'] },
+      // Which decision fits which kind is a rule between two fields, so it is
+      // held where both are known: 'eventSwipes.record', the one writer.
+      decision: { type: String, allowedValues: SWIPE_DECISIONS },
       kind: { type: String, allowedValues: ['event', 'club'], optional: true, defaultValue: 'event' },
       friendActivityVisibility: {
         type: String,

@@ -310,7 +310,7 @@ const Discover = () => {
   };
 
   const goingIds = useMemo(
-    () => new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId)),
+    () => new Set(swipes.filter(swipe => swipe.decision === 'going').map(swipe => swipe.eventId)),
     [swipes],
   );
   const clubByNumber = useMemo(() => new Map(clubs.map(club => [club.clubID, club])), [clubs]);
@@ -419,14 +419,18 @@ const Discover = () => {
     });
   };
 
+  // Taking it back from here is a person saying "not going", which is its own
+  // fact. It used to be sent as 'undo' — the deck's word for rewinding a swipe
+  // made a second ago — so a changed mind and a slipped thumb were recorded as
+  // the same thing.
   const toggleGoing = event => {
     const isGoing = goingIds.has(event._id);
     const method = isGoing ? 'eventSwipes.remove' : 'eventSwipes.record';
-    const args = isGoing ? [event._id] : [event._id, 'interested'];
+    const args = isGoing ? [event._id, 'rsvp_canceled'] : [event._id, 'going', 'event'];
     const context = event._recommendation
       ? { ...event._recommendation, clientEventId: `feed-action:${Random.id()}` }
       : {};
-    Meteor.call(method, ...args, ...(isGoing ? ['undo', context] : ['event', context]), error => {
+    Meteor.call(method, ...args, context, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       }

@@ -282,12 +282,16 @@ const SwipeCard = ({ event, hostName, kind, stackIndex, exitDirection, flipped, 
             </div>
           </div>
         </motion.div>
+        {/* The stamp is the gesture naming itself while the thumb can still
+            change its mind, so it has to say what the swipe will actually do:
+            go to an event, join a group. It read "Saved" for both, which was
+            true of neither. */}
         <motion.div
           className="swipe-stamp swipe-stamp-like"
           style={{ opacity: exitDirection === 'right' ? 1 : likeOpacity }}
           aria-hidden="true"
         >
-          Saved
+          {kind === 'club' ? 'Join' : 'Going'}
         </motion.div>
         <motion.div
           className="swipe-stamp swipe-stamp-pass"

@@ -93,7 +93,7 @@ const ClubFinder = () => {
       events: Events.collection.find({}).fetch(),
       joinedClubIds: ProfileClubs.collection.find({ userId: Meteor.userId() }).fetch().map(membership => membership.clubId),
       goingIds: new Set(EventSwipes.collection
-        .find({ userId: Meteor.userId(), decision: 'interested' }).map(swipe => swipe.eventId)),
+        .find({ userId: Meteor.userId(), decision: 'going' }).map(swipe => swipe.eventId)),
       interests: normalizeCategories(profile?.interests),
       friendClubIds: new Set(ProfileClubs.collection.find({ userId: { $in: acceptedIds } }).fetch().map(membership => membership.clubId)),
       ready: clubsSubscription.ready() && membershipSubscription.ready()
@@ -256,11 +256,13 @@ const ClubFinder = () => {
   /** The card's one action, and the sheet's: say yes to an event. */
   const toggleGoing = event => {
     if (!Meteor.userId()) {
-      swal('Sign in first', 'Saving an event needs an account.', 'info');
+      swal('Sign in first', "Saying you're going needs an account.", 'info');
       return;
     }
     const going = goingIds.has(event._id);
-    const args = going ? [event._id] : [event._id, 'interested'];
+    // Pressing it again is "not going" — a changed mind, told to the server as
+    // one, rather than the deck's 'undo' it used to default to.
+    const args = going ? [event._id, 'rsvp_canceled'] : [event._id, 'going', 'event'];
     Meteor.call(going ? 'eventSwipes.remove' : 'eventSwipes.record', ...args, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');

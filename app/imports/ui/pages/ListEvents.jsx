@@ -48,15 +48,15 @@ const ListEvents = () => {
 
   const { ready, events, clubs, goingIds, joinedIds } = useTracker(() => {
     const subscription = Meteor.subscribe(Events.userPublicationName);
-    // Saving works from the poster here exactly as it does on Discover, so the
-    // page needs to know what this person has already said yes to.
+    // "I'm going" works from the poster here exactly as it does on Discover, so
+    // the page needs to know what this person has already said yes to.
     const swipesSub = Meteor.subscribe(EventSwipes.userPublicationName);
     const clubsSub = Meteor.subscribe(Clubs.userPublicationName);
     const memberSub = Meteor.subscribe(ProfileClubs.membershipPublicationName);
     return {
       events: Events.collection.find({}, { sort: { date: 1 } }).fetch(),
       clubs: Clubs.collection.find({}).fetch(),
-      goingIds: new Set(EventSwipes.collection.find({ userId: Meteor.userId(), decision: 'interested' })
+      goingIds: new Set(EventSwipes.collection.find({ userId: Meteor.userId(), decision: 'going' })
         .map(swipe => swipe.eventId)),
       joinedIds: new Set(ProfileClubs.collection.find({ userId: Meteor.userId() })
         .map(membership => membership.clubId)),
@@ -123,7 +123,9 @@ const ListEvents = () => {
       return;
     }
     const going = goingIds.has(event._id);
-    const args = going ? [event._id] : [event._id, 'interested'];
+    // Pressing it again is "not going" — a changed mind, told to the server as
+    // one, rather than the deck's 'undo' it used to default to.
+    const args = going ? [event._id, 'rsvp_canceled'] : [event._id, 'going', 'event'];
     Meteor.call(going ? 'eventSwipes.remove' : 'eventSwipes.record', ...args, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');

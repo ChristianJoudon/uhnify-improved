@@ -108,47 +108,94 @@ Meteor.publish('Profiles.publication.directory', function () {
   return Profiles.collection.find({}, { fields: { userId: 1, firstName: 1, lastName: 1, picture: 1, title: 1 } });
 });
 
+/**
+ * The memberships of one person that a friend may be sent.
+ *
+ * 'shareable' is written on a row only when its owner has turned sharing on
+ * AND the group is not a sensitive one (see FriendActivityPrivacy.js), so this
+ * selects rows that have already passed both tests. It is the second of two
+ * locks, not the only one: the publication below does not run it at all for a
+ * friend whose profile does not say they share.
+ */
 export const friendClubActivitySelector = userId => ({
   userId,
   friendActivityVisibility: FRIEND_ACTIVITY_VISIBILITY.shareable,
 });
 
+/**
+ * The same for events, and only the ones a person is going to. A pass is
+ * nobody's business, and a swipe that joined a group is already told by the
+ * membership above.
+ */
 export const friendEventActivitySelector = userId => ({
   userId,
-  decision: 'interested',
+  decision: 'going',
   kind: { $ne: 'club' },
   friendActivityVisibility: FRIEND_ACTIVITY_VISIBILITY.shareable,
 });
 
-// Accepted friends' public activity: the clubs they joined and events they saved.
-// Reactive join — unfriending stops publishing immediately; new friends appear live.
+/** The gate: matches a friend's profile only while it says, exactly, `true`. */
+export const friendSharingSelector = userId => ({ userId, friendActivitySharing: true });
+
+const friendOf = (edge, selfId) => (edge.requesterId === selfId ? edge.receiverId : edge.requesterId);
+
+/**
+ * What friends are up to: three levels, each live.
+ *
+ * The friendship: unfriending stops everything beneath it at once, and a new
+ * friend appears without a reload.
+ *
+ * The friend's own consent. Sharing is off until a person turns it on, and
+ * this level is where the publication itself knows that, rather than trusting
+ * that every row was stamped correctly. A friend who is not sharing matches
+ * nothing here, so the row queries below never run for them; one who turns it
+ * off drops out of this cursor and takes their rows with them, whatever those
+ * rows still say. Only `_id` is sent for the match — less than the people
+ * directory already sends every signed-in user about the same profile.
+ *
+ * The rows, already filtered to the shareable ones.
+ *
+ * There is no reciprocity rule. A person who keeps their own activity private
+ * still sees the friends who chose to share theirs.
+ *
+ * Exported as the plain tree so a test can walk the same cursors the
+ * publication opens.
+ */
+export const friendActivityPublication = selfId => ({
+  find() {
+    return Friends.collection.find({
+      status: 'accepted',
+      $or: [{ requesterId: selfId }, { receiverId: selfId }],
+    });
+  },
+  children: [
+    {
+      find(edge) {
+        return Profiles.collection.find(friendSharingSelector(friendOf(edge, selfId)), { fields: { _id: 1 } });
+      },
+      // Each child is handed the document above it and then that one's own
+      // arguments, so the friendship arrives second here.
+      children: [
+        {
+          find(sharer, edge) {
+            return ProfileClubs.collection.find(friendClubActivitySelector(friendOf(edge, selfId)));
+          },
+        },
+        {
+          find(sharer, edge) {
+            return EventSwipes.collection.find(friendEventActivitySelector(friendOf(edge, selfId)));
+          },
+        },
+      ],
+    },
+  ],
+});
+
 publishComposite('Friends.publication.activity', function () {
   if (!this.userId) {
     return null;
   }
-  const selfId = this.userId;
-  return {
-    find() {
-      return Friends.collection.find({
-        status: 'accepted',
-        $or: [{ requesterId: selfId }, { receiverId: selfId }],
-      });
-    },
-    children: [
-      {
-        find(edge) {
-          const friendId = edge.requesterId === selfId ? edge.receiverId : edge.requesterId;
-          return ProfileClubs.collection.find(friendClubActivitySelector(friendId));
-        },
-      },
-      {
-        find(edge) {
-          const friendId = edge.requesterId === selfId ? edge.receiverId : edge.requesterId;
-          return EventSwipes.collection.find(friendEventActivitySelector(friendId));
-        },
-      },
-    ],
-  };
+  return friendActivityPublication(this.userId);
 });
 
 // Event-to-club links are public directory data (creator ids stripped) so pages

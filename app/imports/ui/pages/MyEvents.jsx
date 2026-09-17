@@ -45,15 +45,15 @@ const MyEvents = () => {
     };
   }, []);
 
-  const { clubEvents, savedEvents, savedIds } = useMemo(() => {
+  const { clubEvents, goingEvents, goingIds } = useMemo(() => {
     const joinedClubIds = new Set(memberships.map(membership => membership.clubId));
     const joinedClubNumbers = new Set(clubs.filter(club => joinedClubIds.has(club._id)).map(club => club.clubID));
     const linkedEventIds = new Set(links.filter(link => joinedClubIds.has(link.clubId)).map(link => link.eventId));
-    const saved = new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId));
+    const going = new Set(swipes.filter(swipe => swipe.decision === 'going').map(swipe => swipe.eventId));
     return {
       clubEvents: sortByDate(events.filter(event => linkedEventIds.has(event._id) || joinedClubNumbers.has(event.eventID))),
-      savedEvents: sortByDate(events.filter(event => saved.has(event._id))),
-      savedIds: saved,
+      goingEvents: sortByDate(events.filter(event => going.has(event._id))),
+      goingIds: going,
     };
   }, [events, clubs, memberships, links, swipes]);
 
@@ -72,36 +72,42 @@ const MyEvents = () => {
         extendedProps: { record: event },
         classNames: ['calendar-event-pill'],
       })),
-      ...savedEvents.filter(event => !clubIds.has(event._id)).map(event => ({
+      ...goingEvents.filter(event => !clubIds.has(event._id)).map(event => ({
         title: event.title,
         start: new Date(event.date),
         description: event.description,
         extendedProps: { record: event },
-        classNames: ['calendar-event-pill', 'calendar-event-pill-saved'],
+        classNames: ['calendar-event-pill', 'calendar-event-pill-going'],
       })),
     ];
-  }, [clubEvents, savedEvents]);
+  }, [clubEvents, goingEvents]);
 
-  // The poster's own footer button is how an event is saved everywhere else in
-  // the app, so unsaving from here is the same gesture rather than a private
-  // remove control bolted onto the corner of the card.
+  // The poster's own footer button is how a person says they are going
+  // everywhere else in the app, so taking it back from here is the same
+  // gesture rather than a private remove control bolted onto the corner of
+  // the card. It is sent as 'rsvp_canceled' — a changed mind — not as the
+  // deck's 'undo', which it used to default to.
   const toggleGoing = event => {
-    const saved = savedIds.has(event._id);
-    const args = saved ? [event._id] : [event._id, 'interested'];
-    Meteor.call(saved ? 'eventSwipes.remove' : 'eventSwipes.record', ...args, error => {
+    const going = goingIds.has(event._id);
+    const args = going ? [event._id, 'rsvp_canceled'] : [event._id, 'going', 'event'];
+    Meteor.call(going ? 'eventSwipes.remove' : 'eventSwipes.record', ...args, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
       }
     });
   };
 
-  const posterWall = list => (
+  // `undoable` is for the Going wall alone: every card on it is one the person
+  // chose, so its button says "Not going" instead of repeating "You're going"
+  // down the page. A group's events are a mix, and keep the ordinary toggle.
+  const posterWall = (list, undoable = false) => (
     <div className="mb-grid mb-grid--posters">
       {list.map((event, index) => (
         <motion.div key={event._id} variants={rise} initial="hidden" animate="show" custom={index}>
           <EventPoster
             event={event}
-            going={savedIds.has(event._id)}
+            going={goingIds.has(event._id)}
+            undoable={undoable}
             onGoing={toggleGoing}
             onOpen={() => setDetail(event)}
           />
@@ -120,33 +126,41 @@ const MyEvents = () => {
         title="My events"
         action={<Link className="btn btn-soft-primary" to="/discover-events"><Stars /> Keep swiping</Link>}
       >
-        The ones you saved, and whatever your groups have planned.
+        Where you&apos;re going, and whatever your groups have planned.
       </PageHead>
 
       <section className="mb-5">
         <div className="mb-section-head">
-          <h2>Saved</h2>
-          {savedEvents.length > 0 && (
-            <span className="mb-toolbar-count">{savedEvents.length} {savedEvents.length === 1 ? 'event' : 'events'}</span>
+          <h2>Going</h2>
+          {goingEvents.length > 0 && (
+            <span className="mb-toolbar-count">{goingEvents.length} {goingEvents.length === 1 ? 'event' : 'events'}</span>
           )}
         </div>
 
-        {savedEvents.length === 0 ? (
+        {goingEvents.length === 0 ? (
           <div className="mb-empty">
             <Stars className="mb-empty-glyph" aria-hidden="true" />
-            <h3>Nothing saved yet.</h3>
-            <p>Swipe through what is on and the ones you keep land here.</p>
+            <h3>You&apos;re not going to anything yet.</h3>
+            <p>Swipe through what is on. Whatever you say yes to lands here.</p>
             <Link className="btn btn-solid-primary" to="/discover-events">Start swiping</Link>
           </div>
-        ) : posterWall(savedEvents)}
+        ) : posterWall(goingEvents, true)}
       </section>
 
       <section className="mb-5">
         <div className="mb-section-head">
           <h2>From your groups</h2>
-          {clubEvents.length > 0 && (
-            <span className="mb-toolbar-count">{clubEvents.length} {clubEvents.length === 1 ? 'event' : 'events'}</span>
-          )}
+          {/* The groups themselves live one page over. The nav keeps that page
+              in the profile menu, so this is the link for a reader who came
+              here looking for them. Count and link share the trailing edge;
+              as separate children the row's space-between would strand the
+              count in the middle. */}
+          <span className="d-inline-flex align-items-baseline gap-3">
+            {clubEvents.length > 0 && (
+              <span className="mb-toolbar-count">{clubEvents.length} {clubEvents.length === 1 ? 'event' : 'events'}</span>
+            )}
+            <Link className="mb-section-link" to="/saved">Your groups</Link>
+          </span>
         </div>
 
         {clubEvents.length === 0 ? (
@@ -192,7 +206,7 @@ const MyEvents = () => {
         onHide={() => setDetail(null)}
         record={detail}
         kind="event"
-        isIn={savedIds.has(detail?._id)}
+        isIn={goingIds.has(detail?._id)}
         onAct={toggleGoing}
       />
     </Container>

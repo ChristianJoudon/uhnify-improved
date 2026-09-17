@@ -1080,7 +1080,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   flex: 0 0 auto;
 }
 
-/* Saved events read pink, club meetings read teal. */
+/* Events you're going to read pink, club meetings read teal. */
 /* One pill colour per topic, taken from the same `chip` / `chipInk` the cards
    and the map pins use — so a month page is the same eight colours saying the
    same eight things, rather than 283 identical orange pills. Values are copied
@@ -1131,21 +1131,21 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: #42525f !important;
 }
 
-.calendar-event-pill-saved {
+.calendar-event-pill-going {
   background: var(--mb-pink-tint) !important;
 }
 
-.calendar-event-pill-saved .fc-daygrid-event-dot {
+.calendar-event-pill-going .fc-daygrid-event-dot {
   background: var(--mb-pink-deep);
 }
 
-.calendar-event-pill-saved:hover {
+.calendar-event-pill-going:hover {
   background: #f6d2d6 !important;
 }
 
 /* The hover fills are darker than the resting tints — deepen the time text
    with them so it keeps clearing AA. */
-.calendar-event-pill-saved:hover .fc-event-time,
+.calendar-event-pill-going:hover .fc-event-time,
 .calendar-event-pill-club:hover .fc-event-time,
 .fc-daygrid-event:hover .fc-event-time {
   color: #4d4d49;
@@ -1952,13 +1952,14 @@ div.btn-solid-primary button[type="submit"]:hover {
 }
 
 .swipe-btn-pass,
-.swipe-btn-save {
+.swipe-btn-yes {
   width: 66px;
   height: 66px;
   font-size: 1.5rem;
 }
 
-/* The button row must agree with the stamps: ink = pass, pink = save. */
+/* The button row must agree with the stamps: ink = pass, pink = yes (going to
+   an event, joining a group). */
 .swipe-btn-pass {
   color: var(--mb-ink-soft);
 }
@@ -1968,11 +1969,11 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-paper-bright);
 }
 
-.swipe-btn-save {
+.swipe-btn-yes {
   color: var(--mb-pink-deep);
 }
 
-.swipe-btn-save:not(:disabled):hover {
+.swipe-btn-yes:not(:disabled):hover {
   background: var(--mb-pink-deep);
   color: var(--mb-paper-bright);
 }
@@ -4164,6 +4165,90 @@ div.btn-solid-primary button[type="submit"]:hover {
   align-self: flex-start;
 }
 
+/* The one setting on Customize that Save does not govern — it is stored the
+   moment it moves — so it is a card of its own beneath the form, in the form's
+   column, rather than a field inside it above a button that does not apply. */
+.customize-privacy {
+  grid-column: 2;
+}
+
+/* A switch is a real checkbox with role="switch": focusable, spoken as on or
+   off, and worked from the keyboard with nothing added. The whole label is the
+   target. Off is the quiet state, because off is the default; on takes the
+   green the app already uses for "done". The knob keeps a hairline while off,
+   since white on paper would otherwise leave position — the only cue that is
+   not colour — too faint to read. */
+.mb-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.5rem;
+  color: var(--mb-ink);
+  cursor: pointer;
+}
+
+.mb-switch input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.6rem;
+  height: 1.5rem;
+  margin: 0;
+  border: 1px solid var(--mb-line-control);
+  border-radius: 999px;
+  background: var(--mb-paper-edge);
+  cursor: pointer;
+  transition: background var(--mb-standard) var(--mb-ease), border-color var(--mb-standard) var(--mb-ease);
+}
+
+.mb-switch input::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(1.5rem - 6px);
+  height: calc(1.5rem - 6px);
+  border: 1px solid var(--mb-line-control);
+  border-radius: 50%;
+  background: var(--mb-paper-bright);
+  transition: transform var(--mb-standard) var(--mb-ease), border-color var(--mb-standard) var(--mb-ease);
+}
+
+.mb-switch input:checked {
+  background: var(--mb-success);
+  border-color: var(--mb-success);
+}
+
+.mb-switch input:checked::before {
+  border-color: transparent;
+  transform: translateX(1.1rem);
+}
+
+.mb-switch input:focus-visible {
+  outline: 2px solid var(--mb-ink);
+  outline-offset: 2px;
+}
+
+/* Indented to the label's text, so it reads as the second line of the same
+   sentence and not as a caption for the card. */
+.mb-switch-help {
+  margin: 0.35rem 0 0;
+  padding-left: 3.35rem;
+  font-size: 0.85rem;
+  color: var(--mb-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mb-switch input,
+  .mb-switch input::before {
+    transition: none;
+  }
+}
+
 @media (max-width: 900px) {
   .customize-layout {
     grid-template-columns: 1fr;
@@ -4172,6 +4257,10 @@ div.btn-solid-primary button[type="submit"]:hover {
   .customize-preview {
     position: static;
     order: 2;
+  }
+
+  .customize-privacy {
+    grid-column: auto;
   }
 
   .profile-head-body {
@@ -4620,7 +4709,7 @@ div.btn-solid-primary button[type="submit"]:hover {
   }
 
   .swipe-btn-pass,
-  .swipe-btn-save {
+  .swipe-btn-yes {
     width: 58px;
     height: 58px;
   }
@@ -5537,7 +5626,7 @@ which no longer has a caller.
    marks, not in JSX. Self-contained so the swatch survives independently of
    the `.agenda-legend i` element selector above. */
 .agenda-legend-dot--event,
-.agenda-legend-dot--saved,
+.agenda-legend-dot--going,
 .agenda-legend-dot--club {
   display: inline-block;
   flex: 0 0 auto;
@@ -5550,7 +5639,7 @@ which no longer has a caller.
   background: var(--mb-match);
 }
 
-.agenda-legend-dot--saved {
+.agenda-legend-dot--going {
   background: var(--mb-pink-deep);
 }
 

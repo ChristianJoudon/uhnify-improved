@@ -7,6 +7,7 @@ import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { EventClubs } from '../../api/events/EventClubs';
 import { Counters } from '../../api/counters/Counters';
+import { syncFriendActivityForClub, syncFriendActivityForEvent } from '../../api/privacy/friendActivitySync';
 import {
   CommunitySources,
   IngestionCandidates,
@@ -2267,6 +2268,11 @@ const projectGroup = context => {
     projectionLock,
   });
   reconcileGroupEvents(candidate.sourceId, keyHash, club, now, projectionLock);
+  // The projection files the group under 'support_group' again whatever an
+  // editor had since made of it, and may just have become the host of events
+  // people are already going to. Memberships and those RSVPs are judged again
+  // now, not at the next restart.
+  syncFriendActivityForClub(canonicalId);
 
   return [{ kind: 'group', id: canonicalId, sourceId: publicSourceId }];
 };
@@ -2358,6 +2364,10 @@ const projectEvent = context => {
     });
     const event = Events.collection.findOne(canonicalId);
     replaceSourceManagedEventLink(event, isSupport ? parent : null, now, projectionLock);
+    // A re-review can move an event people are already going to under
+    // 'support_group', or give it a support group for a host. Their RSVPs were
+    // judged against the event as it was, and are judged again against this.
+    syncFriendActivityForEvent(canonicalId);
     return { kind: 'event', id: canonicalId, sourceId: publicSourceId };
   });
 

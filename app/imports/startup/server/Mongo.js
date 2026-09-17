@@ -7,7 +7,7 @@ import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventClubs } from '../../api/events/EventClubs';
 import { parseMeetingTime } from '../../api/club/schedule';
 import { ensureRecommendationScaffold } from './RecommendationScaffold';
-import { dropRedundantCreatedBy } from './migrations';
+import { dropRedundantCreatedBy, renameInterestedSwipes } from './migrations';
 
 /* eslint-disable no-console */
 
@@ -155,5 +155,12 @@ migrateClubSchedules();
 const clearedCreatedBy = dropRedundantCreatedBy();
 if (clearedCreatedBy > 0) {
   console.log(`Cleared createdBy from ${clearedCreatedBy} events.`);
+}
+// Before the scaffold, not after: it replays every stored swipe to the
+// recommender under the swipe's own decision, and 'interested' is a word
+// neither of them uses any more.
+const renamedSwipes = renameInterestedSwipes();
+if (renamedSwipes.going + renamedSwipes.joined > 0) {
+  console.log(`Renamed right swipes: ${renamedSwipes.going} to going, ${renamedSwipes.joined} to joined.`);
 }
 ensureRecommendationScaffold();

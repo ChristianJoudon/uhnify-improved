@@ -54,7 +54,7 @@ const Profile = () => {
       clubs: Clubs.collection.find({}).fetch(),
       events: Events.collection.find({}).fetch(),
       mySwipes: EventSwipes.collection.find({ userId }).fetch(),
-      friendSwipes: EventSwipes.collection.find({ userId: { $in: acceptedIds }, decision: 'interested' }).fetch(),
+      friendSwipes: EventSwipes.collection.find({ userId: { $in: acceptedIds }, decision: 'going' }).fetch(),
     };
   }, [userId]);
 
@@ -89,14 +89,14 @@ const Profile = () => {
 
   const { upcoming, past } = useMemo(() => {
     const now = new Date();
-    const saved = mySwipes
-      .filter(swipe => swipe.decision === 'interested')
+    const going = mySwipes
+      .filter(swipe => swipe.decision === 'going')
       .map(swipe => eventsById.get(swipe.eventId))
       .filter(Boolean)
       .sort((a, b) => new Date(a.date) - new Date(b.date));
     return {
-      upcoming: saved.filter(event => new Date(event.date) >= now),
-      past: saved.filter(event => new Date(event.date) < now).reverse(),
+      upcoming: going.filter(event => new Date(event.date) >= now),
+      past: going.filter(event => new Date(event.date) < now).reverse(),
     };
   }, [mySwipes, eventsById]);
 
@@ -113,14 +113,14 @@ const Profile = () => {
       what: clubsById.get(membership.clubId)?.name,
       when: membership.createdAt ? new Date(membership.createdAt) : null,
     }));
-    const saves = friendSwipes.map(swipe => ({
-      key: `save-${swipe._id}`,
+    const rsvps = friendSwipes.map(swipe => ({
+      key: `going-${swipe._id}`,
       who: peopleById.get(swipe.userId),
       verb: 'is going to',
       what: eventsById.get(swipe.eventId)?.title,
       when: swipe.createdAt ? new Date(swipe.createdAt) : null,
     }));
-    return [...joins, ...saves]
+    return [...joins, ...rsvps]
       .filter(item => item.who && item.what)
       .sort((a, b) => (b.when?.getTime() || 0) - (a.when?.getTime() || 0))
       .slice(0, 10);
@@ -300,9 +300,18 @@ const Profile = () => {
 
         <section className="profile-panel">
           <h2>What friends are up to</h2>
-          {friendActivity.length === 0 ? (
-            <p className="panel-empty">Nothing yet — add some friends.</p>
-          ) : friendActivity.map(item => (
+          {/* Sharing is each friend's own choice and starts off, so an empty list
+              is the ordinary case for someone with plenty of friends. Telling
+              them to add some was wrong, and read beside the line below as if
+              their own setting were what kept the list empty. */}
+          {friendActivity.length === 0 && (
+            <p className="panel-empty">
+              {acceptedIds.length === 0
+                ? 'Nothing yet — add some friends.'
+                : 'Nothing yet. Friends show up here when they choose to share.'}
+            </p>
+          )}
+          {friendActivity.map(item => (
             <div key={item.key} className="friend-row">
               <Image src={profileImagePath(item.who.picture)} alt="" className="friend-avatar" />
               <div>
@@ -311,6 +320,15 @@ const Profile = () => {
               </div>
             </div>
           ))}
+          {/* Sharing is off until a person turns it on, and there is no
+              reciprocity rule: someone who shares nothing still sees the friends
+              who do. So a full list here says nothing about their own side, and
+              this line is the only place the page tells them. */}
+          {profile.friendActivitySharing !== true && (
+            <p className="panel-empty mt-2">
+              Your own activity is private. You can share it in <Link to="/settings">Settings</Link>.
+            </p>
+          )}
         </section>
       </div>
     </Container>

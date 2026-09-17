@@ -47,15 +47,15 @@ const Agenda = () => {
     const joinedClubIds = new Set(memberships.map(membership => membership.clubId));
     const joinedClubNumbers = new Set(clubs.filter(club => joinedClubIds.has(club._id)).map(club => club.clubID));
     const linkedEventIds = new Set(links.filter(link => joinedClubIds.has(link.clubId)).map(link => link.eventId));
-    const savedIds = new Set(swipes.filter(swipe => swipe.decision === 'interested').map(swipe => swipe.eventId));
+    const goingIds = new Set(swipes.filter(swipe => swipe.decision === 'going').map(swipe => swipe.eventId));
 
     const oneOff = events
-      .filter(event => savedIds.has(event._id) || linkedEventIds.has(event._id) || joinedClubNumbers.has(event.eventID))
+      .filter(event => goingIds.has(event._id) || linkedEventIds.has(event._id) || joinedClubNumbers.has(event.eventID))
       .map(event => ({
         title: event.title,
         start: new Date(event.date),
         extendedProps: { record: event, kind: 'event' },
-        classNames: ['calendar-event-pill', savedIds.has(event._id) ? 'calendar-event-pill-saved' : ''].filter(Boolean),
+        classNames: ['calendar-event-pill', goingIds.has(event._id) ? 'calendar-event-pill-going' : ''].filter(Boolean),
       }));
 
     const meetings = clubs
@@ -85,7 +85,7 @@ const Agenda = () => {
   return (
     <Container id="agenda-page" className="page-shell py-4">
       <PageHead title="Agenda">
-        Everything you saved and every group you joined, on one month page.
+        Everywhere you&apos;re going and every group you joined, on one month page.
       </PageHead>
 
       <div className="mb-toolbar">
@@ -106,7 +106,7 @@ const Agenda = () => {
         </div>
         <div className="agenda-legend">
           <span><i className="agenda-legend-dot--event" aria-hidden="true" /> Events</span>
-          <span><i className="agenda-legend-dot--saved" aria-hidden="true" /> Saved</span>
+          <span><i className="agenda-legend-dot--going" aria-hidden="true" /> Going</span>
           <span><i className="agenda-legend-dot--club" aria-hidden="true" /> Groups</span>
         </div>
       </div>
@@ -135,10 +135,10 @@ const Agenda = () => {
         />
       </div>
 
-      {/* Read-only on purpose: everything on this page is already saved or
-          already joined, so there is no action left to offer — only the
-          question of what the pill actually is. `onAct` is omitted and the
-          sheet renders no button. */}
+      {/* Read-only on purpose: everything on this page is somewhere the person
+          is going or a group they already joined, so there is no action left
+          to offer — only the question of what the pill actually is. `onAct` is
+          omitted and the sheet renders no button. */}
       <DetailsModal
         show={Boolean(detail)}
         onHide={() => setDetail(null)}

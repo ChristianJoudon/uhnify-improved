@@ -18,6 +18,19 @@ class ProfilesCollection {
       interests: { type: Array, optional: true },
       'interests.$': String,
       /**
+       * Whether friends may be shown where this person is going and what they
+       * join. Optional, and absent means NO: sharing is something a person
+       * turns on, so an account from before the setting existed, or one that
+       * has never opened Customize, shares nothing. Only `true` shares — every
+       * reader compares against it exactly, so no other stored value can be
+       * mistaken for consent.
+       *
+       * Written only by 'Profiles.setFriendActivitySharing', which also
+       * rewrites the person's existing rows. The people directory lists its
+       * fields by name, so no other member is ever sent this one.
+       */
+      friendActivitySharing: { type: Boolean, optional: true },
+      /**
        * When this was made and when it last changed.
        *
        * Both optional, because the register's imported records predate them
