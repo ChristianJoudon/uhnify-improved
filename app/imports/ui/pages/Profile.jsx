@@ -12,7 +12,7 @@ import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
-import { scheduleLabel } from '../../api/club/schedule';
+import { clubMeetingLine } from '../utilities/cardFields';
 import { formatShortDate, formatEventDate, normalizeCategories, profileImagePath } from '../utilities/helpers';
 import { topicFor, topicForClub, topicForEvent } from '../utilities/topics';
 
@@ -222,7 +222,7 @@ const Profile = () => {
                 </span>
                 <div>
                   <strong>{club.name}</strong>
-                  <span>{scheduleLabel(club.schedule) || club.meetingTime}</span>
+                  <span>{clubMeetingLine(club)}</span>
                 </div>
               </div>
             );

@@ -11,7 +11,7 @@ import { EventClubs } from '../../api/events/EventClubs';
 import { EventSwipes, SWIPE_DECISIONS, SWIPE_KIND_FOR_DECISION } from '../../api/events/EventSwipes';
 import { Friends } from '../../api/friends/Friends';
 import { Counters } from '../../api/counters/Counters';
-import { parseMeetingTime } from '../../api/club/schedule';
+import { normalizeSchedule, parseMeetingTime } from '../../api/club/schedule';
 import '../../api/recommendations/RecommendationsMethods';
 import { recordRecommendationInteraction } from '../../api/recommendations/interactionRecorder';
 import {
@@ -24,6 +24,7 @@ import {
   friendActivityVisibilityOfRow,
   isAnonymousListing,
   isSensitiveListing,
+  tookPartWhileAnonymous,
 } from '../../api/privacy/FriendActivityPrivacy';
 import {
   eventIdsHostedBy,
@@ -33,6 +34,7 @@ import {
   syncFriendActivityForEvent,
   syncFriendActivityForUser,
 } from '../../api/privacy/friendActivitySync';
+import { anonymousMemberRows, nameNewProfile } from '../../api/privacy/anonymousNames';
 import { EMAIL_SHAPE, LIST_MAX_ENTRIES, TEXT_LIMITS } from '../../api/listing/limits';
 import { checkImage, insertWithPhoto, photoFieldFor, removePhoto } from '../../api/photos/photoStore';
 import { OWNERSHIP_FIELDS, accountNameOf, canManageListing } from '../../api/listing/ownership';
@@ -283,19 +285,6 @@ const contactEmailOf = value => {
 
 const normalizeTag = tag => `${tag}`.trim().replace(/\s+/g, ' ').slice(0, TEXT_LIMITS.tag);
 
-const normalizeSchedule = schedule => {
-  if (!schedule || !Array.isArray(schedule.days) || schedule.days.length === 0) {
-    return null;
-  }
-  const days = [...new Set(schedule.days.map(day => Number.parseInt(day, 10)).filter(day => day >= 0 && day <= 6))].sort();
-  if (days.length === 0) {
-    return null;
-  }
-  const time = /^\d{2}:\d{2}$/.test(schedule.time || '') ? schedule.time : '17:00';
-  const cadence = schedule.cadence === 'biweekly' ? 'biweekly' : 'weekly';
-  return { days, time, cadence };
-};
-
 /**
  * The next group number.
  *
@@ -444,6 +433,12 @@ const takesJoinRequests = club => club.approveMembers === true && !isAnonymousLi
  * Joining twice is not an error and not a second row: the membership that is
  * there has its friend visibility re-judged, and nothing else happens.
  *
+ * A join made while the group is anonymous says so on the row
+ * (`joinedAnonymous`), here and nowhere else, because 'clubs.members' shows a
+ * made-up name for those rows alone. The second "Join" above leaves it as it
+ * was: somebody the owner has already been shown by name must not be turned
+ * into a made-up row by opening the link again after the group went anonymous.
+ *
  * A request the person still had open is settled on the way in. They may have
  * come through an invite link while the owner was deciding, and a request left
  * pending would sit in the owner's list asking about somebody already here —
@@ -470,6 +465,7 @@ const joinClub = (userId, club, verifiedContext = {}) => {
     clubId: club._id,
     friendActivityVisibility: friendActivityVisibilityFor(club, choice),
     createdAt: now(),
+    ...(isAnonymousListing(club) ? { joinedAnonymous: true } : {}),
   });
   adjustCount(Clubs.collection, club._id, 'memberCount', 1);
   if (Meteor.isServer) {
@@ -808,12 +804,20 @@ Meteor.methods({
       interests: publicProfileInterests(interests),
     };
 
+    let profileId = existingProfile?._id;
     if (existingProfile) {
       Profiles.collection.update(existingProfile._id, { $set: profileData });
-      return existingProfile._id;
+    } else {
+      profileId = Profiles.collection.insert(profileData);
     }
-
-    return Profiles.collection.insert(profileData);
+    // Who they will be in an anonymous group, given now so the invitation page
+    // can say it before they join one. Both branches: a profile adopted by its
+    // email was made by the seed, around everything that gives a name. Only
+    // the server can — the hash is keyed, and the key is not in a browser.
+    if (Meteor.isServer) {
+      nameNewProfile(targetUserId);
+    }
+    return profileId;
   },
 
   'Profiles.update'(profileData) {
@@ -973,6 +977,11 @@ Meteor.methods({
         owner: getUsername(this.userId),
         categories,
         tags,
+        // What the form sent, through the one validator in api/club/schedule.js.
+        // A copy of it lived in this file and knew two cadences and three
+        // keys, so "first and third Thursday, 6 to 7:30" would have been
+        // stored as every Thursday at 6 with no end, and nobody told. Without
+        // a schedule worth keeping, the meeting text is read instead.
         schedule: normalizeSchedule(clubData.schedule) || parseMeetingTime(listing.meetingTime) || undefined,
         ...privacy,
         memberCount: 0,
@@ -1902,23 +1911,52 @@ Meteor.methods({
   /**
    * Who is in a group, for the person who runs it.
    *
-   * Refused for an anonymous group — to its owner and to an administrator as
-   * much as to anyone. That is what anonymous means here: not "hidden from
-   * the public" but "there is no list". A roster the organizer can open is
-   * one that can be asked for, photographed or left on a bus, and the people
-   * a recovery meeting is for know that. They get the count.
+   * For an anonymous group the answer is made-up names: a handle, a name like
+   * "Sleepy Honu" and the day they joined, and NOTHING else — no userId, no
+   * real name, no picture (see api/privacy/anonymousNames.js). It used to be
+   * a refusal, 'anonymous-group', to the owner and an administrator alike,
+   * and that kept the promise at the price of the owner never knowing three
+   * regulars from thirty strangers. What anonymous means has not moved:
+   * nobody is shown WHO. A roster that can be asked for, photographed or left
+   * on a bus now reads as a page of geckos and roosters. Other members and
+   * friends are still shown nothing at all.
    *
-   * A group that WAS anonymous keeps that promise to the people it was made
-   * to. Whoever joined before anonymity ended (`anonymousUntil`, stamped by
-   * followClubPrivacy) is left off this list for good, and so is a membership
-   * with no date on it, which cannot show that it came after. Otherwise the
-   * refusal above was a switch away from meaning nothing: off, read, on
-   * again. The answer stays a plain list; the group's memberCount still
-   * counts everyone, and the difference between the two is the people who
-   * are in it and not shown.
+   * Nobody is ever shown BOTH ways. A made-up name is the same in every
+   * anonymous group, so one membership seen once by name and once made-up is
+   * that person's name in all of them. This first gave a made-up row to
+   * everybody in a group that is anonymous NOW, and an owner had only to read
+   * a named list, switch anonymity on — or add the tag 'recovery' — and read
+   * it again. So a membership is one of three things, decided by how it was
+   * MADE and not by what the group is today:
+   *   - joined while the group was anonymous (`joinedAnonymous`, written by
+   *     joinClub): a made-up row, for good, whatever the group becomes. The
+   *     promise is kept, and anonymity is not a switch away from meaning
+   *     nothing: off, read, on again.
+   *   - joined a named group that has not been anonymous since: a named row,
+   *     for as long as the group is not anonymous. "Since" is
+   *     tookPartWhileAnonymous, the rule the friends' feed reads, so the two
+   *     cannot drift apart.
+   *   - anything else is not sent at all: somebody the owner has seen by name
+   *     before the group turned anonymous, and a membership from before the
+   *     flag existed, which cannot show which kind it was. They are in the
+   *     count, and the page says how many are not listed.
+   * The made-up rows come first — in a named group they are all the earlier
+   * joins — and the named rows follow in the order people joined.
    *
-   * Authorization is checked first, so a stranger learns nothing from which
-   * refusal they got.
+   * What this does NOT cover, so that nothing is built on it. Leaving and
+   * joining again is a new membership, judged by the group as it is that day:
+   * somebody who joined under the promise, leaves, and comes back once the
+   * anonymity has ended returns by name as their made-up row goes, and an
+   * owner who compares the two lists can pair them. The same is true the
+   * other way about. Marking every later join to a once-anonymous group as
+   * made-up would close that and open worse — such a group can ask first, and
+   * its owner would approve a request by name and watch the made-up row
+   * arrive. And whoever decides who is let in can always let in one person:
+   * a made-up name hides somebody in a crowd, not in a group of one.
+   *
+   * Authorization is checked first, and it is the same for every kind of
+   * group: a stranger and a plain member are refused in the same words
+   * whether or not there was anything to see.
    */
   'clubs.members'(clubId) {
     check(clubId, String);
@@ -1935,28 +1973,32 @@ Meteor.methods({
       throw new Meteor.Error('club-not-found', 'That group could not be found.');
     }
     requireListingManager(this.userId, club, 'Only the person who runs this group can see its members.');
-    if (isAnonymousListing(club)) {
-      throw new Meteor.Error('anonymous-group', 'This group is anonymous, so nobody can see who is in it — not even you.');
-    }
 
     const memberships = ProfileClubs.collection.find(
-      { clubId, ...(club.anonymousUntil ? { createdAt: { $gt: club.anonymousUntil } } : {}) },
-      { fields: { userId: 1, createdAt: 1 }, sort: { createdAt: 1 } },
+      { clubId },
+      { fields: { userId: 1, createdAt: 1, joinedAnonymous: 1 }, sort: { createdAt: 1 } },
     ).fetch();
+    const madeUp = memberships.filter(membership => membership.joinedAnonymous === true);
+    const named = isAnonymousListing(club) ? [] : memberships
+      .filter(membership => membership.joinedAnonymous !== true && !tookPartWhileAnonymous(club, membership));
+    // Only the people who will be shown by name are looked up by name.
     const profiles = new Map(Profiles.collection.find(
-      { userId: { $in: memberships.map(membership => membership.userId) } },
+      { userId: { $in: named.map(membership => membership.userId) } },
       { fields: { userId: 1, firstName: 1, lastName: 1, picture: 1 } },
     ).map(profile => [profile.userId, profile]));
-    return memberships.map(({ userId, createdAt }) => {
-      const profile = profiles.get(userId);
-      return {
-        userId,
-        firstName: profile?.firstName || '',
-        lastName: profile?.lastName || '',
-        picture: profile?.picture,
-        joinedAt: createdAt,
-      };
-    });
+    return [
+      ...anonymousMemberRows(clubId, madeUp),
+      ...named.map(({ userId, createdAt }) => {
+        const profile = profiles.get(userId);
+        return {
+          userId,
+          firstName: profile?.firstName || '',
+          lastName: profile?.lastName || '',
+          picture: profile?.picture,
+          joinedAt: createdAt,
+        };
+      }),
+    ];
   },
 
   /**

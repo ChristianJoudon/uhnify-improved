@@ -74,9 +74,9 @@ const SECRET_ARGUMENTS = new Set(['clubs.inviteInfo']);
  * Every entry names its actor, and the first bare string of each of these is
  * a listing's _id. Put together that is a membership roll: 'person@…
  * profileClubs.add <the recovery meeting's id> ok', one line per member, in a
- * log every administrator is sent. 'clubs.members' refuses an anonymous group
- * to an administrator in so many words, and this was the same list one page
- * over. 'clubs.addTag' is here because only a member may add a tag, so a tag
+ * log every administrator is sent. 'clubs.members' shows an administrator
+ * nothing of an anonymous group but made-up names, and this was the real list
+ * one page over. 'clubs.addTag' is here because only a member may add a tag, so a tag
  * that went through says the same thing a join does; the answer to a request
  * is here because it names, by its id, somebody who asked.
  *

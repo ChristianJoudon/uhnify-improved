@@ -35,7 +35,13 @@ class ClubsCollection {
         optional: true,
       },
       'tags.$': String,
-      // Recurring meeting schedule: { days: [0-6], time: 'HH:mm', cadence: 'weekly'|'biweekly' }.
+      // Recurring meeting schedule:
+      //   { days: [0-6…], time: 'HH:mm', endTime?: 'HH:mm', cadence: 'weekly'|'biweekly'|'monthly', weeks?: [1|2|3|4|'last', …] }
+      // `weeks` counts only when the cadence is monthly — "first and third
+      // Thursday" is days [4], weeks [1, 3] — and a monthly schedule without
+      // it is on no calendar, because nobody knows which week. A blackbox, so
+      // nothing here checks it: every write goes through normalizeSchedule in
+      // schedule.js, and every reader does too.
       schedule: {
         type: Object,
         optional: true,

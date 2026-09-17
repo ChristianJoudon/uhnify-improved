@@ -13,7 +13,7 @@ import PrivacyToggles, { usePrivacySettings } from '../components/PrivacyToggles
 import { Clubs } from '../../api/club/Club';
 import { ClubJoinRequests } from '../../api/club/ClubJoinRequests';
 import { Profiles } from '../../api/profiles/Profiles';
-import { scheduleLabel } from '../../api/club/schedule';
+import { clubMeetingLine } from '../utilities/cardFields';
 import { isOpenToAll } from '../../api/listing/audience';
 import { canManageListing } from '../../api/listing/ownership';
 import { isAnonymousListing, isSensitiveListing } from '../../api/privacy/FriendActivityPrivacy';
@@ -39,10 +39,14 @@ const countLabel = count => (count === 0 ? 'No members yet' : `${count} ${count 
  * An administrator is let through on the admin publication, because every
  * method below lets them through too.
  *
- * For an anonymous group there is no member list and no list of requests, and
- * the page says so in their place rather than showing an empty box. That is
- * not a gap in this page: 'clubs.members' refuses an anonymous group to its
- * own owner, on purpose, and the page does not ask.
+ * For an anonymous group the members are a list of made-up names — "Sleepy
+ * Honu", joined Sep 3 — and there is no list of requests at all, since saying
+ * yes to one means reading a name. That is all 'clubs.members' sends for such
+ * a group, to its own owner as much as to anyone: no id, no face, nothing to
+ * draw but the name. A group that was once anonymous shows both kinds of row
+ * on one list, the people who joined under the promise still under theirs.
+ * Nobody is ever drawn both ways, so whoever joined by name before the group
+ * turned anonymous is on neither list, and the page says how many.
  *
  * The left column holds the poster as people meet it and nothing else yet.
  * Editing the listing, cancelling it, and blocking a member are a later phase;
@@ -55,6 +59,7 @@ const ManageGroup = () => {
   const copiedTimer = useRef(null);
   const [copied, setCopied] = useState(false);
   const [members, setMembers] = useState(null);
+  const [membersAsOf, setMembersAsOf] = useState(null);
   const [membersTrouble, setMembersTrouble] = useState('');
 
   const { ready, club, requests } = useTracker(() => {
@@ -110,15 +115,13 @@ const ManageGroup = () => {
 
   // The list is a method's answer, not a subscription, so it is asked for
   // again whenever the count moves: an approval, a new member through the
-  // link, somebody leaving. Never for an anonymous group — the server would
-  // refuse, and asking is already the wrong thing to do.
+  // link, somebody leaving — and whenever the group turns anonymous or back,
+  // because who may be listed moves with it.
   //
-  // A refusal takes the list down. It used to leave the last one standing
-  // under the server's sentence, and the refusal most worth honouring is
-  // 'anonymous-group': the group went anonymous somewhere else, and this page
-  // drew every name beside the words saying nobody can see them.
+  // A refusal takes the list down; it used to leave the last one standing
+  // under the server's sentence.
   useEffect(() => {
-    if (!club?._id || !loaded || anonymous) {
+    if (!club?._id || !loaded) {
       setMembers(null);
       setMembersTrouble('');
       return undefined;
@@ -130,11 +133,26 @@ const ManageGroup = () => {
       }
       setMembersTrouble(error ? (error.reason || error.message) : '');
       setMembers(error ? null : list);
+      // The count this list answers to. The count arrives by subscription,
+      // ahead of the list it sets off, and for that round trip the two differ
+      // by whoever just joined — which is not somebody who is "not listed".
+      setMembersAsOf(memberCount);
     });
     return () => {
       active = false;
     };
   }, [club?._id, loaded, anonymous, memberCount]);
+
+  // The group went anonymous — here, in another tab, or by a member adding
+  // the tag 'recovery'. The names on screen come down NOW, not when the next
+  // answer arrives without them: for the length of that round trip this page
+  // would otherwise show every real name beside the words saying nobody sees
+  // who they are. The effect above has already asked again.
+  useEffect(() => {
+    if (anonymous) {
+      setMembers(null);
+    }
+  }, [anonymous]);
 
   useEffect(() => () => clearTimeout(copiedTimer.current), []);
 
@@ -153,11 +171,21 @@ const ManageGroup = () => {
   const linkMatters = isPrivate || settings.approveMembers;
   const inviteUrl = club.inviteToken ? `${window.location.origin}/join/${club.inviteToken}` : '';
   const topic = topicForClub(club);
-  // The count is everyone and the list is only who joined after the group
-  // stopped being anonymous, so the two can differ for good. The difference is
-  // said out loud: "3 members" over an empty list reads as something broken.
-  // Only for a group that was once anonymous, where that is what a gap means.
-  const unlisted = members && club.anonymousUntil ? Math.max(memberCount - members.length, 0) : 0;
+  // A row with a handle is somebody under their made-up name: whoever joined
+  // while the group was anonymous, whether or not it still is. While it is,
+  // nothing else is drawn, whatever arrived — an answer asked for a moment
+  // before the switch moved can still land after it.
+  const listed = (members || []).filter(member => (anonymous ? Boolean(member.handle) : true));
+  const hasMadeUpNames = listed.some(member => member.handle);
+  // The count is everyone and the list is not. The server sends nobody both
+  // by name and made-up — one membership seen both ways is that person's
+  // name in every anonymous group — so whoever joined by name before the
+  // group turned anonymous is on neither list, then and after it is switched
+  // back. The gap is said out loud: "3 members" over a short list reads as
+  // something broken. Only where anonymity is what a gap means.
+  const unlisted = members && membersAsOf === memberCount && (anonymous || club.anonymousUntil)
+    ? Math.max(memberCount - listed.length, 0)
+    : 0;
 
   const copyLink = () => {
     const done = () => {
@@ -194,27 +222,40 @@ const ManageGroup = () => {
     });
   };
 
-  // Every switch here is stored the moment it moves, and for all but one that
-  // is what the owner expects. Anonymous going OFF does less than it looks
-  // like: the server never lists the people who joined while nobody could see
-  // them ('clubs.members'), so the list that opens holds only who joins from
-  // then on. This used to promise the opposite — "you will be able to see the
-  // 3 people in this group" — and then drew "3 members" over an empty list.
-  // So the owner is told before the switch moves, not left to work it out
-  // from a count and a blank. With nobody in the group there is nothing to
+  // Every switch here is stored the moment it moves, and for all but this one
+  // that is what the owner expects. Anonymous going OFF does less than it looks
+  // like: the server never names the people who joined while nobody could see
+  // who they were ('clubs.members'), so they stay under their made-up names
+  // and only who joins from then on is shown by name. This used to promise the
+  // opposite — "you will be able to see the 3 people in this group". So the
+  // owner is told before the switch moves, not left to work it out from a
+  // list that did not change. With nobody in the group there is nothing to
   // tell them, and the switch is just a switch.
+  //
+  // Going ON takes something away for good, and had no sentence at all. The
+  // people listed by name leave the list — nobody is shown both ways — and
+  // switching back does not return them, because by then they were in the
+  // group while it was anonymous. An owner trying the switch to see what it
+  // does should hear that first. Asked only when there is a name to lose.
   const changePrivacy = patch => {
-    if (patch.anonymous !== false || memberCount === 0) {
+    const namesListed = listed.filter(member => !member.handle).length;
+    const asking = [
+      patch.anonymous === false && memberCount > 0 && {
+        title: 'Turn anonymous off?',
+        text: 'People who joined while it was anonymous keep their made-up names. You will see names only for who joins from now on.',
+        buttons: ['Keep it anonymous', 'Turn it off'],
+      },
+      patch.anonymous === true && namesListed > 0 && {
+        title: 'Turn anonymous on?',
+        text: `The ${namesListed === 1 ? 'person' : `${namesListed} people`} listed by name will not be listed any more, even if you turn it off again. New members appear under made-up names.`,
+        buttons: ['Leave it off', 'Turn it on'],
+      },
+    ].find(Boolean);
+    if (!asking) {
       change(patch);
       return;
     }
-    swal({
-      title: 'Turn anonymous off?',
-      text: 'People who joined while it was anonymous stay hidden. You will see only who joins from now on.',
-      icon: 'warning',
-      buttons: ['Keep it anonymous', 'Turn it off'],
-      dangerMode: true,
-    }).then(confirmed => {
+    swal({ ...asking, icon: 'warning', dangerMode: true }).then(confirmed => {
       if (confirmed) {
         change(patch);
       }
@@ -243,7 +284,7 @@ const ManageGroup = () => {
           <div className="mb-poster mb-poster-lg">
             <PosterArt
               topic={topic}
-              eyebrow={scheduleLabel(club.schedule) || club.meetingTime}
+              eyebrow={clubMeetingLine(club)}
               title={club.name}
               tagline={club.description}
               image={isPhoto(club.image) ? club.image : ''}
@@ -312,73 +353,68 @@ const ManageGroup = () => {
             </section>
           )}
 
-          {anonymous ? (
-            <section className="form-block" aria-labelledby="manage-group-members">
-              <h3 id="manage-group-members">Members</h3>
-              <p className="manage-count">{countLabel(memberCount)}</p>
-              <p className="panel-empty">This group is anonymous, so there is no list — only a count.</p>
-            </section>
-          ) : (
-            <>
-              {(settings.approveMembers || requests.length > 0) && (
-                <section className="form-block" aria-labelledby="manage-group-requests">
-                  <h3 id="manage-group-requests">Asking to join</h3>
-                  {requests.length === 0 && <p className="panel-empty">Nobody is waiting.</p>}
-                  {requests.map(request => (
-                    <div key={request._id} className="friend-row">
-                      <Image
-                        src={profileImagePath(request.person?.picture)}
-                        alt=""
-                        className="friend-avatar"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div>
-                        <div className="friend-name">{nameOf(request.person)}</div>
-                        <div className="friend-sub">Asked {formatShortDate(request.createdAt)}</div>
-                      </div>
-                      <div className="friend-actions">
-                        <button type="button" className="btn btn-soft-primary" onClick={() => respond(request, true)}>
-                          Approve
-                          <span className="visually-hidden">{` ${nameOf(request.person)}`}</span>
-                        </button>
-                        <button type="button" className="btn btn-outline-danger-soft" onClick={() => respond(request, false)}>
-                          Decline
-                          <span className="visually-hidden">{` ${nameOf(request.person)}`}</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </section>
-              )}
-
-              <section className="form-block" aria-labelledby="manage-group-members">
-                <h3 id="manage-group-members">Members</h3>
-                <p className="manage-count">{countLabel(memberCount)}</p>
-                {membersTrouble && <p className="panel-empty">{membersTrouble}</p>}
-                {(members || []).map(member => (
-                  <div key={member.userId} className="friend-row">
-                    <Image
-                      src={profileImagePath(member.picture)}
-                      alt=""
-                      className="friend-avatar"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div>
-                      <div className="friend-name">{nameOf(member)}</div>
-                      {member.joinedAt && <div className="friend-sub">Joined {formatShortDate(member.joinedAt)}</div>}
-                    </div>
+          {!anonymous && (settings.approveMembers || requests.length > 0) && (
+            <section className="form-block" aria-labelledby="manage-group-requests">
+              <h3 id="manage-group-requests">Asking to join</h3>
+              {requests.length === 0 && <p className="panel-empty">Nobody is waiting.</p>}
+              {requests.map(request => (
+                <div key={request._id} className="friend-row">
+                  <Image
+                    src={profileImagePath(request.person?.picture)}
+                    alt=""
+                    className="friend-avatar"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <div>
+                    <div className="friend-name">{nameOf(request.person)}</div>
+                    <div className="friend-sub">Asked {formatShortDate(request.createdAt)}</div>
                   </div>
-                ))}
-                {unlisted > 0 && (
-                  <p className="panel-empty">
-                    {unlisted} joined before this group stopped being anonymous. They stay unlisted.
-                  </p>
-                )}
-              </section>
-            </>
+                  <div className="friend-actions">
+                    <button type="button" className="btn btn-soft-primary" onClick={() => respond(request, true)}>
+                      Approve
+                      <span className="visually-hidden">{` ${nameOf(request.person)}`}</span>
+                    </button>
+                    <button type="button" className="btn btn-outline-danger-soft" onClick={() => respond(request, false)}>
+                      Decline
+                      <span className="visually-hidden">{` ${nameOf(request.person)}`}</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </section>
           )}
+
+          <section className="form-block" aria-labelledby="manage-group-members">
+            <h3 id="manage-group-members">Members</h3>
+            <p className="manage-count">{countLabel(memberCount)}</p>
+            {membersTrouble && <p className="panel-empty">{membersTrouble}</p>}
+            {hasMadeUpNames && <p className="panel-empty">Made-up names — the same person keeps the same one.</p>}
+            {/* One list for both kinds of row. A made-up row has a name and a
+                day and nothing else, so it is drawn with the face everybody
+                without a photo has; a later phase puts "Block" in the same
+                `friend-actions` slot on either kind. */}
+            {listed.map(member => (
+              <div key={member.handle || member.userId} className="friend-row">
+                <Image
+                  src={profileImagePath(member.picture)}
+                  alt=""
+                  className="friend-avatar"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <div>
+                  <div className="friend-name">{member.handle ? (member.anonymousName || 'No name yet') : nameOf(member)}</div>
+                  {member.joinedAt && <div className="friend-sub">Joined {formatShortDate(member.joinedAt)}</div>}
+                </div>
+              </div>
+            ))}
+            {unlisted > 0 && (
+              <p className="panel-empty">
+                {unlisted} joined before this group was anonymous. They are not listed.
+              </p>
+            )}
+          </section>
         </div>
       </div>
     </Container>

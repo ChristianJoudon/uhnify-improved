@@ -347,7 +347,14 @@ export const friendActivityPublication = selfId => ({
       children: [
         {
           find(sharer, edge) {
-            return ProfileClubs.collection.find(friendClubActivitySelector(friendOf(edge, selfId)));
+            // The row's own bookkeeping stays home. No flagged row can match this
+            // selector today — a membership made under anonymity is private while
+            // it lasts and stays private after — but "cannot match" is a property
+            // of three other files, and this is the one that sends.
+            return ProfileClubs.collection.find(
+              friendClubActivitySelector(friendOf(edge, selfId)),
+              { fields: { joinedAnonymous: 0 } },
+            );
           },
         },
         {

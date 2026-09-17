@@ -11,7 +11,7 @@
  * Adding a field to every card in the app is one entry here.
  */
 
-import { scheduleLabel } from '../../api/club/schedule';
+import { normalizeSchedule, scheduleLabel } from '../../api/club/schedule';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -113,7 +113,16 @@ export const clubMeetingLine = club => {
   if (meetingTime.includes(';')) {
     return meetingTime;
   }
-  return scheduleLabel(club?.schedule) || meetingTime;
+  // A monthly schedule that does not know its week knows LESS than the text it
+  // was read from. "Thursday - first and third of the month" printed here as
+  // "Monthly · Thu · 5 PM", the 5 PM being the default nobody wrote, and
+  // "every other month on Thursday" printed as "Monthly", which is untrue. A
+  // schedule made by the form is not affected: its text IS its label.
+  const schedule = normalizeSchedule(club?.schedule);
+  if (meetingTime && schedule && schedule.cadence === 'monthly' && !schedule.weeks) {
+    return meetingTime;
+  }
+  return scheduleLabel(schedule) || meetingTime;
 };
 
 export const CLUB_FIELDS = [

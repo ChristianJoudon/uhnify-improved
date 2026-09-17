@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Container } from 'react-bootstrap';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTracker } from 'meteor/react-meteor-data';
 import { EnvelopeOpen, Link45deg } from 'react-bootstrap-icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
+import { Profiles } from '../../api/profiles/Profiles';
 import { joinGroupAndTell } from '../utilities/joinGroup';
 
 /**
@@ -14,6 +16,13 @@ import { joinGroupAndTell } from '../utilities/joinGroup';
  * on this page comes from one method, 'clubs.inviteInfo', and that method says
  * deliberately little: the name, how many people are in it, and whether it is
  * anonymous. The rest is what joining shows.
+ *
+ * The one thing here that is not the method's is the person's own made-up
+ * name, which an anonymous group will know them by. It comes off their own
+ * profile, the only place a browser is ever sent it, and it is said BEFORE the
+ * button: "you will be a name on the organizer's list" is part of what is
+ * being agreed to, and "Sleepy Honu" is a kinder way to learn it than finding
+ * out afterwards.
  *
  * The token is read from the address and handed to two method calls. It is
  * never drawn, stored, or put into another address — it is a capability, and
@@ -34,6 +43,13 @@ const JoinGroup = () => {
   // person back to the owner for a new link they do not need.
   const [trouble, setTrouble] = useState('');
   const [joining, setJoining] = useState(false);
+
+  // Not waited for. The line it feeds is drawn when the name is there, and a
+  // page that held the invitation back for it would be slower for nothing.
+  const madeUpName = useTracker(() => {
+    Meteor.subscribe(Profiles.userPublicationName);
+    return Profiles.collection.findOne({ userId: Meteor.userId() })?.anonymousName;
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -109,12 +125,15 @@ const JoinGroup = () => {
         {/* Said before the button, because for the groups this exists for it is
             what decides whether the button gets pressed. "While", because that
             is as far as the promise goes for a group that is anonymous by its
-            owner's choice: they can switch it off, and the server then shows
-            them the list. A support or health group cannot be switched, but
-            'clubs.inviteInfo' does not say which kind this is, so the sentence
-            is the one that is true of both. */}
+            owner's choice: they can switch it off, and whoever joins AFTER
+            that is listed by name. A support or health group cannot be
+            switched, but 'clubs.inviteInfo' does not say which kind this is,
+            so the sentence is the one that is true of both. */}
         {invite.anonymous && (
-          <p>While this group is anonymous, nobody can see who is in it — not other members, and not the person who runs it.</p>
+          <p>While this group is anonymous, nobody sees who is in it. The person who runs it sees made-up names; other members see nothing.</p>
+        )}
+        {invite.anonymous && madeUpName && (
+          <p>You&apos;ll appear as <strong className="made-up-name">{madeUpName}</strong>.</p>
         )}
         <button type="button" className="btn btn-match" onClick={join} disabled={joining}>
           {joining ? 'Joining…' : 'Join'}

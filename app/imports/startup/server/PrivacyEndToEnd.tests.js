@@ -172,10 +172,14 @@ if (Meteor.isServer) {
       callAs(member, 'eventSwipes.record', eventId, 'going');
       assert.equal(Events.collection.findOne(eventId).goingCount, 1);
 
-      // 6. There is no list — not for the owner, not for an administrator.
+      // 6. The list is made-up names — for the owner and for an administrator
+      //    alike — and nothing on it says who: not an id, not a real name.
       const admin = makeUser({ admin: true });
-      assert.equal(errorFrom(() => callAs(owner, 'clubs.members', clubId)), 'anonymous-group');
-      assert.equal(errorFrom(() => callAs(admin, 'clubs.members', clubId)), 'anonymous-group');
+      const madeUp = callAs(owner, 'clubs.members', clubId);
+      assert.deepEqual(madeUp.map(row => Object.keys(row).sort()), [['anonymousName', 'handle', 'joinedAt']]);
+      assert.notInclude(JSON.stringify(madeUp), member);
+      assert.deepEqual(callAs(admin, 'clubs.members', clubId), madeUp);
+      assert.equal(errorFrom(() => callAs(member, 'clubs.members', clubId)), 'not-authorized');
       // And nothing the owner is sent ties the member to the group or its
       // meeting. (The people directory sends every profile; that is not it.)
       assert.deepEqual(
@@ -201,13 +205,13 @@ if (Meteor.isServer) {
 
       // 9. Every switch goes both ways, so the owner opens the group up again
       //    and takes anonymity off. It is public once more, and the person who
-      //    came in under the promise is still nobody's to see: not on the
-      //    owner's list, and not in the feed of a friend — who could as easily
-      //    have been the owner.
+      //    came in under the promise is still nobody's to see: a made-up name
+      //    on the owner's list, as before, and nothing in the feed of a friend
+      //    — who could as easily have been the owner.
       const opened = callAs(owner, 'Clubs.setPrivacy', clubId, { visibility: 'public', anonymous: false });
       assert.include(opened, { visibility: 'public', anonymous: false });
       assert.isTrue(everythingSentTo(stranger).some(doc => doc._id === clubId), 'public again');
-      assert.deepEqual(callAs(owner, 'clubs.members', clubId), []);
+      assert.deepEqual(callAs(owner, 'clubs.members', clubId), madeUp, 'the same made-up row, and never a name');
       assert.equal(Clubs.collection.findOne(clubId).memberCount, 1, 'still counted');
       assert.deepEqual(toldAbout(clubId), [], 'the membership');
       assert.deepEqual(toldAbout(eventId), [], 'and the RSVP');

@@ -8,7 +8,9 @@ import { EventClubs } from '../../api/events/EventClubs';
 import { parseMeetingTime } from '../../api/club/schedule';
 import { ensureRecommendationScaffold } from './RecommendationScaffold';
 import {
+  assignAnonymousNames,
   backfillListingCounts,
+  deriveMonthlyWeeks,
   dropRedundantCreatedBy,
   movePhotosOutOfDocuments,
   redactParticipationAudit,
@@ -156,6 +158,16 @@ syncDefaultProfiles();
 seedProfileClubs();
 seedEventClubs();
 migrateClubSchedules();
+// Straight after the schedules are derived, and over the ones the register
+// arrived with: the importer's "monthly" never said WHICH week, and the old
+// parser stored anything monthly as weekly, so the calendar drew "first and
+// third Thursday" every Thursday. On a fresh database only the importer's
+// eight need it; on an older one this is also what undoes the old parser.
+const rereadSchedules = deriveMonthlyWeeks();
+if (Object.values(rereadSchedules).some(count => count > 0)) {
+  console.log(`Re-read monthly schedules from their meeting text: ${rereadSchedules.weeks} now say which weeks they meet, `
+    + `${rereadSchedules.unknown} are monthly with the week unknown, ${rereadSchedules.cleared} cleared because no one schedule says what the text does.`);
+}
 // Nothing below depends on this, but the recommendation scaffold reads every
 // group and event whole, and a listing still carrying its photo is half a
 // megabyte of that reading — so the photos are out of the way before it runs.
@@ -177,6 +189,17 @@ if (Object.values(movedPhotos).some(count => count > 0)) {
 const redactedAuditEntries = redactParticipationAudit();
 if (redactedAuditEntries > 0) {
   console.log(`Took listing ids out of ${redactedAuditEntries} audit entries.`);
+}
+// After the default profiles above, so the accounts a fresh database starts
+// with have their made-up names from the first boot. The two numbers are all
+// that is said, here or anywhere: a name beside anything that could say whose
+// it is belongs in no log.
+const anonymousNames = assignAnonymousNames();
+if (anonymousNames.named + anonymousNames.failed > 0) {
+  const unnamed = anonymousNames.failed > 0
+    ? ` ${anonymousNames.failed} could not be named and will be tried again at the next boot.`
+    : '';
+  console.log(`Gave made-up names to ${anonymousNames.named} profiles.${unnamed}`);
 }
 // After seeding, so a database seeded before the register dropped the field
 // is cleaned on the same boot.

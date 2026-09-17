@@ -8,6 +8,7 @@ import PosterArt from '../components/PosterArt';
 import PrivacyToggles from '../components/PrivacyToggles';
 import ChipInput from '../components/form/ChipInput';
 import SchedulePicker from '../components/form/SchedulePicker';
+import { weekUnknown } from '../components/form/SchedulePickerModel';
 import { scheduleLabel } from '../../api/club/schedule';
 import { TEXT_LIMITS } from '../../api/listing/limits';
 import { isSensitiveListing } from '../../api/privacy/FriendActivityPrivacy';
@@ -58,7 +59,11 @@ const AddClub = () => {
   );
 
   const when = scheduleLabel(form.schedule);
-  const valid = form.name.trim() && form.description.trim() && form.location.trim() && form.schedule.days.length > 0;
+  // "Once a month" with every week unpicked is a group that would be labelled
+  // "Monthly" and put on no calendar at all. The edit page has to let that
+  // stand, because listings arrive that way; nothing new should start there.
+  const valid = form.name.trim() && form.description.trim() && form.location.trim()
+    && form.schedule.days.length > 0 && !weekUnknown(form.schedule);
 
   const pickImage = async event => {
     const input = event.target;
@@ -291,7 +296,7 @@ const AddClub = () => {
             <button id="submit" type="submit" className="btn btn-solid-primary" disabled={!valid || saving}>
               {saving ? 'Creating…' : 'Create group'}
             </button>
-            {!valid && <span className="field-hint">Name, what it&apos;s about, where, and at least one day.</span>}
+            {!valid && <span className="field-hint">Name, what it&apos;s about, where, at least one day — and which week, if it&apos;s monthly.</span>}
           </div>
         </form>
       </div>

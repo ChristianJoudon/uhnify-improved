@@ -4610,6 +4610,26 @@ div.btn-solid-primary button[type="submit"]:hover {
   min-width: 9rem;
 }
 
+/* A made-up name -----------------------------------------------------------
+   Who a person is inside an anonymous group ("Sleepy Honu"), wherever they
+   are told it: on an invitation, and on Customize. In ink inside a soft
+   sentence, because the name is the one thing the line is read for, and kept
+   on one line so it is never "Sleepy" at the end of one and "Honu" on the
+   next. */
+.made-up-name {
+  color: var(--mb-ink);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+/* On Customize the line follows the sharing switch's help and is about
+   something else, so it keeps its distance and is not indented under it. */
+.customize-alias {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+  color: var(--mb-ink-soft);
+}
+
 /* Chip input ------------------------------------------------------------- */
 
 .chip-input-box {
@@ -4701,15 +4721,109 @@ div.btn-solid-primary button[type="submit"]:hover {
   color: var(--mb-paper-bright);
 }
 
+/* These had no ring of their own, and the browser's is a thin blue line that
+   all but vanishes against a pill that is solid ink. The same two layers as
+   every other control: paper, then ink. */
+.day-pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--mb-paper-bright), 0 0 0 4px var(--mb-ink);
+}
+
+/* A pill that holds a word rather than a letter: which week of the month, how
+   long it runs. The same pill in every state; only the width follows the word. */
+.day-pill--word {
+  width: auto;
+  min-width: 42px;
+  padding: 0 0.9rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* Wraps, because a phone has room for the start or the end on a line and not
+   both. */
 .schedule-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: 0.9rem;
 }
 
 .schedule-row label {
-  flex: 1;
   margin-bottom: 0;
+}
+
+/* A time is nine characters wide. This took whatever the row had left, which
+   on a desktop was most of the card. */
+.schedule-row .schedule-time {
+  flex: 0 1 9.5rem;
+}
+
+/* One captioned control inside a row, with whatever it opens stacked beneath. */
+.schedule-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* A fixed basis rather than the content's. The length pills are wider than
+   the end time they replace, and sized by its content the whole group dropped
+   to the next line the moment somebody chose "Lasts". */
+.schedule-field--end {
+  flex: 1 1 15rem;
+}
+
+.schedule-field--end > .day-row {
+  margin-top: 0.5rem;
+}
+
+/* Three classes to outrank `.create-form input[type="time"]`, which makes
+   every time input in the form as wide as its box. */
+.schedule-picker .schedule-field input[type="time"] {
+  max-width: 9.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Segmented, as a field. Everywhere else it is a sentence on a toolbar, with
+   its caption to the left: "Sort [Soonest | Newest]". Here it is one field
+   among several, so it takes a field's shape — the caption above, in the
+   form's own label type. The selector is as long as it is because
+   `.mb-segmented-field.is-sm .mb-segmented-label` comes later in the file. */
+.schedule-picker .mb-segmented-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  gap: 0.3rem;
+}
+
+.schedule-picker .mb-segmented-field.is-sm .mb-segmented-label {
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--mb-ink);
+}
+
+/* Each segment is a <label>, and `.create-form label` makes every label in the
+   form a block with 0.9rem beneath it. */
+.schedule-picker .mb-segment {
+  display: flex;
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+
+/* Three cadences do not fit a phone on one line; "Every other week" is a third
+   of it alone. Rather than scroll the track or shorten the words, a segment may
+   give up width and set its words on two lines, which at 375px turns the track
+   into three even columns. On a wide card nothing shrinks and nothing wraps. */
+.schedule-picker .mb-segment span {
+  flex: 1;
+  white-space: normal;
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .schedule-picker .mb-segmented {
+    align-self: stretch;
+  }
 }
 
 .schedule-echo {

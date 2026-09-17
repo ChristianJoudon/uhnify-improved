@@ -7,7 +7,7 @@ import { Meteor } from 'meteor/meteor';
 import PosterArt from './PosterArt';
 import { imagePath, isPhoto, normalizeCategories } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';
-import { scheduleLabel } from '../../api/club/schedule';
+import { clubMeetingLine } from '../utilities/cardFields';
 
 /**
  * A club on the admin dashboard. It is the same poster object as the one on
@@ -20,7 +20,7 @@ import { scheduleLabel } from '../../api/club/schedule';
 const ClubItemAdmin = ({ club }) => {
   // Same source order as Club.jsx, so a club keeps its colour across the app.
   const topic = topicFor(normalizeCategories(club.categories), club.tags, club.name, club.description);
-  const when = scheduleLabel(club.schedule) || club.meetingTime;
+  const when = clubMeetingLine(club);
   // Only a genuinely uploaded photo becomes the poster face; the seeded logo
   // art stays the small footer mark.
   const photo = isPhoto(club.image) ? club.image : '';

@@ -7,9 +7,11 @@ import { Events } from '../events/Events';
 import { EventClubs } from '../events/EventClubs';
 import { EventSwipes } from '../events/EventSwipes';
 import { ProfileClubs } from '../profile/ProfileClubs';
+import { Profiles } from '../profiles/Profiles';
 import { AuditLog } from '../audit/AuditLog';
 import { RecommendationInteractions } from '../recommendations/RecommendationData';
 import { FRIEND_ACTIVITY_VISIBILITY } from '../privacy/FriendActivityPrivacy';
+import { anonymousNameFor } from '../privacy/anonymousNames';
 import { syncFriendActivityPrivacy } from '../privacy/friendActivitySync';
 import { accountNameOf, canManageListing, isListingOwner, ownedListingSelector } from '../listing/ownership';
 import { installAuditTrail } from '../../startup/server/auditTrail';
@@ -1176,15 +1178,37 @@ if (Meteor.isServer) {
       });
 
       /**
-       * What anonymous means here: not "hidden from the public" but "there
-       * is no list". The owner's decision names the owner.
+       * What anonymous means here: nobody is shown WHO. The person who runs
+       * the group — the owner's decision names the owner — and an
+       * administrator get a made-up name, a handle and the day somebody
+       * joined. This used to be a refusal, 'anonymous-group'; what it must
+       * never become is a row with anything in it that says who.
        */
-      it('shows an anonymous group’s members to nobody — not its owner, not an administrator', function () {
+      const MADE_UP_KEYS = ['anonymousName', 'handle', 'joinedAt'];
+      const madeUpNameOf = userId => Profiles.collection.findOne({ userId }).anonymousName;
+      const assertSaysNothingOf = (roster, userId) => {
+        const { email, firstName } = Profiles.collection.findOne({ userId });
+        const said = JSON.stringify(roster);
+        [userId, email, firstName].forEach(fact => assert.notInclude(said, fact));
+        roster.forEach(row => ['userId', 'firstName', 'lastName', 'picture', 'email']
+          .forEach(field => assert.notProperty(row, field)));
+      };
+
+      it('shows an anonymous group’s members under made-up names and nothing else — to its owner and an administrator, and to nobody besides', function () {
         const clubId = ownedClub({ anonymous: true });
         callAs(member, 'profileClubs.add', clubId);
-        assert.equal(errorFrom(() => callAs(owner, 'clubs.members', clubId)), 'anonymous-group');
-        assert.equal(errorFrom(() => callAs(admin, 'clubs.members', clubId)), 'anonymous-group');
+
+        const roster = callAs(owner, 'clubs.members', clubId);
+        assert.lengthOf(roster, 1);
+        assert.deepEqual(Object.keys(roster[0]).sort(), MADE_UP_KEYS);
+        assert.equal(roster[0].anonymousName, madeUpNameOf(member));
+        assert.instanceOf(roster[0].joinedAt, Date);
+        assertSaysNothingOf(roster, member);
+        assert.deepEqual(callAs(admin, 'clubs.members', clubId), roster, 'an administrator is shown the same page of names');
+
+        assert.equal(errorFrom(() => callAs(null, 'clubs.members', clubId)), 'not-logged-in');
         assert.equal(errorFrom(() => callAs(stranger, 'clubs.members', clubId)), 'not-authorized');
+        assert.equal(errorFrom(() => callAs(member, 'clubs.members', clubId)), 'not-authorized', 'being in it is not running it');
       });
 
       it('treats a sensitive group the same, whatever its own flag says', function () {
@@ -1192,44 +1216,120 @@ if (Meteor.isServer) {
         const byTag = ownedClub({ tags: ['lgbtq'] });
         [byCategory, byTag].forEach(clubId => {
           callAs(member, 'profileClubs.add', clubId);
-          assert.equal(errorFrom(() => callAs(owner, 'clubs.members', clubId)), 'anonymous-group');
-          assert.equal(errorFrom(() => callAs(admin, 'clubs.members', clubId)), 'anonymous-group');
+          [owner, admin].forEach(asker => {
+            const roster = callAs(asker, 'clubs.members', clubId);
+            assert.deepEqual(roster.map(row => Object.keys(row).sort()), [MADE_UP_KEYS]);
+            assertSaysNothingOf(roster, member);
+          });
+          assert.equal(errorFrom(() => callAs(member, 'clubs.members', clubId)), 'not-authorized');
         });
       });
 
       /**
-       * Every switch goes both ways, and an anonymous group's members are
-       * shown to nobody. The two meet here: off, read the list, on again.
-       * The switch still moves; it does not reach back to the people who
-       * joined because there was no list.
+       * The day and not the moment. An owner who saw a named list first has
+       * each person beside the instant they joined, and the same instants
+       * beside the made-up names would be a key from one list to the other.
        */
-      it('closes the list the moment the group turns anonymous, and never opens it on the people who joined while it was', function () {
+      it('says which day somebody joined an anonymous group, and never when', function () {
+        const clubId = ownedClub({ anonymous: true });
+        const joined = new Date('2026-09-03T08:41:17.123Z');
+        ProfileClubs.collection.insert({ userId: member, clubId, createdAt: joined, joinedAnonymous: true });
+        ProfileClubs.collection.insert({ userId: stranger, clubId, createdAt: new Date(joined.getTime() + 60 * 1000), joinedAnonymous: true });
+
+        const roster = callAs(owner, 'clubs.members', clubId);
+        assert.lengthOf(roster, 2);
+        assert.equal(roster[0].joinedAt.getTime(), roster[1].joinedAt.getTime(), 'a minute apart is the same day');
+        assert.notInclude(JSON.stringify(roster), '08:41');
+        // Within a day the order is the names', not the order people came in.
+        assert.deepEqual(roster.map(row => row.anonymousName), roster.map(row => row.anonymousName).sort((a, b) => a.localeCompare(b)));
+      });
+
+      /**
+       * Every switch goes both ways, and nobody in an anonymous group is
+       * shown by name. The two meet here: off, read the list, on again. The
+       * switch still moves; it does not reach back to the people who joined
+       * because nobody would see them.
+       */
+      it('never turns back the people who joined while a group was anonymous, and never shows anybody both ways', function () {
         const clubId = ownedClub();
         callAs(owner, 'Clubs.setPrivacy', clubId, { anonymous: true });
         callAs(member, 'profileClubs.add', clubId);
-        assert.equal(errorFrom(() => callAs(owner, 'clubs.members', clubId)), 'anonymous-group');
+        assert.isTrue(ProfileClubs.collection.findOne({ userId: member, clubId }).joinedAnonymous, 'the join says how it was made');
+        const promised = callAs(owner, 'clubs.members', clubId);
+        assertSaysNothingOf(promised, member);
 
         callAs(owner, 'Clubs.setPrivacy', clubId, { anonymous: false });
         assert.instanceOf(club(clubId).anonymousUntil, Date);
-        assert.deepEqual(callAs(owner, 'clubs.members', clubId), [], 'not to the owner');
-        assert.deepEqual(callAs(admin, 'clubs.members', clubId), [], 'and not to an administrator');
-        assert.equal(club(clubId).memberCount, 1, 'still counted');
+        assert.deepEqual(callAs(owner, 'clubs.members', clubId), promised, 'the same made-up row, to the owner');
+        assert.deepEqual(callAs(admin, 'clubs.members', clubId), promised, 'and to an administrator');
+        assert.equal(club(clubId).memberCount, 1, 'and the list now agrees with the count');
 
-        // After the promise ended, a join is an ordinary join.
+        // After the promise ended, a join is an ordinary join, and the two
+        // kinds of row stand on one list: the made-up ones first.
         ProfileClubs.collection.insert({ userId: stranger, clubId, createdAt: new Date(club(clubId).anonymousUntil.getTime() + 1) });
-        assert.deepEqual(callAs(owner, 'clubs.members', clubId).map(row => row.userId), [stranger]);
+        const mixed = callAs(owner, 'clubs.members', clubId);
+        assert.deepEqual(mixed.map(row => row.userId), [undefined, stranger]);
+        assert.deepEqual(mixed[0], promised[0]);
+        assertSaysNothingOf([mixed[0]], member);
+        assert.notProperty(mixed[1], 'anonymousName', 'a named row carries nobody’s made-up name, its own least of all');
 
-        // And doing it again moves the line forward, never back.
+        /**
+         * And on again. The owner has just been sent `stranger` by id, name
+         * and face, so `stranger` must not come back as a made-up row: the
+         * name is the same in every anonymous group, and the two answers
+         * side by side would be that name given away in all of them. This
+         * asserted the opposite once. They are counted and not listed — now,
+         * and after the switch goes back, when the one date the group keeps
+         * can no longer show that they joined by name.
+         */
         const first = club(clubId).anonymousUntil;
+        const strangersName = anonymousNameFor(stranger);
         callAs(owner, 'Clubs.setPrivacy', clubId, { anonymous: true });
+        [owner, admin].forEach(asker => {
+          const again = callAs(asker, 'clubs.members', clubId);
+          assert.deepEqual(again, promised, 'only the person who joined under the promise');
+          assert.notInclude(JSON.stringify(again), strangersName);
+        });
         callAs(owner, 'Clubs.setPrivacy', clubId, { anonymous: false });
-        assert.isAtLeast(club(clubId).anonymousUntil.getTime(), first.getTime());
+        assert.isAtLeast(club(clubId).anonymousUntil.getTime(), first.getTime(), 'the line moves forward, never back');
+        assert.deepEqual(callAs(owner, 'clubs.members', clubId), promised);
+        assert.equal(ProfileClubs.collection.find({ clubId }).count(), 2, 'and both are still in the group');
       });
 
-      it('leaves a membership with no date off the list of a group that was once anonymous', function () {
-        const clubId = ownedClub({ anonymousUntil: new Date(Date.now() - DAY_MS) });
-        ProfileClubs.collection.insert({ userId: member, clubId });
-        assert.deepEqual(callAs(owner, 'clubs.members', clubId), [], 'it cannot show that it came after');
+      /**
+       * A membership from before joins said how they were made. It may have
+       * been made under the promise, or read by name a dozen times; nothing
+       * on it says which. So it is shown neither way.
+       */
+      it('lists a membership that cannot say how it was made under no name at all', function () {
+        const once = ownedClub({ anonymousUntil: new Date(Date.now() - DAY_MS) });
+        ProfileClubs.collection.insert({ userId: member, clubId: once });
+        assert.deepEqual(callAs(owner, 'clubs.members', once), [], 'no date: it cannot show that it came after');
+
+        const still = ownedClub({ anonymous: true });
+        ProfileClubs.collection.insert({ userId: member, clubId: still, createdAt: new Date() });
+        assert.deepEqual(callAs(owner, 'clubs.members', still), [], 'no flag: it cannot show that it was not read by name first');
+
+        // With the flag, the date does not matter: the promise is the join's.
+        ProfileClubs.collection.insert({ userId: stranger, clubId: once, joinedAnonymous: true });
+        const roster = callAs(owner, 'clubs.members', once);
+        assert.deepEqual(roster.map(row => row.anonymousName), [madeUpNameOf(stranger)]);
+        assertSaysNothingOf(roster, stranger);
+      });
+
+      /**
+       * The second "Join" — the invite link opened again — re-judges a row
+       * and must not re-make it. Otherwise whoever the owner knows by name
+       * is one tap from a made-up row beside it.
+       */
+      it('does not turn a named member into a made-up one for joining twice', function () {
+        const clubId = ownedClub();
+        callAs(member, 'profileClubs.add', clubId);
+        assert.include(callAs(owner, 'clubs.members', clubId)[0], { userId: member });
+        callAs(owner, 'Clubs.setPrivacy', clubId, { anonymous: true });
+        callAs(member, 'profileClubs.add', clubId);
+        assert.notProperty(ProfileClubs.collection.findOne({ userId: member, clubId }), 'joinedAnonymous');
+        assert.deepEqual(callAs(owner, 'clubs.members', clubId), []);
       });
 
       it('lists everyone in a group that was never anonymous', function () {
@@ -1250,21 +1350,24 @@ if (Meteor.isServer) {
         callAs(member, 'profileClubs.add', byTag);
         callAs(owner, 'clubs.removeTag', byTag, 'recovery');
         assert.instanceOf(club(byTag).anonymousUntil, Date);
-        assert.deepEqual(callAs(owner, 'clubs.members', byTag), []);
+        assert.deepEqual(callAs(owner, 'clubs.members', byTag).map(row => Object.keys(row).sort()), [MADE_UP_KEYS]);
+        assertSaysNothingOf(callAs(owner, 'clubs.members', byTag), member);
 
         const byCategory = ownedClub({ categories: ['support_group'] });
         callAs(member, 'profileClubs.add', byCategory);
         const { name, owner: ownerName, description, location, meetingTime } = club(byCategory);
         callAs(admin, 'Clubs.update', byCategory, { name, owner: ownerName, description, location, meetingTime, categories: ['Outdoors'] });
         assert.instanceOf(club(byCategory).anonymousUntil, Date);
-        assert.deepEqual(callAs(owner, 'clubs.members', byCategory), []);
+        assert.deepEqual(callAs(owner, 'clubs.members', byCategory).map(row => Object.keys(row).sort()), [MADE_UP_KEYS]);
+        assertSaysNothingOf(callAs(owner, 'clubs.members', byCategory), member);
       });
     });
 
     /**
-     * 'clubs.members' tells an administrator "not even you". The operations
-     * log one page over used to read 'person@… profileClubs.add <the group's
-     * id> ok', one line per member, and every administrator is sent it.
+     * 'clubs.members' shows even an administrator nothing but made-up names.
+     * The operations log one page over used to read 'person@…
+     * profileClubs.add <the group's id> ok', one line per member, and every
+     * administrator is sent it.
      */
     describe('the audit trail', function () {
       before(function () {
