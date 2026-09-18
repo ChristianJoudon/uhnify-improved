@@ -219,3 +219,16 @@ with a headline. The page also reads the County of Kauaʻi's latest press
 releases straight from kauai.gov, cached for fifteen minutes; if the county's
 page cannot be reached the section says so rather than guessing. Nothing on
 the help page depends on the ingestion worker.
+
+### The situation report
+
+Above where-to-find-help, `/help` can carry a situation report: the island's
+position in a sentence, the short answers (flights, roads, power and water,
+beaches and parks), an area-by-area card with one of four disruption levels,
+the weeks ahead with when to check again, the questions everyone asks, and
+the official pages it all comes from. Every line has a source and the report
+says when it was last touched. It is written by hand from `/admin/help` —
+nothing is fetched — and turned on and off there; the lines stay when it is
+off. "Load the Lowell example" fills an empty report from
+`private/help-briefing-example.json`, the September 14, 2026 reading after
+Hurricane Lowell, for editing: it never turns the report on by itself.

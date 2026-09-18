@@ -4,7 +4,8 @@ import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Container } from 'react-bootstrap';
 import PageHead from '../components/PageHead';
-import { EmergencyState, HelpResources, RESOURCE_KINDS } from '../../api/help/Help';
+import SituationReport, { briefingSections } from '../components/SituationReport';
+import { EmergencyState, HelpBriefing, HelpBriefingItems, HelpResources, RESOURCE_KINDS } from '../../api/help/Help';
 import { formatShortDate } from '../utilities/helpers';
 
 /**
@@ -70,10 +71,17 @@ Resource.propTypes = {
 };
 
 const Help = () => {
-  const { emergency, resources, ready } = useTracker(() => {
-    const subs = [Meteor.subscribe(HelpResources.publicationName), Meteor.subscribe(EmergencyState.publicationName)];
+  const { emergency, briefing, briefingItems, resources, ready } = useTracker(() => {
+    const subs = [
+      Meteor.subscribe(HelpResources.publicationName),
+      Meteor.subscribe(EmergencyState.publicationName),
+      Meteor.subscribe(HelpBriefing.publicationName),
+      Meteor.subscribe(HelpBriefingItems.publicationName),
+    ];
     return {
       emergency: EmergencyState.collection.findOne(EmergencyState.id),
+      briefing: HelpBriefing.collection.findOne(HelpBriefing.id),
+      briefingItems: HelpBriefingItems.collection.find({}, { sort: { order: 1, createdAt: 1 } }).fetch(),
       resources: HelpResources.collection.find({}, { sort: { status: 1, name: 1 } }).fetch(),
       ready: subs.every(sub => sub.ready()),
     };
@@ -86,6 +94,11 @@ const Help = () => {
   const byKind = RESOURCE_KINDS
     .map(kind => ({ ...kind, items: resources.filter(resource => resource.kind === kind.value) }))
     .filter(kind => kind.items.length > 0);
+  const report = briefing?.active && briefingItems.length > 0 ? briefing : null;
+  const jumps = [
+    ...(report ? briefingSections(briefingItems) : []),
+    ...byKind,
+  ];
 
   return (
     <Container id="help" className="page-shell py-4 help-page">
@@ -93,15 +106,19 @@ const Help = () => {
         {emergency?.active && emergency.message ? emergency.message : 'Water, food, shelter, power, and where to ask. Checked by people, not guessed.'}
       </PageHead>
 
-      {byKind.length > 0 && (
-        <nav className="help-jump" aria-label="Kinds of help">
-          {byKind.map(kind => <a key={kind.value} href={`#help-${kind.value}`}>{kind.label}</a>)}
+      {jumps.length > 0 && (
+        <nav className="help-jump" aria-label="On this page">
+          {jumps.map(jump => <a key={jump.value} href={`#help-${jump.value}`}>{jump.label}</a>)}
         </nav>
       )}
 
-      {ready && byKind.length === 0 && (
+      {report && <SituationReport briefing={report} items={briefingItems} />}
+
+      {ready && jumps.length === 0 && (
         <p className="mb-panel">Nothing is listed right now. When there is, it will be here.</p>
       )}
+
+      {report && byKind.length > 0 && <h2 className="help-divider">Where to find help</h2>}
 
       {byKind.map(kind => (
         <section key={kind.value} className="help-section" id={`help-${kind.value}`} aria-labelledby={`help-${kind.value}-title`}>

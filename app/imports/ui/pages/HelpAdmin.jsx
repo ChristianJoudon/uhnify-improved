@@ -5,7 +5,8 @@ import { Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import swal from 'sweetalert';
 import PageHead from '../components/PageHead';
-import { EmergencyState, HelpResources, RESOURCE_KINDS, RESOURCE_STATUSES } from '../../api/help/Help';
+import BriefingEditor from '../components/BriefingEditor';
+import { EmergencyState, HelpBriefing, HelpBriefingItems, HelpResources, RESOURCE_KINDS, RESOURCE_STATUSES } from '../../api/help/Help';
 import { formatShortDate } from '../utilities/helpers';
 
 const report = error => error && swal('Not saved', error.reason || error.message, 'error');
@@ -19,11 +20,15 @@ const EMPTY = { kind: 'water', name: '', details: '', location: '', region: '', 
  * after a storm is "is it still there?", not "let me edit the description".
  */
 const HelpAdmin = () => {
-  const { emergency, resources } = useTracker(() => {
+  const { emergency, briefing, briefingItems, resources } = useTracker(() => {
     Meteor.subscribe(HelpResources.publicationName);
     Meteor.subscribe(EmergencyState.publicationName);
+    Meteor.subscribe(HelpBriefing.publicationName);
+    Meteor.subscribe(HelpBriefingItems.publicationName);
     return {
       emergency: EmergencyState.collection.findOne(EmergencyState.id),
+      briefing: HelpBriefing.collection.findOne(HelpBriefing.id),
+      briefingItems: HelpBriefingItems.collection.find({}, { sort: { order: 1, createdAt: 1 } }).fetch(),
       resources: HelpResources.collection.find({}, { sort: { kind: 1, name: 1 } }).fetch(),
     };
   });
@@ -42,18 +47,21 @@ const HelpAdmin = () => {
       setForm(EMPTY);
     });
   };
-  const edit = resource => setForm({
-    _id: resource._id,
-    kind: resource.kind,
-    name: resource.name,
-    details: resource.details || '',
-    location: resource.location || '',
-    region: resource.region || '',
-    hours: resource.hours || '',
-    status: resource.status,
-    sourcePublisher: resource.source?.publisher || '',
-    sourceUrl: resource.source?.url || '',
-  });
+  const edit = resource => {
+    setForm({
+      _id: resource._id,
+      kind: resource.kind,
+      name: resource.name,
+      details: resource.details || '',
+      location: resource.location || '',
+      region: resource.region || '',
+      hours: resource.hours || '',
+      status: resource.status,
+      sourcePublisher: resource.source?.publisher || '',
+      sourceUrl: resource.source?.url || '',
+    });
+    document.getElementById('help-admin-add')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const setStatus = (resource, status) => Meteor.call('help.setResourceStatus', resource._id, status, report);
   const remove = resource => swal({ title: `Take "${resource.name}" off the page?`, buttons: ['Keep it', 'Take it off'], dangerMode: true })
     .then(yes => yes && Meteor.call('help.removeResource', resource._id, report));
@@ -87,6 +95,10 @@ const HelpAdmin = () => {
         </div>
         {emergency?.updatedAt && <p className="field-hint">Last changed {formatShortDate(emergency.updatedAt)}.</p>}
       </section>
+
+      <BriefingEditor briefing={briefing} items={briefingItems} />
+
+      <h3 className="help-admin-divider">Where to find help</h3>
 
       <form className="form-block" onSubmit={save} aria-labelledby="help-admin-add">
         <h3 id="help-admin-add">{form._id ? 'Edit a place' : 'Add a place'}</h3>
