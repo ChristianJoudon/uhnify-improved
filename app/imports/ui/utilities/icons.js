@@ -12,6 +12,7 @@ export { default as ArrowCounterclockwise } from 'react-bootstrap-icons/dist/ico
 export { default as ArrowLeft } from 'react-bootstrap-icons/dist/icons/arrow-left';
 export { default as ArrowRepeat } from 'react-bootstrap-icons/dist/icons/arrow-repeat';
 export { default as ArrowRight } from 'react-bootstrap-icons/dist/icons/arrow-right';
+export { default as BoxArrowUpRight } from 'react-bootstrap-icons/dist/icons/box-arrow-up-right';
 export { default as Building } from 'react-bootstrap-icons/dist/icons/building';
 export { default as CalendarEvent } from 'react-bootstrap-icons/dist/icons/calendar-event';
 export { default as CalendarWeek } from 'react-bootstrap-icons/dist/icons/calendar-week';
@@ -19,6 +20,7 @@ export { default as CalendarX } from 'react-bootstrap-icons/dist/icons/calendar-
 export { default as Camera } from 'react-bootstrap-icons/dist/icons/camera';
 export { default as CashCoin } from 'react-bootstrap-icons/dist/icons/cash-coin';
 export { default as Check } from 'react-bootstrap-icons/dist/icons/check';
+export { default as Check2 } from 'react-bootstrap-icons/dist/icons/check2';
 export { default as Check2All } from 'react-bootstrap-icons/dist/icons/check2-all';
 export { default as CheckCircle } from 'react-bootstrap-icons/dist/icons/check-circle';
 export { default as Clipboard } from 'react-bootstrap-icons/dist/icons/clipboard';
@@ -31,6 +33,7 @@ export { default as DoorOpen } from 'react-bootstrap-icons/dist/icons/door-open'
 export { default as Envelope } from 'react-bootstrap-icons/dist/icons/envelope';
 export { default as EnvelopeOpen } from 'react-bootstrap-icons/dist/icons/envelope-open';
 export { default as ExclamationTriangle } from 'react-bootstrap-icons/dist/icons/exclamation-triangle';
+export { default as Flag } from 'react-bootstrap-icons/dist/icons/flag';
 export { default as Gear } from 'react-bootstrap-icons/dist/icons/gear';
 export { default as GeoAlt } from 'react-bootstrap-icons/dist/icons/geo-alt';
 export { default as GeoAltFill } from 'react-bootstrap-icons/dist/icons/geo-alt-fill';
@@ -49,6 +52,7 @@ export { default as Plus } from 'react-bootstrap-icons/dist/icons/plus';
 export { default as PlusCircle } from 'react-bootstrap-icons/dist/icons/plus-circle';
 export { default as Save } from 'react-bootstrap-icons/dist/icons/save';
 export { default as Search } from 'react-bootstrap-icons/dist/icons/search';
+export { default as Share } from 'react-bootstrap-icons/dist/icons/share';
 export { default as ShieldLock } from 'react-bootstrap-icons/dist/icons/shield-lock';
 export { default as Stars } from 'react-bootstrap-icons/dist/icons/stars';
 export { default as Telephone } from 'react-bootstrap-icons/dist/icons/telephone';

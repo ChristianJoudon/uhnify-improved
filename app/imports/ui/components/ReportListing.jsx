@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
+import { Flag } from '../utilities/icons';
 import { FLAG_NOTE_MAX, FLAG_REASONS } from '../../api/moderation/Moderation';
 
 /**
@@ -24,6 +25,7 @@ const ReportListing = ({ kind, listingId }) => {
   if (!open) {
     return (
       <button type="button" className="report-listing-open" onClick={() => setOpen(true)}>
+        <Flag size={13} aria-hidden="true" />
         Report this {kind === 'club' ? 'group' : 'event'}
       </button>
     );

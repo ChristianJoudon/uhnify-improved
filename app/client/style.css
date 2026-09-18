@@ -7094,14 +7094,27 @@ select.mb-field,
 .mb-chip--cancelled { color: #8a2f1f; font-style: normal; font-weight: 700; }
 .mb-chip--cancelled { background: #fbe4dd; }
 
+/* Quiet, and a button: a flag and a few words in the sheet's soft ink, which
+   darken under the pointer. It was an underlined line of body text. */
 .report-listing-open {
-  margin-top: 1.25rem;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
   border: 0;
+  border-radius: 999px;
   background: none;
-  font-size: 0.85rem;
-  text-decoration: underline;
-  opacity: 0.7;
+  color: var(--mb-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: background var(--mb-fast) var(--mb-ease), color var(--mb-fast) var(--mb-ease);
+}
+
+.report-listing-open:hover,
+.report-listing-open:focus-visible {
+  background: var(--mb-wood);
+  color: var(--mb-ink);
 }
 .report-listing { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--mb-line-soft); }
 .report-listing fieldset { border: 0; padding: 0; margin: 0 0 0.75rem; }
@@ -7118,8 +7131,117 @@ select.mb-field,
 .moderation-row-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .moderation-note { margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: 0.9rem; background: #fbe4dd; color: #5c2014; }
 
-.details-source { margin-top: 1.25rem; font-size: 0.85rem; opacity: 0.8; }
-.details-source a { text-decoration: underline; }
+/* The foot of the sheet: where the listing came from on one side, the way to
+   say it is wrong on the other, under a hairline. */
+.details-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--mb-line-soft);
+}
+
+.details-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--mb-ink-soft);
+}
+
+/* The publisher is a chip, like everything else on the sheet that is a name. */
+.details-source a,
+.details-source-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  background: var(--mb-wood);
+  color: var(--mb-match-deep);
+  font-weight: 650;
+  text-decoration: none;
+  transition: background var(--mb-fast) var(--mb-ease), transform var(--mb-fast) var(--mb-ease);
+}
+
+.details-source a:hover,
+.details-source a:focus-visible {
+  background: #f7d8c6;
+  color: var(--mb-match-deep);
+  transform: translateY(-1px);
+}
+
+/* The report form, once opened, takes the row to itself and brings no second rule. */
+.details-foot .report-listing,
+.details-foot .report-listing-done {
+  flex: 1 1 100%;
+  margin-top: 0;
+}
+
+.details-foot .report-listing {
+  padding-top: 0.25rem;
+  border-top: 0;
+}
+
+/* The sheet's facts: each icon in a soft disc, the row a size up from a
+   card's, because a sheet is read and a card is glanced at. */
+.details-fields {
+  gap: 0.6rem;
+}
+
+.details-fields .card-field {
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.details-fields .card-field svg {
+  box-sizing: content-box;
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0;
+  padding: 0.5rem;
+  border-radius: 50%;
+  background: var(--mb-wood);
+  color: var(--mb-match-deep);
+}
+
+.details-fields .card-field:first-child {
+  font-weight: 650;
+}
+
+/* On the sheet a category is a filled chip and a tag an outlined one. */
+.details-modal-grid .club-category-tag,
+.details-modal-grid .badge.club-category-tag {
+  padding: 0.42rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.details-modal-grid .club-category-tag--tag,
+.details-modal-grid .badge.club-category-tag--tag {
+  background: var(--mb-paper-bright) !important;
+  background-color: var(--mb-paper-bright) !important;
+  box-shadow: inset 0 0 0 1px var(--mb-line-control);
+  color: var(--mb-ink) !important;
+}
+
+.details-share svg {
+  color: var(--mb-match-deep);
+}
+
+/* A <button> wearing the link class keeps the browser's button chrome unless told otherwise. */
+button.mb-section-link {
+  padding: 0;
+  border: 0;
+  background: none;
+}
 
 .auth-consent { display: flex; gap: 0.6rem; align-items: flex-start; margin: 0.5rem 0 0.75rem; font-size: 0.9rem; font-weight: 400; }
 .auth-consent input { margin-top: 0.2rem; }
