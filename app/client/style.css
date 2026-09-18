@@ -7155,3 +7155,44 @@ select.mb-field,
 .help-status--open { background: #dcefdc; color: #1e5b2a; }
 .help-status--closed { background: #fbe4dd; color: #8a2f1f; }
 .help-footnote { margin-top: 2rem; font-size: 0.9rem; opacity: 0.8; }
+
+/* The situation report. Four reds for four levels of disruption, lightest
+   first, the darkest the banner's own; the level tints a card's edge and
+   its chip, never its text, because the text is the point. */
+.help-brief { margin-bottom: 1rem; }
+.help-brief-head h2 { font-size: 1.45rem; margin-bottom: 0; }
+.help-brief-updated { margin: 0 0 0.6rem; font-size: 0.85rem; opacity: 0.7; }
+.help-brief-lead { font-size: 1.05rem; line-height: 1.5; margin: 0 0 0.35rem; }
+.help-divider { font-size: 1.45rem; margin: 2.25rem 0 0; padding-top: 1.25rem; border-top: 2px solid var(--mb-line-strong); }
+.help-eyebrow { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.7; margin-bottom: 0.2rem; }
+.help-glance { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.75rem; }
+.help-glance-card { padding: 0.85rem 0.95rem; border: 1px solid var(--mb-line-soft); border-radius: 0.9rem; background: var(--mb-surface, #fff); }
+.help-glance-card strong { display: block; line-height: 1.35; }
+.help-glance-card p { margin: 0.35rem 0 0; font-size: 0.92rem; line-height: 1.45; }
+.help-legend { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; list-style: none; padding: 0; margin: 0 0 0.75rem; font-size: 0.85rem; }
+.help-legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.help-level { width: 0.9rem; height: 0.9rem; border-radius: 0.25rem; display: inline-block; }
+.help-level--interruptions, .help-level-chip--interruptions { background: #fbe4dd; color: #8a2f1f; }
+.help-level--recovering, .help-level-chip--recovering { background: #f4c3b3; color: #7a2818; }
+.help-level--limits, .help-level-chip--limits { background: #e58c72; color: #4d150a; }
+.help-level--restricted, .help-level-chip--restricted { background: #8a2f1f; color: #fff; }
+.help-areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0.75rem; }
+.help-area { padding: 0.85rem 0.95rem; border: 1px solid var(--mb-line-soft); border-left-width: 5px; border-radius: 0.9rem; background: var(--mb-surface, #fff); }
+.help-area--interruptions { border-left-color: #fbe4dd; }
+.help-area--recovering { border-left-color: #f4c3b3; }
+.help-area--limits { border-left-color: #e58c72; }
+.help-area--restricted { border-left-color: #8a2f1f; }
+.help-area-advice { margin: 0.35rem 0 0.5rem; line-height: 1.45; }
+.help-area-facts { margin: 0; font-size: 0.9rem; line-height: 1.45; }
+.help-area-facts dt { font-weight: 700; margin-top: 0.35rem; }
+.help-area-facts dd { margin: 0; }
+.help-recheck { font-size: 0.9rem; font-weight: 600; }
+.help-links { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.35rem 1rem; }
+.help-links a { text-decoration: underline; }
+.help-admin-divider { margin-top: 2rem; padding-top: 1rem; border-top: 2px solid var(--mb-line-strong); }
+/* "Edit" scrolls to the form; the sticky bar must not cover its heading.
+   The jump links on the public page land under the same bar. */
+.help-page .help-section, .help-page .help-brief, #help-admin-brief-item, #help-admin-add { scroll-margin-top: 5.5rem; }
+@media (max-width: 480px) {
+  .help-area .help-resource-head { flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+}
