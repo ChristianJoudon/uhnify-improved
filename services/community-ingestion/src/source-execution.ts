@@ -1,3 +1,4 @@
+import { load } from 'cheerio';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { ManualSupportAdapter } from './adapters/manual-support.js';
@@ -15,16 +16,33 @@ type Page = { url: string; mediaType: string; text: string };
 
 const decode = (bytes: Uint8Array): string => new TextDecoder('utf-8', { fatal: true }).decode(bytes);
 
-const requestFor = (source: SourceDefinition, purpose: string): PlannedRequest | undefined => {
-  const endpoint = source.endpoints.find(candidate => candidate.purpose === purpose);
-  if (!endpoint) return undefined;
-  return {
-    method: endpoint.method,
-    url: endpoint.urlTemplate,
-    ...(endpoint.headers ? { headers: endpoint.headers } : {}),
-    ...(typeof endpoint.bodyTemplate === 'string' ? { body: endpoint.bodyTemplate } : {}),
-  };
+const kauaiDate = (offsetDays: number): string => {
+  // Kauaʻi is UTC−10 all year; the date the island is on, plus an offset.
+  const date = new Date(Date.now() - 10 * 3_600_000 + offsetDays * 86_400_000);
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
 };
+
+/**
+ * The dates a template may ask for: {START_DATE} and {END_DATE} are the
+ * polling window's edges, {DATE+N} is N days from today. A Tribe endpoint
+ * without an end_date answers with two years of a weekly hula class;
+ * AlohaCalendar caps a call at fifty rows, so its endpoints are windows.
+ */
+const withDates = (template: string, source: SourceDefinition): string => template
+  .replaceAll('{START_DATE}', kauaiDate(-(source.polling.lookBackDays ?? 0)))
+  .replaceAll('{END_DATE}', kauaiDate(source.polling.lookAheadDays))
+  .replace(/[{]DATE\+(\d+)[}]/g, (_match, days: string) => kauaiDate(Number(days)));
+
+const requestsFor = (source: SourceDefinition, purpose: string): PlannedRequest[] => source.endpoints
+  .filter(candidate => candidate.purpose === purpose)
+  .map(endpoint => ({
+    method: endpoint.method,
+    url: withDates(endpoint.urlTemplate, source),
+    ...(endpoint.headers ? { headers: endpoint.headers } : {}),
+    ...(typeof endpoint.bodyTemplate === 'string' ? { body: withDates(endpoint.bodyTemplate, source) } : {}),
+  }));
+
+const requestFor = (source: SourceDefinition, purpose: string): PlannedRequest | undefined => requestsFor(source, purpose)[0];
 
 const fetchedPage = (result: SafeHttpResult): Page => ({
   url: result.sourceUrl,
@@ -155,24 +173,73 @@ const fetchPages = async (
   // generic order took the collection page first and found nothing in it.
   const bySitemap = (source.adapterConfig as { sitemap?: boolean }).sitemap === true;
   const fallback = requestFor(source, 'FALLBACK');
-  const request = (bySitemap ? requestFor(source, 'DISCOVERY') : undefined)
-    ?? fallback ?? requestFor(source, 'COLLECTION') ?? requestFor(source, 'DISCOVERY');
-  if (!request) throw new Error(`${source.id} has no fetchable endpoint`);
-  if (/[{][A-Z0-9_]+[}]/.test(request.url)) throw new Error(`${source.id} endpoint requires an unimplemented discovery substitution`);
-  const first = await client.fetch(request, source.httpPolicy);
-  const pages = [fetchedPage(first)];
-  if (/xml/.test(first.mediaType)) {
-    for (const url of sitemapLinks(pages[0]?.text ?? '', source)) {
-      try {
-        const detail = await client.fetch({ method: 'GET', url }, source.httpPolicy);
-        pages.push(fetchedPage(detail));
-      } catch {
-        // A partial sitemap still yields review candidates from the detail
-        // pages that were independently available.
+  // Every COLLECTION endpoint is fetched, not the first: an arts council with
+  // four public calendars is one source, and an API that answers fifty rows a
+  // call is asked in windows.
+  const discovery = bySitemap ? requestFor(source, 'DISCOVERY') : undefined;
+  const requests = discovery ? [discovery]
+    : fallback ? [fallback]
+      : requestsFor(source, 'COLLECTION').length ? requestsFor(source, 'COLLECTION')
+        : requestsFor(source, 'DISCOVERY').slice(0, 1);
+  if (!requests.length) throw new Error(`${source.id} has no fetchable endpoint`);
+  const pages: Page[] = [];
+  for (const [index, request] of requests.entries()) {
+    if (/[{][A-Z0-9_+]+[}]/.test(request.url)) throw new Error(`${source.id} endpoint requires an unimplemented discovery substitution`);
+    let page: Page;
+    try {
+      page = fetchedPage(await client.fetch(request, source.httpPolicy));
+    } catch (error) {
+      // The first window failing is the source failing; a later one is a
+      // partial read, and the pages already in hand are still worth reviewing.
+      if (index === 0) throw error;
+      continue;
+    }
+    pages.push(page);
+    if (/xml/.test(page.mediaType)) {
+      for (const url of sitemapLinks(page.text, source)) {
+        try {
+          const detail = await client.fetch({ method: 'GET', url }, source.httpPolicy);
+          pages.push(fetchedPage(detail));
+        } catch {
+          // A partial sitemap still yields review candidates from the detail
+          // pages that were independently available.
+        }
+      }
+    } else if (/html/.test(page.mediaType)) {
+      for (const url of detailLinks(page, source)) {
+        try {
+          const detail = await client.fetch({ method: 'GET', url }, source.httpPolicy);
+          pages.push(fetchedPage(detail));
+        } catch {
+          // Same as a sitemap: what could be read is read.
+        }
       }
     }
   }
   return composite(source, pages);
+};
+
+/**
+ * The event pages a list page links to, for a site whose list carries no
+ * dates a parser can read but whose detail pages carry schema.org Event
+ * (Squarespace and Wix event lists both work this way). The register's
+ * `detailLinkSelector` says which links; the same host as the list, no
+ * repeats, and at most the polling page budget, so a directory of a
+ * thousand links is not a thousand fetches.
+ */
+const detailLinks = (page: Page, source: SourceDefinition): string[] => {
+  const selector = (source.adapterConfig as { detailLinkSelector?: string }).detailLinkSelector;
+  if (!selector || !['JSON_LD_HTML', 'SOURCE_HTML'].includes(source.adapterKind)) return [];
+  const $ = load(page.text);
+  const host = new URL(page.url).host;
+  const links = new Set<string>();
+  $(selector).each((_index, element) => {
+    const href = $(element).attr('href');
+    if (!href) return;
+    const url = safeUrl(new URL(href, page.url).toString());
+    if (url && new URL(url).host === host && url.split('#')[0] !== page.url.split('#')[0]) links.add(url.split('#')[0]!);
+  });
+  return [...links].slice(0, Math.min(source.polling.maxPages, 20));
 };
 
 /**

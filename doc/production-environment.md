@@ -196,18 +196,39 @@ Clearing a source for automation is a decision recorded in the registry
 (`app/private/community-sources.v1.json`): set `permission` to
 `AUTOMATED_ALLOWED`, `enabled` to `true`, put a name in `steward` and the
 date in `lastVerifiedAt`. The Meteor loader and the registry validator both
-refuse an enabled source without those. As of 2026-09-17 nine sources are
-cleared — the ones that publish a feed or an API, and the County of Kauaʻi's
-pages — and five scraped news and venue pages still await the operator's
-judgment (`SRC-008`, `SRC-009`, `SRC-012`, `SRC-013`, `SRC-014`). Two of the
-county's three are cleared but switched off: the parks page (`SRC-010`) no
-longer publishes the PDFs its adapter watched for, and the press releases
-(`SRC-011`) are notices rather than events — the emergency hub will give
-them a kind of their own; enabling them today would fill the review queue
-with dateless items. Google's
-`calendar.google.com/robots.txt` disallows crawlers, and the KKCR entry is a
-public ICS feed the station embeds for subscription: consuming it four times
-a day is what it is for, not crawling.
+refuse an enabled source without those. After the source sweep of
+2026-09-17 (seven search angles, sixty-five sites probed for robots, terms
+and a machine-readable feed) the registry holds 37 sources, 27 of them
+enabled: island-wide calendars (Kauaʻi Connect, AlohaCalendar's public API,
+The Garden Island's CitySpark calendar, Hawaiʻi Public Radio's Kauaʻi
+filter), venues and organisations that run The Events Calendar (Coconut
+Marketplace, The Shops at Kukuiʻula, Princeville Center, Anaina Hou, the
+Philippine Cultural Center, the Hanalei canoe club), public Google
+calendars (Garden Island Arts Council's four, Kauaʻi Society of Artists,
+Hawaiʻi Children's Theatre, Kauaʻi Sailing), MTB Kauaʻi's Luma feed, and
+event lists whose detail pages carry schema.org (Hanalei Town, Kauaʻi Pride,
+YWCA, Storybook Theatre).
+
+Endpoint templates may carry `{START_DATE}`, `{END_DATE}` (the polling
+window) and `{DATE+N}`; every `COLLECTION` endpoint of a source is fetched,
+so a source can be four calendars or four date windows. A `STATIC_JSON`
+source with `timestampsAreLocal: true` reads a publisher's "13:00Z" as 1 PM
+on Kauaʻi, which is what AlohaCalendar and CitySpark mean by it.
+
+Left switched off, each for a recorded reason: Kanu Hawaiʻi (`SRC-008`,
+terms forbid automated access — `PROHIBITED` until they say otherwise),
+Kauaʻi Now (`SRC-009`, its calendar is per-day JSON cache files on another
+host and needs an adapter of its own), the county parks page (`SRC-010`,
+programmes moved into a Cloudflare-gated WebTrac catalogue — `PAUSED`), the
+press releases (`SRC-011`, read live by the help page instead), Kukui Grove
+(`SRC-014`, a JavaScript-only shell — its events arrive through Hawaiʻi
+Public Radio's list), and princeville.com (`SRC-032`, cleared, the generic
+HTML parser cannot date its month pages yet). Eventbrite, Meetup,
+AllEvents, Bandsintown and Patch all forbid scraping in their terms and are
+not in the registry. Google's `calendar.google.com/robots.txt` disallows
+crawlers, and every Google-calendar entry is a public ICS feed its owner
+embeds for subscription: consuming it four times a day is what it is for,
+not crawling.
 
 ## The help page and the emergency banner
 
