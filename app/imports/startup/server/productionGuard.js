@@ -170,6 +170,10 @@ export const settingsWarnings = (settings, { env = {} } = {}) => {
     warnings.push('No mail transport is configured (MAIL_URL is unset and settings.packages.email is absent), so password reset and address verification cannot send; Meteor prints those emails here instead.');
   }
 
+  if (!config.public?.operator?.email) {
+    warnings.push('public.operator.email is unset, so the privacy policy and the terms cannot say who runs the site or how to reach them.');
+  }
+
   const rootUrl = environment.ROOT_URL;
   if (!rootUrl) {
     warnings.push('ROOT_URL is unset, so links in email cannot be built.');

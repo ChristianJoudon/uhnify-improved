@@ -9,6 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { Profiles } from '../../api/profiles/Profiles';
 import { TEXT_LIMITS } from '../../api/listing/limits';
 import { normalizeCategories, profileImagePath } from '../utilities/helpers';
+import AccountSecurity from '../components/AccountSecurity';
 import { INTEREST_TOPIC_KEYS, TOPICS, topicFor } from '../utilities/topics';
 
 /** Stored and displayed at the same size — see `shrink`. */
@@ -326,6 +327,12 @@ const Settings = () => {
             </p>
           )}
         </section>
+      </div>
+      <div className="create-layout">
+        <div />
+        <div>
+          <AccountSecurity />
+        </div>
       </div>
     </Container>
   );

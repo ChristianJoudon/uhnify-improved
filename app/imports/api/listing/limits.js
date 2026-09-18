@@ -197,3 +197,11 @@ export const splitImageDataUrl = value => {
   const match = typeof value === 'string' ? DATA_URL_PREFIX.exec(value) : null;
   return match ? { contentType: `image/${match[1]}`, data: value.slice(match[0].length) } : null;
 };
+
+/**
+ * The shortest password sign-up accepts. Checked in the browser only, and
+ * honestly so: Meteor hashes a password before it leaves the page, so the
+ * server never sees its length. Eight is the floor that stops "a", not a
+ * claim of strength; a reset link, not a rule, is what saves a weak one.
+ */
+export const MIN_PASSWORD_LENGTH = 8;

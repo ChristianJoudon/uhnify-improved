@@ -53,6 +53,23 @@ const requireLoggedIn = (userId) => {
   }
 };
 
+/**
+ * Posting needs a verified address. There is no captcha here and there will
+ * not be one; this is what makes a hundred throwaway accounts cost a hundred
+ * inboxes. Judged on the server only — a browser is not sent other people's
+ * `emails`, and its own copy can lag a click behind the mail.
+ */
+const requireVerifiedEmail = userId => {
+  requireLoggedIn(userId);
+  if (!Meteor.isServer || Roles.userIsInRole(userId, 'admin')) {
+    return;
+  }
+  const user = Meteor.users.findOne(userId, { fields: { emails: 1 } });
+  if (!user?.emails?.some(entry => entry.verified)) {
+    throw new Meteor.Error('email-unverified', 'Confirm your email address first — the link is in your inbox. Check Settings to have it sent again.');
+  }
+};
+
 const requireAdmin = (userId) => {
   requireLoggedIn(userId);
   if (!Roles.userIsInRole(userId, 'admin')) {
@@ -948,7 +965,7 @@ Meteor.methods({
       anonymous: Match.Optional(Boolean),
       approveMembers: Match.Optional(Boolean),
     });
-    requireLoggedIn(this.userId);
+    requireVerifiedEmail(this.userId);
     const listing = {
       name: checkText(clubData.name, 'name', 'Name', { required: true }),
       description: checkText(clubData.description, 'description', 'Description'),
@@ -1305,7 +1322,7 @@ Meteor.methods({
       visibility: Match.Optional(VISIBILITY),
       anonymous: Match.Optional(Boolean),
     });
-    requireLoggedIn(this.userId);
+    requireVerifiedEmail(this.userId);
     const contactEmail = contactEmailOf(eventData.email);
 
     const hostClubID = parseNumericId(eventData.eventID, 'host club ID');

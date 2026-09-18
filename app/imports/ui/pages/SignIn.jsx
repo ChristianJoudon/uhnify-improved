@@ -98,7 +98,7 @@ const SignIn = () => {
         </form>
 
         <p className="auth-alt">
-          New here? <Link to="/signup">Create an account</Link>
+          New here? <Link to="/signup">Create an account</Link> · <Link to="/forgot-password">Forgot your password?</Link>
         </p>
 
         {devAccounts().length > 0 && (
