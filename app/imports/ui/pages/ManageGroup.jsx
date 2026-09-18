@@ -5,7 +5,7 @@ import { Container, Image } from 'react-bootstrap';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import swal from 'sweetalert';
-import { ArrowRepeat, Clipboard, ClipboardCheck } from 'react-bootstrap-icons';
+import { ArrowRepeat, Clipboard, ClipboardCheck } from '../utilities/icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import PosterArt from '../components/PosterArt';

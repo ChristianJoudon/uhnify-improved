@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { X } from 'react-bootstrap-icons';
+import { X } from '../../utilities/icons';
 
 /**
  * Free-text entries as chips: type and press Enter (or comma) to commit, click

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
 /**
@@ -10,16 +10,25 @@ import PropTypes from 'prop-types';
  * page body: "Edit", "Start swiping". Anything more than one belongs in a
  * toolbar underneath.
  */
-const PageHead = ({ title, children, action, eyebrow }) => (
-  <header className="page-intro">
-    {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-    <div className="page-intro-row">
-      <h1>{title}</h1>
-      {action}
-    </div>
-    {children && <p>{children}</p>}
-  </header>
-);
+const PageHead = ({ title, children, action, eyebrow }) => {
+  // The tab reads the page's name, not the same word on every route — it is
+  // what a screen reader announces on arrival and what a bookmark is called.
+  useEffect(() => {
+    const name = typeof title === 'string' ? title : '';
+    document.title = name ? `${name} · MatchBook` : 'MatchBook';
+    return () => { document.title = 'MatchBook'; };
+  }, [title]);
+  return (
+    <header className="page-intro">
+      {eyebrow && <span className="eyebrow">{eyebrow}</span>}
+      <div className="page-intro-row">
+        <h1>{title}</h1>
+        {action}
+      </div>
+      {children && <p>{children}</p>}
+    </header>
+  );
+};
 
 PageHead.propTypes = {
   title: PropTypes.node.isRequired,

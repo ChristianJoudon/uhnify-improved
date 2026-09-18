@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
-import { Camera } from 'react-bootstrap-icons';
+import { Camera } from '../utilities/icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Profiles } from '../../api/profiles/Profiles';
 import { TEXT_LIMITS } from '../../api/listing/limits';

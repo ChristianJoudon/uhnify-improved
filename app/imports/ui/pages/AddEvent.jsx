@@ -4,7 +4,7 @@ import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import { useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
-import { Camera, Trash } from 'react-bootstrap-icons';
+import { Camera, Trash } from '../utilities/icons';
 import PosterArt from '../components/PosterArt';
 import PrivacyToggles from '../components/PrivacyToggles';
 import LoadingSpinner from '../components/LoadingSpinner';

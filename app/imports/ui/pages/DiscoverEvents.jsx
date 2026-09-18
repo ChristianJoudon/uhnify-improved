@@ -15,7 +15,7 @@ import {
   People,
   PlusCircle,
   XLg,
-} from 'react-bootstrap-icons';
+} from '../utilities/icons';
 import { Events, NOT_CALLED_OFF } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';
 import { Clubs } from '../../api/club/Club';

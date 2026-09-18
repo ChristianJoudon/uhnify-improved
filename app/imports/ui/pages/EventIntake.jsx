@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Container } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import swal from 'sweetalert';
 import {
   ArrowLeft,
   ArrowClockwise,
@@ -13,9 +15,7 @@ import {
   Inbox,
   PlayFill,
   ShieldLock,
-} from 'react-bootstrap-icons';
-import { Link } from 'react-router-dom';
-import swal from 'sweetalert';
+} from '../utilities/icons';
 import {
   CommunitySources,
   INGESTION_PUBLICATIONS,

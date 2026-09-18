@@ -20,3 +20,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 // Override default Bootstrap styles.
 import './style.css';
+
+// Meteor writes the <html> element itself, so the document's language is set
+// here rather than in main.html. Screen readers pick their voice from it.
+document.documentElement.lang = 'en';

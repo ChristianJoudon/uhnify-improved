@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { PencilSquare, Trash } from 'react-bootstrap-icons';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
+import { PencilSquare, Trash } from '../utilities/icons';
 import PosterArt from './PosterArt';
 import { imagePath, isPhoto, normalizeCategories } from '../utilities/helpers';
 import { topicFor } from '../utilities/topics';

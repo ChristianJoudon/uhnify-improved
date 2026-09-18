@@ -3,7 +3,7 @@ import { Meteor } from 'meteor/meteor';
 import { Container } from 'react-bootstrap';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
-import { EnvelopeOpen, Link45deg } from 'react-bootstrap-icons';
+import { EnvelopeOpen, Link45deg } from '../utilities/icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import { Profiles } from '../../api/profiles/Profiles';

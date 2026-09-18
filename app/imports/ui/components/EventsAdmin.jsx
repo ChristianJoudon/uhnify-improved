@@ -1,9 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { GeoAlt, PencilSquare, Trash } from 'react-bootstrap-icons';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
+import { GeoAlt, PencilSquare, Trash } from '../utilities/icons';
 import PosterArt from './PosterArt';
 import { formatEventDate, isPhoto } from '../utilities/helpers';
 import { topicForEvent } from '../utilities/topics';

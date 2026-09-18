@@ -141,7 +141,7 @@ const Landing = () => {
         {upcoming.length > 0 && (
           <section className="mb-section">
             <div className="mb-section-head">
-              <h2>Happening right now, nearby</h2>
+              <h2>Coming up nearby</h2>
               <Link className="mb-section-link" to="/upcoming-events">See all</Link>
             </div>
             <div className="landing-wall">

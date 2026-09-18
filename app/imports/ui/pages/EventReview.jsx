@@ -8,6 +8,8 @@ import { Meteor } from 'meteor/meteor';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Container } from 'react-bootstrap';
 import moment from 'moment-timezone';
+import { Link } from 'react-router-dom';
+import swal from 'sweetalert';
 import {
   ArrowLeft,
   ArrowRepeat,
@@ -20,9 +22,7 @@ import {
   Search,
   ShieldLock,
   X,
-} from 'react-bootstrap-icons';
-import { Link } from 'react-router-dom';
-import swal from 'sweetalert';
+} from '../utilities/icons';
 import {
   CommunitySources,
   INGESTION_PUBLICATIONS,

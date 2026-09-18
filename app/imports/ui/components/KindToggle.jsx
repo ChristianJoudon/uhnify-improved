@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { CalendarEvent, People } from 'react-bootstrap-icons';
+import { CalendarEvent, People } from '../utilities/icons';
 
 /**
  * Events or groups.

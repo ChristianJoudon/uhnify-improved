@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
-import { ArrowLeft, GeoAlt, InfoCircle } from 'react-bootstrap-icons';
+import { ArrowLeft, GeoAlt, InfoCircle } from '../utilities/icons';
 import CardFields from './CardFields';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
 import { isPhoto } from '../utilities/helpers';
