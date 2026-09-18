@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container } from 'react-bootstrap';
-import { ShieldLock } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
+import { ShieldLock } from '../utilities/icons';
 import PageHead from '../components/PageHead';
 
 /**

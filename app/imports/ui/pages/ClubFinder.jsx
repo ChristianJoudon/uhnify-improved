@@ -5,7 +5,7 @@ import { Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
-import { GeoAlt, GeoAltFill, Search, X } from 'react-bootstrap-icons';
+import { GeoAlt, GeoAltFill, Search, X } from '../utilities/icons';
 import { Clubs } from '../../api/club/Club';
 import { Events, NOT_CALLED_OFF } from '../../api/events/Events';
 import { EventSwipes } from '../../api/events/EventSwipes';

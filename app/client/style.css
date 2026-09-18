@@ -7126,3 +7126,9 @@ select.mb-field,
 .legal-page { max-width: 44rem; }
 .legal-page h2 { font-size: 1.15rem; margin-top: 1.75rem; }
 .legal-page p, .legal-page li { line-height: 1.55; }
+
+/* iOS Safari zooms the page into any text control smaller than 16px on focus,
+   and then leaves it zoomed. The controls are 15.2px on a phone. */
+@media (max-width: 767px) {
+  input, select, textarea, .mb-field { font-size: 16px; }
+}

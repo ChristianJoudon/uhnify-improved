@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { motion } from 'framer-motion';
 import swal from 'sweetalert';
-import { CalendarX, Stars } from 'react-bootstrap-icons';
+import { CalendarX, Stars } from '../utilities/icons';
 import { Events } from '../../api/events/Events';
 import { Clubs } from '../../api/club/Club';
 import { ProfileClubs } from '../../api/profile/ProfileClubs';

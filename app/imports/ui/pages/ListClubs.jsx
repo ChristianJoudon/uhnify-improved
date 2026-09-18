@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import swal from 'sweetalert';
 import { motion } from 'framer-motion';
-import { Collection, DoorOpen } from 'react-bootstrap-icons';
+import { Collection, DoorOpen } from '../utilities/icons';
 import { Clubs } from '../../api/club/Club';
 import Club from '../components/Club';
 import DetailsModal from '../components/DetailsModal';

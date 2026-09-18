@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {
   Building, CalendarEvent, CashCoin, CheckCircle, Envelope, GeoAlt, People, Telephone,
-} from 'react-bootstrap-icons';
+} from '../utilities/icons';
 import { readFields } from '../utilities/cardFields';
 
 /** The schema names a glyph; only this file knows what a glyph looks like. */

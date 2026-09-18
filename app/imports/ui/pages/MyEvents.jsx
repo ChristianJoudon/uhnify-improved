@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import swal from 'sweetalert';
-import { People, Stars } from 'react-bootstrap-icons';
+import { People, Stars } from '../utilities/icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PageHead from '../components/PageHead';
 import EventPoster from '../components/EventPoster';

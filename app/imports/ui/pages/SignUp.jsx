@@ -4,7 +4,7 @@ import swal from 'sweetalert';
 import { Link, Navigate } from 'react-router-dom';
 import { Accounts } from 'meteor/accounts-base';
 import { Container } from 'react-bootstrap';
-import { ArrowLeft, ArrowRight } from 'react-bootstrap-icons';
+import { ArrowLeft, ArrowRight } from '../utilities/icons';
 import PageHead from '../components/PageHead';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../utilities/topics';
 import { EMAIL_SHAPE, MIN_PASSWORD_LENGTH, TEXT_LIMITS } from '../../api/listing/limits';

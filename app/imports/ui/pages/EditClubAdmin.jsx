@@ -5,7 +5,7 @@ import { Meteor } from 'meteor/meteor';
 import { Link, useParams } from 'react-router-dom';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Roles } from 'meteor/alanning:roles';
-import { Camera, Trash } from 'react-bootstrap-icons';
+import { Camera, Trash } from '../utilities/icons';
 import PageHead from '../components/PageHead';
 import PosterArt from '../components/PosterArt';
 import ChipInput from '../components/form/ChipInput';

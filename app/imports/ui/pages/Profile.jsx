@@ -4,7 +4,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Meteor } from 'meteor/meteor';
 import { Link } from 'react-router-dom';
 import swal from 'sweetalert';
-import { Check, Gear, PersonPlus, Search, X } from 'react-bootstrap-icons';
+import { Check, Gear, PersonPlus, Search, X } from '../utilities/icons';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Profiles } from '../../api/profiles/Profiles';
 import { Events } from '../../api/events/Events';

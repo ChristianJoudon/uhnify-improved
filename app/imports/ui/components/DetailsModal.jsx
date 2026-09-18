@@ -5,7 +5,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Badge, Button, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import swal from 'sweetalert';
-import { Plus } from 'react-bootstrap-icons';
+import { Plus } from '../utilities/icons';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { isOpenToAll } from '../../api/listing/audience';
@@ -78,6 +78,7 @@ const KINDS = {
 
 const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, onAct }) => {
   const [newTag, setNewTag] = useState('');
+  const [shared, setShared] = useState(false);
   const shape = KINDS[kind];
 
   // Prefer the live minimongo doc so a tag added here appears at once; the prop
@@ -146,6 +147,18 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
   // Called off, not taken away: whoever said they were going still finds it
   // here, saying so. There is nothing left to say yes to, so the action goes.
   const cancelled = kind === 'event' && record.cancellationStatus === 'canceled';
+  const shareUrl = `${window.location.origin}/${kind === 'event' ? 'e' : 'g'}/${record._id}`;
+  const share = () => {
+    const title = shape.heading(record);
+    if (navigator.share) {
+      navigator.share({ title, url: shareUrl }).catch(() => {});
+      return;
+    }
+    navigator.clipboard?.writeText(shareUrl).then(() => {
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    });
+  };
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg" className="details-modal">
@@ -235,9 +248,14 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
       </Modal.Body>
 
       <Modal.Footer>
+        {/* The link somebody texts a friend. The phone's share sheet where
+            there is one; the clipboard where there is not. */}
+        <button type="button" className="mb-section-link me-auto" onClick={share}>
+          {shared ? 'Link copied' : 'Share'}
+        </button>
         {/* For the person who runs it, and quiet: the sheet is for reading, and
             this is the way through to where the listing is changed. */}
-        {mine && <Link className="mb-section-link me-auto" to={shape.managePath(record)}>Manage</Link>}
+        {mine && <Link className="mb-section-link" to={shape.managePath(record)}>Manage</Link>}
         {/* The same one action the card carried, so the sheet is never a dead
             end — a reader who opened it to decide can decide here. A request
             already made is the one state with nothing left to press. */}

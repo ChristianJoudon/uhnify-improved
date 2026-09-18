@@ -3,7 +3,7 @@ import { Container, Form } from 'react-bootstrap';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
 import { useNavigate } from 'react-router-dom';
-import { Camera, Trash } from 'react-bootstrap-icons';
+import { Camera, Trash } from '../utilities/icons';
 import PosterArt from '../components/PosterArt';
 import PrivacyToggles from '../components/PrivacyToggles';
 import ChipInput from '../components/form/ChipInput';

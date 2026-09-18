@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Trash } from 'react-bootstrap-icons';
 import swal from 'sweetalert';
 import { Meteor } from 'meteor/meteor';
+import { Trash } from '../utilities/icons';
 import { profileImagePath } from '../utilities/helpers';
 
 /**

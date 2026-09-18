@@ -1,0 +1,13 @@
+{
+  "name": "MatchBook",
+  "short_name": "MatchBook",
+  "description": "Events, groups and communities around Kauaʻi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcfcfb",
+  "theme_color": "#e26a2c",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
