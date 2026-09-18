@@ -11,7 +11,8 @@
     "test": "tsx --test test/*.test.ts",
     "validate-registry": "tsx src/cli.ts validate-registry",
     "worker": "tsx src/cli.ts worker",
-    "start": "tsx src/cli.ts worker"
+    "start": "tsx src/cli.ts worker",
+    "drain": "tsx src/cli.ts worker --drain"
   },
   "dependencies": {
     "cheerio": "^1.1.2",

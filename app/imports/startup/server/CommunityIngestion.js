@@ -122,11 +122,20 @@ const readSourceRegistry = () => {
       throw new Error(`${id} must declare at least one endpoint.`);
     }
     source.endpoints.forEach((endpoint, endpointIndex) => validateEndpoint(source, endpoint, endpointIndex));
-    if (source.enabled !== false) {
-      throw new Error(`${id} must remain disabled until its collection lane is separately enabled.`);
+    // Enabling is a decision, recorded on the entry: the permission reached
+    // AUTOMATED_ALLOWED, somebody put their name to it, and they said when.
+    // The scaffold refused any enabled source at all, which kept every source
+    // a probe for good; the rule now is that an enabled source has to have
+    // been cleared, not that none may be.
+    if (source.enabled !== false && source.enabled !== true) {
+      throw new Error(`${id} enabled must be true or false.`);
     }
-    if (CORE_SOURCE_IDS.has(id) && source.permission !== 'PROBE_REQUIRED') {
-      throw new Error(`${id} must remain PROBE_REQUIRED in the initial source backbone.`);
+    if (source.enabled && source.permission !== 'AUTOMATED_ALLOWED') {
+      throw new Error(`${id} may not be enabled until its permission is AUTOMATED_ALLOWED.`);
+    }
+    if (source.permission === 'AUTOMATED_ALLOWED'
+        && (!source.steward || source.steward === 'unassigned' || !source.lastVerifiedAt)) {
+      throw new Error(`${id} was cleared for automation without a steward and a verification date.`);
     }
     if (SENSITIVE_SOURCE_IDS.has(id)
         && (source.permission !== 'MANUAL_ONLY' || source.adapterKind !== 'MANUAL_CLIP')) {
@@ -357,5 +366,5 @@ Meteor.publish(INGESTION_PUBLICATIONS.health, function () {
 Meteor.startup(async () => {
   await ensureIngestionIndexes();
   const sourceCount = await seedSourceRegistry();
-  console.log(`[ingestion] loaded ${sourceCount} disabled source definitions.`);
+  console.log(`[ingestion] loaded ${sourceCount} source definitions.`);
 });

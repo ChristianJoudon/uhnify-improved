@@ -29,6 +29,9 @@ export const INGESTION_RUN_REQUEST_STATUS = Object.freeze({
 export const INGESTION_RUN_EXECUTION_MODE = Object.freeze({
   practice: 'PRACTICE',
   manual: 'MANUAL',
+  /** A source cleared for automation, run for real — by the scheduler or by
+      an administrator's Run. A practice request for one is refused. */
+  automatic: 'AUTOMATIC',
 });
 
 export const INGESTION_RECENT_POLICY = Object.freeze({

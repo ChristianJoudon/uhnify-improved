@@ -185,5 +185,21 @@ MONGO_URL=mongodb://.../meteor npm start
 | `MATCHBOOK_INGESTION_USER_AGENT` | How the worker introduces itself to the sites it reads. |
 
 Run it under a supervisor that restarts it (a systemd unit, or a container
-with a restart policy). Every source ships disabled; enabling one is a
-decision recorded on the intake page, source by source.
+with a restart policy), or from cron with `npm run drain`, which collects
+everything that is due and exits. The worker schedules its own runs: every
+source that is `enabled` and `AUTOMATED_ALLOWED` in the registry is queued
+when its `polling.intervalMinutes` comes round, and its next run is set the
+moment it is queued. Nothing publishes on its own — every candidate still
+goes through the review page.
+
+Clearing a source for automation is a decision recorded in the registry
+(`app/private/community-sources.v1.json`): set `permission` to
+`AUTOMATED_ALLOWED`, `enabled` to `true`, put a name in `steward` and the
+date in `lastVerifiedAt`. The Meteor loader and the registry validator both
+refuse an enabled source without those. As of 2026-09-17 nine sources are
+cleared — the ones that publish a feed or an API, and the County of Kauaʻi's
+pages — and five scraped news and venue pages still await the operator's
+judgment (`SRC-008`, `SRC-009`, `SRC-012`, `SRC-013`, `SRC-014`). Google's
+`calendar.google.com/robots.txt` disallows crawlers, and the KKCR entry is a
+public ICS feed the station embeds for subscription: consuming it four times
+a day is what it is for, not crawling.

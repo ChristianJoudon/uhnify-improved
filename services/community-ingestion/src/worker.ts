@@ -26,7 +26,7 @@ export type RunRequest = {
   _id: string;
   sourceId: string;
   status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'SKIPPED_RECENT' | 'ALREADY_RUNNING';
-  executionMode: 'PRACTICE' | 'MANUAL' | 'RESEARCH';
+  executionMode: 'PRACTICE' | 'MANUAL' | 'RESEARCH' | 'AUTOMATIC';
   candidateId?: string;
   candidateFingerprint?: string;
   candidateObservationId?: string;
@@ -524,6 +524,9 @@ export const processRequest = async (options: {
     if (request.executionMode === 'PRACTICE' && source.permission !== 'PROBE_REQUIRED') {
       throw Object.assign(new Error('Practice request does not match its source permission'), { code: 'EXECUTION_MODE_MISMATCH' });
     }
+    if (request.executionMode === 'AUTOMATIC' && (!source.enabled || source.permission !== 'AUTOMATED_ALLOWED')) {
+      throw Object.assign(new Error('Automatic request for a source that is not enabled and cleared for automation'), { code: 'EXECUTION_MODE_MISMATCH' });
+    }
     const repository = new MongoIngestionRepository(client);
     const result = await executeSource({
       source,
@@ -622,9 +625,64 @@ export const processRequest = async (options: {
   }
 };
 
+/**
+ * Queue a run for every enabled, cleared source whose time has come.
+ *
+ * The worker only ever worked through requests an administrator queued by
+ * hand, so "automatic" collection was a permission nobody could exercise:
+ * every source carries a polling interval and nothing read it. This reads it.
+ * Each due source gets one AUTOMATIC request — the unique partial index on
+ * (sourceId, activeGuard) refuses a second while one is queued or running —
+ * and its nextRunAt moves forward at once, with the registry's jitter, so a
+ * loop that wakes every second does not queue it every second.
+ */
+export const scheduleDueSources = async (
+  client: MongoClient,
+  requests: Collection<RunRequest>,
+  now: Date = new Date(),
+): Promise<number> => {
+  const sources = client.db().collection('community_sources');
+  const due = await sources.find({
+    enabled: true,
+    permission: 'AUTOMATED_ALLOWED',
+    $or: [{ nextRunAt: { $lte: now } }, { nextRunAt: { $exists: false } }, { nextRunAt: null }],
+  }).toArray();
+  let queued = 0;
+  for (const source of due) {
+    const intervalMs = Math.max(15, Number(source.polling?.intervalMinutes ?? 360)) * 60_000;
+    const jitter = intervalMs * (Number(source.polling?.jitterPercent ?? 0) / 100) * (Math.random() * 2 - 1);
+    const nextRunAt = new Date(now.getTime() + intervalMs + jitter);
+    // Advanced first: if the insert below is refused because a run is already
+    // active, the source is still not asked again until its next interval.
+    await sources.updateOne({ _id: source._id }, { $set: { nextRunAt } });
+    try {
+      await requests.insertOne({
+        _id: randomUUID(),
+        sourceId: source.id ?? source.sourceId,
+        status: 'QUEUED',
+        executionMode: 'AUTOMATIC',
+        activeGuard: 'ACTIVE',
+        availableAt: now,
+        requestedAt: now,
+        attempts: 0,
+        requestedBy: 'scheduler',
+        batchId: `schedule:${now.toISOString().slice(0, 13)}`,
+        contractVersion: 'ingestion-run-request.v1',
+        createdAt: now,
+        updatedAt: now,
+      } as RunRequest & Record<string, unknown>);
+      queued += 1;
+    } catch (error) {
+      if ((error as { code?: number }).code !== 11000) throw error;
+    }
+  }
+  return queued;
+};
+
 export const runWorker = async (options: {
   mongoUrl: string;
   once?: boolean;
+  drain?: boolean;
   pollMs?: number;
   artifactRoot?: string;
   userAgent?: string;
@@ -702,9 +760,12 @@ export const runWorker = async (options: {
     }, WORKER_HEARTBEAT_MS);
     healthHeartbeat.unref();
     while (!options.signal?.aborted) {
+      await scheduleDueSources(client, requests);
       const request = await claimNextRequest(requests, workerId);
       if (!request) {
-        if (options.once) break;
+        // --once: one request, for the tests. --drain: everything that is
+        // queued, then stop — what a cron job wants.
+        if (options.once || options.drain) break;
         await new Promise(resolve => setTimeout(resolve, options.pollMs ?? 1_000));
         continue;
       }

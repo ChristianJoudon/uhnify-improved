@@ -39,11 +39,18 @@ const registeredSource = sourceId => CommunitySources.findOne({
   $or: [{ _id: sourceId }, { id: sourceId }, { sourceId }],
 });
 
-const executionModeFor = sourceId => (
-  sourceId.startsWith('SEN-')
-    ? INGESTION_RUN_EXECUTION_MODE.manual
-    : INGESTION_RUN_EXECUTION_MODE.practice
-);
+const executionModeFor = sourceId => {
+  if (sourceId.startsWith('SEN-')) {
+    return INGESTION_RUN_EXECUTION_MODE.manual;
+  }
+  // What the registry says about the source decides how it runs: cleared for
+  // automation means a real run, anything else a probe. This always said
+  // "practice", and the worker refuses a practice run of a cleared source.
+  const source = registeredSource(sourceId);
+  return source?.permission === 'AUTOMATED_ALLOWED' && source.enabled
+    ? INGESTION_RUN_EXECUTION_MODE.automatic
+    : INGESTION_RUN_EXECUTION_MODE.practice;
+};
 
 const dateOrNull = value => {
   if (!value) return null;
