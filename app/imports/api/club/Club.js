@@ -95,6 +95,9 @@ class ClubsCollection {
       /** Left by a takedown — { takenDownAt, takenDownBy, reason } — so whoever
           posted it reads why it is down instead of finding it gone. */
       moderation: { type: Object, optional: true, blackbox: true },
+      /** When an administrator last corrected an imported record in the app.
+          The register sync leaves such a record alone. */
+      curatedAt: { type: Date, optional: true },
       /**
        * Joining asks first: a request the owner approves or declines.
        *

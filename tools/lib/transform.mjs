@@ -5,6 +5,9 @@
  */
 
 /** Occurrence identity: a recurring listing yields one document per date. */
+/** HST is UTC−10, all year. */
+const HAWAII_UTC_OFFSET_HOURS = 10;
+
 export const occurrenceId = (id, isoDate) => `${id}@${isoDate}`;
 
 export const transform = (reg, { horizonWeeks = 6, maxPerListing = 6 } = {}) => {
@@ -28,12 +31,18 @@ export const transform = (reg, { horizonWeeks = 6, maxPerListing = 6 } = {}) => 
   /** Drop every undefined key so the document carries only what was published. */
   const compact = obj => Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 
-  /** Local wall-clock, so a 6pm listing is 6pm and not shifted by the offset. */
+  /**
+   * Kauaʻi wall-clock, whatever machine runs this. It used to build the date in
+   * the HOST's zone, which was right on the laptop it was written on (HST) and
+   * would have shifted every listing by ten hours the first time the sync ran
+   * from a server on UTC — a 6 PM concert filed at 8 AM the next morning.
+   * Hawaiʻi does not observe daylight saving, so the offset is a constant.
+   */
   const at = (date, time) => {
     if (!date) return undefined;
     const [y, m, d] = date.split('-').map(Number);
     const [hh, mm] = (time || '00:00').split(':').map(Number);
-    return new Date(y, m - 1, d, hh || 0, mm || 0);
+    return new Date(Date.UTC(y, m - 1, d, (hh || 0) + HAWAII_UTC_OFFSET_HOURS, mm || 0));
   };
 
   const venueLine = loc => clean(loc && (loc.venue || loc.address_line_1

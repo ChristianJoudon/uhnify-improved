@@ -7117,3 +7117,6 @@ select.mb-field,
 .moderation-row-main p { margin: 0.15rem 0 0; font-size: 0.9rem; opacity: 0.8; }
 .moderation-row-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 .moderation-note { margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: 0.9rem; background: #fbe4dd; color: #5c2014; }
+
+.details-source { margin-top: 1.25rem; font-size: 0.85rem; opacity: 0.8; }
+.details-source a { text-decoration: underline; }
