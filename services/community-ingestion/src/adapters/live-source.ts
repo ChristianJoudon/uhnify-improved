@@ -303,7 +303,96 @@ const clockFromNumber = (value: unknown): string => {
   return `${String(Math.floor(number / 100)).padStart(2, '0')}:${String(number % 100).padStart(2, '0')}`;
 };
 
+/**
+ * A timestamp the way a JSON API wrote it, as a Kauaʻi instant.
+ *
+ * Three shapes turn up: an ISO string with a real offset or Z; a number of
+ * epoch milliseconds (Squarespace); and — from AlohaCalendar and CitySpark —
+ * a wall-clock time with a "Z" stapled on that never meant UTC ("13:00Z" for
+ * a 1 PM jam session). The register says which publishers do that
+ * (`timestampsAreLocal`), and for them the Z is dropped and the clock read
+ * as Pacific/Honolulu.
+ */
+const apiDateTime = (value: unknown, timestampsAreLocal: boolean): string | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const millis = value > 1e11 ? value : value * 1000;
+    return onKauaiClock(new Date(millis).toISOString());
+  }
+  const raw = asString(value);
+  if (!raw) return undefined;
+  if (timestampsAreLocal) {
+    const match = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)(?:\.\d+)?Z?$/.exec(raw);
+    if (match) return hawaiiDateTime(`${match[1]} ${match[2]}`);
+  }
+  return onKauaiClock(hawaiiDateTime(raw));
+};
+
+/** The same instant, written with Kauaʻi's offset, so a card reads 7 PM and not 05:00Z. */
+const onKauaiClock = (iso: string | undefined): string | undefined => {
+  if (!iso || !/Z$/.test(iso)) return iso;
+  const shifted = new Date(Date.parse(iso) - 10 * 3_600_000);
+  return `${shifted.toISOString().slice(0, 19)}${HAWAII_OFFSET}`;
+};
+
+const RECORD_ARRAY_KEYS = ['events', 'Value', 'upcoming', 'items', 'results', 'data'];
+
+/**
+ * Event records from a JSON API in the common shape — one array of objects,
+ * each with a title and a start — rather than Coconut Wireless's own. The
+ * array is found under `eventSelector` when that names a key, else under
+ * the first of the usual names. Field names cover the APIs the register
+ * actually reads (AlohaCalendar, CitySpark, Squarespace); a record without
+ * a title or a start inside the window is skipped, never guessed.
+ */
+const jsonRecordEvents = (document: unknown, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
+  const config = source.adapterConfig as { eventSelector?: string; timestampsAreLocal?: boolean };
+  const local = config.timestampsAreLocal === true;
+  const records = ((): unknown[] => {
+    if (Array.isArray(document)) return document;
+    if (!isRecord(document)) return [];
+    const named = config.eventSelector && Array.isArray(document[config.eventSelector])
+      ? document[config.eventSelector] : undefined;
+    if (Array.isArray(named)) return named;
+    const key = RECORD_ARRAY_KEYS.find(candidate => Array.isArray(document[candidate]));
+    return key ? (document[key] as unknown[]) : [];
+  })();
+  return records.flatMap((value, index) => {
+    if (!isRecord(value)) return [];
+    const title = textOnly(value.title ?? value.name ?? value.Name, 300);
+    const start = apiDateTime(value.startDate ?? value.start_date ?? value.DateStart ?? value.start, local);
+    if (!title || !start || !inWindow(start, source)) return [];
+    const end = apiDateTime(value.endDate ?? value.end_date ?? value.DateEnd ?? value.end, local);
+    const place = isRecord(value.location) ? value.location : isRecord(value.venue) ? value.venue : undefined;
+    const location = (place && locationText(place))
+      || [value.Venue, value.Address, value.CityState, place?.addressTitle, place?.addressLine1, place?.addressLine2]
+        .map(asString).filter(Boolean).join(', ')
+      || undefined;
+    const description = safeVisibleText(value.description ?? value.Description ?? value.shortDesc ?? value.Summary ?? value.excerpt, 2_000);
+    const categories = uniqueLabels(value.categories, value.category, value.tags, value.Labels);
+    const url = asString(value.url ?? value.fullUrl ?? value.link ?? value.PrimaryUrl ?? value.ticketUrl) || sourceUrl;
+    const context = contextText([value.organizer, value.Sponsor, place], [title, description, location]);
+    return [eventItem({
+      id: asString(value.id ?? value.Id ?? value.PId ?? value.slug) || url,
+      title,
+      start,
+      ...(end ? { end } : {}),
+      ...(location ? { location } : {}),
+      ...(description ? { description } : {}),
+      ...(categories.length ? { categories } : {}),
+      ...(context ? { context } : {}),
+      sourceUrl: url,
+      raw: value,
+      locator: `$[${index}]`,
+    })];
+  });
+};
+
 const staticJsonEvents = (document: unknown, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
+  const own = coconutWirelessEvents(document, source, sourceUrl);
+  return own.length ? own : jsonRecordEvents(document, source, sourceUrl);
+};
+
+const coconutWirelessEvents = (document: unknown, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
   if (!isRecord(document)) return [];
   return Object.entries(document).flatMap(([key, value]) => {
     if (!isRecord(value) || asString(value.category)?.toLowerCase() !== 'events') return [];
@@ -524,7 +613,102 @@ const jsonLdEvents = (html: string, source: SourceDefinition, sourceUrl: string)
   });
 };
 
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+/**
+ * "Sep 18" as a date, given no year: the nearest one that is not far in the
+ * past. A calendar sorted from today forward runs over New Year, so "Jan 3"
+ * read in December is next year, while "Sep 12" read on the 17th is this
+ * year's — a listing only a few days gone, not one eleven months ahead.
+ */
+const dateFromMonthDay = (text: string, now = new Date(Date.now() - 10 * 3_600_000)): string | undefined => {
+  const match = /([A-Za-z]{3,9})\.?\s+(\d{1,2})\b/.exec(text);
+  if (!match) return undefined;
+  const month = MONTHS.indexOf(match[1]!.slice(0, 3).toLowerCase());
+  if (month === -1) return undefined;
+  const day = Number(match[2]);
+  const year = now.getUTCFullYear();
+  const candidate = Date.UTC(year, month, day);
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const resolved = candidate < today - 60 * DAY_MS ? year + 1 : year;
+  return `${resolved}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
+
+/** "05:30 PM" → "17:30"; anything else → undefined. */
+const clockFromText = (text: string | undefined): string | undefined => {
+  const match = /(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(text ?? '');
+  if (!match) return undefined;
+  let hours = Number(match[1]) % 12;
+  if (/pm/i.test(match[3]!)) hours += 12;
+  return `${String(hours).padStart(2, '0')}:${match[2]}`;
+};
+
+/**
+ * Hawaiʻi Public Radio's community calendar, filtered to Kauaʻi — a
+ * Brightspot page with no schema.org, no <time>, and dates written "Sep 18"
+ * with the year left to the reader. Each event is a <ps-promo
+ * class="PromoEvent">: the date line, a title with its own page, the venue,
+ * the price, and a time line that is either a single "06:00 PM - 08:30 PM on
+ * Sat, 26 Sep 2026" or a recurrence sentence. A recurrence is filed once,
+ * on the listed date, with the sentence kept as context; expanding "every
+ * month on Friday through Oct 17" is a guess the review queue should not
+ * inherit.
+ */
+const hprCalendarEvents = (html: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
+  const $ = load(html);
+  const items: ExtractedItem[] = [];
+  $('.PromoEvent').each((index, element) => {
+    const root = $(element);
+    const title = textOnly(root.find('.PromoEvent-title').first().text(), 300);
+    const dateText = root.find('.PromoEvent-date-date').first().contents().first().text();
+    const timeText = textOnly(root.find('.PromoEvent-time').first().text(), 300);
+    // "on Sat, 26 Sep 2026" carries the year; the date line does not.
+    const dated = /\bon\s+\w+,\s+(\d{1,2})\s+([A-Za-z]{3,9})\.?\s+(\d{4})/.exec(timeText ?? '');
+    const day = dated
+      ? `${dated[3]}-${String(MONTHS.indexOf(dated[2]!.slice(0, 3).toLowerCase()) + 1).padStart(2, '0')}-${dated[1]!.padStart(2, '0')}`
+      : dateFromMonthDay(dateText);
+    const start = day ? hawaiiDateTime(`${day} ${clockFromText(timeText) ?? '00:00'}`) : undefined;
+    if (!title || !start || !inWindow(start, source)) return;
+    const endClock = clockFromText((timeText ?? '').split(/\s[-–]\s/)[1]);
+    const href = root.find('.PromoEvent-title a[href]').first().attr('href');
+    const url = href ? new URL(href, sourceUrl).toString() : sourceUrl;
+    const location = safeVisibleText(root.find('.PromoEvent-venue').first().text(), 500);
+    const description = safeVisibleText(root.find('.PromoEvent-description').first().text(), 2_000);
+    const categories = uniqueLabels(
+      root.find('.PromoEvent-categories-item').map((_categoryIndex, node) => $(node).text()).get()
+        .filter(label => !/^Community Calendar:/i.test(label.trim())),
+    );
+    const recurring = root.find('.PromoEvent-time[data-recurring]').length > 0;
+    const price = safeVisibleText(root.find('.PromoEvent-price').first().text(), 40);
+    const context = contextText([
+      recurring ? timeText : undefined,
+      price ? `Price: ${price}` : undefined,
+    ], [title, description, location]);
+    items.push(eventItem({
+      id: `${url}#${day}`,
+      title,
+      start,
+      ...(endClock && day ? { end: hawaiiDateTime(`${day} ${endClock}`) } : {}),
+      ...(location ? { location } : {}),
+      ...(description ? { description } : {}),
+      ...(categories.length ? { categories } : {}),
+      ...(context ? { context } : {}),
+      sourceUrl: url,
+      raw: { url, title, date: dateText, time: timeText, location, recurring },
+      locator: `PromoEvent[${index}]`,
+    }));
+  });
+  return items;
+};
+
+/** Parsers for one publisher's own markup, chosen by the register's parserId. */
+const HTML_PARSERS: Record<string, (html: string, source: SourceDefinition, sourceUrl: string) => ExtractedItem[]> = {
+  'hpr-calendar-html': hprCalendarEvents,
+};
+
 const visibleHtmlEvents = (html: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
+  const own = HTML_PARSERS[source.parser.parserId];
+  if (own) return own(html, source, sourceUrl);
   const $ = load(html);
   const items: ExtractedItem[] = [];
   const seen = new Set<string>();

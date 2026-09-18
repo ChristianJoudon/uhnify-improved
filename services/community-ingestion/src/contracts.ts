@@ -55,7 +55,12 @@ const WpFilteredTribeConfigSchema = z.object({
 
 const StaticJsonConfigSchema = z.object({
   kind: z.literal('STATIC_JSON'),
+  /** The key of the array of event records ("events", "Value", "upcoming"),
+      or a description of the publisher's own shape for a bespoke parser. */
   eventSelector: z.string().min(1),
+  /** Some publishers write Kauaʻi wall-clock times with a "Z" on the end
+      (AlohaCalendar, CitySpark); read those as Pacific/Honolulu, not UTC. */
+  timestampsAreLocal: z.boolean().optional(),
 }).strict();
 
 const IcsConfigSchema = z.object({

@@ -71,6 +71,59 @@ test('static community data expands publisher day indexes without timezone drift
   assert.equal(result.items[0]?.normalizedFields.localStart, '2026-08-16T09:00:00-10:00');
 });
 
+test('a JSON API in the common shape is read, with a publisher’s wall-clock "Z" times kept on Kauaʻi time', async () => {
+  const adapter = new LiveSourceAdapter('STATIC_JSON');
+  const source: SourceDefinition = {
+    ...liveSource('STATIC_JSON'),
+    adapterConfig: { kind: 'STATIC_JSON', eventSelector: 'events', timestampsAreLocal: true },
+  };
+  const result = await adapter.extract({
+    bytes: new TextEncoder().encode(JSON.stringify({ version: 'v1', count: 2, events: [
+      {
+        id: '230c2216', slug: 'kupuna-jam', title: 'Kūpuna Jam Sessions at Hale Līhuʻe',
+        shortDesc: 'Bring your instrument.', startDate: '2026-09-18T13:00:00.000Z', endDate: '2026-09-18T14:30:00.000Z',
+        island: { slug: 'kauai', name: 'Kauai' }, location: { name: 'Hale Lihue', address: '4286 Rice Street', city: 'Lihue' },
+        categories: [{ slug: 'community', name: 'Community' }], url: 'https://fixture.example/events/kupuna-jam',
+      },
+      { id: 'no-title', startDate: '2026-09-18T13:00:00.000Z' },
+    ] })),
+    mediaType: 'application/json',
+    sourceUrl: 'https://fixture.example/api/v1/events',
+    statusCode: 200,
+    responseHeaders: {},
+  }, source);
+  assert.equal(result.items.length, 1);
+  const fields = result.items[0]?.normalizedFields ?? {};
+  assert.equal(fields.title, 'Kūpuna Jam Sessions at Hale Līhuʻe');
+  assert.equal(fields.localStart, '2026-09-18T13:00:00-10:00', 'a 1 PM jam session, not 3 AM');
+  assert.equal(fields.localEnd, '2026-09-18T14:30:00-10:00');
+  assert.match(`${fields.location}`, /Hale Lihue, 4286 Rice Street, Lihue/);
+  assert.deepEqual(fields.categories, ['Community']);
+  assert.equal(fields.sourceUrl, 'https://fixture.example/events/kupuna-jam');
+});
+
+test('a JSON API whose times are epoch milliseconds and true UTC is read as such', async () => {
+  const adapter = new LiveSourceAdapter('STATIC_JSON');
+  const source: SourceDefinition = {
+    ...liveSource('STATIC_JSON'),
+    adapterConfig: { kind: 'STATIC_JSON', eventSelector: 'upcoming' },
+  };
+  const result = await adapter.extract({
+    bytes: new TextEncoder().encode(JSON.stringify({ upcoming: [{
+      id: 'sq1', title: 'Fall Forest Camp', fullUrl: '/events/fall-forest-camp',
+      startDate: Date.parse('2026-10-08T19:00:00Z'), endDate: Date.parse('2026-10-08T22:00:00Z'),
+      location: { addressTitle: 'Storybook Theatre', addressLine1: '3814 Hanapepe Rd' },
+    }], past: [{ id: 'old', title: 'Old', startDate: Date.parse('2020-01-01T00:00:00Z') }] })),
+    mediaType: 'application/json',
+    sourceUrl: 'https://fixture.example/events?format=json',
+    statusCode: 200,
+    responseHeaders: {},
+  }, source);
+  assert.equal(result.items.length, 1);
+  assert.equal(result.items[0]?.normalizedFields.localStart, '2026-10-08T09:00:00-10:00');
+  assert.equal(result.items[0]?.normalizedFields.location, 'Storybook Theatre, 3814 Hanapepe Rd');
+});
+
 test('ICS weekly recurrences are materialized inside the review horizon', async () => {
   const result = await extract('ICS', [
     'BEGIN:VCALENDAR',
@@ -289,4 +342,51 @@ test('County of Kauaʻi calendar items read the OpenCities shape: wall-clock dat
   assert.equal(holiday!.normalizedFields.title, 'Kūhiō Day Holiday');
   assert.equal(String(holiday!.normalizedFields.localStart).slice(11), '00:00:00');
   assert.equal(holiday!.normalizedFields.sourceUrl, 'https://fixture.example/ocapi/calendars/getcalendaritems', 'no detail: the calendar itself');
+});
+
+test('Hawaiʻi Public Radio’s Kauaʻi calendar is read from its own markup, the year inferred', async () => {
+  const adapter = new LiveSourceAdapter('SOURCE_HTML');
+  const source: SourceDefinition = {
+    ...liveSource('SOURCE_HTML'),
+    parser: { parserId: 'hpr-calendar-html', parserVersion: '1.0.0', fixtureVersion: '2026-09-17' },
+  };
+  const year = new Date(Date.now() - 10 * 3_600_000).getUTCFullYear();
+  const html = `<html><body>
+    <ps-promo class="PromoEvent" data-no-media>
+      <div class="PromoEvent-link"><a href="/community-calendar/event/improv-02-06-2026-19-10-56" class="PromoEvent-link-link">
+        <div class="PromoEvent-date"><p class="PromoEvent-date-date">Sep 18 <span class="PromoEvent-date-day">Friday</span></p></div></a>
+      <div class="PromoEvent-content">
+        <ul class="PromoEvent-categories"><li class="PromoEvent-categories-item"><a class="Link">Community Calendar: Kauai</a></li><li class="PromoEvent-categories-item"><a class="Link">Theatre</a></li></ul>
+        <h3 class="PromoEvent-title"><a href="https://www.hawaiipublicradio.org/community-calendar/event/improv-02-06-2026-19-10-56" class="Link">Improv &amp; Open Mic Community Nights</a></h3>
+        <div class="PromoEvent-venue PromoEvent-content-item">Puhi Theatrical Warehouse</div>
+        <div class="PromoEvent-price PromoEvent-content-item">5</div>
+        <div class="PromoEvent-time PromoEvent-content-item" data-recurring>05:30 PM - 10:00 PM, every month on Friday through Oct 17, ${year}.</div>
+        <div class="PromoEvent-description-wrapper"><div class="PromoEvent-description"><p>Theatre games and open mic.</p></div></div>
+      </div></div>
+    </ps-promo>
+    <ps-promo class="PromoEvent">
+      <div class="PromoEvent-date"><p class="PromoEvent-date-date">Sep 26 <span class="PromoEvent-date-day">Saturday</span></p></div>
+      <h3 class="PromoEvent-title"><a href="/community-calendar/event/swing-band" class="Link">The Sunset Swing Band at Kukui Grove</a></h3>
+      <div class="PromoEvent-venue">Kukui Grove Center</div>
+      <div class="PromoEvent-time">06:00 PM - 08:30 PM on Sat, 26 Sep ${year}</div>
+    </ps-promo>
+  </body></html>`;
+  const result = await adapter.extract({
+    bytes: new TextEncoder().encode(html),
+    mediaType: 'text/html',
+    sourceUrl: 'https://www.hawaiipublicradio.org/community-calendar?f0=x&p=1',
+    statusCode: 200,
+    responseHeaders: {},
+  }, { ...source, polling: { ...source.polling, lookBackDays: 400, lookAheadDays: 400 } });
+  assert.equal(result.items.length, 2);
+  const [improv, swing] = result.items.map(item => item.normalizedFields);
+  assert.equal(improv?.title, 'Improv & Open Mic Community Nights');
+  assert.equal(improv?.localStart, `${year}-09-18T17:30:00-10:00`);
+  assert.equal(improv?.localEnd, `${year}-09-18T22:00:00-10:00`);
+  assert.equal(improv?.location, 'Puhi Theatrical Warehouse');
+  assert.deepEqual(improv?.categories, ['Theatre']);
+  assert.match(`${improv?.context}`, /every month on Friday/);
+  assert.equal(improv?.sourceUrl, 'https://www.hawaiipublicradio.org/community-calendar/event/improv-02-06-2026-19-10-56');
+  assert.equal(swing?.localStart, `${year}-09-26T18:00:00-10:00`, 'the dated form carries its own year');
+  assert.equal(swing?.sourceUrl, 'https://www.hawaiipublicradio.org/community-calendar/event/swing-band');
 });
