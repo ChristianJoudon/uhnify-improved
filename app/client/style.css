@@ -6288,6 +6288,14 @@ which no longer has a caller.
    (kauaiCoast.js) on the container's sea colour. It used to be a provider's
    raster tiles pushed through an SVG filter, until the provider watermarked
    them and the filter turned the watermark into dots across the island. */
+/* Leaflet sizes each vector layer to the view plus a margin and only moves it
+   when a drag ends, and an <svg> clips to its own box. The island and roads
+   are drawn whole (noClip in NearbyMap.jsx), so let them show past that box:
+   otherwise a long drag uncovers a straight-edged hole where the coast is. */
+.mb-map .leaflet-pane > svg {
+  overflow: visible;
+}
+
 /* Town names: the app's type in its ink, with a land-coloured halo so a name
    reads over a road or the coast. The marker is a zero-sized anchor and the
    name stands off it on its inland side, by the reach of the widest pin, so a
