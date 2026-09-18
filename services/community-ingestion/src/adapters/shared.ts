@@ -81,7 +81,7 @@ export const uniqueLabels = (...values: unknown[]): string[] => {
   const labels: string[] = [];
   const seen = new Set<string>();
   for (const label of values.flatMap(labelsFrom)) {
-    const key = label.toLocaleLowerCase();
+    const key = label.toLowerCase();
     if (!seen.has(key)) {
       seen.add(key);
       labels.push(label);
@@ -94,8 +94,8 @@ export const contextText = (
   values: unknown[],
   excluded: Array<string | undefined> = [],
 ): string | undefined => {
-  const blocked = new Set(excluded.filter(Boolean).map(value => value!.toLocaleLowerCase()));
-  const labels = uniqueLabels(...values).filter(label => !blocked.has(label.toLocaleLowerCase()));
+  const blocked = new Set(excluded.filter(Boolean).map(value => value!.toLowerCase()));
+  const labels = uniqueLabels(...values).filter(label => !blocked.has(label.toLowerCase()));
   return safeVisibleText(labels.join(' · '), 1_500);
 };
 
@@ -208,10 +208,10 @@ const titleCase = (text: string): string => text.split(/(\s+|[-–—/])/).map((
   // Known initials, anything with a digit ("5K"), and short tokens with no
   // vowel at all ("KVMH", "SMMH") — no word in English or Hawaiian is spelled that way.
   if (KEEP_UPPER.has(bare.toUpperCase()) || /\d/.test(bare) || (bare.length >= 2 && bare.length <= 5 && !/[aeiouyāēīōū]/i.test(bare))) return word;
-  const lower = word.toLocaleLowerCase('en-US');
+  const lower = word.toLowerCase();
   if (index > 0 && SMALL_WORDS.has(bare.toLowerCase())) return lower;
   // The first LETTER is raised, wherever it sits: "ʻukulele" → "ʻUkulele", "(free)" → "(Free)".
-  return lower.replace(/[a-zà-ɏ]/, letter => letter.toLocaleUpperCase('en-US'));
+  return lower.replace(/[a-zà-ɏ]/, letter => letter.toUpperCase());
 }).join('');
 
 const JUNK_TITLE = /^(?:read|learn|see|view|find out)\s+more\b|^(?:more\s+)?(?:info(?:rmation)?|details?)$|^click\s+here\b|^(?:register|rsvp|sign\s*up|buy\s+tickets?|get\s+tickets?|tickets?)(?:\s+(?:now|here|today))?$|^(?:view|see)\s+(?:event|all|calendar)\b|^(?:home|events?|calendar|upcoming events?|untitled|tbd|tba|n\/a)$/i;

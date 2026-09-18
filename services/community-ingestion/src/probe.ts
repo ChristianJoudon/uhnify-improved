@@ -4,6 +4,7 @@ import { SourceDefinitionSchema, type HttpPolicy, type SourceDefinition } from '
 import { SafeHttpClient, SafeHttpError } from './safe-http-client.js';
 import { fetchSourceArtifact } from './source-execution.js';
 import { findDates, kauaiToday } from './text-dates.js';
+import { decodeBytes, repairMojibake } from './text-repair.js';
 
 /**
  * Looking a site over the way a careful person would before adding it to the
@@ -208,7 +209,7 @@ export const probeSite = async (rawUrl: string, options: { client?: SafeHttpClie
   const text = async (url: string, policy: HttpPolicy): Promise<{ body: string; type: string } | undefined> => {
     try {
       const result = await client.fetch({ method: 'GET', url }, policy);
-      return { body: new TextDecoder().decode(result.bytes), type: result.mediaType };
+      return { body: repairMojibake(decodeBytes(result.bytes, result.responseHeaders['content-type'])), type: result.mediaType };
     } catch (error) {
       if (error instanceof SafeHttpError && /returned (?:401|403|429)/.test(error.message)) report.refusal ??= `${new URL(url).pathname}: ${error.message}`;
       return undefined;

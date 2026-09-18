@@ -299,7 +299,7 @@ const evidenceUrl = (raw: unknown): string | undefined => {
 };
 
 const normalizedTitle = (fields: Record<string, unknown>): string => (
-  typeof fields.title === 'string' ? fields.title.trim().toLocaleLowerCase('en-US').replace(/\s+/g, ' ') : ''
+  typeof fields.title === 'string' ? fields.title.trim().toLowerCase().replace(/\s+/g, ' ') : ''
 );
 
 const normalizedDay = (fields: Record<string, unknown>): string => {

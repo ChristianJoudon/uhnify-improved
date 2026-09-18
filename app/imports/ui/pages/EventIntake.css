@@ -185,8 +185,14 @@
   column-gap: 0.8rem;
 }
 
+/* Every part is placed by hand. The icon used to span "1 / -1", which in a
+   grid with no explicit rows is one row, not all of them; the label then
+   auto-placed into the icon's column, stretched it to the label's width, and
+   left the number a sliver to overflow from. */
 .event-intake-stat-icon {
-  grid-row: 1 / -1;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
   display: inline-grid;
   place-items: center;
   width: 2.4rem;
@@ -194,6 +200,12 @@
   border-radius: 50%;
   background: var(--mb-wood);
   color: var(--mb-match-deep);
+}
+
+.event-intake-stat > strong,
+.event-intake-stat > strong + span {
+  grid-column: 2;
+  min-width: 0;
 }
 
 .event-intake-stat strong {
