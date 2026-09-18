@@ -107,6 +107,7 @@ if (command === 'validate-registry') {
   const result = await runWorker({
     mongoUrl,
     once: process.argv.includes('--once'),
+    drain: process.argv.includes('--drain'),
     signal: controller.signal,
     ...(process.env.MATCHBOOK_ARTIFACT_ROOT ? { artifactRoot: process.env.MATCHBOOK_ARTIFACT_ROOT } : {}),
     ...(process.env.MATCHBOOK_INGESTION_USER_AGENT ? { userAgent: process.env.MATCHBOOK_INGESTION_USER_AGENT } : {}),

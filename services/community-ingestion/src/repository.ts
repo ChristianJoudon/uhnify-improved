@@ -325,9 +325,17 @@ export class MongoIngestionRepository implements IngestionRepository {
   }
 
   async upsertSource(source: SourceDefinition, registryVersion: string): Promise<void> {
+    // The registry is the authority on everything about a source EXCEPT when
+    // it next runs: that is the scheduler's, moved forward after each run. This
+    // used to write the registry's nextRunAt over it on every upsert, so a
+    // source that had just run was due again the moment it finished.
+    const { nextRunAt, ...definition } = source;
     await this.collection('community_sources').updateOne(
       { _id: source.id },
-      { $set: { ...source, registryVersion, nextRunAt: new Date(source.nextRunAt), lastVerifiedAt: new Date(source.lastVerifiedAt) } },
+      {
+        $set: { ...definition, registryVersion, lastVerifiedAt: new Date(source.lastVerifiedAt) },
+        $setOnInsert: { nextRunAt: new Date(nextRunAt) },
+      },
       { upsert: true },
     );
   }

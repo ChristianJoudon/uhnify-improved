@@ -228,10 +228,15 @@ export const executeSource = async (options: {
 
   const client = new SafeHttpClient({ userAgent: options.userAgent ?? DEFAULT_USER_AGENT });
   const artifact = await fetchSourceArtifact(source, client);
+  // The permission decides the execution, not the caller: a source cleared for
+  // automation runs as 'automatic' (which the runtime allows only when it is
+  // also enabled), and one still awaiting its probe runs as 'practice'. This
+  // always said 'practice', which meant a source could be probed forever and
+  // never once run for real after it was cleared.
   return runtime.runArtifact({
     ...artifact,
     source,
     adapter: new LiveSourceAdapter(source.adapterKind),
-    execution: 'practice',
+    execution: source.permission === 'AUTOMATED_ALLOWED' ? 'automatic' : 'practice',
   });
 };

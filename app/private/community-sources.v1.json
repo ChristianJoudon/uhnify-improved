@@ -14,17 +14,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://kauaifestivals.com/wp-json/tribe/events/v1/events/?categories=island-happenings" }
       ],
       "trust": "AGGREGATOR",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 360, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 20, "maxItems": 1000 },
       "httpPolicy": { "allowedHosts": ["kauaifestivals.com"], "allowedRedirectHosts": ["www.kauaifestivals.com"], "allowedMediaTypes": ["application/json"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 2, "minimumDelayMs": 1000 },
       "parser": { "parserId": "tribe-events", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["id", "url", "title", "description", "start_date", "end_date", "timezone", "all_day", "cost", "venue", "organizer", "categories", "status"],
       "authorityByField": { "title": "AGGREGATOR", "start": "AGGREGATOR", "location": "AGGREGATOR", "status": "AGGREGATOR" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-002",
@@ -39,17 +39,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://cocowire.com/theKnowledgeList.json" }
       ],
       "trust": "AGGREGATOR",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 720, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 1, "maxItems": 3000 },
       "httpPolicy": { "allowedHosts": ["cocowire.com"], "allowedRedirectHosts": ["www.cocowire.com"], "allowedMediaTypes": ["application/json", "text/plain"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 2, "minimumDelayMs": 1000 },
       "parser": { "parserId": "coconut-static-json", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["name", "category", "tags", "url", "locations", "recurrence", "coordinates", "cost", "registration"],
       "authorityByField": { "title": "AGGREGATOR", "start": "AGGREGATOR", "location": "AGGREGATOR" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-003",
@@ -66,17 +66,17 @@
         { "purpose": "HYDRATION", "method": "GET", "urlTemplate": "https://www.librarieshawaii.org/wp-json/tribe/events/v1/events?include={COMMA_SEPARATED_IDS}&per_page=50" }
       ],
       "trust": "GOVERNMENT_INSTITUTION",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 360, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 30, "maxItems": 2000 },
       "httpPolicy": { "allowedHosts": ["www.librarieshawaii.org"], "allowedRedirectHosts": ["librarieshawaii.org"], "allowedMediaTypes": ["application/json", "text/calendar"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 2, "minimumDelayMs": 1000 },
       "parser": { "parserId": "wp-filtered-tribe", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["id", "modified", "link", "title", "description", "start_date", "end_date", "timezone", "all_day", "venue", "organizer", "categories", "status", "audience"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "location": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-004",
@@ -91,17 +91,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://events.kauai.hawaii.edu/wp-json/tribe/events/v1/events" }
       ],
       "trust": "GOVERNMENT_INSTITUTION",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 360, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 20, "maxItems": 1000 },
       "httpPolicy": { "allowedHosts": ["events.kauai.hawaii.edu"], "allowedRedirectHosts": [], "allowedMediaTypes": ["application/json"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 1, "minimumDelayMs": 1000 },
       "parser": { "parserId": "tribe-events", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["id", "url", "title", "description", "start_date", "end_date", "timezone", "all_day", "cost", "venue", "organizer", "categories", "status"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "location": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-005",
@@ -116,17 +116,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://kauaiadrc.org/wp-json/tribe/events/v1/events" }
       ],
       "trust": "GOVERNMENT_INSTITUTION",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 360, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 20, "maxItems": 1000 },
       "httpPolicy": { "allowedHosts": ["kauaiadrc.org"], "allowedRedirectHosts": ["www.kauaiadrc.org"], "allowedMediaTypes": ["application/json"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 2, "minimumDelayMs": 10000 },
       "parser": { "parserId": "tribe-events-adrc", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["id", "url", "title", "description", "start_date", "end_date", "timezone", "all_day", "cost", "venue", "organizer", "categories", "status"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "location": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-006",
@@ -141,17 +141,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://calendar.google.com/calendar/ical/9103aa3525c651803e8a3f3263030413876f8541b6169d4caa2fd827e2bed6c2%40group.calendar.google.com/public/basic.ics" }
       ],
       "trust": "PARTNER",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 360, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 1, "maxItems": 3000 },
       "httpPolicy": { "allowedHosts": ["calendar.google.com"], "allowedRedirectHosts": [], "allowedMediaTypes": ["text/calendar"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 1, "minimumDelayMs": 1000 },
       "parser": { "parserId": "icalendar", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["UID", "RECURRENCE-ID", "DTSTART", "DTEND", "SUMMARY", "DESCRIPTION", "LOCATION", "URL", "RRULE", "RDATE", "EXDATE", "STATUS", "SEQUENCE", "DTSTAMP"],
       "authorityByField": { "title": "PARTNER", "start": "PARTNER", "location": "PARTNER", "status": "PARTNER" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-007",
@@ -168,17 +168,17 @@
         { "purpose": "FALLBACK", "method": "GET", "urlTemplate": "https://www.kauai.gov/Events-directory" }
       ],
       "trust": "GOVERNMENT_INSTITUTION",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
       "polling": { "intervalMinutes": 360, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 50, "maxItems": 3000 },
       "httpPolicy": { "allowedHosts": ["www.kauai.gov"], "allowedRedirectHosts": ["kauai.gov"], "allowedMediaTypes": ["application/json", "text/html"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 2, "minimumDelayMs": 1000 },
       "parser": { "parserId": "county-opencities", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["calendarId", "contentId", "occurrenceDateTime", "title", "description", "location", "url", "status"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "location": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-008",
@@ -243,17 +243,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://www.kauai.gov/Government/Departments-Agencies/Parks/Programs" }
       ],
       "trust": "GOVERNMENT_INSTITUTION",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "organization"],
       "polling": { "intervalMinutes": 10080, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 20, "maxItems": 500 },
       "httpPolicy": { "allowedHosts": ["www.kauai.gov"], "allowedRedirectHosts": ["kauai.gov"], "allowedMediaTypes": ["text/html", "application/pdf"], "timeoutMs": 20000, "maxResponseBytes": 20000000, "maxRedirects": 2, "minimumDelayMs": 3000 },
       "parser": { "parserId": "parks-change-monitor", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["url", "title", "text", "documentDate", "contentHash"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-011",
@@ -269,17 +269,17 @@
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://www.kauai.gov/County-Press-Releases" }
       ],
       "trust": "GOVERNMENT_INSTITUTION",
-      "permission": "PROBE_REQUIRED",
+      "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "organization"],
       "polling": { "intervalMinutes": 1440, "jitterPercent": 15, "lookBackDays": 7, "lookAheadDays": 120, "maxPages": 50, "maxItems": 1000 },
       "httpPolicy": { "allowedHosts": ["www.kauai.gov"], "allowedRedirectHosts": ["kauai.gov"], "allowedMediaTypes": ["text/html", "application/xml", "text/xml"], "timeoutMs": 20000, "maxResponseBytes": 10000000, "maxRedirects": 2, "minimumDelayMs": 3000 },
       "parser": { "parserId": "county-release-monitor", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["url", "title", "text", "publishedAt", "modifiedAt", "contentHash"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": false,
+      "enabled": true,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
-      "lastVerifiedAt": "2026-08-08T22:00:00.000Z",
-      "steward": "unassigned"
+      "lastVerifiedAt": "2026-09-18T01:22:09Z",
+      "steward": "operator"
     },
     {
       "id": "SRC-012",
