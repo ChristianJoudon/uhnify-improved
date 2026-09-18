@@ -15,7 +15,8 @@
    "title": "div.ccaWPEvtName a",
    "date": "div.ccaWPEvtTime",
    "link": "div.ccaWPEvtName a",
-   "yearFrom": "span.ccaWPCalendarMonth"
+   "yearFrom": "span.ccaWPCalendarMonth",
+   "titleStrip": "^(?:SOLD OUT|POSTPONED|CANCEL+ED|RESCHEDULED)\\s*[-–:]?\\s*"
   },
   "followDetails": false
  },

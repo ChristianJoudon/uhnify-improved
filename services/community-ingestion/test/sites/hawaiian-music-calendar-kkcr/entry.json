@@ -27,7 +27,7 @@
   }
  ],
  "trust": "DIRECTORY",
- "permission": "AUTOMATED_ALLOWED",
+ "permission": "PROBE_REQUIRED",
  "contentKinds": [
   "event",
   "venue"
@@ -71,8 +71,8 @@
   "location": "DIRECTORY",
   "status": "DIRECTORY"
  },
- "enabled": true,
+ "enabled": false,
  "nextRunAt": "2026-09-18T00:00:00.000Z",
  "lastVerifiedAt": "2026-09-18T11:15:00Z",
- "steward": "operator"
+ "steward": "unassigned"
 }

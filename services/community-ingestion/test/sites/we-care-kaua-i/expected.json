@@ -1,0 +1,30 @@
+{
+ "now": "2026-09-18T12:17:14.300Z",
+ "items": [
+  {
+   "start": "2026-09-19T00:00:00-10:00",
+   "title": "Volunteer Workday",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T08:00:00-10:00",
+   "title": "Community Workday",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-26T00:00:00-10:00",
+   "title": "Beach Clean Up",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-26T00:00:00-10:00",
+   "title": "Family Day",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-26T09:00:00-10:00",
+   "title": "Community Workday",
+   "status": "SCHEDULED"
+  }
+ ]
+}

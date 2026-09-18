@@ -107,6 +107,8 @@ const JsonRecordsSchema = z.object({
     location: z.string().min(1).optional(), description: z.string().min(1).optional(),
   }).strict().optional(),
   titleStrip: z.string().min(1).optional(),
+  /** A venue's own feed: every record is there. */
+  defaultLocation: z.string().min(1).optional(),
   /** A record whose `recurrence` reads as a rule is written out for this many weeks from its start. */
   recurrenceWeeks: z.number().int().min(1).max(26).optional(),
   urlPrefix: z.string().url().optional(),

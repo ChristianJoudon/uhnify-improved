@@ -8,7 +8,7 @@
  "adapterKind": "SOURCE_HTML",
  "adapterConfig": {
   "kind": "SOURCE_HTML",
-  "detailLinkSelector": "a",
+  "detailLinkSelector": "article.category-holiday_happenings .entry-title a",
   "sitemap": false,
   "selectors": {
    "item": "article[itemtype$='schema.org/Event']",
@@ -18,13 +18,14 @@
    "description": "p",
    "link": "a[itemprop='url']"
   },
-  "followDetails": false
+  "followDetails": true,
+  "embedSelector": "iframe[src*='/wp-content/uploads/']"
  },
  "endpoints": [
   {
    "purpose": "COLLECTION",
    "method": "GET",
-   "urlTemplate": "https://kauaifamilymagazine.com/wp-content/uploads/2026/09/kfm_fall26_events.html"
+   "urlTemplate": "https://kauaifamilymagazine.com/category/holiday_happenings/"
   }
  ],
  "trust": "AGGREGATOR",
@@ -39,7 +40,7 @@
   "jitterPercent": 15,
   "lookBackDays": 1,
   "lookAheadDays": 120,
-  "maxPages": 2,
+  "maxPages": 4,
   "maxItems": 200
  },
  "httpPolicy": {

@@ -12,7 +12,9 @@
   "sitemap": false,
   "selectors": {
    "item": "h4.title:contains('Upcoming Events') ~ div.desc p",
-   "exclude": "\\bmeeting\\b|celebration of life|memorial|funeral"
+   "exclude": "\\bmeeting\\b|celebration of life|memorial|funeral",
+   "defaultLocation": "Līhuʻe Christian Church, 2943 Kress St, Līhuʻe",
+   "locationPattern": "\\s@\\s*([^–—-]+?)(?=\\s+[-–—]\\s|$)"
   },
   "followDetails": false
  },

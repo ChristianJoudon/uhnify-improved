@@ -1,0 +1,23 @@
+{
+ "now": "2026-09-18T12:17:06.520Z",
+ "items": [
+  {
+   "start": "2026-10-13T10:00:00-10:00",
+   "title": "Doggy Hour",
+   "location": "Hale Līhuʻe",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-11-10T10:00:00-10:00",
+   "title": "Doggy Hour",
+   "location": "Hale Līhuʻe",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-12-08T10:00:00-10:00",
+   "title": "Doggy Hour",
+   "location": "Hale Līhuʻe",
+   "status": "SCHEDULED"
+  }
+ ]
+}

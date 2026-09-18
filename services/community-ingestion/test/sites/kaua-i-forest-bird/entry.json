@@ -1,0 +1,68 @@
+{
+ "id": "SRC-921",
+ "slug": "kaua-i-forest-bird",
+ "displayName": "Kauaʻi Forest Bird Recovery Project events",
+ "publisherName": "Kauaʻi Forest Bird Recovery Project",
+ "publisherUrl": "https://kauaiforestbirds.org/events/",
+ "tier": "C",
+ "adapterKind": "RSS_ATOM",
+ "adapterConfig": {
+  "kind": "RSS_ATOM",
+  "identityField": "guid"
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://kauaiforestbirds.org/category/events/feed/"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 180,
+  "maxPages": 1,
+  "maxItems": 50
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "kauaiforestbirds.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "application/rss+xml"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 10000
+ },
+ "parser": {
+  "parserId": "rss-prose-dates",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "title",
+  "link",
+  "published",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:10:00Z",
+ "steward": "operator"
+}

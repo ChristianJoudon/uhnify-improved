@@ -1,0 +1,83 @@
+{
+ "id": "SRC-923",
+ "slug": "i-heart-princeville-north",
+ "displayName": "I Heart Princeville — North Shore events calendar",
+ "publisherName": "I Heart Princeville",
+ "publisherUrl": "https://iheartprinceville.com/events-and-clubs/princeville-events-calendar/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.elementor-widget-theme-post-content div.elementor-widget-container > p",
+   "link": "a:last-of-type",
+   "yearFrom": "div.elementor-widget-theme-post-content h2",
+   "weeklyWeeks": 8,
+   "exclude": "almost every day|online charity auction",
+   "stopAt": "Events Calendar General",
+   "titleLine": true,
+   "labels": {
+    "time": "Time",
+    "location": "Where"
+   }
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://iheartprinceville.com/events-and-clubs/princeville-events-calendar/"
+  }
+ ],
+ "trust": "DIRECTORY",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 200
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "iheartprinceville.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "DIRECTORY",
+  "start": "DIRECTORY",
+  "location": "DIRECTORY",
+  "status": "DIRECTORY"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:15:00Z",
+ "steward": "operator"
+}

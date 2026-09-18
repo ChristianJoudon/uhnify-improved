@@ -11,9 +11,9 @@
   "detailLinkSelector": "h3.title a",
   "sitemap": false,
   "selectors": {
-   "item": "div.view-events div.views-row:has(span.date-display-single), div.view-events div.views-row:not(:has(span.date-display-single)) h3.title",
+   "item": "div.view-events div.views-row",
    "title": "h3.title a",
-   "date": "span.date-display-single",
+   "date": "div.field-name-field-event-date",
    "description": "div.field-name-body p",
    "link": "h3.title a",
    "weeklyWeeks": 8

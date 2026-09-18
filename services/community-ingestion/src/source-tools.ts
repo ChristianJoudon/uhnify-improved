@@ -225,11 +225,12 @@ export const saveSiteFixture = async (source: SourceDefinition, directory: strin
   if (options.expectOnly) {
     const pages = JSON.parse(await readFile(resolve(directory, 'pages.json'), 'utf8')) as { capturedAt: string; pages: Array<{ url: string; mediaType: string; text: string }> };
     const items = await replaySite(source, pages.pages);
-    await writeFile(resolve(directory, 'expected.json'), `${JSON.stringify({ now: pages.capturedAt, items }, null, 1)}\n`);
+    // The clock the test is pinned to is the one these were read under: now, not the day of capture.
+    await writeFile(resolve(directory, 'expected.json'), `${JSON.stringify({ now, items }, null, 1)}\n`);
     return { directory, items: items.length };
   }
   const run = await dryRun(source, 10_000);
-  const pages = trimPages(source, run.pages);
+  const pages = await trimPages(source, run.pages);
   const items = await replaySite(source, pages);
   await writeFile(resolve(directory, 'entry.json'), `${JSON.stringify(source, null, 1)}\n`);
   await writeFile(resolve(directory, 'pages.json'), `${JSON.stringify({ capturedAt: now, pages }, null, 1)}\n`);
@@ -252,36 +253,64 @@ const trimJson = (value: unknown, keep: number, depth = 0): unknown => {
   return typeof value === 'string' && value.length > 1_500 ? `${value.slice(0, 1_500)}…` : value;
 };
 
+/** The indexes of the `selectors.item` elements on a page that yield an event. */
+const producingItems = async (source: SourceDefinition, page: { url: string; mediaType: string; text: string }): Promise<Set<number>> => {
+  const result = await new LiveSourceAdapter(source.adapterKind).extract({
+    bytes: new TextEncoder().encode(JSON.stringify({ pages: [page] })),
+    mediaType: 'application/vnd.matchbook.source-pages+json', sourceUrl: source.publisherUrl, statusCode: 200, responseHeaders: {},
+  }, source);
+  return new Set(result.items.map(item => Number(/\[(\d+)\]$/.exec(item.evidence[0]?.locator ?? '')?.[1])).filter(Number.isInteger));
+};
+
 /**
- * A captured page cut down to a fixture: the first few events, no scripts or
+ * Captured pages cut down to a fixture: the pages and rows that yield events
+ * (and a couple that do not, so a filter is proved too), no scripts or
  * styles, and no one's email address or phone number — a fixture is
  * committed, and a calendar's submitters did not agree to that.
  */
-export const trimPages = (source: SourceDefinition, pages: Array<{ url: string; mediaType: string; text: string }>, keep = 4) => (
-  pages.slice(0, 3).map(page => {
+export const trimPages = async (source: SourceDefinition, pages: Array<{ url: string; mediaType: string; text: string }>, keep = 4) => {
+  const yielding: typeof pages = [];
+  for (const page of pages) {
+    if (yielding.length >= 3) break;
+    if ((await replaySite(source, [page])).length) yielding.push(page);
+  }
+  const today = new Date(Date.now() - 10 * 3_600_000).toISOString().slice(0, 10).replaceAll('-', '');
+  return Promise.all((yielding.length ? yielding : pages.slice(0, 1)).map(async page => {
     let text = page.text;
     if (/json|octet-stream/.test(page.mediaType) || /^\s*[[{]/.test(text)) {
       try { text = JSON.stringify(trimJson(JSON.parse(text), keep)); } catch { /* not JSON after all */ }
     } else if (/calendar/.test(page.mediaType)) {
       const [head = '', ...events] = text.split(/(?=BEGIN:VEVENT)/);
-      text = `${head}${events.slice(0, keep * 2).join('')}${/END:VCALENDAR/.test(events.slice(0, keep * 2).join('')) ? '' : 'END:VCALENDAR\r\n'}`;
+      // The events that can still happen: a rule, or a start that is not past.
+      const live = events.filter(event => /\nRRULE:/.test(event) || (/\nDTSTART[^:]*:(\d{8})/.exec(event)?.[1] ?? '') >= today);
+      const kept = [...live.slice(0, keep * 2), ...events.filter(event => !live.includes(event)).slice(0, 2)].join('');
+      text = `${head}${kept}${/END:VCALENDAR/.test(kept) ? '' : 'END:VCALENDAR\r\n'}`;
     } else if (/xml|rss|atom/.test(page.mediaType)) {
       const $ = load(text, { xmlMode: true });
       $('item, entry').slice(keep).remove();
       text = $.xml();
     } else if (/html/.test(page.mediaType)) {
-      const $ = load(text);
       const config = source.adapterConfig as { selectors?: { item?: string }; records?: { htmlJson?: unknown } };
+      const producing = config.selectors?.item ? await producingItems(source, page) : new Set<number>();
+      const $ = load(text);
+      if (config.selectors?.item) {
+        let spare = 2;
+        let kept = 0;
+        $(config.selectors.item).each((index, element) => {
+          if (producing.has(index) && kept < keep * 2) { kept += 1; return; }
+          if (!producing.has(index) && spare > 0) { spare -= 1; return; }
+          $(element).remove();
+        });
+      }
       if (!config.records?.htmlJson) $('script:not([type="application/ld+json"])').remove();
-      $('style, svg, noscript, link, meta, iframe, img, picture, source, header nav, footer').remove();
+      $('style, svg, noscript, link, meta, iframe, img, picture, source, input, select, header nav, footer').remove();
       $('*').contents().filter((_index, node) => node.type === 'comment').remove();
-      if (config.selectors?.item) $(config.selectors.item).slice(keep * 2).remove();
       $('[style]').removeAttr('style');
       text = $.html().replace(/\n\s*\n+/g, '\n').replace(/[ \t]{2,}/g, ' ');
     }
     return { url: page.url, mediaType: page.mediaType, text: redact(text) };
-  })
-);
+  }));
+};
 
 /** What the parser reads from stored pages — the half of a run that needs no network. */
 export const replaySite = async (source: SourceDefinition, pages: Array<{ url: string; mediaType: string; text: string }>) => {

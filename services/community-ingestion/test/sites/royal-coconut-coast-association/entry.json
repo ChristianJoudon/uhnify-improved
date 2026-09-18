@@ -16,7 +16,10 @@
    "date": "p.event_date",
    "time": "p.event_date",
    "description": "div.verbose_container > p:not(.event_date), div.verbose_container > div:not(.event_details) > p",
-   "link": "h3 a"
+   "link": "h3 a",
+   "labels": {
+    "location": "Location"
+   }
   },
   "followDetails": false
  },

@@ -196,39 +196,47 @@ Clearing a source for automation is a decision recorded in the registry
 (`app/private/community-sources.v1.json`): set `permission` to
 `AUTOMATED_ALLOWED`, `enabled` to `true`, put a name in `steward` and the
 date in `lastVerifiedAt`. The Meteor loader and the registry validator both
-refuse an enabled source without those. After the source sweep of
-2026-09-17 (seven search angles, sixty-five sites probed for robots, terms
-and a machine-readable feed) the registry holds 37 sources, 27 of them
-enabled: island-wide calendars (Kauaʻi Connect, AlohaCalendar's public API,
-The Garden Island's CitySpark calendar, Hawaiʻi Public Radio's Kauaʻi
-filter), venues and organisations that run The Events Calendar (Coconut
-Marketplace, The Shops at Kukuiʻula, Princeville Center, Anaina Hou, the
-Philippine Cultural Center, the Hanalei canoe club), public Google
-calendars (Garden Island Arts Council's four, Kauaʻi Society of Artists,
-Hawaiʻi Children's Theatre, Kauaʻi Sailing), MTB Kauaʻi's Luma feed, and
-event lists whose detail pages carry schema.org (Hanalei Town, Kauaʻi Pride,
-YWCA, Storybook Theatre).
+refuse an enabled source without those.
 
-Endpoint templates may carry `{START_DATE}`, `{END_DATE}` (the polling
-window) and `{DATE+N}`; every `COLLECTION` endpoint of a source is fetched,
-so a source can be four calendars or four date windows. A `STATIC_JSON`
-source with `timestampsAreLocal: true` reads a publisher's "13:00Z" as 1 PM
-on Kauaʻi, which is what AlohaCalendar and CitySpark mean by it.
+**What is in it.** After the sweep of 2026-09-17 and the blind-spot work of
+the 18th the registry holds 65 sources, 56 enabled: island-wide calendars
+(Kauaʻi Connect, AlohaCalendar's public API, The Garden Island, Kauaʻi Now,
+Hawaiʻi Public Radio's Kauaʻi filter, Kauaʻi Family Magazine), venues and
+organisations that run The Events Calendar, public Google and CalendarWiz
+calendars, and some thirty sites with no feed at all — churches' bulletin
+pages, a chamber of commerce's month grid, a bar's weekly music table, a
+mall whose site is a JavaScript shell over a JSON file, a theatre's season
+page, a wildlife refuge's hand-typed list — each read from a description in
+its register entry rather than by code written for it.
 
-Left switched off, each for a recorded reason: Kanu Hawaiʻi (`SRC-008`,
-terms forbid automated access — `PROHIBITED` until they say otherwise),
-Kauaʻi Now (`SRC-009`, its calendar is per-day JSON cache files on another
-host and needs an adapter of its own), the county parks page (`SRC-010`,
-programmes moved into a Cloudflare-gated WebTrac catalogue — `PAUSED`), the
-press releases (`SRC-011`, read live by the help page instead), Kukui Grove
-(`SRC-014`, a JavaScript-only shell — its events arrive through Hawaiʻi
-Public Radio's list), and princeville.com (`SRC-032`, cleared, the generic
-HTML parser cannot date its month pages yet). Eventbrite, Meetup,
-AllEvents, Bandsintown and Patch all forbid scraping in their terms and are
-not in the registry. Google's `calendar.google.com/robots.txt` disallows
-crawlers, and every Google-calendar entry is a public ICS feed its owner
-embeds for subscription: consuming it four times a day is what it is for,
-not crawling.
+**How a source is added now** is in
+`services/community-ingestion/ADDING-SOURCES.md`: `probe` a URL (robots.txt,
+terms of use, every way of reading the site tried with the real adapters and
+counted), `dry-run` the proposal, keep it as a fixture under `test/sites/`,
+and `adopt` it under somebody's name. `discover` finds organisers' and
+venues' own sites in what has already been collected and probes those. The
+worker never works around a refusal: a 403, a bot challenge, a robots.txt
+that says no, or terms that forbid automated access end it there.
+
+Two rules hold for every source: recovery meetings listed on a general
+calendar are never collected (the run records `SENSITIVE_WITHHELD`; those
+come only through the manual `SEN-` lane), and "cancelled" or "postponed" in
+a title sets the status rather than dropping the row.
+
+Left switched off or out, each for a recorded reason: Kanu Hawaiʻi
+(`SRC-008`, terms forbid automated access — `PROHIBITED`), the county parks
+page (`SRC-010`, programmes moved into a Cloudflare-gated catalogue —
+`PAUSED`), the press releases (`SRC-011`, read live by the help page), the
+Hawaiian-music blog (`SRC-060`, readable — 96 weekly slots — but a
+volunteer's personal blog with no stated terms: ask first, then enable).
+Not in the registry at all: Eventbrite, Meetup, AllEvents, Bandsintown,
+Patch, 1 Hotel and North Shore Give (terms forbid scraping); the Concert
+Association's ticketing API (its host's robots.txt disallows it); the yacht
+club (robots.txt answers 403); gohawaii.com, the Marriott event pages and
+Chabad (bot challenges); Kauaʻi Magazine (its two hosts' terms disagree).
+Google's `calendar.google.com/robots.txt` disallows crawlers, and every
+Google-calendar entry is a public ICS feed its owner embeds for
+subscription: consuming it a few times a day is what it is for.
 
 ## The help page and the emergency banner
 

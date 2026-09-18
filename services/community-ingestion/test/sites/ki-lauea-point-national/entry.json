@@ -14,7 +14,9 @@
    "item": "div.field--name-field-upcoming-events-body li",
    "exclude": "\\bclos(?:ed|ure)",
    "stopAt": "^(?:holiday\\s+)?closures?\\b",
-   "defaultLocation": "Kīlauea Point National Wildlife Refuge, Kīlauea"
+   "defaultLocation": "Kīlauea Point National Wildlife Refuge, Kīlauea",
+   "descriptionFrom": "div.field--name-field-upcoming-events-body > p",
+   "titlePrefix": "Admission-free day: "
   },
   "followDetails": false
  },

@@ -19,9 +19,10 @@ const WEEKDAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', '
 const MONTH = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\\.?';
 const DAY = '(\\d{1,2})(?!\\d)(?:st|nd|rd|th)?';
 const YEAR = '((?:19|20)\\d{2})';
-const DASH = '\\s*(?:-|–|—|to|through|thru|until)\\s*';
+const DASH = '\\s*(?:-|–|—|to|through|thru|until)(?:\\s*[-–—])?\\s*';
 
-export type DateHit = { date: string; endDate?: string; index: number; length: number };
+/** `spans`: the stretches of the match that are the dates themselves, when the match also runs over a time ("1/7/2026 - 3:30pm to 12/31/2026"). */
+export type DateHit = { date: string; endDate?: string; index: number; length: number; spans?: Array<[number, number]> };
 export type Clock = { start?: string; end?: string };
 export type WeeklyRule = { weekdays: number[]; ordinals?: number[] };
 export type DateOptions = { today?: string; yearHint?: number };
@@ -54,7 +55,7 @@ const fullYear = (raw: string | undefined): number | undefined => {
   return raw.length === 2 ? 2000 + year : year;
 };
 
-type Found = { date: string | undefined; endDate?: string | undefined };
+type Found = { date: string | undefined; endDate?: string | undefined; spans?: Array<[number, number]> };
 type Pattern = { expression: RegExp; read: (match: RegExpExecArray, options: DateOptions) => Found[] };
 
 const PATTERNS: Pattern[] = [
@@ -100,10 +101,16 @@ const PATTERNS: Pattern[] = [
     } },
   // 01/07/2026 - 3:30pm to 12/31/2026 - 6:00pm: a run, the way a Drupal date field prints one
   { expression: /(?<![\d/.-])(\d{1,2})\/(\d{1,2})\/((?:19|20)\d{2})(?:\s*[-–—,]?\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)?\s*(?:to|through|thru|until|[-–—])\s*(\d{1,2})\/(\d{1,2})\/((?:19|20)\d{2})/gi,
-    read: match => [{
-      date: valid(Number(match[3]), Number(match[1]) - 1, Number(match[2])),
-      endDate: valid(Number(match[6]), Number(match[4]) - 1, Number(match[5])),
-    }] },
+    read: match => {
+      const first = `${match[1]}/${match[2]}/${match[3]}`;
+      const second = `${match[4]}/${match[5]}/${match[6]}`;
+      const secondAt = match[0].lastIndexOf(second);
+      return [{
+        date: valid(Number(match[3]), Number(match[1]) - 1, Number(match[2])),
+        endDate: valid(Number(match[6]), Number(match[4]) - 1, Number(match[5])),
+        spans: [[match.index, first.length], [match.index + secondAt, second.length]],
+      }];
+    } },
   // 9/20/2026 · 9-18-2026 · 9/20 (only with a month and day that can be one)
   { expression: /(?<![\d/.-])(\d{1,2})([/-])(\d{1,2})(?:\2((?:19|20)?\d{2}))?(?![\d/]|\s*(?:am|pm|a\.m|p\.m))/gi,
     read: (match, options) => {
@@ -127,12 +134,13 @@ export const findDates = (text: string, options: DateOptions = {}): DateHit[] =>
     for (let match = expression.exec(text); match; match = expression.exec(text)) {
       const [from, to] = [match.index, match.index + match[0].length];
       if (taken.some(([start, end]) => from < end && to > start)) continue;
-      const found = read(match, options).filter((hit): hit is { date: string; endDate?: string | undefined } => Boolean(hit.date));
+      const found = read(match, options).filter((hit): hit is Found & { date: string } => Boolean(hit.date));
       if (!found.length) continue;
       taken.push([from, to]);
       found.forEach(hit => hits.push({
         date: hit.date,
         ...(hit.endDate && hit.endDate >= hit.date ? { endDate: hit.endDate } : {}),
+        ...(hit.spans ? { spans: hit.spans } : {}),
         index: from,
         length: to - from,
       }));

@@ -82,14 +82,44 @@ every request failing is.
     "yearFrom": "div.selectedmonth",    // a page-level element naming the year
     "weeklyWeeks": 8,                   // undated items under a weekday heading, or saying "every Friday", repeat this far
     "include": "kaua", "exclude": "food tour", "stopAt": "^Previous Concerts",
-    "defaultTitle": "KAGRA Rodeo", "defaultLocation": "CJM Stables, Poʻipū"
+    "defaultTitle": "KAGRA Rodeo", "defaultLocation": "CJM Stables, Poʻipū",
+
+    "titleFrom": "h1.show-title",       // the nearest element BEFORE the item that names it (a show over its dates)
+    "timeFrom": "#start-time", "locationFrom": "p.venue", "descriptionFrom": "div.intro > p",   // said once on the page, for every item
+    "titlePrefix": "Admission-free day: ",
+    "titleLine": true,                  // the title is the item's first line
+    "titleAfter": "\\s[-–—]\\s+",        // "<when> - <what>": cut there; the date is read from the first half
+    "titleStrip": "^(?:SOLD OUT|POSTPONED)\\s*",   // leaves the title, becomes the status; the item keeps its key
+    "locationPattern": "\\s@\\s*([^–—-]+)",   // a place written into the line: group 1
+    "labels": { "location": "Where|Location", "date": "When", "time": "Time", "title": "Event" },   // labelled lines
+    "dateRequired": true,               // the `date` element must hold a date (no falling back to a deadline in the prose)
+    "dateFromWins": true,               // the heading's date is the date, whatever the item mentions
+    "cellHeaders": true                 // item is a <td>: weekday/date from its column header, time from its row header
   } }
 ```
+
+`labels`, `titleStrip`, `groupPath` + `dateFrom` (records in sections whose
+heading carries the month and year) and `defaultLocation` exist on
+`records` too. `embedSelector` (on `SOURCE_HTML` and `JSON_LD_HTML`) follows
+a same-site `<iframe src>` that holds the real list.
+
+A weekly series stored as one long run ("01/07/2026 to 12/31/2026", weekday
+in the title) is written out as a series when `weeklyWeeks` is set. A run
+that has opened and not closed ("Jan 8 – 31") stays in the read until it
+closes. Where a `time` selector is given, the prose is not searched for a
+clock.
 
 Dates are read however they are typed — "Sunday, August 30, 2026", "Sept.
 13th & 20th", "Oct 8–11", "9/20:", "26 Sep 2026" — and a missing year is the
 nearest one that is not long past (`src/text-dates.ts`). Times likewise:
 "3-6 PM", "9 a.m.-noon", "8:30-10:30am".
+
+## `ICS`
+
+`"exclude": "^No Service|Gallery Maintenance"` drops entries that are not
+events. Recurrence is reckoned on Kauaʻi's wall clock: WEEKLY with BYDAY,
+MONTHLY with an ordinal BYDAY ("1SU", "-1FR") or BYMONTHDAY, YEARLY, EXDATE,
+and RECURRENCE-ID overrides replacing the occurrence they edit.
 
 ## `RSS_ATOM`
 

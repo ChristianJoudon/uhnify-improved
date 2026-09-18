@@ -15,7 +15,8 @@
    "title": "em",
    "location": "p:nth-of-type(2)",
    "link": "a[href*='hilt.org/volunteer']",
-   "include": "Island of Kaua"
+   "include": "Island of Kaua",
+   "titlePrefix": "Volunteer workday: "
   },
   "followDetails": false
  },

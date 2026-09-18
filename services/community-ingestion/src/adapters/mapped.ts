@@ -42,6 +42,7 @@ type JsonRecordsConfig = {
   dateFrom?: string;
   labels?: { title?: string; date?: string; time?: string; location?: string; description?: string };
   titleStrip?: string;
+  defaultLocation?: string;
   urlPrefix?: string;
   include?: { field: string; pattern: string };
   exclude?: { field: string; pattern: string };
@@ -230,7 +231,7 @@ export const mappedJsonEvents = (text: string, source: SourceDefinition, sourceU
     if (!start || !inWindow(start, source)) return [];
 
     const location = safeVisibleText(labelled.location
-      ?? (fields.location ?? []).map(path => textOnly(textAt(record, path), 200)).filter(Boolean).join(', '), 500);
+      ?? ((fields.location ?? []).map(path => textOnly(textAt(record, path), 200)).filter(Boolean).join(', ') || mapping.defaultLocation), 500);
     const description = safeVisibleText(labelled.description ?? textAt(record, fields.description), 2_000);
     const categoryValue = firstAt(record, fields.categories);
     const categories = uniqueLabels(typeof categoryValue === 'string' ? categoryValue.split(/\s*,\s*/) : categoryValue);
@@ -293,15 +294,20 @@ const linesOf = (node: ReturnType<CheerioAPI>): string[] => {
   const walk = (elements: AnyNode[]) => elements.forEach(element => {
     if (element.type === 'text') lines[lines.length - 1] += element.data;
     else if (element.type === 'tag' && !/^(?:script|style|svg|noscript)$/.test(element.name)) {
+      const seam = INLINE.test(element.name) ? '\u0001' : ' ';
       if (element.name === 'br' || BLOCK.test(element.name)) lines.push('');
-      else if (!INLINE.test(element.name)) lines[lines.length - 1] += ' ';
+      else lines[lines.length - 1] += seam;
       walk(element.children);
       if (BLOCK.test(element.name)) lines.push('');
-      else if (!INLINE.test(element.name)) lines[lines.length - 1] += ' ';
+      else lines[lines.length - 1] += seam;
     }
   });
   walk(node.toArray());
-  return lines.map(line => clean(line).replace(/\s+([,.;:!?])/g, '$1')).filter(Boolean);
+  // A seam between two typographic tags is no space ("3<sup>rd</sup>",
+  // "Ha<b>ʻ</b>ena") unless a word plainly ends and another begins there
+  // ("<b>EDGE Ministry</b><b>Middle School</b>").
+  return lines.map(line => clean(line.replace(/([a-z,.;:!?)])\u0001+([A-Z(])/g, '$1 $2').replace(/\u0001/g, ''))
+    .replace(/\s+([,.;:!?])/g, '$1')).filter(Boolean);
 };
 
 const spaced = (_$: CheerioAPI, node: ReturnType<CheerioAPI>): string => linesOf(node).join(' ');
@@ -315,7 +321,8 @@ const orderOf = ($: CheerioAPI): Map<AnyNode, number> => {
 
 const tidyTitle = (text: string): string => clean(text
   .replace(/\(\s*\)/g, ' ')
-  .replace(/^(?:[\s:|@,&–—-]|and\b)+|[\s:|@,&–—-]+$/gi, '')
+  .replace(/\(\s+/g, '(').replace(/\s+\)/g, ')')
+  .replace(/^(?:[\s:|@,&•·*–—-]|and\b)+|[\s:|@,&•·–—-]+$/gi, '')
   .replace(/\s+([:,])/g, '$1')
   .replace(/^\W*(?:on|at)\s+/i, ''));
 
@@ -449,7 +456,8 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
     if (selectors.dateRequired && !hits.length && !horizon) return;
 
     const blank = (text: string) => (hits.length && text === from
-      ? hits.reduceRight((rest, hit) => rest.slice(0, hit.index) + ' '.repeat(hit.length) + rest.slice(hit.index + hit.length), text)
+      ? hits.flatMap(hit => hit.spans ?? [[hit.index, hit.length] as [number, number]])
+        .reduceRight((rest, [start, length]) => rest.slice(0, start) + ' '.repeat(length) + rest.slice(start + length), text)
       : text);
     // Where the entry says which element holds the time, the prose is not
     // searched for one: a festival's "September 20th to 26th" must not pick up
@@ -481,7 +489,7 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       if (!selectors.titleAfter) {
         findDates(rest, local).reverse().forEach(hit => { rest = rest.slice(0, hit.index) + rest.slice(hit.index + hit.length); });
         if (dateText && rest.includes(dateText)) rest = rest.replace(dateText, ' ');
-        rest = rest.replace(/\((?:every|each|weekly|monthly|daily)[^)]*\)/gi, ' ').replace(WEEKDAY_WORDS, ' ');
+        rest = rest.replace(/\([^)]*\b(?:every|each|weekly|monthly|daily|annual(?:ly)?)\b[^)]*\)/gi, ' ').replace(WEEKDAY_WORDS, ' ');
       }
       if (timeText && rest.includes(timeText)) rest = rest.replace(timeText, ' ');
       title = tidyTitle(rest.replace(CLOCK_WORDS, ' ')) || borrowedTitle || selectors.defaultTitle || '';
