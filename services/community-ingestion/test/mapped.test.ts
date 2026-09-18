@@ -38,15 +38,15 @@ test('a JSON API is read by the register’s description of it: paths, a date sp
   const { rows } = await read(definition, JSON.stringify([
     { eventHash: 'a1', title: 'Improv &amp; Open Mic', address: '4411 Kikowaena St.', region: 'Lihue', category: 'Arts & Culture,Community', website: '',
       userEmail: 'someone@example.org', dates: [{ date: '9-18-2026', dateString: 'Fri, Sep 18, 2026', startTime: 63_000_000, endTime: 79_200_000 }] },
-    { eventHash: 'b2', title: 'KANIKAPILA', address: 'The Shops', region: 'South Shore', category: 'Music', website: 'https://shops.example/events',
+    { eventHash: 'b2', title: 'Kanikapila', address: 'The Shops', region: 'South Shore', category: 'Music', website: 'https://shops.example/events',
       dates: [{ date: '9-18-2026', dateString: 'Every Friday', startTime: 63_000_000, endTime: 70_200_000 }] },
   ]), 'application/json');
   assert.deepEqual(rows.map(row => [row.localStart, row.localEnd, row.title]), [
-    ['2026-09-18T17:30:00-10:00', '2026-09-18T19:30:00-10:00', 'KANIKAPILA'],
+    ['2026-09-18T17:30:00-10:00', '2026-09-18T19:30:00-10:00', 'Kanikapila'],
     ['2026-09-18T17:30:00-10:00', '2026-09-18T22:00:00-10:00', 'Improv & Open Mic'],
-    ['2026-09-25T17:30:00-10:00', '2026-09-25T19:30:00-10:00', 'KANIKAPILA'],
-    ['2026-10-02T17:30:00-10:00', '2026-10-02T19:30:00-10:00', 'KANIKAPILA'],
-    ['2026-10-09T17:30:00-10:00', '2026-10-09T19:30:00-10:00', 'KANIKAPILA'],
+    ['2026-09-25T17:30:00-10:00', '2026-09-25T19:30:00-10:00', 'Kanikapila'],
+    ['2026-10-02T17:30:00-10:00', '2026-10-02T19:30:00-10:00', 'Kanikapila'],
+    ['2026-10-09T17:30:00-10:00', '2026-10-09T19:30:00-10:00', 'Kanikapila'],
   ]);
   assert.equal(rows[1]?.location, '4411 Kikowaena St., Lihue');
   assert.deepEqual(rows[1]?.categories, ['Arts & Culture', 'Community']);
@@ -212,4 +212,106 @@ test('calendar rules are reckoned on Kauaʻi’s clock: an evening series stays 
   assert.deepEqual(at('Monthly Memorial Service').map(hst), ['2026-11-01T09:00'], 'the first Sunday; October’s was replaced, and the replacement is not an event');
   assert.deepEqual(at('Last Friday Art Walk').map(hst), ['2026-09-25T17:00', '2026-10-30T17:00']);
   assert.equal(at('No Service Today').length, 0);
+});
+
+test('titles read like titles: shouting lowered, acronyms kept, a tacked-on date cut, a button is not a title', async () => {
+  const { polishTitle, isJunkTitle } = await import('../src/adapters/shared.js');
+  assert.equal(polishTitle('FREE SATURDAY HULA SHOW'), 'Free Saturday Hula Show');
+  assert.equal(polishTitle('KANIKAPILA LIVE MUSIC at THE SHOPS AT KUKUIʻULA'), 'Kanikapila Live Music at the Shops at Kukuiʻula');
+  assert.equal(polishTitle('KCC 5K FUN RUN & BBQ WITH DJ ANUHEA'), 'KCC 5K Fun Run & BBQ with DJ Anuhea');
+  assert.equal(polishTitle('ʻUKULELE CLASS (FREE)'), 'ʻUkulele Class (Free)');
+  assert.equal(polishTitle('Kauai Mokihana Festival -- Sept 20 - 26'), 'Kauai Mokihana Festival');
+  assert.equal(polishTitle('Sound Bath and Yin Yoga Session - Sept. 27th'), 'Sound Bath and Yin Yoga Session');
+  assert.equal(polishTitle('“The Wizard of Oz”'), 'The Wizard of Oz');
+  assert.equal(polishTitle('Lūʻau Kalamakū'), 'Lūʻau Kalamakū', 'a title that is fine is left alone');
+  assert.equal(polishTitle('October 3'), 'October 3', 'a title that is only a date is not cut to nothing');
+  assert.deepEqual(['Read more', 'Details', 'Buy Tickets', 'RSVP now', 'Events', '—'].map(isJunkTitle), [true, true, true, true, true, true]);
+  assert.deepEqual(['Learn to Surf', 'Register of Deeds Open House', 'Ticket to Ride Game Night'].map(isJunkTitle), [false, false, false]);
+});
+
+const composite = (pages: Array<{ url: string; text: string }>) => JSON.stringify({ pages: pages.map(page => ({ ...page, mediaType: 'text/html' })) });
+
+const readPages = async (definition: SourceDefinition, pages: Array<{ url: string; text: string }>) => {
+  mock.timers.enable({ apis: ['Date'], now: Date.parse(NOW) });
+  try {
+    const result = await new LiveSourceAdapter(definition.adapterKind).extract({
+      bytes: new TextEncoder().encode(composite(pages)), mediaType: 'application/vnd.matchbook.source-pages+json',
+      sourceUrl: 'https://fixture.example/classes', statusCode: 200, responseHeaders: {},
+    }, definition);
+    return { ...result, rows: result.items.map(item => item.normalizedFields).sort((a, b) => `${a.localStart}`.localeCompare(`${b.localStart}`)) };
+  } finally {
+    mock.timers.reset();
+  }
+};
+
+const htmlSource = (selectors: Record<string, unknown>, extra: Record<string, unknown> = {}) => source({
+  adapterKind: 'SOURCE_HTML',
+  adapterConfig: { kind: 'SOURCE_HTML', detailLinkSelector: 'a', sitemap: false, selectors, ...extra },
+});
+
+test('an item’s own page fills in what its list row left out: by selector, by labelled line, and from schema.org with no configuration', async () => {
+  const list = `<ul>
+    <li class="card"><a href="/classes/childbirth"><h2>Childbirth Education</h2></a><time datetime="2026-09-23">Sep 23</time><span class="when">Wed 5:30 p.m.-7:30 p.m.</span></li>
+    <li class="card"><a href="/classes/doggy-hour"><h2>Doggy Hour</h2></a><time datetime="2026-10-13">Oct 13</time></li>
+    <li class="card"><a href="/classes/concert"><h2>Slack Key Night</h2></a></li>
+    <li class="card"><a href="/classes/not-fetched"><h2>Car Seat Check</h2></a><time datetime="2026-10-13">Oct 13</time></li></ul>`;
+  const { rows } = await readPages(htmlSource({
+    item: 'li.card', title: 'h2', time: 'span.when', defaultLocation: 'Somewhere on Kauaʻi',
+    detail: { location: 'div.venue p', labels: { time: 'Time', location: 'Venue' } },
+  }), [
+    { url: 'https://fixture.example/classes', text: list },
+    { url: 'https://fixture.example/classes/childbirth', text: '<div class="venue"><p>Wilcox Medical Center</p><p>3-3420 Kūhiō Highway, Līhuʻe</p></div><p>About the class.</p>' },
+    { url: 'https://fixture.example/classes/doggy-hour', text: '<p><strong>Time : </strong> 10:00 am</p><p><strong>Venue : </strong> Hale Līhuʻe</p>' },
+    { url: 'https://fixture.example/classes/concert', text: `<script type="application/ld+json">{"@type":"MusicEvent","name":"Slack Key Night","startDate":"2026-10-02T19:00:00-10:00","endDate":"2026-10-02T21:00:00-10:00","location":{"@type":"Place","name":"Hanalei Community Center"},"description":"An evening of kī hōʻalu."}</script>` },
+  ]);
+  assert.deepEqual(rows.map(row => [row.localStart, row.localEnd, row.title, row.location]), [
+    ['2026-09-23T17:30:00-10:00', '2026-09-23T19:30:00-10:00', 'Childbirth Education', 'Wilcox Medical Center, 3-3420 Kūhiō Highway, Līhuʻe'],
+    ['2026-10-02T19:00:00-10:00', '2026-10-02T21:00:00-10:00', 'Slack Key Night', 'Hanalei Community Center'],
+    ['2026-10-13T00:00:00-10:00', undefined, 'Car Seat Check', 'Somewhere on Kauaʻi'],
+    ['2026-10-13T10:00:00-10:00', undefined, 'Doggy Hour', 'Hale Līhuʻe'],
+  ]);
+  assert.equal(rows[1]?.description, 'An evening of kī hōʻalu.');
+});
+
+test('a page whose markup has changed says so, and what it tells machines is read meanwhile; an empty calendar is not that', async () => {
+  const definition = htmlSource({ item: 'div.event-row', title: 'h3', date: 'span.date' }, { followDetails: false });
+  const redesigned = await readPages(definition, [{ url: 'https://fixture.example/classes', text: `<main><article class="tile">Market day, October 3</article>
+    <div itemscope itemtype="https://schema.org/Event"><span itemprop="name">Harvest Festival</span><meta itemprop="startDate" content="2026-10-03T10:00:00-10:00">
+      <div itemprop="location" itemscope itemtype="https://schema.org/Place"><span itemprop="name">Hanapēpē Athletic Field</span></div></div></main>` }]);
+  assert.deepEqual(redesigned.warnings.map(warning => warning.code), ['SELECTOR_MATCHED_NOTHING', 'READ_FROM_STRUCTURED_DATA']);
+  assert.equal(redesigned.completeness, 'PARTIAL', 'a page that can no longer be read is not a complete read');
+  assert.deepEqual(redesigned.rows.map(row => [row.localStart, row.title, row.location]), [['2026-10-03T10:00:00-10:00', 'Harvest Festival', 'Hanapēpē Athletic Field']]);
+
+  const undated = await readPages(definition, [{ url: 'https://fixture.example/classes', text: ['a', 'b', 'c'].map(each => `<div class="event-row"><h3>Thing ${each}</h3><span class="date">TBA</span></div>`).join('') }]);
+  assert.deepEqual(undated.warnings.map(warning => warning.code), ['NO_DATES_READ']);
+
+  const quiet = await readPages(definition, [{ url: 'https://fixture.example/classes', text: '<div class="event-row"><h3>Last month’s fair</h3><span class="date">August 8, 2026</span></div>' }]);
+  assert.deepEqual([quiet.warnings, quiet.completeness, quiet.rows.length], [[], 'COMPLETE', 0], 'rows that are simply past are a quiet calendar');
+});
+
+test('what a row says about itself is believed: a machine date, a status badge, a series with an end, a weekday that contradicts', async () => {
+  const { rows, warnings } = await readPages(htmlSource({ item: 'div.row', title: 'h3' }, { followDetails: false }), [{ url: 'https://fixture.example/classes', text: `
+    <div class="row"><h3>Garden Tour</h3><time datetime="2026-10-03T09:00:00-10:00">Saturday morning</time><p>Meet by October 1 to register.</p></div>
+    <div class="row"><h3>Harvest Festival</h3><span class="badge">Cancelled</span><p>October 3, 2026, 10 am</p></div>
+    <div class="row"><h3>Line Dancing</h3><p>Every Friday through October 9, 6-7 pm</p></div>
+    <div class="row"><h3>Refuge Week</h3><p>Saturday, October 18, 2026</p></div>
+    <div class="row"><h3>Read more</h3><p>October 20, 2026</p></div>` }]);
+  assert.deepEqual(rows.map(row => [row.localStart, row.title, row.realityStatus]), [
+    ['2026-09-18T18:00:00-10:00', 'Line Dancing', 'SCHEDULED'],
+    ['2026-09-25T18:00:00-10:00', 'Line Dancing', 'SCHEDULED'],
+    ['2026-10-02T18:00:00-10:00', 'Line Dancing', 'SCHEDULED'],
+    ['2026-10-03T09:00:00-10:00', 'Garden Tour', 'SCHEDULED'],
+    ['2026-10-03T10:00:00-10:00', 'Harvest Festival', 'CANCELLED'],
+    ['2026-10-09T18:00:00-10:00', 'Line Dancing', 'SCHEDULED'],
+    ['2026-10-18T00:00:00-10:00', 'Refuge Week', 'SCHEDULED'],
+  ]);
+  assert.deepEqual(rows.find(row => row.title === 'Refuge Week')?.researchNeeded, ['location', 'schedule'], 'October 18, 2026 is a Sunday: a person should look');
+  assert.deepEqual(warnings.map(warning => warning.code).sort(), ['JUNK_TITLES_DROPPED', 'WEEKDAY_DISAGREES']);
+});
+
+test('times that are ten hours out are noticed', async () => {
+  const definition = source({ adapterKind: 'STATIC_JSON', adapterConfig: { kind: 'STATIC_JSON', eventSelector: 'events' } });
+  const events = Array.from({ length: 8 }, (_unused, index) => ({ id: index, title: `Evening show ${index}`, startDate: `2026-10-0${index + 1}T13:00:00.000Z` }));
+  const result = await read(definition, JSON.stringify({ events }), 'application/json');
+  assert.deepEqual(result.warnings.map(warning => warning.code), ['TIMES_LOOK_SHIFTED'], 'a 1 PM show written "13:00Z" and believed lands at 3 in the morning');
 });

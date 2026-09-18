@@ -8,7 +8,7 @@
  "adapterKind": "SOURCE_HTML",
  "adapterConfig": {
   "kind": "SOURCE_HTML",
-  "detailLinkSelector": "h2.event-card__heading a",
+  "detailLinkSelector": "li.event-card:has(li.area:contains(\"Kaua\")) h2.event-card__heading a",
   "sitemap": false,
   "selectors": {
    "item": "li.event-card:has(li.area:contains(\"Kaua\"))",
@@ -19,9 +19,12 @@
    "description": "div.event-card__desc",
    "link": "h2.event-card__heading a",
    "category": "li.type",
-   "defaultLocation": "Wilcox Medical Center, 3-3420 Kūhiō Highway, Līhuʻe, HI 96766"
+   "defaultLocation": "Kauaʻi",
+   "detail": {
+    "location": "p:has(> strong:contains('Location'))"
+   }
   },
-  "followDetails": false
+  "followDetails": true
  },
  "endpoints": [
   {
@@ -42,7 +45,7 @@
   "jitterPercent": 15,
   "lookBackDays": 1,
   "lookAheadDays": 150,
-  "maxPages": 1,
+  "maxPages": 8,
   "maxItems": 200
  },
  "httpPolicy": {

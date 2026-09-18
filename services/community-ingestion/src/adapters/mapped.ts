@@ -1,7 +1,8 @@
 import { load, type CheerioAPI } from 'cheerio';
 import type { AnyNode, Element } from 'domhandler';
 import type { ExtractedItem, SourceDefinition } from '../contracts.js';
-import { findClock, findDates, findWeeklyRule, kauaiToday, occurrences, type DateOptions, type WeeklyRule } from '../text-dates.js';
+import { findClock, findDates, findSeries, findWeeklyRule, kauaiToday, occurrences, seriesDates, type DateOptions } from '../text-dates.js';
+import { structuredEvents } from './structured.js';
 import {
   asString,
   contextText,
@@ -275,9 +276,65 @@ type HtmlSelectors = {
   dateFromWins?: boolean; titleFrom?: string; timeFrom?: string; locationFrom?: string; descriptionFrom?: string;
   titlePrefix?: string; titleLine?: boolean; titleAfter?: string; titleStrip?: string; locationPattern?: string;
   labels?: Labels; cellHeaders?: boolean;
+  detail?: { date?: string; time?: string; location?: string; description?: string; labels?: Labels };
 };
 
-const clean = (value: string | undefined): string => (value ?? '').replace(/[​-‍﻿]/g, '').replace(/\s+/g, ' ').trim();
+/** What the parser may ask of the run around it, and what it reports back. */
+export type HtmlReadContext = {
+  /** The HTML of a page this run fetched, by URL — an item's own page, if it was followed. */
+  detailFor?: (url: string) => string | undefined;
+  /** Filled in by the parser: how many items the selector found, and how many of those yielded a date or a rule. */
+  diagnostics?: { matched: number; dated: number };
+};
+
+type DetailFacts = { dateText?: string; timeText?: string; location?: string; description?: string; start?: string; end?: string };
+
+/**
+ * An item's own page, read for what its list row left out. The entry's
+ * `detail` selectors and labels come first; a schema.org Event on the page
+ * fills whatever they did not, with no configuration at all.
+ */
+const readDetail = (html: string, pageUrl: string, detail: HtmlSelectors['detail']): DetailFacts => {
+  const $ = load(html);
+  const text = (selector: string | undefined, join = ' ') => (selector
+    ? $(selector).toArray().map(element => spaced($, $(element))).filter(Boolean).join(join) : '');
+  const { found } = detail?.labels ? readLabels(linesOf($('body')), detail.labels) : { found: {} as Labels };
+  const events = structuredEvents(html, pageUrl);
+  const structured = events.length === 1 ? events[0] : undefined;
+  const facts: DetailFacts = {};
+  const dateText = text(detail?.date) || found.date;
+  const timeText = text(detail?.time) || found.time;
+  // A venue block is lines: a label ("Location"), the place, the street, the
+  // town, and a "Get directions" link. The label and the link are not the place.
+  const placeLines = detail?.location
+    ? $(detail.location).toArray().flatMap(element => linesOf($(element)))
+      .map(line => line.replace(/^\W*(?:venue|address|location|where|place)\b\s*:?\s*/i, '').trim())
+      .filter(line => line && !/^(?:get\s+)?directions?\b|^(?:view\s+)?(?:on\s+)?map\b|^google maps/i.test(line))
+    : [];
+  const location = placeLines.join(', ') || found.location || structured?.location;
+  const description = text(detail?.description) || found.description || structured?.description;
+  if (dateText) facts.dateText = dateText;
+  if (timeText) facts.timeText = timeText;
+  if (location) facts.location = location;
+  if (description) facts.description = description;
+  if (structured?.start) facts.start = structured.start;
+  if (structured?.end) facts.end = structured.end;
+  return facts;
+};
+
+/** "2026-10-03T09:00:00-10:00" (or Z, or no offset) as Kauaʻi's date and clock. */
+const isoOnKauai = (value: string | undefined): { date: string; clock?: string } | undefined => {
+  const match = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2})(?::\d{2})?(?:\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/.exec((value ?? '').trim());
+  if (!match) return undefined;
+  if (!match[2]) return { date: match[1]! };
+  if (!match[3]) return { date: match[1]!, clock: match[2]! };
+  const instant = Date.parse(value!.trim());
+  if (Number.isNaN(instant)) return undefined;
+  const local = new Date(instant - 10 * 3_600_000).toISOString();
+  return { date: local.slice(0, 10), clock: local.slice(11, 16) };
+};
+
+const clean = (value: string | undefined): string => (value ?? '').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
 
 const INLINE = /^(?:strong|b|em|i|u|sup|sub|small|mark|font)$/;
 const BLOCK = /^(?:p|div|li|tr|h[1-6]|ul|ol|table|section|article|blockquote|dd|dt)$/;
@@ -375,7 +432,7 @@ const cellHeadersOf = ($: CheerioAPI, cell: ReturnType<CheerioAPI>): { column: s
  * `weeklyWeeks` weeks — which is what a market directory or a bar's music
  * table is.
  */
-export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
+export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceUrl: string, run: HtmlReadContext = {}): ExtractedItem[] => {
   const selectors = (source.adapterConfig as { selectors?: HtmlSelectors }).selectors;
   if (!selectors) return [];
   const $ = load(html);
@@ -406,7 +463,9 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
   const lookAhead = new Date(Date.now() - 10 * 3_600_000 + source.polling.lookAheadDays * 86_400_000).toISOString().slice(0, 10);
   const items: ExtractedItem[] = [];
 
-  $(selectors.item).each((index, element) => {
+  const matched = $(selectors.item);
+  if (run.diagnostics) run.diagnostics.matched += matched.length;
+  matched.each((index, element) => {
     if (items.length >= source.polling.maxItems) return;
     const at = order.get(element) ?? 0;
     if (at >= stopIndex) return;
@@ -428,10 +487,20 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
     }
 
     const dateNode = selectors.date ? root.find(selectors.date).first() : selectors.dateAttr ? root : undefined;
-    const dateText = labelled.date
+    // A <time datetime> in the item is the publisher telling a machine the
+    // date; with no selector saying otherwise it is believed before the prose.
+    const stamped = !selectors.date && !selectors.dateAttr && !labelled.date
+      ? isoOnKauai(root.find('time[datetime]').first().attr('datetime')) : undefined;
+    const dateText = labelled.date ?? stamped?.date
       ?? (dateNode ? (selectors.dateAttr ? clean(dateNode.attr(selectors.dateAttr)) : spaced($, dateNode)) : '');
     const timeText = labelled.time ?? (selectors.time ? spaced($, root.find(selectors.time).first()) : '');
     const titleNode = selectors.title ? root.find(selectors.title).first() : undefined;
+    const href = (selectors.link ? root.find(selectors.link).first() : titleNode?.is('a') ? titleNode : root.find('a[href]').first())?.attr('href')
+      ?? (root.is('a') ? root.attr('href') : undefined);
+    const url = href && !/^(?:mailto|tel|javascript):/i.test(href) ? new URL(href, sourceUrl).toString() : sourceUrl;
+    const detailHtml = url !== sourceUrl ? run.detailFor?.(url) : undefined;
+    const detail = detailHtml ? readDetail(detailHtml, url, selectors.detail) : {};
+    const detailStamp = isoOnKauai(detail.start);
 
     // Where the date is looked for, nearest first: its own element, the "when"
     // part, the item's text, then the heading over the group. A heading that is
@@ -453,6 +522,11 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       hits = findDates(candidate, local);
       if (hits.length) { from = candidate; break; }
     }
+    if (!hits.length && (detail.dateText || detailStamp)) {
+      // The list gave a title and a link; the date is on the item's own page.
+      from = detail.dateText ?? detailStamp!.date;
+      hits = findDates(from, local);
+    }
     if (selectors.dateRequired && !hits.length && !horizon) return;
 
     const blank = (text: string) => (hits.length && text === from
@@ -464,7 +538,12 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
     // the 10 am of a church service mentioned in its description.
     const structured = Boolean(selectors.time || selectors.labels?.time);
     const ownClock = [timeText, dateText, whenPart, ...(structured ? [] : [whole])].map(text => findClock(blank(text))).find(found => found.start);
-    const clock = ownClock ?? (headers ? findClock(headers.row) : undefined) ?? (pageClock.start ? pageClock : {});
+    const stampedClock: { start?: string; end?: string } | undefined = stamped?.clock && stamped.clock !== '00:00' ? { start: stamped.clock } : undefined;
+    const detailClock = [findClock(detail.timeText ?? '', { bare: true }), findClock(detail.dateText ?? '')].find(found => found.start)
+      ?? (detailStamp?.clock && detailStamp.clock !== '00:00' && hits[0]?.date === detailStamp.date
+        ? { start: detailStamp.clock, ...(isoOnKauai(detail.end)?.clock ? { end: isoOnKauai(detail.end)!.clock! } : {}) } : undefined);
+    const clock: { start?: string; end?: string } = ownClock ?? stampedClock ?? (headers ? [findClock(headers.row, { bare: true })].find(found => found.start) : undefined)
+      ?? detailClock ?? (pageClock.start ? pageClock : {});
 
     // The place: a labelled line, its own element, a pattern in the line, the page, the default.
     let location = labelled.location ?? (selectors.location ? spaced($, root.find(selectors.location).first()) : '');
@@ -472,7 +551,7 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       const placed = new RegExp(selectors.locationPattern, 'i').exec(whole);
       if (placed) { location = clean(placed[1] ?? placed[0]); whole = whole.replace(placed[0], ' '); }
     }
-    location = location || pageLocation || selectors.defaultLocation || '';
+    location = location || detail.location || pageLocation || selectors.defaultLocation || '';
 
     let title = labelled.title ?? (titleNode ? spaced($, titleNode) : '');
     // A heading that is only the date ("September 27th") is not the title;
@@ -499,14 +578,17 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       const stripped = new RegExp(selectors.titleStrip, 'i').exec(title);
       if (stripped) { status = clean(stripped[0]).replace(/[\s:–-]+$/, ''); title = tidyTitle(title.replace(stripped[0], ' ')); }
     }
+    if (!status) {
+      // A badge — an element that says nothing but "Cancelled" — is a status, wherever it sits in the item.
+      status = root.find('*').toArray().map(node => ($(node).children().length ? '' : clean($(node).text())))
+        .find(text => /^(?:cancel+ed|postponed|rescheduled|sold[\s-]?out)\W*$/i.test(text));
+    }
     title = textOnly(`${selectors.titlePrefix ?? ''}${title}`, 300) ?? '';
     if (!title) return;
 
-    const href = (selectors.link ? root.find(selectors.link).first() : titleNode?.is('a') ? titleNode : root.find('a[href]').first())?.attr('href')
-      ?? (root.is('a') ? root.attr('href') : undefined);
-    const url = href && !/^(?:mailto|tel|javascript):/i.test(href) ? new URL(href, sourceUrl).toString() : sourceUrl;
     const description = safeVisibleText(labelled.description
       ?? (selectors.description ? spaced($, root.find(selectors.description).first()) : '') ?? '', 2_000)
+      ?? safeVisibleText(detail.description, 2_000)
       ?? safeVisibleText(pageDescription, 2_000);
     const categories = selectors.category ? uniqueLabels(root.find(selectors.category).map((_i, node) => $(node).text()).get()) : [];
     const place = safeVisibleText(location, 500);
@@ -520,7 +602,10 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       if (!inWindow(start, source) && !running) return;
       const end = clock.end ? hawaiiDateTime(`${endDay ?? day} ${clock.end}`) : endDay ? hawaiiDateTime(endDay) : undefined;
       const note = series ? contextText([context, whole !== title ? whole : undefined], [title, description, place]) : undefined;
+      const doubt = !series && hits.find(hit => hit.date === day)?.weekday === 'disagrees'
+        ? 'The weekday written beside this date does not fall on it; one of the two is a typo.' : undefined;
       items.push(eventItem({
+        ...(doubt ? { doubt } : {}),
         id: `${url}#${title}#${day}`,
         title,
         start,
@@ -536,7 +621,14 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       }));
     };
 
-    const ruleText = `${dateText} ${whenPart} ${lines[0] ?? ''} ${whole}`;
+    // Where a rule ("every Friday") is looked for: where the page says when —
+    // the date and time elements, the title, the first line. The description
+    // is searched only for an item that is nothing but a line of text; a
+    // festival's blurb mentioning "a workshop on Monday" is not a schedule.
+    const lineMode = !selectors.date && !selectors.title && !selectors.dateAttr;
+    // A schedule is said in a short line ("Every Friday through October 9, 6-7 pm"); a blurb is long.
+    const shortLines = lines.filter(line => line.length <= 120).join(' ');
+    const ruleText = `${dateText} ${timeText} ${whenPart} ${title} ${shortLines} ${lineMode ? whole : ''}`;
     // A weekly market stored as one long run ("01/07/2026 to 12/31/2026") with
     // its weekday in the title is a series, not an eleven-month event.
     const [first] = hits;
@@ -548,13 +640,27 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
         return;
       }
     }
+    // "Every Friday through December 18", "Saturdays in October": the dates in
+    // such a line are the series' edges, not events of their own. A series
+    // with a stated end may be written out to it without weeklyWeeks, because
+    // the publisher has said how far it goes.
+    const series = findSeries(ruleText, local) ?? (context && !hits.length ? findSeries(`every ${context}`, local) : undefined);
+    if (series && (series.from || series.until)) {
+      const reach = horizon || (series.until ? source.polling.lookAheadDays : 0);
+      if (reach) {
+        if (run.diagnostics) run.diagnostics.dated += 1;
+        seriesDates(series, today, reach).forEach(day => push(day, undefined, true));
+        return;
+      }
+    }
     if (hits.length) {
+      if (run.diagnostics) run.diagnostics.dated += 1;
       hits.forEach(hit => push(hit.date, hit.endDate, false));
       return;
     }
-    if (!horizon) return;
-    const rule: WeeklyRule | undefined = findWeeklyRule(ruleText) ?? (context ? findWeeklyRule(`every ${context}`) : undefined);
-    if (rule) occurrences(rule, today, horizon).forEach(day => push(day, undefined, true));
+    if (!horizon || !series) return;
+    if (run.diagnostics) run.diagnostics.dated += 1;
+    occurrences(series.rule, today, horizon).forEach(day => push(day, undefined, true));
   });
   return items;
 };

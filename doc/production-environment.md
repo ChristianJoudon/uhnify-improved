@@ -218,6 +218,12 @@ venues' own sites in what has already been collected and probes those. The
 worker never works around a refusal: a 403, a bot challenge, a robots.txt
 that says no, or terms that forbid automated access end it there.
 
+A run says when it can no longer read a page rather than reporting an empty
+calendar: `SELECTOR_MATCHED_NOTHING` and `NO_DATES_READ` mark the run
+PARTIAL (and the page's schema.org data is used meanwhile), while
+`WEEKDAY_DISAGREES`, `TIMES_LOOK_SHIFTED` and `JUNK_TITLES_DROPPED` are
+advice on a complete read. The list is in ADDING-SOURCES.md.
+
 Two rules hold for every source: recovery meetings listed on a general
 calendar are never collected (the run records `SENSITIVE_WITHHELD`; those
 come only through the manual `SEN-` lane), and "cancelled" or "postponed" in

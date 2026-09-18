@@ -1,5 +1,6 @@
 import { load } from 'cheerio';
 import { formatDate } from './text-dates.js';
+import { decodeBytes, repairMojibake } from './text-repair.js';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { ManualSupportAdapter } from './adapters/manual-support.js';
@@ -15,7 +16,8 @@ const COMPOSITE_MEDIA_TYPE = 'application/vnd.matchbook.source-pages+json';
 
 type Page = { url: string; mediaType: string; text: string };
 
-const decode = (bytes: Uint8Array): string => new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+/** Never a reason to fail a run: see text-repair.ts. JSON and calendars are UTF-8 by definition and pass through untouched. */
+const decode = (bytes: Uint8Array, contentType?: string): string => repairMojibake(decodeBytes(bytes, contentType));
 
 const kauaiDate = (offsetDays: number): string => {
   // Kauaʻi is UTC−10 all year; the date the island is on, plus an offset.
@@ -76,7 +78,7 @@ const requestFor = (source: SourceDefinition, purpose: string): PlannedRequest |
 const fetchedPage = (result: SafeHttpResult): Page => ({
   url: result.sourceUrl,
   mediaType: result.mediaType,
-  text: decode(result.bytes),
+  text: decode(result.bytes, result.responseHeaders['content-type']),
 });
 
 const composite = (source: SourceDefinition, pages: Page[]): FetchArtifactInput => ({

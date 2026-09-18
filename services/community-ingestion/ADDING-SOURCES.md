@@ -98,6 +98,25 @@ every request failing is.
   } }
 ```
 
+### An item's own page — `detail`
+
+```jsonc
+"followDetails": true,                    // the default; false means the list page says everything
+"detailLinkSelector": "li.card h2 a",     // which links to follow (same host, de-duplicated, at most polling.maxPages)
+"selectors": { …,
+  "detail": {
+    "location": "p:has(> strong:contains('Location'))",   // a venue block is read as lines; its label and "Get directions" are dropped
+    "time": "p.event-time", "date": "p.event-start-date", "description": "div.about",
+    "labels": { "time": "Time", "location": "Venue" }      // or labelled lines anywhere on that page
+  } }
+```
+
+What the list row says wins; its own page fills what the row left out — the
+venue, the time, the description, even the date — and outranks
+`defaultLocation` and the page-level `…From` fallbacks. With no `detail`
+selectors at all, a followed page's schema.org Event (JSON-LD or microdata)
+still fills the gaps.
+
 `labels`, `titleStrip`, `groupPath` + `dateFrom` (records in sections whose
 heading carries the month and year) and `defaultLocation` exist on
 `records` too. `embedSelector` (on `SOURCE_HTML` and `JSON_LD_HTML`) follows
@@ -113,6 +132,47 @@ Dates are read however they are typed — "Sunday, August 30, 2026", "Sept.
 13th & 20th", "Oct 8–11", "9/20:", "26 Sep 2026" — and a missing year is the
 nearest one that is not long past (`src/text-dates.ts`). Times likewise:
 "3-6 PM", "9 a.m.-noon", "8:30-10:30am".
+
+## What the reader does without being told
+
+- **Dates.** Every written form above, plus: a weekday beside a date is
+  checked against it — it *corrects* a year nobody wrote ("Sunday, November
+  16" in last year's post is last year's) and *flags* a contradiction the
+  publisher wrote ("Saturday, October 18, 2026") for a schedule check; "every
+  Friday through December 18", "Saturdays in October", "Mondays, Sept 14 –
+  Oct 26" are series with an end, written out to it; in a dated post (RSS,
+  `prose`) "this Saturday" and "tomorrow" are read against the post's date.
+- **Times.** "10a–2p", "6.30pm", "9 a.m.–noon", "doors 6, show 7" (the show),
+  "all day"; a bare "6-8" only where the text is known to be a time (a
+  `time` element, a `Time:` label, a schedule's row header).
+- **Machine dates first.** A `<time datetime>` in an item is believed before
+  its prose; schema.org is read as JSON-LD *and* microdata, and a malformed
+  JSON-LD block (trailing commas, comments) is repaired rather than skipped.
+- **Text.** A page that is not UTF-8 is decoded by its declared charset or
+  as Windows-1252 instead of failing the run; text decoded once too often
+  ("KÅ«hiÅ") is put back word by word; `<br>` and block ends are word
+  breaks; `3<sup>rd</sup>` stays "3rd".
+- **Titles.** SHOUTING is lowered with initials kept ("KCC 5K Fun Run & BBQ
+  with DJ Anuhea"), a date tacked on the end is cut, wrapping quotes go. The
+  item's key is made from the title as written, so polishing never re-keys.
+  Every start is written on Kauaʻi's clock, whatever offset the feed used.
+
+## What a run reports
+
+| Warning | Means | Read is |
+|---|---|---|
+| `SELECTOR_MATCHED_NOTHING` | the item selector found no rows — the markup changed | PARTIAL |
+| `NO_DATES_READ` | rows matched, none had a readable date or rule | PARTIAL |
+| `READ_FROM_STRUCTURED_DATA` | …so the page's schema.org was read meanwhile | — |
+| `PAGE_PARSE_FAILED` | a page could not be parsed at all | PARTIAL |
+| `WEEKDAY_DISAGREES` | an event's weekday and date contradict; queued for a schedule check | complete |
+| `TIMES_LOOK_SHIFTED` | most events start between midnight and 5 AM — see `timestampsAreLocal` | complete |
+| `JUNK_TITLES_DROPPED` | rows titled "Read more", "Events"… were dropped | complete |
+| `SENSITIVE_WITHHELD` | recovery meetings were not collected | complete |
+
+An empty calendar — rows that are simply past, or none at all on a page
+whose selector still matches — is a complete read with no warning. That is
+the difference a silent zero hides.
 
 ## `ICS`
 

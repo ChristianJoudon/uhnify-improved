@@ -170,6 +170,22 @@ const HtmlSelectorsSchema = z.object({
   }).strict().optional(),
   /** The item is a table cell: its column's and row's headers carry the weekday or date and the time. */
   cellHeaders: z.boolean().optional(),
+  /**
+   * What to read from the page an item links to, for whatever the list left
+   * out — the venue, the time, the description, even the date. Needs
+   * `followDetails` (the default). Without any selectors here, a fetched
+   * detail page's schema.org Event still fills the gaps.
+   */
+  detail: z.object({
+    date: z.string().min(1).optional(),
+    time: z.string().min(1).optional(),
+    location: z.string().min(1).optional(),
+    description: z.string().min(1).optional(),
+    labels: z.object({
+      date: z.string().min(1).optional(), time: z.string().min(1).optional(),
+      location: z.string().min(1).optional(), description: z.string().min(1).optional(),
+    }).strict().optional(),
+  }).strict().optional(),
 }).strict();
 
 const TribeConfigSchema = z.object({
