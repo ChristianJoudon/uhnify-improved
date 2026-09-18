@@ -1,0 +1,81 @@
+{
+ "id": "SRC-904",
+ "slug": "royal-coconut-coast-association",
+ "displayName": "Royal Coconut Coast Association featured events",
+ "publisherName": "Royal Coconut Coast Association",
+ "publisherUrl": "https://royalcoconutcoast.com/kauai-events/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "h3 a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.single_event_block",
+   "title": "h3 a",
+   "date": "p.event_date",
+   "time": "p.event_date",
+   "description": "div.verbose_container > p:not(.event_date), div.verbose_container > div:not(.event_details) > p",
+   "link": "h3 a",
+   "labels": {
+    "location": "Location"
+   }
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://royalcoconutcoast.com/kauai-events/"
+  }
+ ],
+ "trust": "DIRECTORY",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 100
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "royalcoconutcoast.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "DIRECTORY",
+  "start": "DIRECTORY",
+  "location": "DIRECTORY",
+  "status": "DIRECTORY"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:00:00Z",
+ "steward": "operator"
+}

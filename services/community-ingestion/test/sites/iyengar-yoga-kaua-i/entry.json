@@ -1,0 +1,108 @@
+{
+ "id": "SRC-929",
+ "slug": "iyengar-yoga-kaua-i",
+ "displayName": "Iyengar Yoga Kauaʻi class schedule",
+ "publisherName": "Iyengar Yoga Kauaʻi",
+ "publisherUrl": "https://www.momoyoga.com/iykauai/schedule",
+ "tier": "C",
+ "adapterKind": "STATIC_JSON",
+ "adapterConfig": {
+  "kind": "STATIC_JSON",
+  "eventSelector": "Momoyoga weekly schedule: each lesson's JSON hangs on its LessonActionButton (data-options); the page shows seven days from ?date=",
+  "records": {
+   "path": "lesson",
+   "htmlJson": {
+    "selector": ".schedule-lesson > .lesson-action [data-component=\"LessonActionButton\"]",
+    "attribute": "data-options"
+   },
+   "fields": {
+    "id": "id",
+    "title": "title",
+    "start": "timeFrom",
+    "end": "timeTo",
+    "location": [
+     "location",
+     "room"
+    ],
+    "description": "description",
+    "url": "detailUrl",
+    "status": "states.state"
+   }
+  }
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.momoyoga.com/iykauai/schedule?date={DATE+0}"
+  },
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.momoyoga.com/iykauai/schedule?date={DATE+7}"
+  },
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.momoyoga.com/iykauai/schedule?date={DATE+14}"
+  },
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.momoyoga.com/iykauai/schedule?date={DATE+21}"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event"
+ ],
+ "polling": {
+  "intervalMinutes": 720,
+  "jitterPercent": 15,
+  "lookBackDays": 0,
+  "lookAheadDays": 28,
+  "maxPages": 4,
+  "maxItems": 100
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.momoyoga.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 3000
+ },
+ "parser": {
+  "parserId": "mapped-json",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "id",
+  "title",
+  "description",
+  "timeFrom",
+  "timeTo",
+  "location",
+  "room",
+  "detailUrl",
+  "isCancelled",
+  "isFree"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T12:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:30:00Z",
+ "steward": "operator"
+}

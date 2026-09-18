@@ -1,0 +1,87 @@
+{
+ "id": "SRC-014",
+ "slug": "kukui-grove-events",
+ "displayName": "Kukui Grove Center Events",
+ "publisherName": "Kukui Grove Center",
+ "publisherUrl": "https://www.kukuigrovecenter.com/events/",
+ "tier": "B",
+ "adapterKind": "STATIC_JSON",
+ "adapterConfig": {
+  "kind": "STATIC_JSON",
+  "eventSelector": "Pylot mall platform: an object keyed by slug, each a Modern Events Calendar record",
+  "records": {
+   "path": "*",
+   "fields": {
+    "id": "mvk_id",
+    "title": "mvk_item_content.title",
+    "start": "mvk_event_data.meta.start_datetime",
+    "end": "mvk_event_data.meta.end_datetime",
+    "description": "mvk_item_content.excerpt",
+    "url": "mvk_item_meta.url",
+    "categories": "mvk_item_tax.cats.*.name",
+    "status": "mvk_event_data.meta.event_status"
+   },
+   "defaultLocation": "Kukui Grove Center, 3-2600 Kaumualiʻi Hwy, Līhuʻe",
+   "exclude": {
+    "field": "mvk_item_tax.cats.*.name",
+    "pattern": "holiday"
+   }
+  }
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://api.mypylot.io/mvk-api/v1/content/www.kukuigrovecenter.com/mec-events.json"
+  }
+ ],
+ "trust": "OFFICIAL_VENUE",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event"
+ ],
+ "polling": {
+  "intervalMinutes": 720,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 500
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "api.mypylot.io"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "application/json"
+  ],
+  "timeoutMs": 30000,
+  "maxResponseBytes": 12000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-json",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "mvk_id",
+  "mvk_slug",
+  "mvk_item_content",
+  "mvk_item_meta",
+  "mvk_item_tax",
+  "mvk_event_data"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_VENUE",
+  "start": "OFFICIAL_VENUE",
+  "location": "OFFICIAL_VENUE",
+  "status": "OFFICIAL_VENUE"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T12:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:30:00Z",
+ "steward": "operator"
+}

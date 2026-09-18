@@ -1,0 +1,31 @@
+{
+ "now": "2026-09-18T12:17:56.089Z",
+ "items": [
+  {
+   "start": "2026-10-07T17:15:00-10:00",
+   "end": "2026-10-07T18:15:00-10:00",
+   "title": "American Legion Post 54 Meeting",
+   "location": "Kauaʻi Veterans Center, 3215 Kauaʻi Veterans Memorial Hwy, Līhuʻe",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-21T17:00:00-10:00",
+   "title": "Veterans' Council Meeting at 1700",
+   "location": "Kauaʻi Veterans Center, 3215 Kauaʻi Veterans Memorial Hwy, Līhuʻe",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-11-04T17:15:00-10:00",
+   "end": "2026-11-04T18:15:00-10:00",
+   "title": "American Legion Post 54 Meeting",
+   "location": "Kauaʻi Veterans Center, 3215 Kauaʻi Veterans Memorial Hwy, Līhuʻe",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-11-18T17:00:00-10:00",
+   "title": "Veterans' Council Meeting at 1700",
+   "location": "Kauaʻi Veterans Center, 3215 Kauaʻi Veterans Memorial Hwy, Līhuʻe",
+   "status": "SCHEDULED"
+  }
+ ]
+}

@@ -1,0 +1,87 @@
+{
+ "id": "SRC-032",
+ "slug": "princeville-at-hanalei",
+ "displayName": "Princeville at Hanalei community events",
+ "publisherName": "Princeville at Hanalei",
+ "publisherUrl": "https://www.princeville.com/events/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.eventitem",
+   "title": "h3",
+   "date": "div.eventdate",
+   "time": "span.eventtime",
+   "location": "span.eventlocation a",
+   "description": "div.eventcopy > p:nth-of-type(2)",
+   "yearFrom": "div.selectedmonth"
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.princeville.com/events/{M|YYYY/MM}",
+   "expand": {
+    "variable": "M",
+    "months": 3
+   }
+  }
+ ],
+ "trust": "DIRECTORY",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 720,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 3,
+  "maxItems": 300
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.princeville.com"
+  ],
+  "allowedRedirectHosts": [
+   "princeville.com"
+  ],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 2,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "DIRECTORY",
+  "start": "DIRECTORY",
+  "location": "DIRECTORY",
+  "status": "DIRECTORY"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T20:00:00Z",
+ "steward": "operator"
+}

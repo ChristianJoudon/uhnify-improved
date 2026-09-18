@@ -9,250 +9,39 @@ import type {
 } from '../contracts.js';
 import { sha256 } from '../hash.js';
 
-type JsonRecord = Record<string, unknown>;
+import { mappedHtmlEvents, mappedJsonEvents, rssEvents } from './mapped.js';
+import {
+  isRecoveryMeeting,
+  ACCESS_SECRET,
+  DAY_MS,
+  EMAIL,
+  GENERIC_LOCATION_HINT,
+  HAWAII_OFFSET,
+  LOCATION_SUFFIX,
+  NAMED_LOCATION,
+  PHONE,
+  RELATIONAL_LOCATION,
+  WEB_URL,
+  WEEKDAY,
+  asString,
+  cleanLocationHint,
+  contextText,
+  eventItem,
+  hawaiiDateTime,
+  inWindow,
+  isRecord,
+  itemKey,
+  labelsFrom,
+  locationHintFrom,
+  locationText,
+  safeVisibleText,
+  textOnly,
+  uniqueLabels,
+  usableEnd,
+} from './shared.js';
+import type { JsonRecord } from './shared.js';
 
-const HAWAII_OFFSET = '-10:00';
-const DAY_MS = 86_400_000;
-export const SAFE_REVIEW_CONTEXT_VERSION = 'safe-review.v1' as const;
-const WEEKDAY = new Map([
-  ['SU', 0], ['MO', 1], ['TU', 2], ['WE', 3], ['TH', 4], ['FR', 5], ['SA', 6],
-]);
-
-const isRecord = (value: unknown): value is JsonRecord => (
-  value !== null && typeof value === 'object' && !Array.isArray(value)
-);
-
-const asString = (value: unknown): string | undefined => {
-  if (typeof value === 'string' || typeof value === 'number') {
-    const text = `${value}`.trim();
-    return text || undefined;
-  }
-  if (isRecord(value)) return asString(value.rendered ?? value.name ?? value.value);
-  return undefined;
-};
-
-const textOnly = (value: unknown, limit = 2_000): string | undefined => {
-  const source = asString(value);
-  if (!source) return undefined;
-  const text = load(`<div>${source}</div>`)('div').text().replace(/\s+/g, ' ').trim();
-  return text ? text.slice(0, limit) : undefined;
-};
-
-const EMAIL = /[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi;
-const PHONE = /(?:\+?1[\s().-]*)?(?:\(?[2-9]\d{2}\)?[\s().-]*)?[2-9]\d{2}[\s.-]*\d{4}/g;
-const WEB_URL = /(?:\b[a-z][a-z0-9+.-]*:\/\/|\bwww\.)\S+/gi;
-const ACCESS_SECRET = /\b(?:meeting\s*(?:id|code)|passcode|password)\s*[:#-]?\s*[\w-]+/gi;
-
-/**
- * Description and context are useful review evidence, but contact details and
- * private-access material are not classification inputs. Keep the public prose
- * around those fragments and replace only the unsafe fragment.
- */
-const safeVisibleText = (value: unknown, limit = 2_000): string | undefined => {
-  const visible = textOnly(value, limit * 2);
-  if (!visible) return undefined;
-  const redacted = visible
-    .replace(EMAIL, '[contact removed]')
-    .replace(PHONE, '[contact removed]')
-    .replace(WEB_URL, '[link removed]')
-    .replace(ACCESS_SECRET, '[access detail removed]')
-    .replace(/(?:\[contact removed\]\s*){2,}/g, '[contact removed] ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return redacted ? redacted.slice(0, limit) : undefined;
-};
-
-const labelsFrom = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value.flatMap(labelsFrom);
-  if (isRecord(value)) {
-    const label = value.name ?? value.venue ?? value.label ?? value.title
-      ?? value.rendered ?? value.value ?? value.slug;
-    return labelsFrom(label).map(item => item.replace(/[-_]+/g, ' '));
-  }
-  const label = safeVisibleText(value, 240);
-  return label ? [label] : [];
-};
-
-const uniqueLabels = (...values: unknown[]): string[] => {
-  const labels: string[] = [];
-  const seen = new Set<string>();
-  for (const label of values.flatMap(labelsFrom)) {
-    const key = label.toLocaleLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      labels.push(label);
-    }
-  }
-  return labels;
-};
-
-const contextText = (
-  values: unknown[],
-  excluded: Array<string | undefined> = [],
-): string | undefined => {
-  const blocked = new Set(excluded.filter(Boolean).map(value => value!.toLocaleLowerCase()));
-  const labels = uniqueLabels(...values).filter(label => !blocked.has(label.toLocaleLowerCase()));
-  return safeVisibleText(labels.join(' · '), 1_500);
-};
-
-const LOCATION_SUFFIX = '(?:Beach(?:\\s+Park)?|Community(?:\\s+(?:Ag|Agricultural))?\\s+Center|Neighborhood\\s+Center|Civic\\s+Center|Church|Temple|Chapel|Library|Museum|Park|Hall|Theatre|Theater|Garden|Gardens|Farm|Market|School|College|University|Marina|Harbor|Pavilion|Playground|Trailhead|Studio|Cafe|Café|Restaurant|Resort|Hotel|Plaza|Ranch|Club|Arena|Field|Gym)';
-const NAMED_LOCATION = new RegExp(
-  `\\b((?:[\\p{Lu}\\d][\\p{L}\\p{N}’ʻ'&.-]*(?:\\s+|$)){1,6}${LOCATION_SUFFIX})\\b`,
-  'gu',
-);
-const RELATIONAL_LOCATION = new RegExp(
-  `\\b(?:at|near|inside|outside|venue|location)\\s*[:@-]?\\s*((?:[\\p{L}\\p{N}][\\p{L}\\p{N}’ʻ'&.-]*(?:\\s+|$)){1,6}${LOCATION_SUFFIX})\\b`,
-  'giu',
-);
-const GENERIC_LOCATION_HINT = /^(?:farmers?|local|night|craft|makers?|goods|community)\s+market$/i;
-
-const cleanLocationHint = (value: string): string | undefined => {
-  const hint = value
-    .replace(/^(?:the|our|this|join|visit|meet|gather(?:ing)?)\s+/i, '')
-    .replace(/[.,;:!?]+$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!hint || hint.length < 5 || hint.length > 160 || GENERIC_LOCATION_HINT.test(hint)) return undefined;
-  return hint;
-};
-
-/**
- * A title-cased public place name is retained only as a clue. It never becomes
- * a canonical address, and it always leaves location research outstanding.
- */
-const locationHintFrom = (description?: string, context?: string, title?: string): string | undefined => {
-  for (const text of [description, context]) {
-    if (!text) continue;
-    NAMED_LOCATION.lastIndex = 0;
-    for (const match of text.matchAll(NAMED_LOCATION)) {
-      const hint = cleanLocationHint(match[1] ?? '');
-      if (hint) return hint;
-    }
-    RELATIONAL_LOCATION.lastIndex = 0;
-    for (const match of text.matchAll(RELATIONAL_LOCATION)) {
-      const hint = cleanLocationHint(match[1] ?? '');
-      if (hint) return hint;
-    }
-  }
-  if (title) {
-    RELATIONAL_LOCATION.lastIndex = 0;
-    for (const match of title.matchAll(RELATIONAL_LOCATION)) {
-      const hint = cleanLocationHint(match[1] ?? '');
-      if (hint) return hint;
-    }
-  }
-  return undefined;
-};
-
-const locationText = (value: unknown): string | undefined => {
-  if (typeof value === 'string') return safeVisibleText(value, 500);
-  if (!isRecord(value)) return undefined;
-  const address = isRecord(value.address) ? value.address : value;
-  return safeVisibleText([
-    asString(value.name ?? value.venue),
-    asString(address.streetAddress ?? address.address),
-    asString(address.addressLocality ?? address.city),
-    asString(address.addressRegion ?? address.state),
-    asString(address.postalCode ?? address.zip),
-  ].filter(Boolean).join(', '), 500);
-};
-
-const hawaiiDateTime = (value: unknown): string | undefined => {
-  const raw = asString(value);
-  if (!raw) return undefined;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return `${raw}T00:00:00${HAWAII_OFFSET}`;
-  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?$/.test(raw)) {
-    const [date = '', clock = '00:00:00'] = raw.replace(' ', 'T').split('T');
-    return `${date}T${clock.length === 5 ? `${clock}:00` : clock}${HAWAII_OFFSET}`;
-  }
-  const parsed = new Date(raw);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-};
-
-const inWindow = (value: string | undefined, source: SourceDefinition): boolean => {
-  if (!value) return false;
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return false;
-  const now = Date.now();
-  return time >= now - source.polling.lookBackDays * DAY_MS
-    && time <= now + source.polling.lookAheadDays * DAY_MS;
-};
-
-const itemKey = (...parts: Array<string | number | undefined>): string => (
-  sha256(parts.filter(part => part !== undefined).join('|'))
-);
-
-const usableEnd = (start: string | undefined, end: string | undefined): string | undefined => {
-  if (!end) return undefined;
-  const startTime = Date.parse(start ?? '');
-  const endTime = Date.parse(end);
-  if (Number.isNaN(endTime)) return undefined;
-  if (Number.isNaN(startTime)) return end;
-  const duration = endTime - startTime;
-  return duration > 0 && duration <= 31 * DAY_MS ? end : undefined;
-};
-
-const eventItem = (input: {
-  id?: string | number | undefined;
-  title: string;
-  start?: string | undefined;
-  end?: string | undefined;
-  location?: string | undefined;
-  description?: string | undefined;
-  sourceUrl: string;
-  timeZone?: string | undefined;
-  status?: string | undefined;
-  attendanceMode?: string | undefined;
-  categories?: string[] | undefined;
-  context?: string | undefined;
-  raw: JsonRecord;
-  locator: string;
-}): ExtractedItem => {
-  const title = safeVisibleText(input.title, 300) ?? input.title;
-  const description = safeVisibleText(input.description, 2_000);
-  const location = safeVisibleText(input.location, 500);
-  const categories = uniqueLabels(input.categories);
-  const context = safeVisibleText(input.context, 1_500);
-  const locationHint = location ? undefined : locationHintFrom(description, context, title);
-  const end = usableEnd(input.start, input.end);
-  const researchNeeded = [
-    ...(!location ? ['location' as const] : []),
-    ...(!input.start || (input.end && !end) ? ['schedule' as const] : []),
-  ];
-  const reality = /cancel/i.test(input.status ?? '') ? 'CANCELLED'
-    : /postpon/i.test(input.status ?? '') ? 'POSTPONED' : 'SCHEDULED';
-  return {
-    // Stable identity continues to depend only on the publisher identity and
-    // schedule—not on enrichment fields that may improve on a later parser run.
-    sourceItemKey: itemKey(input.id, input.sourceUrl, title, input.start),
-    canonicalSourceUrl: input.sourceUrl,
-    entityHint: 'event',
-    rawFields: input.raw,
-    normalizedFields: {
-      title,
-      ...(input.start ? { localStart: input.start } : {}),
-      ...(end ? { localEnd: end } : {}),
-      ...(location ? { location } : {}),
-      ...(locationHint ? { locationHint } : {}),
-      ...(description ? { description } : {}),
-      ...(description ? { reviewDescription: description } : {}),
-      ...(categories.length ? { categories } : {}),
-      ...(context ? { context } : {}),
-      ...(researchNeeded.length ? { researchNeeded } : {}),
-      reviewContextVersion: SAFE_REVIEW_CONTEXT_VERSION,
-      timeZone: input.timeZone || 'Pacific/Honolulu',
-      sourceUrl: input.sourceUrl,
-      ...(input.attendanceMode ? { attendanceMode: input.attendanceMode } : {}),
-      realityStatus: reality,
-    },
-    evidence: [{
-      locatorKind: 'json_path',
-      locator: input.locator,
-      excerpt: [title, description, context, locationHint].filter(Boolean).join(' · ').slice(0, 500),
-    }],
-    explicitRealityHint: reality,
-  };
-};
+export { SAFE_REVIEW_CONTEXT_VERSION } from './shared.js';
 
 const tribeEvents = (document: unknown, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
   const events = isRecord(document) && Array.isArray(document.events)
@@ -461,44 +250,82 @@ const parseIcsDate = (raw: string): string | undefined => {
   return `${year}-${month}-${day}T${hour}:${minute}:${second}${zulu ? 'Z' : HAWAII_OFFSET}`;
 };
 
+const HST_MS = 10 * 3_600_000;
+
+/** "1SU", "-1FR", "MO" → { ordinal, weekday }. */
+const byDayRule = (value: string): { ordinal: number | undefined; weekday: number } | undefined => {
+  const match = /^([+-]?\d{1,2})?(SU|MO|TU|WE|TH|FR|SA)$/.exec(value.trim());
+  if (!match) return undefined;
+  return { ordinal: match[1] ? Number(match[1]) : undefined, weekday: WEEKDAY.get(match[2]!)! };
+};
+
+/**
+ * The occurrences of a recurring VEVENT inside the polling window.
+ *
+ * All of the calendar arithmetic — which weekday, which day of the month,
+ * the nth Sunday — is done on Kauaʻi's wall clock, not on UTC. A 7 PM
+ * kanikapila is already tomorrow in UTC, and a rule tested against the UTC
+ * weekday put every evening series a day early. MONTHLY rules honour an
+ * ordinal BYDAY ("1SU", "-1FR") and BYMONTHDAY; before, they repeated on
+ * DTSTART's day of the month whatever the rule said, so a first-Sunday
+ * service landed on a Monday. `skip` holds the instants a calendar has
+ * taken out (EXDATE) or replaced (a RECURRENCE-ID override).
+ */
 const expandIcs = (
   start: string,
   rule: string | undefined,
   source: SourceDefinition,
+  skip: Set<number> = new Set(),
 ): string[] => {
-  if (!rule) return inWindow(start, source) ? [start] : [];
+  if (!rule) return inWindow(start, source) && !skip.has(Date.parse(start)) ? [start] : [];
   const parts = Object.fromEntries(rule.split(';').map(part => {
     const [name = '', value = ''] = part.split('=', 2);
     return [name, value];
   }));
   const frequency = parts.FREQ;
-  if (!['DAILY', 'WEEKLY', 'MONTHLY'].includes(frequency ?? '')) return inWindow(start, source) ? [start] : [];
+  if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(frequency ?? '')) return inWindow(start, source) ? [start] : [];
   const interval = Math.max(1, Number(parts.INTERVAL) || 1);
   const count = Math.min(source.polling.maxItems, Number(parts.COUNT) || Number.POSITIVE_INFINITY);
   const until = parts.UNTIL ? Date.parse(parseIcsDate(parts.UNTIL) ?? '') : Number.POSITIVE_INFINITY;
-  const byDays = new Set((parts.BYDAY || '').split(',').map(value => WEEKDAY.get(value.slice(-2))).filter(value => value !== undefined));
-  const origin = new Date(start);
-  const floor = new Date(Math.max(origin.getTime(), Date.now() - source.polling.lookBackDays * DAY_MS));
-  floor.setUTCHours(origin.getUTCHours(), origin.getUTCMinutes(), origin.getUTCSeconds(), 0);
+  const byDay = (parts.BYDAY || '').split(',').map(byDayRule).filter((value): value is NonNullable<ReturnType<typeof byDayRule>> => Boolean(value));
+  const byMonthDay = (parts.BYMONTHDAY || '').split(',').map(Number).filter(value => Number.isInteger(value) && value !== 0);
+  const originInstant = Date.parse(start);
+  // The wall clock, held in a Date's UTC fields so that getUTCDay() is Kauaʻi's weekday.
+  const origin = new Date(originInstant - HST_MS);
+  const floor = Date.now() - source.polling.lookBackDays * DAY_MS;
   const ceiling = Math.min(Date.now() + source.polling.lookAheadDays * DAY_MS, until);
+  const originWeek = Math.floor((origin.getTime() - origin.getUTCDay() * DAY_MS) / (7 * DAY_MS));
   const occurrences: string[] = [];
   let generated = 0;
-  for (const probe = new Date(origin); probe.getTime() <= ceiling && generated < count; probe.setUTCDate(probe.getUTCDate() + 1)) {
-    const days = Math.floor((probe.getTime() - origin.getTime()) / DAY_MS);
+  for (const probe = new Date(origin); probe.getTime() + HST_MS <= ceiling && generated < count; probe.setUTCDate(probe.getUTCDate() + 1)) {
+    const days = Math.round((probe.getTime() - origin.getTime()) / DAY_MS);
+    const months = (probe.getUTCFullYear() - origin.getUTCFullYear()) * 12 + probe.getUTCMonth() - origin.getUTCMonth();
+    const dayOfMonth = probe.getUTCDate();
+    const daysInMonth = new Date(Date.UTC(probe.getUTCFullYear(), probe.getUTCMonth() + 1, 0)).getUTCDate();
+    const nth = Math.ceil(dayOfMonth / 7);
+    const nthFromEnd = -Math.ceil((daysInMonth - dayOfMonth + 1) / 7);
+    const weekdayMatches = byDay.some(each => each.weekday === probe.getUTCDay()
+      && (each.ordinal === undefined || each.ordinal === nth || each.ordinal === nthFromEnd));
     let match = false;
     if (frequency === 'DAILY') match = days % interval === 0;
     if (frequency === 'WEEKLY') {
-      match = Math.floor(days / 7) % interval === 0
-        && (byDays.size ? byDays.has(probe.getUTCDay()) : probe.getUTCDay() === origin.getUTCDay());
+      const week = Math.floor((probe.getTime() - probe.getUTCDay() * DAY_MS) / (7 * DAY_MS));
+      match = (week - originWeek) % interval === 0
+        && (byDay.length ? byDay.some(each => each.weekday === probe.getUTCDay()) : probe.getUTCDay() === origin.getUTCDay());
     }
     if (frequency === 'MONTHLY') {
-      const months = (probe.getUTCFullYear() - origin.getUTCFullYear()) * 12
-        + probe.getUTCMonth() - origin.getUTCMonth();
-      match = months >= 0 && months % interval === 0 && probe.getUTCDate() === origin.getUTCDate();
+      match = months >= 0 && months % interval === 0 && (
+        byDay.length ? weekdayMatches
+          : byMonthDay.length ? byMonthDay.some(day => day === dayOfMonth || day === dayOfMonth - daysInMonth - 1)
+            : dayOfMonth === origin.getUTCDate());
+    }
+    if (frequency === 'YEARLY') {
+      match = months >= 0 && months % (12 * interval) === 0 && dayOfMonth === origin.getUTCDate();
     }
     if (!match) continue;
     generated += 1;
-    if (probe >= floor) occurrences.push(probe.toISOString());
+    const instant = probe.getTime() + HST_MS;
+    if (instant >= floor && !skip.has(instant)) occurrences.push(new Date(instant).toISOString());
     if (occurrences.length >= source.polling.maxItems) break;
   }
   return occurrences;
@@ -507,6 +334,22 @@ const expandIcs = (
 const icsEvents = (text: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
   const blocks = unfoldIcs(text).join('\n').split('BEGIN:VEVENT').slice(1)
     .map(block => block.split('END:VEVENT')[0] ?? '');
+  const valuesOf = (block: string, name: string): string[] => block.split('\n')
+    .filter(line => new RegExp(`^${name}(?:;|:)`, 'i').test(line))
+    .flatMap(line => line.slice(line.indexOf(':') + 1).split(','))
+    .map(value => value.trim()).filter(Boolean);
+  const uidOf = (block: string): string => valuesOf(block, 'UID')[0] ?? '';
+  // An edited occurrence is a second VEVENT with the same UID and a
+  // RECURRENCE-ID: it replaces the series' occurrence at that instant.
+  const replaced = new Map<string, Set<number>>();
+  for (const block of blocks) {
+    for (const value of valuesOf(block, 'RECURRENCE-ID')) {
+      const instant = Date.parse(parseIcsDate(value) ?? '');
+      if (Number.isNaN(instant)) continue;
+      const uid = uidOf(block);
+      replaced.set(uid, (replaced.get(uid) ?? new Set()).add(instant));
+    }
+  }
   return blocks.flatMap((block, blockIndex) => {
     const fields = new Map<string, string>();
     for (const line of block.split('\n')) {
@@ -515,10 +358,15 @@ const icsEvents = (text: string, source: SourceDefinition, sourceUrl: string): E
       const key = line.slice(0, colon).split(';')[0]?.toUpperCase();
       if (key && !fields.has(key)) fields.set(key, icsValue(line.slice(colon + 1)));
     }
+    const skip = new Set<number>(fields.has('RECURRENCE-ID') ? [] : replaced.get(fields.get('UID') ?? '') ?? []);
+    valuesOf(block, 'EXDATE').forEach(value => {
+      const instant = Date.parse(parseIcsDate(value) ?? '');
+      if (!Number.isNaN(instant)) skip.add(instant);
+    });
     const title = textOnly(fields.get('SUMMARY'), 300);
     const baseStart = parseIcsDate(fields.get('DTSTART') ?? '');
     if (!title || !baseStart) return [];
-    const starts = expandIcs(baseStart, fields.get('RRULE'), source);
+    const starts = expandIcs(baseStart, fields.get('RRULE'), source, skip);
     const baseEnd = parseIcsDate(fields.get('DTEND') ?? '');
     const duration = baseEnd ? Date.parse(baseEnd) - Date.parse(baseStart) : undefined;
     const location = safeVisibleText(fields.get('LOCATION'), 500);
@@ -897,11 +745,20 @@ export class LiveSourceAdapter implements SourceAdapter {
         if (['TRIBE_REST', 'WP_FILTERED_TRIBE'].includes(this.kind)) {
           items.push(...tribeEvents(JSON.parse(page.text), source, page.url));
         } else if (this.kind === 'STATIC_JSON') {
-          items.push(...staticJsonEvents(JSON.parse(page.text), source, page.url));
+          items.push(...((source.adapterConfig as { records?: unknown }).records
+            ? mappedJsonEvents(page.text, source, page.url)
+            : staticJsonEvents(JSON.parse(page.text), source, page.url)));
+        } else if (this.kind === 'RSS_ATOM') {
+          items.push(...rssEvents(page.text, source, page.url));
         } else if (this.kind === 'ICS') {
-          items.push(...icsEvents(page.text, source, page.url));
+          const exclude = (source.adapterConfig as { exclude?: string }).exclude;
+          const pattern = exclude ? new RegExp(exclude, 'i') : undefined;
+          items.push(...icsEvents(page.text, source, page.url)
+            .filter(item => !pattern || !pattern.test(`${item.normalizedFields.title ?? ''}`)));
         } else if (this.kind === 'COUNTY_OPENCITIES') {
           items.push(...openCitiesEvents(JSON.parse(page.text), source, page.url));
+        } else if (this.kind === 'SOURCE_HTML' && (source.adapterConfig as { selectors?: unknown }).selectors) {
+          items.push(...mappedHtmlEvents(page.text, source, page.url));
         } else if (['JSON_LD_HTML', 'SOURCE_HTML'].includes(this.kind)) {
           const structured = jsonLdEvents(page.text, source, page.url);
           items.push(...(structured.length ? structured : visibleHtmlEvents(page.text, source, page.url)));
@@ -913,11 +770,16 @@ export class LiveSourceAdapter implements SourceAdapter {
         warnings.push({ code: 'PAGE_PARSE_FAILED', message: (error as Error).message.slice(0, 300) });
       }
     }
+    const withheld = items.filter(isRecoveryMeeting).length;
+    if (withheld) {
+      items = items.filter(item => !isRecoveryMeeting(item));
+      warnings.push({ code: 'SENSITIVE_WITHHELD', message: `${withheld} recovery-meeting listing(s) were not collected from a general calendar` });
+    }
     const deduplicated = [...new Map(items.map(item => [item.sourceItemKey, item])).values()]
       .slice(0, source.polling.maxItems);
     return {
       items: deduplicated,
-      completeness: warnings.length ? 'PARTIAL' : 'COMPLETE',
+      completeness: warnings.some(warning => warning.code !== 'SENSITIVE_WITHHELD') ? 'PARTIAL' : 'COMPLETE',
       warnings,
       metrics: {
         discovered: items.length,

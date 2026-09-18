@@ -1,0 +1,79 @@
+{
+ "id": "SRC-911",
+ "slug": "kapa-a-hongwanji-buddhist",
+ "displayName": "Kapaʻa Hongwanji Buddhist Temple services",
+ "publisherName": "Kapaʻa Hongwanji Buddhist Temple",
+ "publisherUrl": "https://www.kapaahongwanji.org/events/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "#sidebar .j-text p.MsoNoSpacing",
+   "yearFrom": "#sidebar .j-text p.MsoNoSpacing",
+   "exclude": "zoom",
+   "defaultTitle": "Kapaʻa Hongwanji temple service",
+   "defaultLocation": "Kapaʻa Hongwanji Mission, 4-1170 Kūhiō Hwy, Kapaʻa",
+   "titleFrom": "#sidebar .j-text p:has(strong):not(:contains('Rev.'))"
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.kapaahongwanji.org/events/"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 100
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.kapaahongwanji.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 5000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:20:00Z",
+ "steward": "operator"
+}

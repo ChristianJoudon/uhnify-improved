@@ -1,0 +1,52 @@
+{
+ "now": "2026-09-18T11:15:24.475Z",
+ "items": [
+  {
+   "start": "2026-09-18T18:30:00Z",
+   "end": "2026-09-18T20:30:00.000Z",
+   "title": "Aloha Aerobics",
+   "location": "All Saints' Gym",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T04:30:00Z",
+   "end": "2026-09-19T07:00:00.000Z",
+   "title": "Marshallese Youth Group",
+   "location": "Memorial Hall",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T18:00:00Z",
+   "end": "2026-09-20T19:00:00.000Z",
+   "title": "Sunday Service",
+   "location": "Church",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T19:30:00Z",
+   "end": "2026-09-20T20:30:00.000Z",
+   "title": "Sunday Service with Music",
+   "location": "Church",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T19:30:00Z",
+   "end": "2026-09-23T21:00:00.000Z",
+   "title": "Healing Prayer & Eucharist",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T01:00:00Z",
+   "end": "2026-09-25T03:45:00.000Z",
+   "title": "Doug and Sandy Slack Key Concert",
+   "location": "Church",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-03T18:00:00Z",
+   "end": "2026-10-04T01:00:00.000Z",
+   "title": "FGM- carwash",
+   "status": "SCHEDULED"
+  }
+ ]
+}

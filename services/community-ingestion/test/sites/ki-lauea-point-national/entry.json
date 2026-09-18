@@ -1,0 +1,79 @@
+{
+ "id": "SRC-910",
+ "slug": "ki-lauea-point-national",
+ "displayName": "Kīlauea Point National Wildlife Refuge admission-free days",
+ "publisherName": "U.S. Fish & Wildlife Service, Kīlauea Point National Wildlife Refuge",
+ "publisherUrl": "https://www.fws.gov/refuge/kilauea-point/events",
+ "tier": "B",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.field--name-field-upcoming-events-body li",
+   "exclude": "\\bclos(?:ed|ure)",
+   "stopAt": "^(?:holiday\\s+)?closures?\\b",
+   "defaultLocation": "Kīlauea Point National Wildlife Refuge, Kīlauea",
+   "descriptionFrom": "div.field--name-field-upcoming-events-body > p",
+   "titlePrefix": "Admission-free day: "
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.fws.gov/refuge/kilauea-point/events"
+  }
+ ],
+ "trust": "GOVERNMENT_INSTITUTION",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 180,
+  "maxPages": 1,
+  "maxItems": 50
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.fws.gov"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "GOVERNMENT_INSTITUTION",
+  "start": "GOVERNMENT_INSTITUTION",
+  "location": "GOVERNMENT_INSTITUTION",
+  "status": "GOVERNMENT_INSTITUTION"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:00:00Z",
+ "steward": "operator"
+}

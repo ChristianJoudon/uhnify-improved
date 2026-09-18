@@ -1,0 +1,80 @@
+{
+ "id": "SRC-927",
+ "slug": "li-hu-e-hongwanji",
+ "displayName": "Līhuʻe Hongwanji Mission calendar",
+ "publisherName": "Līhuʻe Hongwanji Mission",
+ "publisherUrl": "https://lihuehongwanji.org/calendar/",
+ "tier": "C",
+ "adapterKind": "ICS",
+ "adapterConfig": {
+  "kind": "ICS",
+  "materializationDays": 120,
+  "exclude": "^\\s*no service|service (?:at \\S+ )?cancell?ed|\\bno service\\s*$|vacation|board of directors|happy thanksgiving"
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://calendar.google.com/calendar/ical/lihuehongwanjimission%40gmail.com/public/basic.ics"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 3000
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "calendar.google.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/calendar"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 10000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 1000
+ },
+ "parser": {
+  "parserId": "icalendar",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "UID",
+  "RECURRENCE-ID",
+  "DTSTART",
+  "DTEND",
+  "SUMMARY",
+  "DESCRIPTION",
+  "LOCATION",
+  "URL",
+  "RRULE",
+  "RDATE",
+  "EXDATE",
+  "STATUS",
+  "SEQUENCE",
+  "DTSTAMP"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T12:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:30:00Z",
+ "steward": "operator"
+}

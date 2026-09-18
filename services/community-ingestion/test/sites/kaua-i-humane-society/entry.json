@@ -1,0 +1,81 @@
+{
+ "id": "SRC-905",
+ "slug": "kaua-i-humane-society",
+ "displayName": "Kauaʻi Humane Society events",
+ "publisherName": "Kauaʻi Humane Society",
+ "publisherUrl": "https://kauaihumane.org/about-us/events/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "div.events-title a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.events-inner, div.team-content li",
+   "title": "div.events-title a",
+   "date": "div.events-date",
+   "time": "span.event-time",
+   "exclude": "photo fundraiser|pet calendar",
+   "defaultLocation": "Kauaʻi Humane Society, 3-825 Kaumualiʻi Hwy, Līhuʻe",
+   "timeFrom": "p.event-time",
+   "locationFrom": "p.event-venue-name, p.event-venue-address"
+  },
+  "followDetails": true
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://kauaihumane.org/about-us/events/"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 180,
+  "maxPages": 6,
+  "maxItems": 100
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "kauaihumane.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T11:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:00:00Z",
+ "steward": "operator"
+}

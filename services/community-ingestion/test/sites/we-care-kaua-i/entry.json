@@ -1,0 +1,95 @@
+{
+ "id": "SRC-902",
+ "slug": "we-care-kaua-i",
+ "displayName": "We Care Kauaʻi community calendar",
+ "publisherName": "We Care Kauaʻi",
+ "publisherUrl": "https://www.wecarekauai.org/community-calendar",
+ "tier": "C",
+ "adapterKind": "STATIC_JSON",
+ "adapterConfig": {
+  "kind": "STATIC_JSON",
+  "eventSelector": "Square Online page model (window.__BOOTSTRAP_STATE__): one 'repeatable' card per stewardship opportunity; the card's title is its day ('Saturday 19th', 'Tuesdays and Saturdays'), its text is the event name and time as Quill runs, and the month and year are only in the section's title ('September 2026')",
+  "records": {
+   "path": "repeatables.*",
+   "htmlJson": {
+    "marker": "window.__BOOTSTRAP_STATE__ ="
+   },
+   "fields": {
+    "id": "id",
+    "title": "text.content.quill.ops.0.insert",
+    "date": "title.content.quill.ops.0.insert",
+    "time": [
+     "text.content.quill.ops.1.insert",
+     "text.content.quill.ops.2.insert"
+    ],
+    "url": "text.content.quill.ops.0.attributes.wLink.link.external",
+    "recurrence": "title.content.quill.ops.0.insert"
+   },
+   "groupPath": "siteData.page.properties.contentAreas.userContent.content.cells.*.content.properties",
+   "dateFrom": "sectionTitle.title.quill.ops.*.insert",
+   "recurrenceWeeks": 2,
+   "include": {
+    "field": "text.content.quill.ops.insert",
+    "pattern": "\\d\\s*[ap]\\.?\\s*m\\b"
+   },
+   "exclude": {
+    "field": "title.content.quill.ops.insert",
+    "pattern": "daily"
+   }
+  }
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.wecarekauai.org/community-calendar"
+  }
+ ],
+ "trust": "DIRECTORY",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 45,
+  "maxPages": 1,
+  "maxItems": 100
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.wecarekauai.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 5000
+ },
+ "parser": {
+  "parserId": "mapped-json",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "id",
+  "title",
+  "text"
+ ],
+ "authorityByField": {
+  "title": "DIRECTORY",
+  "start": "DIRECTORY",
+  "location": "DIRECTORY",
+  "status": "DIRECTORY"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T12:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:15:00Z",
+ "steward": "operator"
+}

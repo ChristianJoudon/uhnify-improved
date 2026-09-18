@@ -1,0 +1,573 @@
+{
+ "now": "2026-09-18T11:16:14.071Z",
+ "items": [
+  {
+   "start": "2026-09-18T12:30:00-10:00",
+   "end": "2026-09-18T14:30:00-10:00",
+   "title": "The Kokee Lodge features Nick Castillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T17:00:00-10:00",
+   "end": "2026-09-18T19:00:00-10:00",
+   "title": "Kaua`i Island Brewery at Port Allen Marina in Ele`ele features Frank Cruz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T17:30:00-10:00",
+   "end": "2026-09-18T20:00:00-10:00",
+   "title": "Cabana's at the Po`ipu Athletic Center features Kyle La Benz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T17:30:00-10:00",
+   "end": "2026-09-18T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Coconut Beach Resort in Waipouli features Pono Nero",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T17:30:00-10:00",
+   "end": "2026-09-18T19:30:00-10:00",
+   "title": "The Westin Princeville Ocean Resort Villa features Michael Keale",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T20:00:00-10:00",
+   "title": "Bankok Happy Bowl and Thai Bistro features Falling Down Romance",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T20:00:00-10:00",
+   "title": "Japanese Grandma's in Hanapepe features Darren Kiyotsuka",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T20:00:00-10:00",
+   "title": "Merriman’s Fish House at the Kukui`ula Shopping Center in Po`ipu features music",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T21:00:00-10:00",
+   "title": "The Happy Talk Lounge at the Hanalei Bay Resort in Princeville features Michael Ruff and Friends",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T21:00:00-10:00",
+   "title": "The Hukilau Lanai at the Kaua`i Coast resort in Waipouli presents Pancho Graham",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Aumakua",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-18T18:00:00-10:00",
+   "end": "2026-09-18T20:00:00-10:00",
+   "title": "The Saddle Room at the Wrangler Steakhouse in Waimea presents The Triple T's",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T12:00:00-10:00",
+   "title": "There is a Hula show, featuring Leilani Rivera Low & Halua Hula O Leilani, at the Coconut Marketplace Shopping Center",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T13:00:00-10:00",
+   "end": "2026-09-19T14:30:00-10:00",
+   "title": "The Princeville Shopping Center (food court area) presents a hula show with Hui Halau O Kahealani (Aunty Bev Kauanui and Haunani Kauai)",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T16:00:00-10:00",
+   "end": "2026-09-19T18:00:00-10:00",
+   "title": "The Honu Bar features Kyle LaBenz w/hula by Nicole",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T17:30:00-10:00",
+   "end": "2026-09-19T19:30:00-10:00",
+   "title": "East Side: The Crooked Surf Restaurant at the Sheraton Kauai`i Beach Resort in Waipouli features Lake Basil",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T17:30:00-10:00",
+   "end": "2026-09-19T19:30:00-10:00",
+   "title": "Merriman's Fish House at the Kukui`ula Shopping Center in Po`ipu features music",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T17:30:00-10:00",
+   "end": "2026-09-19T19:30:00-10:00",
+   "title": "The Na Pali Brewing Company in Kapaa features Norman \"Kaawa\" Solomon",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T18:00:00-10:00",
+   "end": "2026-09-19T20:00:00-10:00",
+   "title": "Cabana's at the Po`ipu Athletic Center in Po`ipu features music",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T18:00:00-10:00",
+   "end": "2026-09-19T20:00:00-10:00",
+   "title": "Duke's Barefoot Bar at the Royal Sonesta Resort in Lihue features John \"Kepa\" Mahi",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T18:00:00-10:00",
+   "end": "2026-09-19T21:00:00-10:00",
+   "title": "The Happy Talk Restaurant and Bar at the Hanalei Bay Resort in Princeville features Kirk Smart and Friends",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T18:00:00-10:00",
+   "end": "2026-09-19T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Tropical Groove (Haunani Maui and Linda Tan)",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T18:00:00-10:00",
+   "end": "2026-09-19T20:00:00-10:00",
+   "title": "The Saddle Room at the Wrangler Steakhouse in Waimea presents The Triple T's",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-19T19:00:00-10:00",
+   "end": "2026-09-19T21:00:00-10:00",
+   "title": "The Seaview Terrace at the Grand Hyatt in Po`ipu features Falling Down Romance",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T12:30:00-10:00",
+   "end": "2026-09-20T14:30:00-10:00",
+   "title": "The Kokee Lodge features Nick Castillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T16:00:00-10:00",
+   "end": "2026-09-20T17:30:00-10:00",
+   "title": "Timbers Bar at Hokuala features Wes Kaui & Cliff Furtado",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T17:30:00-10:00",
+   "end": "2026-09-20T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Kauai`i Beach Resort in Waipouli features Darryl Gonzales",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T17:30:00-10:00",
+   "end": "2026-09-20T19:30:00-10:00",
+   "title": "The Na Pali Brewing Company in Kapaa features John Kepa Mahi",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T18:00:00-10:00",
+   "end": "2026-09-20T20:00:00-10:00",
+   "title": "Japanese Grandmas in Hanapepe features Russel Wellington",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T18:00:00-10:00",
+   "end": "2026-09-20T21:00:00-10:00",
+   "title": "The Happy Talk Restaurant and Bar at the Hanalei Bay Resort features music",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T18:00:00-10:00",
+   "end": "2026-09-20T21:00:00-10:00",
+   "title": "The Lava Lava Beach Club at the Kauai Shores Hotel in Kapaa features Sheldon Espina or Danny De Fries (rotating)",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T18:00:00-10:00",
+   "end": "2026-09-20T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kauai Beach Resort in Wailua features Jonathan",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T18:30:00-10:00",
+   "title": "The Tahiti Nui Restaurant in Hanalei features Music starting",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-20T19:30:00-10:00",
+   "end": "2026-09-20T21:30:00-10:00",
+   "title": "The Seaview Terrace at the Grand Hyatt features Kyle LaBenz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T12:00:00-10:00",
+   "end": "2026-09-21T14:00:00-10:00",
+   "title": "The Kokee Lodge in Kokee features Nick Castillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T16:00:00-10:00",
+   "end": "2026-09-21T17:30:00-10:00",
+   "title": "The Sunset Lanai at Anina Hou in Kilauea features Pancho Graham",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T17:30:00-10:00",
+   "end": "2026-09-21T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Coconut Beach Hotel in Waipouli features Wayne and Junior Panui",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T17:30:00-10:00",
+   "title": "The Kauai Inn features Sheldon Espina",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T18:00:00-10:00",
+   "end": "2026-09-21T21:00:00-10:00",
+   "title": "The Happy Talk Lounge at Hanalei Bay Resort in Princeville features Falling Down Romance",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T18:00:00-10:00",
+   "end": "2026-09-21T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Channel and Sky",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T18:30:00-10:00",
+   "end": "2026-09-21T20:30:00-10:00",
+   "title": "Bangkok Happy Bowl and Thai Bistro features Kyle La Benz with hula by Nikole",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T18:30:00-10:00",
+   "end": "2026-09-21T20:30:00-10:00",
+   "title": "The Tahiti Nui Restaurant & Lounge in Hanalei presents Michael Keale",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T12:00:00-10:00",
+   "end": "2026-09-22T14:00:00-10:00",
+   "title": "The Food Trucks at Koloa featuring Kyle LaBenz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T16:00:00-10:00",
+   "end": "2026-09-22T18:00:00-10:00",
+   "title": "Duke’s Barefoot Bar at the Royal Sonesta Resort at Kalapaki Bay presents Loki Sasil",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T17:00:00-10:00",
+   "end": "2026-09-22T20:30:00-10:00",
+   "title": "Keoki’s Paradise in the Po`ipu Shopping Village features Chico",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T17:00:00-10:00",
+   "title": "The Coconut Marketplace Shopping Center (stage area) features Local Hawaiian Contemporary music",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T17:30:00-10:00",
+   "end": "2026-09-22T19:30:00-10:00",
+   "title": "Peitro's Pizzaria in Po`ipu features Sheldon Espina",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T17:30:00-10:00",
+   "end": "2026-09-22T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Coconut Beach Hotel in Waipouli features Sean Carillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T17:30:00-10:00",
+   "end": "2026-09-22T19:30:00-10:00",
+   "title": "The Na Pali Brewing Company in Kapaa features John Kepa Mahi",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T17:30:00-10:00",
+   "end": "2026-09-22T19:30:00-10:00",
+   "title": "The Westin Princeville Ocean Resort Villa features Kaliko Mai`i",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T18:00:00-10:00",
+   "end": "2026-09-22T21:00:00-10:00",
+   "title": "Hualani's Restaurant at Timber's Resort in Lihue features Sheldon Espina",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T18:00:00-10:00",
+   "end": "2026-09-22T20:00:00-10:00",
+   "title": "T he new Gaia Restaurant (Formerly Opakapaka) in Ha`ena features Allan Thomas",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T18:00:00-10:00",
+   "end": "2026-09-22T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Alika and Pono",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T18:00:00-10:00",
+   "end": "2026-09-22T20:00:00-10:00",
+   "title": "The Saddle Room at the Wrangler Steakhouse in Waimea features Kahalau Leoki",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T18:30:00-10:00",
+   "end": "2026-09-22T20:30:00-10:00",
+   "title": "The Tahiti Nui Restaurant and Lounge in Hanalei presents Makaha O Na Lani with Randy and Primrose Rego",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-22T19:30:00-10:00",
+   "end": "2026-09-22T21:30:00-10:00",
+   "title": "The Seaview Terrace auth Grand Hyatt in Po`ipu is featuring Kyle La Benz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T13:00:00-10:00",
+   "end": "2026-09-23T15:00:00-10:00",
+   "title": "The Kokee Lodge features Nick Castillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:00:00-10:00",
+   "end": "2026-09-23T19:30:00-10:00",
+   "title": "Keoki’s Paradise in the Po`ipu Shopping Village features Chanel Waipualani Flores",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:00:00-10:00",
+   "end": "2026-09-23T19:00:00-10:00",
+   "title": "The Kaua`i Island Brewery at the Port Allen Marina features Frank Cruz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:00:00-10:00",
+   "title": "There is a hula show featuring Leilani Rivera Low and Halau Hula O Leilani at the Coconut Marketplace Shopping Center stage area",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:30:00-10:00",
+   "end": "2026-09-23T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Coconut Beach Resort in Waipouli features Kyle LaBenz with hula",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:30:00-10:00",
+   "end": "2026-09-23T19:30:00-10:00",
+   "title": "The Na Pali Brewing Company in Kapaa features Sheldon Espina",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:30:00-10:00",
+   "title": "The Tahiti Nui in Hanalei presents Hui Halau O Kahealani, Aunty Bev Kauanui and Haunani Kauai with the hula maidens starting",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T17:30:00-10:00",
+   "end": "2026-09-23T19:30:00-10:00",
+   "title": "The Westin Princeville Ocean Villas features Pancho Graham",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T18:00:00-10:00",
+   "end": "2026-09-23T20:00:00-10:00",
+   "title": "Namaka Restaurant in Kauai Village features Ho`aka",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T18:00:00-10:00",
+   "end": "2026-09-23T21:00:00-10:00",
+   "title": "The Happy Talk Lounge at the Hanalei Bay Resort in Princeville features Makana O Na Lani with Randy and Primrose Rego",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T18:00:00-10:00",
+   "end": "2026-09-23T21:00:00-10:00",
+   "title": "The Lava Lava Beach Club at the Kaua`i Shores Hotel features Loki Sasil",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T18:00:00-10:00",
+   "end": "2026-09-23T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Demaine and Sky",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T18:00:00-10:00",
+   "end": "2026-09-23T20:00:00-10:00",
+   "title": "The Saddle Room at the Wrangler Steakhouse in Waimea presents Jojo (Tango) Tangalin",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T18:30:00-10:00",
+   "end": "2026-09-23T20:30:00-10:00",
+   "title": "The Lighthouse Bistro features Chad Pa and Paul Kaimina`oau",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-23T19:30:00-10:00",
+   "end": "2026-09-23T21:30:00-10:00",
+   "title": "Troy's Place in Lihue features Oiwi with John Kepa Mahi",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T12:00:00-10:00",
+   "title": "There is a Hula show featuring Leilani Rivera Low & Halua Hula O Leilani, at the Coconut Marketplace Shopping Center in Waipouli",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T16:00:00-10:00",
+   "end": "2026-09-24T17:30:00-10:00",
+   "title": "The Sunset Lanai at Anina Hou in Kilauea features Various Musicians",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T17:00:00-10:00",
+   "end": "2026-09-24T19:00:00-10:00",
+   "title": "The Kaua`i Island Brewery at the Port Allen Marina in Ele`ele features Darren",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T17:00:00-10:00",
+   "end": "2026-09-24T19:00:00-10:00",
+   "title": "The Seaview Terrace at the Grand Hyatt in Po`ipu features Tommy Tokioka",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T17:30:00-10:00",
+   "end": "2026-09-24T20:30:00-10:00",
+   "title": "The Hukilau Lanai at the Kaua`i Coast Resort in Waipouli presents Dennis Chun",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T17:30:00-10:00",
+   "title": "The Tahiti Nui Restaurant & Bar in Hanalei features Hui Halau O Kahealani, Aunty Bev Kauanui and Haunani Kauai with the hula maidens starting",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T17:30:00-10:00",
+   "end": "2026-09-24T19:30:00-10:00",
+   "title": "The Westin Princeville Ocean Resort Villa features Michael Keale",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T17:50:00-10:00",
+   "end": "2026-09-24T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Coconut Beach Resort in Waipouli features Danny DeFries",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T18:00:00-10:00",
+   "end": "2026-09-24T20:00:00-10:00",
+   "title": "Duke's Barefoot Bar at the Royal Sonesta Resort iat Kalapaki Bay features John \"Kepa\" Mahi",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T18:00:00-10:00",
+   "end": "2026-09-24T20:00:00-10:00",
+   "title": "Kalapaki Joe's in Po`ipu features the Kama`ainas",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T18:00:00-10:00",
+   "end": "2026-09-24T21:00:00-10:00",
+   "title": "The Happy Talk Lounge at the Hanalei Bay Resort in Princeville features Kaimi Hermosura & Del Seeger",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T18:00:00-10:00",
+   "end": "2026-09-24T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Channel and Rieff",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-24T18:00:00-10:00",
+   "end": "2026-09-24T20:00:00-10:00",
+   "title": "The Saddle Room at the Wrangler Steakhouse in Waimea presents Nick Castillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T12:30:00-10:00",
+   "end": "2026-09-25T14:30:00-10:00",
+   "title": "The Kokee Lodge features Nick Castillo",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T17:00:00-10:00",
+   "end": "2026-09-25T19:00:00-10:00",
+   "title": "Kaua`i Island Brewery at Port Allen Marina in Ele`ele features Frank Cruz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T17:30:00-10:00",
+   "end": "2026-09-25T20:00:00-10:00",
+   "title": "Cabana's at the Po`ipu Athletic Center features Kyle La Benz",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T17:30:00-10:00",
+   "end": "2026-09-25T19:30:00-10:00",
+   "title": "The Crooked Surf Restaurant at the Sheraton Coconut Beach Resort in Waipouli features Pono Nero",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T17:30:00-10:00",
+   "end": "2026-09-25T19:30:00-10:00",
+   "title": "The Westin Princeville Ocean Resort Villa features Michael Keale",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T20:00:00-10:00",
+   "title": "Bankok Happy Bowl and Thai Bistro features Falling Down Romance",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T20:00:00-10:00",
+   "title": "Japanese Grandma's in Hanapepe features Darren Kiyotsuka",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T20:00:00-10:00",
+   "title": "Merriman’s Fish House at the Kukui`ula Shopping Center in Po`ipu features music",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T21:00:00-10:00",
+   "title": "The Happy Talk Lounge at the Hanalei Bay Resort in Princeville features Michael Ruff and Friends",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T21:00:00-10:00",
+   "title": "The Hukilau Lanai at the Kaua`i Coast resort in Waipouli presents Pancho Graham",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T20:00:00-10:00",
+   "title": "The Ocean House Lounge at the Outrigger Kaua`i Beach Resort in Wailua features Aumakua",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-25T18:00:00-10:00",
+   "end": "2026-09-25T20:00:00-10:00",
+   "title": "The Saddle Room at the Wrangler Steakhouse in Waimea presents The Triple T's",
+   "status": "SCHEDULED"
+  }
+ ]
+}

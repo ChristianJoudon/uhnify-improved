@@ -1,0 +1,78 @@
+{
+ "id": "SRC-917",
+ "slug": "hawaiian-music-calendar-kkcr",
+ "displayName": "Hawaiian Music Calendar (KKCR volunteer blog)",
+ "publisherName": "Hawaiian Music Calendar (KKCR volunteer blog)",
+ "publisherUrl": "https://kkcrevents-linda.blogspot.com/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.blog-posts > div.date-outer:first-child div.post-body p:not(:has(p, div)), div.blog-posts > div.date-outer:first-child div.post-body div:not(:has(p, div)), div.blog-posts > div.date-outer:first-child div.post-body div:has(p, div) > b:not(:has(p, div)), div.blog-posts > div.date-outer:first-child div.post-body div:has(p, div) > span:not(:has(p, div))",
+   "dateFrom": "div.blog-posts > div.date-outer:first-child div.post-body p:not(:has(p, div)):contains('DAY'), div.blog-posts > div.date-outer:first-child div.post-body div:not(:has(p, div)):contains('DAY')",
+   "weeklyWeeks": 1,
+   "include": "\\d\\s*[ap]\\.?m\\b",
+   "exclude": "^(?!.*(?:featur|present|hula show))|\\d:\\d{2}(?!\\s*[ap]\\.?m)(?!\\s*(?:-|–|—|to)\\s*\\d{1,2}(?::\\d{2})?\\s*[ap]\\.?m)|\\d:\\D|\\d\\s*[ap]\\.?m\\b.*\\d(?::\\d{2}|\\s*[ap]\\.?m\\b)|[^\\s•]\\s*•"
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://kkcrevents-linda.blogspot.com/"
+  }
+ ],
+ "trust": "DIRECTORY",
+ "permission": "PROBE_REQUIRED",
+ "contentKinds": [
+  "event",
+  "venue"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 0,
+  "lookAheadDays": 14,
+  "maxPages": 1,
+  "maxItems": 400
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "kkcrevents-linda.blogspot.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "DIRECTORY",
+  "start": "DIRECTORY",
+  "location": "DIRECTORY",
+  "status": "DIRECTORY"
+ },
+ "enabled": false,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:15:00Z",
+ "steward": "unassigned"
+}

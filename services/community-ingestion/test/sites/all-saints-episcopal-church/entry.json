@@ -1,0 +1,76 @@
+{
+ "id": "SRC-928",
+ "slug": "all-saints-episcopal-church",
+ "displayName": "All Saints' Episcopal Church & Preschool campus calendar",
+ "publisherName": "All Saints' Episcopal Church & Preschool, Kapaʻa",
+ "publisherUrl": "https://www.allsaintskauai.org/calendar.html",
+ "tier": "C",
+ "adapterKind": "ICS",
+ "adapterConfig": {
+  "kind": "ICS",
+  "materializationDays": 60,
+  "exclude": "--|funeral|memorial service|celebration of life|wedding|cottage|^\\s*preschool|altar guild|thursday crew|vestry|rehearsal|aloha hour|^all saints'? day$|financial benefits|gymnastics academy|yth night|tentative|\\bprivate\\b|\\bclosed\\b"
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.calendarwiz.com/CalendarWiz_iCal.php?crd=allsaintskauai"
+  }
+ ],
+ "trust": "OFFICIAL_VENUE",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 0,
+  "lookAheadDays": 60,
+  "maxPages": 1,
+  "maxItems": 1000
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.calendarwiz.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/calendar"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "icalendar",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "UID",
+  "DTSTART",
+  "DTEND",
+  "SUMMARY",
+  "DESCRIPTION",
+  "LOCATION",
+  "CATEGORIES",
+  "STATUS",
+  "SEQUENCE",
+  "LAST-MODIFIED"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_VENUE",
+  "start": "OFFICIAL_VENUE",
+  "location": "OFFICIAL_VENUE",
+  "status": "OFFICIAL_VENUE"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:30:00Z",
+ "steward": "operator"
+}

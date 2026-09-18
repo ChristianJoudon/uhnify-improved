@@ -1,0 +1,133 @@
+{
+ "now": "2026-09-18T12:19:15.338Z",
+ "items": [
+  {
+   "start": "2026-09-20T00:00:00-10:00",
+   "end": "2026-09-26T00:00:00-10:00",
+   "title": "Kaua'i Mokihana Festival",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-21T15:00:00-10:00",
+   "end": "2026-09-21T19:00:00-10:00",
+   "title": "International Peace Day",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-03T08:00:00-10:00",
+   "end": "2026-10-03T16:30:00-10:00",
+   "title": "ALOHA Kaua'i Yoga Festival",
+   "location": "Kaua'i Shores Hotel",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-03T09:30:00-10:00",
+   "end": "2026-10-03T12:30:00-10:00",
+   "title": "Grove Farm Crafts Fair & Farmers Market",
+   "location": "Puhi Park",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-03T10:00:00-10:00",
+   "end": "2026-10-03T15:00:00-10:00",
+   "title": "HARVEST FESTIVAL",
+   "location": "Hanapēpē Athletic Field Free admission Free pumpkins Food, entertainment, rides educational tent and more!",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-03T15:00:00-10:00",
+   "end": "2026-10-03T18:00:00-10:00",
+   "title": "Kaua'i Brewers Festival",
+   "location": "Kress Street, Līhu'e",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-09T09:00:00-10:00",
+   "end": "2026-10-09T15:00:00-10:00",
+   "title": "Kaua'i Matsuri Festival",
+   "location": "Kaua'i War Memorial Convention Hall",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-10T09:00:00-10:00",
+   "end": "2026-10-10T15:00:00-10:00",
+   "title": "Kaua'i Matsuri Festival",
+   "location": "Kaua'i War Memorial Convention Hall",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-10T09:00:00-10:00",
+   "end": "2026-10-10T13:00:00-10:00",
+   "title": "Līhu'e Senior Center Craft Fair",
+   "location": "Līhu'e Neighborhood Center",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-17T18:00:00-10:00",
+   "title": "HALLOWEEN MOVIE NIGHT",
+   "location": "Kukui Grove",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-18T10:00:00-10:00",
+   "end": "2026-10-18T16:00:00-10:00",
+   "title": "Kaua'i Chocolate & Coffee Festival",
+   "location": "Kilohana Luau Pavillion",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-23T16:00:00-10:00",
+   "end": "2026-10-23T20:30:00-10:00",
+   "title": "26th KAUA'I CHRISTIAN ACADEMY FALL FESTIVAL",
+   "location": "Kaua'i Christian Academy Family FUN in a carnival atmosphere Kilauea [link removed]",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-23T18:30:00-10:00",
+   "end": "2026-10-23T19:30:00-10:00",
+   "title": "VILLAIN NIGHT",
+   "location": "Kukui Grove",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-24T16:00:00-10:00",
+   "end": "2026-10-24T20:30:00-10:00",
+   "title": "26th KAUA'I CHRISTIAN ACADEMY FALL FESTIVAL",
+   "location": "Kaua'i Christian Academy Family FUN in a carnival atmosphere Kilauea [link removed]",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-30T09:30:00-10:00",
+   "end": "2026-10-30T11:30:00-10:00",
+   "title": "ANNUAL SMMH KEIKI HALLOWEEN PARADE",
+   "location": "Kapa'a",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-30T11:30:00-10:00",
+   "end": "2026-10-30T13:00:00-10:00",
+   "title": "KVMH BABY HALLOWEEN PARADE",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-30T12:00:00-10:00",
+   "end": "2026-10-30T13:00:00-10:00",
+   "title": "WILCOX HALLOWEEN KEIKI PARADE",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-30T18:00:00-10:00",
+   "end": "2026-10-30T21:00:00-10:00",
+   "title": "CANDYLANE & GLOW SHOW",
+   "location": "King's Līhu'e FREE",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-30T18:30:00-10:00",
+   "end": "2026-10-30T19:30:00-10:00",
+   "title": "VILLAIN NIGHT",
+   "location": "Kukui Grove",
+   "status": "SCHEDULED"
+  }
+ ]
+}

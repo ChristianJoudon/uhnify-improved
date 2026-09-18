@@ -1,0 +1,29 @@
+{
+ "now": "2026-09-18T12:17:02.430Z",
+ "items": [
+  {
+   "start": "2026-09-20T09:00:00-10:00",
+   "title": "What Does It Mean to Be an Episcopalian",
+   "location": "St. Michael and All Angels Episcopal Church, 4364 Hardy St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-27T00:00:00-10:00",
+   "title": "Feast of St. Michael and All Angels",
+   "location": "St. Michael and All Angels Episcopal Church, 4364 Hardy St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-27T09:00:00-10:00",
+   "title": "The Apostles’ Creed",
+   "location": "St. Michael and All Angels Episcopal Church, 4364 Hardy St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-04T10:00:00-10:00",
+   "title": "Feast of St. Francis of Assisi - Blessing of the Animals",
+   "location": "St. Michael and All Angels Episcopal Church, 4364 Hardy St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  }
+ ]
+}

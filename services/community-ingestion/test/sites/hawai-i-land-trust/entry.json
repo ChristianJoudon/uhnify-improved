@@ -1,0 +1,79 @@
+{
+ "id": "SRC-931",
+ "slug": "hawai-i-land-trust",
+ "displayName": "Hawaiʻi Land Trust volunteer workdays (Kauaʻi preserves)",
+ "publisherName": "Hawaiʻi Land Trust",
+ "publisherUrl": "https://www.hilt.org/volunteer",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.image-card",
+   "title": "em",
+   "location": "p:nth-of-type(2)",
+   "link": "a[href*='hilt.org/volunteer']",
+   "include": "Island of Kaua",
+   "titlePrefix": "Volunteer workday: "
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.hilt.org/volunteer"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 0,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 50
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.hilt.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T03:00:00Z",
+ "steward": "operator"
+}

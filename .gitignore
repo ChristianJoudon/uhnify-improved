@@ -20,3 +20,6 @@ services/community-ingestion/.artifacts/
 
 # Generated documents. Derived from the Markdown in doc/, and it drifts.
 output/
+
+# Probe proposals are working files; the register is what is kept
+services/community-ingestion/proposals/

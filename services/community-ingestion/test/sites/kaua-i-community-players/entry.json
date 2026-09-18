@@ -1,0 +1,78 @@
+{
+ "id": "SRC-909",
+ "slug": "kaua-i-community-players",
+ "displayName": "Kauaʻi Community Players productions",
+ "publisherName": "Kauaʻi Community Players",
+ "publisherUrl": "https://kauaicommunityplayers.org/upcoming-productions/",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.et_pb_text_inner:has(> h4 + p)",
+   "title": "h4",
+   "date": "h4 + p",
+   "description": "h4 ~ p:nth-of-type(2), h4 ~ div",
+   "defaultLocation": "Puhi Theatrical Warehouse, 4411 Kikowaena St, Līhuʻe, HI 96766"
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://kauaicommunityplayers.org/upcoming-productions/"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 10080,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 366,
+  "maxPages": 1,
+  "maxItems": 50
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "kauaicommunityplayers.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 3000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T21:10:00Z",
+ "steward": "operator"
+}

@@ -1,0 +1,33 @@
+{
+ "now": "2026-09-18T11:04:19.755Z",
+ "items": [
+  {
+   "start": "2027-01-08T00:00:00-10:00",
+   "end": "2027-01-31T00:00:00-10:00",
+   "title": "Come from Away",
+   "location": "Puhi Theatrical Warehouse, 4411 Kikowaena St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2027-02-26T00:00:00-10:00",
+   "end": "2027-03-14T00:00:00-10:00",
+   "title": "Cemetery Club",
+   "location": "Puhi Theatrical Warehouse, 4411 Kikowaena St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2027-04-09T00:00:00-10:00",
+   "end": "2027-04-25T00:00:00-10:00",
+   "title": "Death of a Salesman",
+   "location": "Puhi Theatrical Warehouse, 4411 Kikowaena St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2027-05-14T00:00:00-10:00",
+   "end": "2027-05-30T00:00:00-10:00",
+   "title": "Sex Please, We’re 60",
+   "location": "Puhi Theatrical Warehouse, 4411 Kikowaena St, Līhuʻe, HI 96766",
+   "status": "SCHEDULED"
+  }
+ ]
+}
