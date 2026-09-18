@@ -6278,36 +6278,56 @@ which no longer has a caller.
   height: 100%;
 }
 
-/* Defs only — it paints nothing itself. */
-.mb-map-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
-
 /* Leaflet ships its own type and chrome; bring both onto the app's. */
 .mb-map .leaflet-container {
   font-family: "DM Sans", system-ui, sans-serif;
   background: var(--mb-sea);
 }
 
-/* Warm land, navy sea. A CSS filter chain can only push every pixel the same
-   way, and this needs two answers from one image — so the work happens in the
-   SVG filter defined in NearbyMap, which separates water from land by the one
-   thing that distinguishes them in Positron's palette (water is the only fill
-   whose blue outruns its red) and paints each its own colour. The pins are
-   untouched: they live in a pane above this one. */
-/* Only the base layer is flattened. The labels ride in the shadow pane above
-   it and keep their own edges, or the town names would be flooded flat along
-   with the island they sit on. */
-.mb-map .leaflet-tile-pane .mb-map-base {
-  filter: url(#mb-sea);
+/* Warm land, navy sea — drawn, not fetched: the island is a polygon of our own
+   (kauaiCoast.js) on the container's sea colour. It used to be a provider's
+   raster tiles pushed through an SVG filter, until the provider watermarked
+   them and the filter turned the watermark into dots across the island. */
+/* Town names: the app's type in its ink, with a land-coloured halo so a name
+   reads over a road or the coast. The marker is a zero-sized anchor and the
+   name stands off it on its inland side, by the reach of the widest pin, so a
+   pin that shares the town never sits on the town's name. */
+.mb-map-town {
+  pointer-events: none;
 }
 
-/* Labels: Positron draws them in a grey that vanishes on cream. Darken to the
-   app's ink and let the halo Carto bakes in do the separating. */
-.mb-map .mb-map-labels {
-  filter: saturate(0) brightness(0.55) contrast(1.35);
+.mb-map-town span {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--mb-ink);
+  text-shadow: 0 0 2px #f7ece0, 0 0 2px #f7ece0, 0 0 4px #f7ece0, 0 0 6px #f7ece0;
+}
+
+.mb-map-town--s span {
+  left: 0;
+  top: 1.45rem;
+  transform: translateX(-50%);
+}
+
+.mb-map-town--n span {
+  left: 0;
+  bottom: 1.45rem;
+  transform: translateX(-50%);
+}
+
+.mb-map-town--w span {
+  right: 1.6rem;
+  top: 0;
+  transform: translateY(-50%);
+}
+
+.mb-map-town--e span {
+  left: 1.6rem;
+  top: 0;
+  transform: translateY(-50%);
 }
 
 /* Leaflet's zoom control ships as white boxes with a blue focus ring. */
