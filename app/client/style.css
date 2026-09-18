@@ -7132,3 +7132,26 @@ select.mb-field,
 @media (max-width: 767px) {
   input, select, textarea, .mb-field { font-size: 16px; }
 }
+
+/* ---------------------------------------------------------------------------
+   HELP — where to find water, food, shelter. Plain on purpose.
+   --------------------------------------------------------------------------- */
+.emergency-banner { background: #8a2f1f; color: #fff; text-align: center; padding: 0.55rem 1rem; font-size: 0.95rem; }
+.emergency-banner a { color: inherit; text-decoration: none; }
+.emergency-banner a:hover span { text-decoration: underline; }
+.help-page { max-width: 46rem; }
+.help-jump { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.25rem; }
+.help-jump a { padding: 0.35rem 0.8rem; border-radius: 999px; border: 1px solid var(--mb-line-strong); text-decoration: none; font-size: 0.9rem; }
+.help-section { margin-top: 1.5rem; }
+.help-section h2 { font-size: 1.2rem; margin-bottom: 0.15rem; }
+.help-section-blurb { margin: 0 0 0.6rem; font-size: 0.9rem; opacity: 0.75; }
+.help-list { list-style: none; padding: 0; margin: 0; }
+.help-resource { padding: 0.8rem 0; border-top: 1px solid var(--mb-line-soft); }
+.help-resource p { margin: 0.25rem 0 0; line-height: 1.5; }
+.help-resource-head { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; }
+.help-resource-facts a { text-decoration: underline; }
+.help-resource-meta { font-size: 0.85rem; opacity: 0.75; }
+.help-status { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--mb-line-soft); white-space: nowrap; }
+.help-status--open { background: #dcefdc; color: #1e5b2a; }
+.help-status--closed { background: #fbe4dd; color: #8a2f1f; }
+.help-footnote { margin-top: 2rem; font-size: 0.9rem; opacity: 0.8; }

@@ -21,7 +21,7 @@ import { DDPRateLimiter } from 'meteor/ddp-rate-limiter';
  */
 
 /** Everything the app owns, as a fallback for anything not named below. */
-const APP_METHOD = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.|moderation\.|accounts\.)/;
+const APP_METHOD = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.|moderation\.|accounts\.|help\.)/;
 
 /** Named limits: [calls, seconds]. Anything absent falls to GENERAL. */
 const LIMITS = {
@@ -56,6 +56,8 @@ const LIMITS = {
   // One mail per press is one mail too many when a person presses it five times.
   'accounts.resendVerification': [2, 300],
   'accounts.deleteMine': [3, 60],
+  // Served from a cache; the limit is for the one call that is not.
+  'help.countyNotices': [10, 60],
   'Clubs.block': [20, 60],
   'Clubs.insert': [8, 60],
   'Events.insert': [8, 60],

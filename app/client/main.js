@@ -7,6 +7,7 @@ import '../imports/startup/client/Startup';
 import '../imports/startup/both/Methods';
 import '../imports/api/moderation/ModerationMethods';
 import '../imports/api/accounts/AccountMethods';
+import '../imports/api/help/HelpMethods';
 
 // The audit collection, so an administrator's screen has somewhere to receive
 // the trail. Defining it here does not publish anything — the publication is

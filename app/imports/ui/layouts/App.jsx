@@ -16,6 +16,8 @@ import ResetPassword from '../pages/ResetPassword';
 import VerifyEmail from '../pages/VerifyEmail';
 import LegalPage from '../pages/LegalPage';
 import ListingPage from '../pages/ListingPage';
+import Help from '../pages/Help';
+import EmergencyBanner from '../components/EmergencyBanner';
 import NotAuthorized from '../pages/NotAuthorized';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ListClubs from '../pages/ListClubs';
@@ -42,6 +44,7 @@ import { rememberReturnTo } from '../utilities/returnTo';
 const ListClubAdmin = lazy(() => import('../pages/ListClubAdmin'));
 const EventIntake = lazy(() => import('../pages/EventIntake.jsx'));
 const EventReview = lazy(() => import('../pages/EventReview.jsx'));
+const HelpAdmin = lazy(() => import('../pages/HelpAdmin'));
 // Keep the extension explicit because this page has a same-basename CSS module;
 // Meteor's resolver can otherwise hand React the stylesheet module object.
 
@@ -87,6 +90,7 @@ const App = () => {
     <MotionConfig reducedMotion="user">
       <Router>
         <div className="app-shell d-flex flex-column min-vh-100">
+          <EmergencyBanner />
           <NavBar />
           {/* Inside the Router, so the boundary can watch the route and reset
               on navigation; around only the page, so the nav and footer stay
@@ -104,6 +108,8 @@ const App = () => {
                 {/* A listing's own address — what somebody texts a friend. */}
                 <Route path="/e/:_id" element={<ListingPage kind="event" />} />
                 <Route path="/g/:_id" element={<ListingPage kind="club" />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/admin/help" element={<AdminProtectedRoute ready={ready}><HelpAdmin /></AdminProtectedRoute>} />
                 <Route path="/privacy" element={<LegalPage which="privacy" />} />
                 <Route path="/terms" element={<LegalPage which="terms" />} />
                 <Route path="/home" element={<ProtectedRoute><Landing /></ProtectedRoute>} />
