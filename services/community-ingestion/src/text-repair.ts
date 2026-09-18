@@ -26,23 +26,6 @@ const tryDecode = (bytes: Uint8Array, label: string, fatal: boolean): string | u
   }
 };
 
-/**
- * Bytes to text: UTF-8 when the bytes are UTF-8; otherwise what the page
- * declares; otherwise Windows-1252, which is what an undeclared legacy page
- * almost always is. Never throws.
- */
-export const decodeBytes = (bytes: Uint8Array, contentType?: string): string => {
-  const strict = tryDecode(bytes, 'utf-8', true);
-  if (strict !== undefined) return strict;
-  const head = tryDecode(bytes.slice(0, 2_048), 'windows-1252', false) ?? '';
-  const declared = declaredCharset(contentType, head);
-  if (declared && declared !== 'utf-8' && declared !== 'utf8') {
-    const asDeclared = tryDecode(bytes, declared, false);
-    if (asDeclared !== undefined) return asDeclared;
-  }
-  return tryDecode(bytes, 'windows-1252', false) ?? new TextDecoder('utf-8').decode(bytes);
-};
-
 /** Windows-1252's printable characters in the 0x80–0x9F range: code point → byte. */
 const CP1252: Record<number, number> = {
   0x20AC: 0x80, 0x201A: 0x82, 0x0192: 0x83, 0x201E: 0x84, 0x2026: 0x85, 0x2020: 0x86, 0x2021: 0x87, 0x02C6: 0x88,
@@ -52,6 +35,39 @@ const CP1252: Record<number, number> = {
 };
 
 const byteOf = (code: number): number | undefined => (code <= 0xFF ? code : CP1252[code]);
+
+const CP1252_BYTE_TO_CODE = new Map(Object.entries(CP1252).map(([code, byte]) => [byte, Number(code)]));
+
+/**
+ * Windows-1252, decoded here rather than by the runtime: a Node built
+ * without full ICU answers to the label "windows-1252" with plain Latin-1,
+ * and hands back curly quotes and dashes as invisible control characters.
+ * (Browsers read "iso-8859-1" as Windows-1252 too, which is what pages that
+ * declare it were tested against.)
+ */
+const decodeCp1252 = (bytes: Uint8Array): string => {
+  let text = '';
+  for (let index = 0; index < bytes.length; index += 8_192) {
+    text += String.fromCharCode(...Array.from(bytes.subarray(index, index + 8_192), byte => CP1252_BYTE_TO_CODE.get(byte) ?? byte));
+  }
+  return text;
+};
+
+/**
+ * Bytes to text: UTF-8 when the bytes are UTF-8; otherwise what the page
+ * declares; otherwise Windows-1252, which is what an undeclared legacy page
+ * almost always is. Never throws.
+ */
+export const decodeBytes = (bytes: Uint8Array, contentType?: string): string => {
+  const strict = tryDecode(bytes, 'utf-8', true);
+  if (strict !== undefined) return strict;
+  const declared = declaredCharset(contentType, decodeCp1252(bytes.subarray(0, 2_048)));
+  if (declared && !/^(?:utf-?8|windows-1252|cp1252|iso-8859-1|latin-?1|us-ascii|ascii)$/.test(declared)) {
+    const asDeclared = tryDecode(bytes, declared, false);
+    if (asDeclared !== undefined) return asDeclared;
+  }
+  return decodeCp1252(bytes);
+};
 
 /**
  * The tell-tale of UTF-8 read as Windows-1252: a lead byte (0xC2–0xF4, which
