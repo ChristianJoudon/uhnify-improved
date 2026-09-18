@@ -21,6 +21,7 @@ import { RECOMMENDATION_COLLECTIONS } from '../../api/recommendations/Recommenda
  */
 import '../both/Methods';
 import '../../api/moderation/ModerationMethods';
+import '../../api/accounts/AccountMethods';
 
 /**
  * What every backend test needs before it can say anything.
@@ -93,10 +94,15 @@ export const errorFrom = fn => {
 let seq = 0;
 
 /** A real account with a profile, which is what the app assumes everywhere. */
-export const makeUser = ({ admin = false, email } = {}) => {
+export const makeUser = ({ admin = false, email, verified = true } = {}) => {
   seq += 1;
   const address = email || `person${seq}@test.example`;
   const userId = Accounts.createUser({ username: address, email: address, password: 'test-password' });
+  // Confirmed, unless a test is about the unconfirmed: posting needs a
+  // confirmed address, and nearly every test posts.
+  if (verified) {
+    Meteor.users.update(userId, { $set: { 'emails.0.verified': true } });
+  }
   Profiles.collection.insert({
     userId,
     email: address,

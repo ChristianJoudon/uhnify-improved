@@ -30,6 +30,8 @@ const Footer = () => (
           <Link to="/upcoming-events" className="footer-link">Calendar</Link>
           <Link to="/user-events" className="footer-link">Going</Link>
           <Link to="/profile" className="footer-link">Profile</Link>
+          <Link to="/privacy" className="footer-link">Privacy</Link>
+          <Link to="/terms" className="footer-link">Terms</Link>
         </div>
         <p className="footer-copy">© 2026 MatchBook</p>
       </div>

@@ -11,6 +11,10 @@ import SignUp from '../pages/SignUp';
 import SignOut from '../pages/SignOut';
 import NavBar from '../components/NavBar';
 import SignIn from '../pages/SignIn';
+import ForgotPassword from '../pages/ForgotPassword';
+import ResetPassword from '../pages/ResetPassword';
+import VerifyEmail from '../pages/VerifyEmail';
+import LegalPage from '../pages/LegalPage';
 import NotAuthorized from '../pages/NotAuthorized';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ListClubs from '../pages/ListClubs';
@@ -90,6 +94,11 @@ const App = () => {
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/signout" element={<SignOut />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/verify-email/:token" element={<VerifyEmail />} />
+              <Route path="/privacy" element={<LegalPage which="privacy" />} />
+              <Route path="/terms" element={<LegalPage which="terms" />} />
               <Route path="/home" element={<ProtectedRoute><Landing /></ProtectedRoute>} />
               <Route path="/upcoming-events" element={<ListEvents />} />
               <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />

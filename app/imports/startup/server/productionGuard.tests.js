@@ -15,6 +15,7 @@ import { enforceSettings, settingsProblems, settingsWarnings } from './productio
 /** A production-shaped file that passes every rule, to break one thing at a
     time from. */
 const SAFE = {
+  public: { operator: { name: 'MatchBook', email: 'hello@matchbook.kauai' } },
   defaultAccounts: [
     { email: 'admin@matchbook.kauai', password: 'correct-horse-battery-staple-9', role: 'admin' },
   ],
@@ -50,7 +51,11 @@ const stubLog = () => {
  * drift without a test saying so.
  */
 const DEVELOPMENT_SETTINGS = {
-  public: { communityIngestionSandbox: true, devSignIn: ['john@foo.com', 'admin@foo.com'] },
+  public: {
+    communityIngestionSandbox: true,
+    devSignIn: ['john@foo.com', 'admin@foo.com'],
+    operator: { name: 'the MatchBook team (development)', email: 'hello@localhost' },
+  },
   defaultAccounts: [
     { email: 'admin@foo.com', password: 'changeme', role: 'admin' },
     { email: 'john@foo.com', password: 'changeme' },
@@ -214,6 +219,9 @@ if (Meteor.isServer) {
 
       it('warns when no mail transport is configured by either route', function () {
         const { MAIL_URL, ...withoutMail } = ENV;
+        const unnamed = settingsWarnings({ ...SAFE, public: {} }, { env: ENV });
+        assert.lengthOf(unnamed, 1);
+        assert.include(unnamed[0], 'public.operator.email is unset');
         const warnings = settingsWarnings(SAFE, { env: withoutMail });
 
         assert.lengthOf(warnings, 1);

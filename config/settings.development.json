@@ -1,7 +1,9 @@
 {
   "public": {
     "communityIngestionSandbox": true,
-    "devSignIn": ["john@foo.com", "admin@foo.com"]
+    "devSignIn": ["john@foo.com", "admin@foo.com"],
+    "siteName": "MatchBook",
+    "operator": { "name": "the MatchBook team (development)", "email": "hello@localhost" }
   },
   "recommendations": {
     "enabled": true,

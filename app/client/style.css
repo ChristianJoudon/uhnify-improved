@@ -7120,3 +7120,9 @@ select.mb-field,
 
 .details-source { margin-top: 1.25rem; font-size: 0.85rem; opacity: 0.8; }
 .details-source a { text-decoration: underline; }
+
+.auth-consent { display: flex; gap: 0.6rem; align-items: flex-start; margin: 0.5rem 0 0.75rem; font-size: 0.9rem; font-weight: 400; }
+.auth-consent input { margin-top: 0.2rem; }
+.legal-page { max-width: 44rem; }
+.legal-page h2 { font-size: 1.15rem; margin-top: 1.75rem; }
+.legal-page p, .legal-page li { line-height: 1.55; }

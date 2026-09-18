@@ -7,7 +7,7 @@ import { Container } from 'react-bootstrap';
 import { ArrowLeft, ArrowRight } from 'react-bootstrap-icons';
 import PageHead from '../components/PageHead';
 import { INTEREST_TOPIC_KEYS, TOPICS } from '../utilities/topics';
-import { TEXT_LIMITS } from '../../api/listing/limits';
+import { EMAIL_SHAPE, MIN_PASSWORD_LENGTH, TEXT_LIMITS } from '../../api/listing/limits';
 import { takeReturnTo } from '../utilities/returnTo';
 
 const STEPS = ['Account', 'Your name', 'Interests'];
@@ -31,14 +31,46 @@ const SignUp = () => {
     setInterests(previous => (previous.includes(interest) ? previous.filter(item => item !== interest) : [...previous, interest]));
   };
 
-  const handleNext = () => setCurrentStep(step => Math.min(step + 1, STEPS.length));
+  const [stepTrouble, setStepTrouble] = useState('');
+  const [agreed, setAgreed] = useState(false);
+
+  /**
+   * Each step checks what it collected before letting go of it. The form used
+   * to check nothing until "Join" on the third step, so a typo in the address
+   * — the one thing the person will need to get back in — surfaced only after
+   * they had picked their interests, and a one-character password got through.
+   */
+  const troubleWithStep = step => {
+    if (step === 1) {
+      const address = formData.email.trim().toLowerCase();
+      if (!EMAIL_SHAPE.test(address)) {
+        return 'That email address does not look right.';
+      }
+      if (formData.password.length < MIN_PASSWORD_LENGTH) {
+        return `Pick a password of at least ${MIN_PASSWORD_LENGTH} characters.`;
+      }
+    }
+    return '';
+  };
+  const handleNext = () => {
+    const trouble = troubleWithStep(currentStep);
+    setStepTrouble(trouble);
+    if (!trouble) {
+      setCurrentStep(step => Math.min(step + 1, STEPS.length));
+    }
+  };
   const handlePrevious = () => setCurrentStep(step => Math.max(step - 1, 1));
 
   const submit = event => {
     event.preventDefault();
-    const { email, password, firstName, lastName } = formData;
+    if (!agreed) {
+      setStepTrouble('Tick the box to agree to the terms.');
+      return;
+    }
+    const { password, firstName, lastName } = formData;
+    const email = formData.email.trim().toLowerCase();
 
-    Accounts.createUser({ email, username: email, password }, error => {
+    Accounts.createUser({ email, username: email, password, profile: { agreedToTermsAt: new Date() } }, error => {
       if (error) {
         swal('Error', error.reason || error.message, 'error');
         return;
@@ -107,9 +139,12 @@ const SignUp = () => {
                   autoComplete="new-password"
                   value={formData.password}
                   onChange={updateField}
+                  minLength={MIN_PASSWORD_LENGTH}
                   required
                 />
+                <span className="field-hint">At least {MIN_PASSWORD_LENGTH} characters.</span>
               </label>
+              {stepTrouble && <p className="auth-error" role="alert">{stepTrouble}</p>}
               <div className="auth-actions">
                 <button type="button" onClick={handleNext} className="btn btn-solid-primary form-controlsubmit">
                   Next <ArrowRight aria-hidden="true" />
@@ -188,6 +223,14 @@ const SignUp = () => {
                   );
                 })}
               </div>
+              <label className="auth-consent" htmlFor="signup-agree">
+                <input id="signup-agree" type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} />
+                <span>
+                  I&apos;m 18 or older and I agree to the <Link to="/terms" target="_blank">terms</Link> and
+                  the <Link to="/privacy" target="_blank">privacy policy</Link>.
+                </span>
+              </label>
+              {stepTrouble && <p className="auth-error" role="alert">{stepTrouble}</p>}
               <div className="auth-actions">
                 <button type="button" onClick={handlePrevious} className="btn btn-soft-primary">
                   <ArrowLeft aria-hidden="true" /> Back

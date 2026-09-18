@@ -6,6 +6,7 @@ import '../imports/startup/client/Startup';
 // waiting for the server round-trip.
 import '../imports/startup/both/Methods';
 import '../imports/api/moderation/ModerationMethods';
+import '../imports/api/accounts/AccountMethods';
 
 // The audit collection, so an administrator's screen has somewhere to receive
 // the trail. Defining it here does not publish anything — the publication is
