@@ -246,3 +246,47 @@ test('document monitors create visible but undated review candidates', async () 
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0]?.normalizedFields.localStart, undefined);
 });
+
+test('County of Kauaʻi calendar items read the OpenCities shape: wall-clock date, venue, own page, cancellation', async () => {
+  const adapter = new LiveSourceAdapter('COUNTY_OPENCITIES');
+  const source: SourceDefinition = {
+    ...liveSource('SOURCE_HTML'),
+    adapterKind: 'COUNTY_OPENCITIES',
+    adapterConfig: { kind: 'COUNTY_OPENCITIES', calendarDiscoveryUrl: 'https://fixture.example/ocapi/calendars/getcalendars/x' },
+  };
+  const page = (item: Record<string, unknown>, detail: unknown, calendar = 'Boards & Commissions') => ({
+    url: `https://fixture.example/ocapi/calendars/getcalendaritems#${item.Id}`,
+    mediaType: 'application/json',
+    text: JSON.stringify({ item, calendar, detail }),
+  });
+  const soon = new Date(Date.now() + 5 * 86_400_000);
+  const when = `${soon.getMonth() + 1}/${soon.getDate()}/${soon.getFullYear()} 1:00:00 PM`;
+  const composite = JSON.stringify({ pages: [
+    page({ Id: 'a1', CalendarId: 'c1', Name: 'CANCELLED - Board of Ethics Meeting', DateTime: when }, {
+      Title: 'CANCELLED - Board of Ethics Meeting',
+      Description: 'This notice is intended to satisfy HRS 92-7.',
+      Link: 'https://fixture.example/Boards/Ethics/meeting',
+      Address: { Venue: 'Conference Room', Street: '4444 Rice St.', Suburb: 'Lihue', Formatted: 'Conference Room, 4444 Rice St., Lihue' },
+      IsCancelled: false,
+    }),
+    page({ Id: 'a2', CalendarId: 'c2', Name: 'Kūhiō Day Holiday', DateTime: `${soon.getMonth() + 1}/${soon.getDate()}/${soon.getFullYear()}` }, null, 'Holiday Closures'),
+  ] });
+  const result = await adapter.extract({
+    bytes: new TextEncoder().encode(composite),
+    mediaType: 'application/vnd.matchbook.source-pages+json',
+    sourceUrl: 'https://fixture.example/Residents/Calendar',
+    statusCode: 200,
+    responseHeaders: {},
+  }, source);
+  assert.equal(result.items.length, 2);
+  const [meeting, holiday] = result.items;
+  assert.equal(meeting!.normalizedFields.title, 'Board of Ethics Meeting');
+  assert.equal(meeting!.normalizedFields.localStart, `${soon.getFullYear()}-${String(soon.getMonth() + 1).padStart(2, '0')}-${String(soon.getDate()).padStart(2, '0')}T13:00:00`);
+  assert.equal(meeting!.normalizedFields.location, 'Conference Room, 4444 Rice St., Lihue');
+  assert.equal(meeting!.normalizedFields.sourceUrl, 'https://fixture.example/Boards/Ethics/meeting');
+  assert.equal(meeting!.normalizedFields.realityStatus, 'CANCELLED');
+  assert.deepEqual(meeting!.normalizedFields.categories, ['Boards & Commissions']);
+  assert.equal(holiday!.normalizedFields.title, 'Kūhiō Day Holiday');
+  assert.equal(String(holiday!.normalizedFields.localStart).slice(11), '00:00:00');
+  assert.equal(holiday!.normalizedFields.sourceUrl, 'https://fixture.example/ocapi/calendars/getcalendaritems', 'no detail: the calendar itself');
+});
