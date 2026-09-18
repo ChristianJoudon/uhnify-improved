@@ -199,7 +199,12 @@ date in `lastVerifiedAt`. The Meteor loader and the registry validator both
 refuse an enabled source without those. As of 2026-09-17 nine sources are
 cleared — the ones that publish a feed or an API, and the County of Kauaʻi's
 pages — and five scraped news and venue pages still await the operator's
-judgment (`SRC-008`, `SRC-009`, `SRC-012`, `SRC-013`, `SRC-014`). Google's
+judgment (`SRC-008`, `SRC-009`, `SRC-012`, `SRC-013`, `SRC-014`). Two of the
+county's three are cleared but switched off: the parks page (`SRC-010`) no
+longer publishes the PDFs its adapter watched for, and the press releases
+(`SRC-011`) are notices rather than events — the emergency hub will give
+them a kind of their own; enabling them today would fill the review queue
+with dateless items. Google's
 `calendar.google.com/robots.txt` disallows crawlers, and the KKCR entry is a
 public ICS feed the station embeds for subscription: consuming it four times
 a day is what it is for, not crawling.

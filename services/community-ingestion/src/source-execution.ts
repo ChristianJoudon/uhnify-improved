@@ -149,8 +149,14 @@ const fetchPages = async (
   source: SourceDefinition,
   client: SafeHttpClient,
 ): Promise<FetchArtifactInput> => {
+  // A source whose config says `sitemap: true` is read from its sitemap —
+  // the DISCOVERY endpoint — because its index page lists nothing a parser
+  // can date; the county press-release index is a list of titles. The
+  // generic order took the collection page first and found nothing in it.
+  const bySitemap = (source.adapterConfig as { sitemap?: boolean }).sitemap === true;
   const fallback = requestFor(source, 'FALLBACK');
-  const request = fallback ?? requestFor(source, 'COLLECTION') ?? requestFor(source, 'DISCOVERY');
+  const request = (bySitemap ? requestFor(source, 'DISCOVERY') : undefined)
+    ?? fallback ?? requestFor(source, 'COLLECTION') ?? requestFor(source, 'DISCOVERY');
   if (!request) throw new Error(`${source.id} has no fetchable endpoint`);
   if (/[{][A-Z0-9_]+[}]/.test(request.url)) throw new Error(`${source.id} endpoint requires an unimplemented discovery substitution`);
   const first = await client.fetch(request, source.httpPolicy);
@@ -170,6 +176,72 @@ const fetchPages = async (
 };
 
 /**
+ * The County of Kauaʻi's OpenCities calendar, the way its own page reads it.
+ *
+ * The registry's endpoints were right and nothing used them: the discovery
+ * URL lists the calendars, the collection URL is a POST that wants those ids
+ * and a date range, and each item then has a detail call with the venue, the
+ * page it lives on, and whether it was cancelled. The generic page fetch took
+ * the FALLBACK — the human directory page — and found nothing in it. Read the
+ * way the page's own script reads it (oc_main.js: {LanguageCode, Ids,
+ * StartDate, EndDate} to getcalendaritems; contentinfo for a detail), with
+ * every request going through the same safe client and host policy.
+ */
+const fetchOpenCities = async (
+  source: SourceDefinition,
+  client: SafeHttpClient,
+): Promise<FetchArtifactInput> => {
+  const discovery = requestFor(source, 'DISCOVERY');
+  const collection = requestFor(source, 'COLLECTION');
+  if (!discovery || !collection) throw new Error(`${source.id} needs DISCOVERY and COLLECTION endpoints`);
+  const calendars = await client.fetch(discovery, source.httpPolicy);
+  const listing: unknown = JSON.parse(decode(calendars.bytes));
+  const rows = (listing as { data?: Array<{ Id?: string; Label?: string }> })?.data ?? [];
+  const ids = rows.map(row => row.Id).filter((id): id is string => typeof id === 'string');
+  const labels = new Map(rows.map(row => [row.Id, row.Label]));
+  if (!ids.length) return composite(source, [fetchedPage(calendars)]);
+
+  const stamp = (date: Date) => `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}T00:00:00`;
+  const today = new Date(Date.now() - 10 * 3_600_000); // Kauaʻi is UTC−10, all year
+  const start = new Date(today.getTime() - (source.polling.lookBackDays ?? 0) * 86_400_000);
+  const end = new Date(today.getTime() + source.polling.lookAheadDays * 86_400_000);
+  const items = await client.fetch({
+    method: 'POST',
+    url: collection.url,
+    headers: { 'content-type': 'application/json; charset=utf-8' },
+    body: JSON.stringify({ LanguageCode: 'en-US', Ids: ids, StartDate: stamp(start), EndDate: stamp(end) }),
+  }, source.httpPolicy);
+  const days = (JSON.parse(decode(items.bytes)) as { data?: Array<{ Items?: Array<Record<string, unknown>> }> })?.data ?? [];
+  const flat = days.flatMap(day => day.Items ?? []).slice(0, source.polling.maxItems);
+
+  const origin = new URL(collection.url).origin;
+  const pages: Page[] = [];
+  for (const item of flat) {
+    const calendarId = String(item.CalendarId ?? '');
+    const query = new URLSearchParams({
+      calendarId,
+      contentId: String(item.Id ?? ''),
+      language: 'en-US',
+      currentDateTime: String(item.DateTime ?? ''),
+      mainContentId: String(item.MainContentId ?? ''),
+    });
+    let detail: unknown = null;
+    try {
+      const response = await client.fetch({ method: 'GET', url: `${origin}/ocapi/get/contentinfo?${query}` }, source.httpPolicy);
+      detail = JSON.parse(decode(response.bytes));
+    } catch {
+      // The list already says what and when; the detail only adds where.
+    }
+    pages.push({
+      url: `${collection.url}#${item.Id}`,
+      mediaType: 'application/json',
+      text: JSON.stringify({ item, calendar: labels.get(calendarId) ?? null, detail }),
+    });
+  }
+  return composite(source, pages);
+};
+
+/**
  * Fetch a governed source without persisting or promoting anything.
  *
  * Research uses this same boundary so its fallback cannot widen source hosts,
@@ -183,7 +255,9 @@ export const fetchSourceArtifact = async (
     ? fetchTribe(source, client)
     : source.adapterKind === 'WP_FILTERED_TRIBE'
       ? fetchFilteredTribe(source, client)
-      : fetchPages(source, client)
+      : source.adapterKind === 'COUNTY_OPENCITIES'
+        ? fetchOpenCities(source, client)
+        : fetchPages(source, client)
 );
 
 export type SourceExecutionResult = {

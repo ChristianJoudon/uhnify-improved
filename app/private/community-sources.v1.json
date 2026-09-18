@@ -250,7 +250,7 @@
       "parser": { "parserId": "parks-change-monitor", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["url", "title", "text", "documentDate", "contentHash"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": true,
+      "enabled": false,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
       "lastVerifiedAt": "2026-09-18T01:22:09Z",
       "steward": "operator"
@@ -276,7 +276,7 @@
       "parser": { "parserId": "county-release-monitor", "parserVersion": "1.0.0", "fixtureVersion": "2026-08-08" },
       "fieldAllowlist": ["url", "title", "text", "publishedAt", "modifiedAt", "contentHash"],
       "authorityByField": { "title": "GOVERNMENT_INSTITUTION", "start": "GOVERNMENT_INSTITUTION", "status": "GOVERNMENT_INSTITUTION" },
-      "enabled": true,
+      "enabled": false,
       "nextRunAt": "2026-08-09T00:00:00.000Z",
       "lastVerifiedAt": "2026-09-18T01:22:09Z",
       "steward": "operator"

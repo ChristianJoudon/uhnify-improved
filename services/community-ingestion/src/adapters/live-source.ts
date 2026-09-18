@@ -625,6 +625,50 @@ const monitorItems = (text: string, sourceUrl: string): ExtractedItem[] => {
 
 type CompositePage = { url: string; mediaType: string; text: string };
 
+/** "9/18/2026 1:00:00 PM", which is how OpenCities writes a Kauaʻi wall-clock time. */
+const openCitiesDateTime = (value: unknown): string | undefined => {
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?$/i.exec(asString(value) ?? '');
+  if (!match) return undefined;
+  const [, month, day, year, hour = '0', minute = '00', second = '00', meridiem] = match;
+  let hours = Number(hour) % 12;
+  if (/pm/i.test(meridiem ?? '')) hours += 12;
+  return `${year}-${month!.padStart(2, '0')}-${day!.padStart(2, '0')}T${String(hours).padStart(2, '0')}:${minute}:${second}`;
+};
+
+/**
+ * One county calendar item and its detail, as fetchOpenCities wrote them:
+ * { item: { Id, CalendarId, Name, DateTime, … }, calendar: label, detail:
+ * { Title, Description, Link, Address: { Venue, Street, Suburb, Formatted },
+ * IsCancelled } | null }. The detail's Link is the item's own page and is the
+ * source URL; without a detail, the calendar page is.
+ */
+const openCitiesEvents = (document: unknown, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
+  if (!isRecord(document) || !isRecord(document.item)) return [];
+  const item = document.item;
+  const detail = isRecord(document.detail) ? (isRecord(document.detail.data) ? document.detail.data : document.detail) : {};
+  const address = isRecord(detail.Address) ? detail.Address : {};
+  const title = asString(detail.Title) ?? asString(item.Name);
+  const start = openCitiesDateTime(item.DateTime);
+  if (!title || !inWindow(start, source)) return [];
+  const cancelled = detail.IsCancelled === true || /^cancel+ed\b/i.test(title);
+  const location = asString(address.Formatted)
+    ?? [address.Venue, address.Street, address.Suburb].map(asString).filter(Boolean).join(', ');
+  const calendar = asString(document.calendar);
+  return [eventItem({
+    id: asString(item.Id),
+    title: title.replace(/^cancel+ed\s*[-–:]\s*/i, ''),
+    start,
+    location: location || undefined,
+    description: asString(detail.Description),
+    sourceUrl: asString(detail.Link) ?? sourceUrl.split('#')[0]!,
+    status: cancelled ? 'cancelled' : undefined,
+    categories: calendar ? [calendar] : undefined,
+    context: calendar ? `County of Kauaʻi · ${calendar}` : 'County of Kauaʻi',
+    raw: document,
+    locator: '$.item',
+  })];
+};
+
 const decodePages = (input: FetchArtifactInput): CompositePage[] => {
   const text = new TextDecoder('utf-8', { fatal: true }).decode(input.bytes);
   if (input.mediaType === 'application/vnd.matchbook.source-pages+json') {
@@ -672,7 +716,9 @@ export class LiveSourceAdapter implements SourceAdapter {
           items.push(...staticJsonEvents(JSON.parse(page.text), source, page.url));
         } else if (this.kind === 'ICS') {
           items.push(...icsEvents(page.text, source, page.url));
-        } else if (['JSON_LD_HTML', 'SOURCE_HTML', 'COUNTY_OPENCITIES'].includes(this.kind)) {
+        } else if (this.kind === 'COUNTY_OPENCITIES') {
+          items.push(...openCitiesEvents(JSON.parse(page.text), source, page.url));
+        } else if (['JSON_LD_HTML', 'SOURCE_HTML'].includes(this.kind)) {
           const structured = jsonLdEvents(page.text, source, page.url);
           items.push(...(structured.length ? structured : visibleHtmlEvents(page.text, source, page.url)));
           if (!structured.length && !items.length) items.push(...monitorItems(page.text, page.url));
