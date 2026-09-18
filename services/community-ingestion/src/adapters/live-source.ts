@@ -9,8 +9,11 @@ import type {
 } from '../contracts.js';
 import { sha256 } from '../hash.js';
 
+import { decodeBytes } from '../text-repair.js';
+import { structuredEvents } from './structured.js';
 import { mappedHtmlEvents, mappedJsonEvents, rssEvents } from './mapped.js';
 import {
+  isJunkTitle,
   isRecoveryMeeting,
   ACCESS_SECRET,
   DAY_MS,
@@ -396,70 +399,36 @@ const icsEvents = (text: string, source: SourceDefinition, sourceUrl: string): E
   });
 };
 
-const jsonLdNodes = (value: unknown): JsonRecord[] => {
-  if (Array.isArray(value)) return value.flatMap(jsonLdNodes);
-  if (!isRecord(value)) return [];
-  return [value, ...Object.values(value).flatMap(jsonLdNodes)];
-};
-
-const jsonLdEvents = (html: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
-  const $ = load(html);
-  const nodes: JsonRecord[] = [];
-  $('script[type="application/ld+json"]').each((_index, element) => {
-    try {
-      nodes.push(...jsonLdNodes(JSON.parse($(element).text())));
-    } catch {
-      // A malformed block is ignored; other blocks on the same official page
-      // remain independently reviewable.
-    }
-  });
-  return nodes.flatMap((node, index) => {
-    const kinds = Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
-    if (!kinds.some(kind => typeof kind === 'string' && /event/i.test(kind))) return [];
-    const title = textOnly(node.name ?? node.headline, 300);
-    const start = hawaiiDateTime(node.startDate);
-    if (!title || !start || !inWindow(start, source)) return [];
-    const rawUrl = asString(node.url ?? node['@id']);
-    let url = sourceUrl;
-    if (rawUrl) {
-      try {
-        url = new URL(rawUrl, sourceUrl).toString();
-      } catch {
-        // Invalid publisher links do not replace the official page URL.
-      }
-    }
-    const end = hawaiiDateTime(node.endDate);
-    const location = locationText(node.location);
-    const description = safeVisibleText(node.description ?? node.abstract, 2_000);
-    const categories = uniqueLabels(
-      node.keywords,
-      node.eventType,
-      node.about,
-      node.category,
-    );
-    const context = contextText([
-      node.organizer,
-      node.performer,
-      node.audience,
-      node.location,
-    ], [title, description, location]);
+/**
+ * schema.org Events on a page — JSON-LD or microdata — as candidates. The
+ * reading itself is in structured.ts, shared with the detail-page reader
+ * and the prober; this adds the window and the candidate's shape.
+ */
+const jsonLdEvents = (html: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => (
+  structuredEvents(html, sourceUrl).flatMap(event => {
+    const start = hawaiiDateTime(event.start);
+    if (!event.title || !start || !inWindow(start, source)) return [];
+    const end = hawaiiDateTime(event.end);
+    const node = event.raw;
+    const categories = uniqueLabels(node.keywords, node.eventType, node.about, node.category);
+    const context = contextText([node.organizer, node.performer, node.audience, node.location], [event.title, event.description, event.location]);
     return [eventItem({
       ...(asString(node['@id'] ?? node.url) ? { id: asString(node['@id'] ?? node.url) } : {}),
-      title,
+      title: event.title,
       start,
       ...(end ? { end } : {}),
-      ...(location ? { location } : {}),
-      ...(description ? { description } : {}),
+      ...(event.location ? { location: event.location } : {}),
+      ...(event.description ? { description: event.description } : {}),
       ...(categories.length ? { categories } : {}),
       ...(context ? { context } : {}),
-      sourceUrl: url,
-      ...(asString(node.eventStatus) ? { status: asString(node.eventStatus) } : {}),
-      ...(asString(node.eventAttendanceMode) ? { attendanceMode: asString(node.eventAttendanceMode) } : {}),
+      sourceUrl: event.url ?? sourceUrl,
+      ...(event.status ? { status: event.status } : {}),
+      ...(event.attendanceMode ? { attendanceMode: event.attendanceMode } : {}),
       raw: node,
-      locator: `$jsonld[${index}]`,
+      locator: event.locator,
     })];
-  });
-};
+  })
+);
 
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
@@ -702,7 +671,7 @@ const openCitiesEvents = (document: unknown, source: SourceDefinition, sourceUrl
 };
 
 const decodePages = (input: FetchArtifactInput): CompositePage[] => {
-  const text = new TextDecoder('utf-8', { fatal: true }).decode(input.bytes);
+  const text = decodeBytes(input.bytes, input.responseHeaders['content-type']);
   if (input.mediaType === 'application/vnd.matchbook.source-pages+json') {
     const parsed: unknown = JSON.parse(text);
     if (!isRecord(parsed) || !Array.isArray(parsed.pages)) throw new Error('Composite source artifact omitted pages');
@@ -716,6 +685,9 @@ const decodePages = (input: FetchArtifactInput): CompositePage[] => {
   }
   return [{ url: input.sourceUrl, mediaType: input.mediaType, text }];
 };
+
+/** Warnings that say something about what was read, not that the read was incomplete. */
+const ADVISORY = new Set(['SENSITIVE_WITHHELD', 'JUNK_TITLES_DROPPED', 'TIMES_LOOK_SHIFTED', 'WEEKDAY_DISAGREES', 'READ_FROM_STRUCTURED_DATA']);
 
 export class LiveSourceAdapter implements SourceAdapter {
   readonly kind: SourceDefinition['adapterKind'];
@@ -740,6 +712,10 @@ export class LiveSourceAdapter implements SourceAdapter {
     const pages = decodePages(input);
     let items: ExtractedItem[] = [];
     const warnings: Array<{ code: string; message: string }> = [];
+    const pageKey = (url: string): string => url.split('#')[0]!.replace(/\/$/, '');
+    const byUrl = new Map(pages.map(page => [pageKey(page.url), page.text]));
+    const perPage: Array<{ key: string; items: ExtractedItem[]; text: string; url: string }> = [];
+    const htmlDiagnostics = { matched: 0, dated: 0 };
     for (const page of pages) {
       try {
         if (['TRIBE_REST', 'WP_FILTERED_TRIBE'].includes(this.kind)) {
@@ -758,7 +734,18 @@ export class LiveSourceAdapter implements SourceAdapter {
         } else if (this.kind === 'COUNTY_OPENCITIES') {
           items.push(...openCitiesEvents(JSON.parse(page.text), source, page.url));
         } else if (this.kind === 'SOURCE_HTML' && (source.adapterConfig as { selectors?: unknown }).selectors) {
-          items.push(...mappedHtmlEvents(page.text, source, page.url));
+          if (!/html/.test(page.mediaType) && !/^\s*</.test(page.text)) continue;
+          // An item's own page, if this run followed the link to it, fills in
+          // what its list row left out.
+          const found = mappedHtmlEvents(page.text, source, page.url, {
+            diagnostics: htmlDiagnostics,
+            detailFor: url => {
+              const key = pageKey(url);
+              if (key === pageKey(page.url) || !byUrl.has(key)) return undefined;
+              return byUrl.get(key);
+            },
+          });
+          perPage.push({ key: pageKey(page.url), items: found, text: page.text, url: page.url });
         } else if (['JSON_LD_HTML', 'SOURCE_HTML'].includes(this.kind)) {
           const structured = jsonLdEvents(page.text, source, page.url);
           items.push(...(structured.length ? structured : visibleHtmlEvents(page.text, source, page.url)));
@@ -770,6 +757,43 @@ export class LiveSourceAdapter implements SourceAdapter {
         warnings.push({ code: 'PAGE_PARSE_FAILED', message: (error as Error).message.slice(0, 300) });
       }
     }
+    if (perPage.length) {
+      // Every page is read as a list, an item's own page included: some sites
+      // keep a series' dates there ("Upcoming: Oct 13, Nov 10, Dec 8"), and a
+      // row met twice has one key and is kept once.
+      const lists = perPage;
+      items.push(...lists.flatMap(page => page.items));
+      // The difference between "nothing is on" and "we can no longer read
+      // this page" is the one a silent zero hides. A selector that finds no
+      // rows, or rows in which no date can be read, is the page having
+      // changed; what the page says for machines is used meanwhile.
+      const blind = htmlDiagnostics.matched === 0 || (htmlDiagnostics.dated === 0 && htmlDiagnostics.matched >= 3);
+      if (blind) {
+        warnings.push(htmlDiagnostics.matched === 0
+          ? { code: 'SELECTOR_MATCHED_NOTHING', message: 'The entry\u2019s item selector found no rows on any page; the site\u2019s markup has probably changed.' }
+          : { code: 'NO_DATES_READ', message: `${htmlDiagnostics.matched} rows matched but no date or weekly rule could be read in any of them.` });
+        const rescued = lists.flatMap(page => jsonLdEvents(page.text, source, page.url));
+        if (rescued.length) {
+          items.push(...rescued);
+          warnings.push({ code: 'READ_FROM_STRUCTURED_DATA', message: `${rescued.length} event(s) were read from the page\u2019s schema.org data instead.` });
+        }
+      }
+    }
+    const junk = items.filter(item => isJunkTitle(`${item.normalizedFields.title ?? ''}`)).length;
+    if (junk) {
+      items = items.filter(item => !isJunkTitle(`${item.normalizedFields.title ?? ''}`));
+      warnings.push({ code: 'JUNK_TITLES_DROPPED', message: `${junk} row(s) whose title was a button or a page heading ("Read more", "Events") were dropped.` });
+    }
+    // Most of a community's events do not start between midnight and five.
+    // When most of a feed's do, its times are wall-clock written as UTC (or
+    // the reverse), and every card would be ten hours out.
+    const clocks = items.map(item => `${item.normalizedFields.localStart ?? ''}`).filter(start => /T\d{2}:\d{2}/.test(start) && !/T00:00/.test(start))
+      .map(start => new Date(Date.parse(start) - 10 * 3_600_000).getUTCHours());
+    if (clocks.length >= 6 && clocks.filter(hour => hour < 5).length / clocks.length > 0.6) {
+      warnings.push({ code: 'TIMES_LOOK_SHIFTED', message: 'Most events start between midnight and 5 AM Kaua\u02BBi time; the feed\u2019s times are probably wall-clock written as UTC (see timestampsAreLocal).' });
+    }
+    const doubted = items.filter(item => /weekday written beside this date/.test(`${item.normalizedFields.context ?? ''}`)).length;
+    if (doubted) warnings.push({ code: 'WEEKDAY_DISAGREES', message: `${doubted} event(s) name a weekday that does not fall on their date; they are queued for a schedule check.` });
     const withheld = items.filter(isRecoveryMeeting).length;
     if (withheld) {
       items = items.filter(item => !isRecoveryMeeting(item));
@@ -779,7 +803,7 @@ export class LiveSourceAdapter implements SourceAdapter {
       .slice(0, source.polling.maxItems);
     return {
       items: deduplicated,
-      completeness: warnings.some(warning => warning.code !== 'SENSITIVE_WITHHELD') ? 'PARTIAL' : 'COMPLETE',
+      completeness: warnings.some(warning => !ADVISORY.has(warning.code)) ? 'PARTIAL' : 'COMPLETE',
       warnings,
       metrics: {
         discovered: items.length,

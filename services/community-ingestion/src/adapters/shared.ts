@@ -1,6 +1,7 @@
 import { load } from 'cheerio';
 import type { ExtractedItem, SourceDefinition } from '../contracts.js';
 import { sha256 } from '../hash.js';
+import { findDates } from '../text-dates.js';
 
 /**
  * What every parser in this directory stands on: reading a publisher's
@@ -34,7 +35,10 @@ export const asString = (value: unknown): string | undefined => {
 export const textOnly = (value: unknown, limit = 2_000): string | undefined => {
   const source = asString(value);
   if (!source) return undefined;
-  const text = load(`<div>${source}</div>`)('div').text().replace(/\s+/g, ' ').trim();
+  // A line break or the end of a block is a word break. Without this,
+  // "3-6 PM<br>Waikomo Courtyard" reads "3-6 PMWaikomo Courtyard".
+  const broken = source.replace(/<(?:br|hr)\b[^>]*>|<\/(?:p|div|li|h[1-6]|tr|td|th|dd|dt|blockquote|section|article)>/gi, ' $& ');
+  const text = load(`<div>${broken}</div>`)('div').text().replace(/\s+/g, ' ').replace(/\s+([,.;:!?])/g, '$1').trim();
   return text ? text.slice(0, limit) : undefined;
 };
 
@@ -192,6 +196,67 @@ export const usableEnd = (start: string | undefined, end: string | undefined): s
   return duration > 0 && duration <= 31 * DAY_MS ? end : undefined;
 };
 
+const SMALL_WORDS = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'vs', 'via', 'with', 'o']);
+const KEEP_UPPER = new Set(['KCC', 'NTBG', 'KMF', 'KIUC', 'YWCA', 'YMCA', 'UH', 'DJ', 'BBQ', 'USA', 'HI', 'LGBTQ', 'LGBTQ+', 'DIY', 'STEM', 'STEAM',
+  'EKK', 'HCT', 'KKCR', 'KPAA', 'KEMA', 'KPD', 'KFD', 'DLNR', 'NOAA', 'FEMA', 'CPR', 'AED', 'TV', 'PTA', 'PTSA', 'ROTC', 'JROTC', 'VFW', 'AARP', 'RSVP',
+  'BYOB', 'UFC', 'MMA', 'NFL', 'NBA', 'II', 'III', 'IV', 'VI', 'VII', 'VIII', 'IX', 'XI', 'AM', 'PM', 'HST', 'ID', 'IT', 'GED', 'ESL', 'SUP', 'ATV', 'KHS']);
+
+/** "FREE SATURDAY HULA SHOW" → "Free Saturday Hula Show"; "KCC", "5K" and "DJ" stay as they are. */
+const titleCase = (text: string): string => text.split(/(\s+|[-–—/])/).map((word, index) => {
+  if (!/[A-Za-zÀ-ɏ]/.test(word)) return word;
+  const bare = word.replace(/^[^A-Za-zÀ-ɏ0-9]+|[^A-Za-zÀ-ɏ0-9+]+$/g, '');
+  // Known initials, anything with a digit ("5K"), and short tokens with no
+  // vowel at all ("KVMH", "SMMH") — no word in English or Hawaiian is spelled that way.
+  if (KEEP_UPPER.has(bare.toUpperCase()) || /\d/.test(bare) || (bare.length >= 2 && bare.length <= 5 && !/[aeiouyāēīōū]/i.test(bare))) return word;
+  const lower = word.toLocaleLowerCase('en-US');
+  if (index > 0 && SMALL_WORDS.has(bare.toLowerCase())) return lower;
+  // The first LETTER is raised, wherever it sits: "ʻukulele" → "ʻUkulele", "(free)" → "(Free)".
+  return lower.replace(/[a-zà-ɏ]/, letter => letter.toLocaleUpperCase('en-US'));
+}).join('');
+
+const JUNK_TITLE = /^(?:read|learn|see|view|find out)\s+more\b|^(?:more\s+)?(?:info(?:rmation)?|details?)$|^click\s+here\b|^(?:register|rsvp|sign\s*up|buy\s+tickets?|get\s+tickets?|tickets?)(?:\s+(?:now|here|today))?$|^(?:view|see)\s+(?:event|all|calendar)\b|^(?:home|events?|calendar|upcoming events?|untitled|tbd|tba|n\/a)$/i;
+
+/** A "title" that is a button or a heading of the page, not the name of anything. */
+export const isJunkTitle = (title: string): boolean => JUNK_TITLE.test(title.trim()) || !/[A-Za-zÀ-ɏ]{2}/.test(title);
+
+/**
+ * A title as it should read on a card. Nothing is invented: shouting is
+ * lowered, a date the publisher tacked on the end ("Mokihana Festival --
+ * Sept 20 - 26") is cut because the card shows the date itself, and the
+ * wrapping punctuation goes. What cannot be improved is returned as it was.
+ */
+export const polishTitle = (written: string): string => {
+  let title = written.replace(/\s+/g, ' ').trim();
+  // A trailing date, after a separator: the card already says when.
+  const dates = findDates(title);
+  const last = dates[dates.length - 1];
+  if (last) {
+    const head = title.slice(0, last.index);
+    const tail = title.slice(last.index + last.length);
+    const separator = /\s*(?:[-–—:|,(]|\bon\b)+\s*$/i.exec(head);
+    if (separator && /^[\s).,!]*$/.test(tail) && head.slice(0, separator.index).trim().length >= 4) title = head.slice(0, separator.index).trim();
+  }
+  // Quotation marks around the whole title are the publisher's emphasis, not part of the name.
+  if (/^["“‘'].{3,}["”’']$/.test(title) && !/["“”]/.test(title.slice(1, -1))) title = title.slice(1, -1).trim();
+  title = title.replace(/[\s:;,|–—-]+$/g, '').trim();
+  const letters = title.replace(/[^A-Za-zÀ-ɏ]/g, '');
+  const shouted = letters.length >= 8 && letters.replace(/[^A-ZÀ-Þ]/g, '').length / letters.length >= 0.7;
+  if (shouted) title = titleCase(title);
+  return title || written;
+};
+
+/**
+ * The same instant, written on Kauaʻi's clock. A feed's "2026-10-04T05:00:00Z"
+ * is 7 PM on the 3rd; a field called localStart should say so, whichever way
+ * the publisher wrote it. (The item's key is made from what the publisher
+ * wrote, so this changes what a reviewer reads and not which item it is.)
+ */
+const onKauaiClock = (iso: string): string => {
+  if (!/(?:Z|[+-]\d{2}:?\d{2})$/.test(iso) || /-10:00$/.test(iso)) return iso;
+  const instant = Date.parse(iso);
+  return Number.isNaN(instant) ? iso : `${new Date(instant - 10 * 3_600_000).toISOString().slice(0, 19)}-10:00`;
+};
+
 export const eventItem = (input: {
   id?: string | number | undefined;
   title: string;
@@ -205,19 +270,24 @@ export const eventItem = (input: {
   attendanceMode?: string | undefined;
   categories?: string[] | undefined;
   context?: string | undefined;
+  /** Something about the schedule a person should look at: "the page says Saturday, but October 18, 2026 is a Sunday". */
+  doubt?: string | undefined;
   raw: JsonRecord;
   locator: string;
 }): ExtractedItem => {
-  const title = safeVisibleText(input.title, 300) ?? input.title;
+  // The key is made from the title as the publisher wrote it, so that the
+  // polishing below can get better without every item becoming a new one.
+  const writtenTitle = safeVisibleText(input.title, 300) ?? input.title;
+  const title = polishTitle(writtenTitle);
   const description = safeVisibleText(input.description, 2_000);
   const location = safeVisibleText(input.location, 500);
   const categories = uniqueLabels(input.categories);
-  const context = safeVisibleText(input.context, 1_500);
+  const context = safeVisibleText([input.context, input.doubt].filter(Boolean).join(' · '), 1_500);
   const locationHint = location ? undefined : locationHintFrom(description, context, title);
   const end = usableEnd(input.start, input.end);
   const researchNeeded = [
     ...(!location ? ['location' as const] : []),
-    ...(!input.start || (input.end && !end) ? ['schedule' as const] : []),
+    ...(!input.start || (input.end && !end) || input.doubt ? ['schedule' as const] : []),
   ];
   // A publisher with no status field says it in the title: "CANCELLED –
   // Harvest Festival", "Trashion Show (postponed, new date TBD)". Dropping
@@ -229,14 +299,14 @@ export const eventItem = (input: {
   return {
     // Stable identity continues to depend only on the publisher identity and
     // schedule—not on enrichment fields that may improve on a later parser run.
-    sourceItemKey: itemKey(input.id, input.sourceUrl, title, input.start),
+    sourceItemKey: itemKey(input.id, input.sourceUrl, writtenTitle, input.start),
     canonicalSourceUrl: input.sourceUrl,
     entityHint: 'event',
     rawFields: input.raw,
     normalizedFields: {
       title,
-      ...(input.start ? { localStart: input.start } : {}),
-      ...(end ? { localEnd: end } : {}),
+      ...(input.start ? { localStart: onKauaiClock(input.start) } : {}),
+      ...(end ? { localEnd: onKauaiClock(end) } : {}),
       ...(location ? { location } : {}),
       ...(locationHint ? { locationHint } : {}),
       ...(description ? { description } : {}),

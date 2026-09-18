@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { findClock, findDates, findWeeklyRule, formatDate, occurrences } from '../src/text-dates.js';
+import { findClock, findDates, findSeries, findWeeklyRule, formatDate, occurrences, seriesDates } from '../src/text-dates.js';
 
 const TODAY = { today: '2026-09-17' };
 const dates = (text: string, options = TODAY) => findDates(text, options).map(hit => (hit.endDate ? `${hit.date}..${hit.endDate}` : hit.date));
@@ -80,3 +80,46 @@ test('dates format into endpoint templates', () => {
   assert.equal(formatDate('2026-09-08', 'YYYY/MM'), '2026/09');
   assert.equal(formatDate('2026-09-08', 'YYYY-MM-DD'), '2026-09-08');
 });
+
+test('a weekday written beside a date checks our arithmetic, and corrects a year nobody wrote', () => {
+  const hit = (text: string, today: string) => findDates(text, { today })[0];
+  // A post from October 2025, read a year later: "Sunday, November 16" is 2025's, where it IS a Sunday.
+  assert.deepEqual([hit('Sunday, November 16 | 3 PM', '2026-09-18')?.date, hit('Sunday, November 16 | 3 PM', '2026-09-18')?.weekday], ['2025-11-16', 'corrected']);
+  assert.deepEqual([hit('Saturday, October 3', '2026-09-18')?.date, hit('Saturday, October 3', '2026-09-18')?.weekday], ['2026-10-03', 'agrees']);
+  // The refuge's own typo: the year is written, so nothing is "corrected" — the contradiction is reported.
+  assert.deepEqual([hit('Saturday, October 18, 2026: Refuge Week', '2026-09-18')?.date, hit('Saturday, October 18, 2026: Refuge Week', '2026-09-18')?.weekday], ['2026-10-18', 'disagrees']);
+  assert.equal(hit('October 3 at the pavilion', '2026-09-18')?.weekday, undefined, 'no weekday, no opinion');
+  assert.deepEqual(findDates('Fri 10/2 – Sun 10/4', { today: '2026-09-18' }).map(found => [found.date, found.weekday]), [['2026-10-02', 'agrees'], ['2026-10-04', 'agrees']]);
+});
+
+test('a post\u2019s "this Saturday" is read against the day it was posted; a standing page\u2019s is not read at all', () => {
+  const posted = { today: '2026-09-15', relative: true }; // a Tuesday
+  assert.deepEqual(findDates('Join us this Saturday for a beach cleanup', posted).map(hit => hit.date), ['2026-09-19']);
+  assert.deepEqual(findDates('Tomorrow night at the Warehouse', posted).map(hit => hit.date), ['2026-09-16']);
+  assert.deepEqual(findDates('Next Friday we open the show', posted).map(hit => hit.date), ['2026-09-25']);
+  assert.deepEqual(findDates('Open today! Come this Saturday', { today: '2026-09-15' }), []);
+});
+
+test('a series knows how long it runs', () => {
+  const today = { today: '2026-09-18' };
+  assert.deepEqual(findSeries('Saturdays in October, 9 am', today), { rule: { weekdays: [6] }, from: '2026-10-01', until: '2026-10-31' });
+  assert.deepEqual(findSeries('Every Friday through December 18', today), { rule: { weekdays: [5] }, until: '2026-12-18' });
+  assert.deepEqual(findSeries('Mondays, Sept 14 \u2013 Oct 26', today), { rule: { weekdays: [1] }, from: '2026-09-14', until: '2026-10-26' });
+  assert.deepEqual(findSeries('Tuesdays starting October 6', today), { rule: { weekdays: [2] }, from: '2026-10-06' });
+  assert.equal(findSeries('Saturday, October 3 through Monday, October 5', today), undefined, 'two dates, not a rule');
+  assert.deepEqual(seriesDates({ rule: { weekdays: [5] }, until: '2026-10-09' }, '2026-09-18', 120), ['2026-09-18', '2026-09-25', '2026-10-02', '2026-10-09']);
+  assert.deepEqual(seriesDates({ rule: { weekdays: [6] }, from: '2026-10-01', until: '2026-10-31' }, '2026-09-18', 30), ['2026-10-03', '2026-10-10', '2026-10-17']);
+});
+
+test('clocks in the forms people actually use', () => {
+  assert.deepEqual(findClock('10a-2p at the pavilion'), { start: '10:00', end: '14:00' });
+  assert.deepEqual(findClock('Doors 6.30pm'), { start: '18:30' });
+  assert.deepEqual(findClock('Doors 6 pm, show 7 pm'), { start: '19:00' }, 'the show is the event');
+  assert.deepEqual(findClock('All day'), { allDay: true });
+  assert.deepEqual(findClock('5 a day keeps 7 people happy'), {}, 'a lone letter must hug its number');
+  assert.deepEqual(findClock('6-8', { bare: true }), { start: '18:00', end: '20:00' });
+  assert.deepEqual(findClock('9 - 12', { bare: true }), { start: '09:00', end: '12:00' });
+  assert.deepEqual(findClock('6:30 \u2013 8:30', { bare: true }), { start: '18:30', end: '20:30' });
+  assert.deepEqual(findClock('ages 5-12, $5-10'), {}, 'without being told it is a time, bare numbers are not one');
+});
+

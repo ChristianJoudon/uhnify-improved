@@ -957,14 +957,14 @@
       "publisherUrl": "https://www.hawaiipacifichealth.org/patient-resources/calendar/",
       "tier": "B",
       "adapterKind": "SOURCE_HTML",
-      "adapterConfig": { "kind": "SOURCE_HTML", "detailLinkSelector": "h2.event-card__heading a", "sitemap": false, "selectors": { "item": "li.event-card:has(li.area:contains(\"Kaua\"))", "title": "h2.event-card__heading a", "date": "div.event-card__date time", "dateAttr": "datetime", "time": "li.time", "description": "div.event-card__desc", "link": "h2.event-card__heading a", "category": "li.type", "defaultLocation": "Wilcox Medical Center, 3-3420 Kūhiō Highway, Līhuʻe, HI 96766" }, "followDetails": false },
+      "adapterConfig": { "kind": "SOURCE_HTML", "detailLinkSelector": "li.event-card:has(li.area:contains(\"Kaua\")) h2.event-card__heading a", "sitemap": false, "selectors": { "item": "li.event-card:has(li.area:contains(\"Kaua\"))", "title": "h2.event-card__heading a", "date": "div.event-card__date time", "dateAttr": "datetime", "time": "li.time", "description": "div.event-card__desc", "link": "h2.event-card__heading a", "category": "li.type", "defaultLocation": "Kauaʻi", "detail": { "location": "p:has(> strong:contains('Location'))" } }, "followDetails": true },
       "endpoints": [
         { "purpose": "COLLECTION", "method": "GET", "urlTemplate": "https://www.hawaiipacifichealth.org/patient-resources/calendar/" }
       ],
       "trust": "OFFICIAL_ORGANIZER",
       "permission": "AUTOMATED_ALLOWED",
       "contentKinds": ["event", "venue", "organization"],
-      "polling": { "intervalMinutes": 1440, "jitterPercent": 15, "lookBackDays": 1, "lookAheadDays": 150, "maxPages": 1, "maxItems": 200 },
+      "polling": { "intervalMinutes": 1440, "jitterPercent": 15, "lookBackDays": 1, "lookAheadDays": 150, "maxPages": 8, "maxItems": 200 },
       "httpPolicy": { "allowedHosts": ["www.hawaiipacifichealth.org"], "allowedRedirectHosts": [], "allowedMediaTypes": ["text/html"], "timeoutMs": 20000, "maxResponseBytes": 2000000, "maxRedirects": 1, "minimumDelayMs": 2000 },
       "parser": { "parserId": "mapped-html", "parserVersion": "1.0.0", "fixtureVersion": "2026-09-18" },
       "fieldAllowlist": ["url", "title", "text", "heading", "date"],
