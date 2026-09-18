@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { KAUAI, KAUAI_BOUNDS, positionOf } from '../utilities/geo';
+import { KAUAI_COAST } from '../utilities/kauaiCoast';
 import { KAUAI_ROADS } from '../utilities/kauaiRoads';
 import { TOPICS } from '../utilities/topics';
 
@@ -56,17 +57,38 @@ const pinFor = (topicKey, count, chosen) => {
 };
 
 /**
- * The sea, as a literal because an SVG `feFlood` cannot read a CSS custom
- * property. It mirrors --mb-sea in style.css and the two must change together:
- * the stylesheet's copy paints the frame behind the tiles, this one paints the
- * water itself, and a mismatch shows as a hairline of the wrong colour at the
- * map's edge. There is no matching land constant — the island is drawn from the
- * tiles now rather than flooded, which is what keeps its roads.
+ * The island's colour. The sea has no constant here: it is the map container's
+ * own background (--mb-sea in style.css), and the island is a polygon laid on it.
  */
-const SEA = '#3f5563';
 const LAND = '#f7ece0';
 /** The road network's ink, and its two weights. */
 const ROAD = '#3f3a35';
+
+/**
+ * The names on the map. `from` is the zoom at which a name appears: the towns
+ * a visitor steers by at the whole-island view, the rest a step closer.
+ * `side` is where the name sits from its town - inland, always, because the
+ * pins gather on the coast road and a name under a pin is no name at all.
+ */
+const KAUAI_TOWNS = [
+  { name: 'Līhuʻe', at: [21.9811, -159.3711], from: 0, side: 'w' },
+  { name: 'Kapaʻa', at: [22.0881, -159.3380], from: 0, side: 'w' },
+  { name: 'Hanalei', at: [22.2035, -159.5010], from: 0, side: 's' },
+  { name: 'Waimea', at: [21.9572, -159.6698], from: 0, side: 'n' },
+  { name: 'Kōloa', at: [21.9067, -159.4697], from: 10, side: 'n' },
+  { name: 'Princeville', at: [22.2180, -159.4790], from: 11, side: 's' },
+  { name: 'Kīlauea', at: [22.2122, -159.4061], from: 11, side: 's' },
+  { name: 'Anahola', at: [22.1444, -159.3133], from: 11, side: 'w' },
+  { name: 'Wailua', at: [22.0525, -159.3380], from: 12, side: 'w' },
+  { name: 'Hanamāʻulu', at: [21.9983, -159.3583], from: 12, side: 'w' },
+  { name: 'Poʻipū', at: [21.8769, -159.4572], from: 11, side: 'n' },
+  { name: 'Kalāheo', at: [21.9244, -159.5269], from: 11, side: 'n' },
+  { name: 'ʻEleʻele', at: [21.9075, -159.5833], from: 12, side: 'e' },
+  { name: 'Hanapēpē', at: [21.9114, -159.5947], from: 11, side: 'n' },
+  { name: 'Kekaha', at: [21.9669, -159.7119], from: 11, side: 'n' },
+  { name: 'Hāʻena', at: [22.2206, -159.5606], from: 11, side: 's' },
+  { name: 'Kōkeʻe', at: [22.1303, -159.6586], from: 11, side: 's' },
+];
 
 /** The widest a pin ever gets, at the top of the count scale in `pinFor`. */
 const PIN_MAX = 24 + 6 * 3.4;
@@ -129,29 +151,38 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
       dragging: !L.Browser.mobile,
       attributionControl: true,
     });
-    // Two layers, because they want opposite treatment. The base is thresholded
-    // to two flat colours — a cream island on a navy sea — which is the only way
-    // to be rid of tile seams, contour shading and the streams that read as
-    // cracks at this zoom. Labels come separately and are NOT thresholded, so
-    // town names stay crisp type rather than being flattened into the island.
-    const base = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 19,
-      attribution: '© OpenStreetMap · © CARTO',
+    // The island is our own geometry (kauaiCoast.js) on a flat sea: no tiles,
+    // no provider, no key. It sits in a pane of its own beneath the roads and
+    // pins, and takes no clicks.
+    map.current.createPane('mb-land').style.zIndex = 200;
+    L.polygon(KAUAI_COAST, {
+      pane: 'mb-land',
+      stroke: true,
+      color: LAND,
+      weight: 1,
+      fillColor: LAND,
+      fillOpacity: 1,
+      interactive: false,
     }).addTo(map.current);
-    // The filter goes on the layer's CONTAINER, not on each tile. Leaflet's
-    // `className` option tags every tile image, which meant the blur-and-cut ran
-    // 30-odd times against 30 separate transparent edges — and every tile
-    // boundary came back as a pale hairline ruling the island into a grid.
-    // Filtering the assembled layer once has no interior edges to find.
-    base.getContainer().classList.add('mb-map-base');
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-      subdomains: 'abcd',
-      maxZoom: 19,
-      className: 'mb-map-labels',
-    }).addTo(map.current);
-    // OpenStreetMap and CARTO are keeping their credit — that is the licence.
+    // Town names, in the island's own spelling, as type rather than as tiles.
+    // The smaller places wait for a closer look so the whole-island view is
+    // not a crowd of words.
+    const towns = L.layerGroup().addTo(map.current);
+    const drawTowns = () => {
+      towns.clearLayers();
+      const zoom = map.current.getZoom();
+      KAUAI_TOWNS.filter(town => zoom >= town.from).forEach(town => {
+        L.marker(town.at, {
+          interactive: false,
+          keyboard: false,
+          icon: L.divIcon({ className: `mb-map-town mb-map-town--${town.side}`, html: `<span>${town.name}</span>`, iconSize: [0, 0] }),
+        }).addTo(towns);
+      });
+    };
+    drawTowns();
+    map.current.on('zoomend', drawTowns);
+    map.current.attributionControl.addAttribution('\u00A9 OpenStreetMap contributors');
+    // OpenStreetMap keeps its credit — that is the licence.
     // Leaflet's own "Leaflet | 🇺🇦" prefix is not part of it, and on a phone that
     // optional branding took nearly half the map's width.
     map.current.attributionControl.setPrefix('');
@@ -290,73 +321,6 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
 
   return (
     <div className="mb-map" style={height ? { height } : undefined}>
-      {/* The two-tone repaint of the basemap, referenced from style.css.
-          Positron's water is the one fill whose blue outruns its red, so the
-          alpha row below (-200R +200B) resolves to 1 over the sea and 0 over
-          every shade of land, road and park. The slope is deliberately steep:
-          Positron's own tiles carry faint seams a shade off open water, and a
-          gentler threshold left them behind as a light grid on the sea. */}
-      <svg className="mb-map-defs" aria-hidden="true" focusable="false">
-        <filter id="mb-sea" colorInterpolationFilters="sRGB">
-          <feColorMatrix
-            in="SourceGraphic"
-            result="seamask"
-            type="matrix"
-            values="0 0 0 0 0
-                    0 0 0 0 0
-                    0 0 0 0 0
-                    -200 0 200 0 -0.8"
-          />
-          {/* Soften, then cut hard. A blur followed by a near-vertical transfer
-              curve drops anything thinner than the blur — the hairline seams in
-              Positron's rasters AND the streams threading the island, which at
-              this zoom read as cracks rather than water — while a coastline,
-              being a large edge, survives and comes through smooth. Morphology
-              did the same job on the pixel grid and chewed the coast into
-              stair-steps. */}
-          <feGaussianBlur in="seamask" stdDeviation="2.4" result="soft" />
-          <feComponentTransfer in="soft" result="closed">
-            <feFuncA type="linear" slope="20" intercept="-9.5" />
-          </feComponentTransfer>
-          {/* The land keeps its detail now, which is how the roads came back.
-
-              It used to be flooded flat — one colour edge to edge — and that
-              erased the road network along with the tile seams it was aimed at.
-              Instead the tile's own luminance is kept and recoloured: Positron
-              draws roads WHITE on a light grey land, a difference of a few
-              percent that is invisible until it is stretched.
-
-              So: drop to luminance, stretch that narrow band until roads
-              separate from the ground they sit on, then map the result through
-              a warm ramp — dark end to sand, light end to cream. The roads come
-              out as the pale threads across the island, which is exactly what
-              they look like on paper. */}
-          {/* The island is one flat field again. Trying to lift roads out of the
-              tiles was abandoned on measurement, not taste: at the zoom this map
-              is framed to, a tile over Līhuʻe is 58,540 pixels of water, ~6,500
-              of land and road pixels in the double digits. There was nothing
-              there to recover, and stretching the contrast far enough to look
-              for it only amplified the raster's own noise into grey mud. The
-              roads are drawn from real geometry instead — see kauaiRoads.js. */}
-          <feFlood floodColor={LAND} result="landFlood" />
-          <feComposite in="landFlood" in2="closed" operator="out" result="land" />
-
-          {/* The sea stays flat. It carries no information — every place worth
-              drawing is on the island — and a flat field is what lets the coast
-              read as one clean edge.
-
-              Deliberately NOT clipped to SourceAlpha: Leaflet lays its tiles at
-              fractional pixels, so hairline transparent gaps run between them,
-              and clipping to the source's own alpha punched those gaps through
-              the flood as a pale grid ruled across the map. */}
-          <feFlood floodColor={SEA} result="seaFlood" />
-          <feComposite in="seaFlood" in2="closed" operator="in" result="sea" />
-          <feMerge>
-            <feMergeNode in="land" />
-            <feMergeNode in="sea" />
-          </feMerge>
-        </filter>
-      </svg>
       <div ref={holder} className="mb-map-canvas" />
       {pins.length === 0 && (
         <p className="mb-map-empty">Nothing here to put on the map yet.</p>

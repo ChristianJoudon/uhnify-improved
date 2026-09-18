@@ -5,7 +5,7 @@ import { useTracker } from 'meteor/react-meteor-data';
 import { Badge, Button, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import swal from 'sweetalert';
-import { Plus } from '../utilities/icons';
+import { BoxArrowUpRight, Check2, Plus, Share } from '../utilities/icons';
 import { Clubs } from '../../api/club/Club';
 import { Events } from '../../api/events/Events';
 import { isOpenToAll } from '../../api/listing/audience';
@@ -17,6 +17,7 @@ import ReportListing from './ReportListing';
 import { isPhoto, normalizeCategories } from '../utilities/helpers';
 import { CLUB_FIELDS, EVENT_FIELDS } from '../utilities/cardFields';
 import { topicForClub, topicForEvent } from '../utilities/topics';
+import { tagLabels } from '../utilities/tagLabel';
 
 /**
  * The sheet behind a card.
@@ -132,8 +133,13 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
   }
 
   const topic = shape.topic(record);
-  const categories = normalizeCategories(record.categories);
-  const tags = record.tags || [];
+  // As words, each once. A reviewed listing's categories are the taxonomy's
+  // keys ("music", "open_mic_karaoke") — what the filters and artwork run on,
+  // not what a chip should say — and the first usually repeats the eyebrow
+  // above the title, which has already said it.
+  const eyebrow = topic.matched ? (topic.activityLabel || topic.label) : tagLabels(normalizeCategories(record.categories))[0];
+  const categories = tagLabels(normalizeCategories(record.categories), eyebrow ? [eyebrow] : []);
+  const tags = tagLabels(record.tags || [], [...categories, ...(eyebrow ? [eyebrow] : [])]);
   // Same rule as the card: only a genuinely uploaded photo takes the face.
   const photo = isPhoto(record.image) ? record.image : '';
   const isPrivate = !isOpenToAll(record);
@@ -168,11 +174,7 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
               for unmatched records too, and printing it would assert a subject
               nothing was matched on — so an unmatched record falls back to its
               own first category, or to no eyebrow at all. */}
-          {(topic.matched ? (topic.activityLabel || topic.label) : categories[0]) && (
-            <span className="eyebrow">
-              {topic.matched ? (topic.activityLabel || topic.label) : categories[0]}
-            </span>
-          )}
+          {eyebrow && <span className="eyebrow">{eyebrow}</span>}
           {/* A real heading: react-bootstrap renders ModalTitle as a div by
               default, so the sheet's title was the one title-scale string in
               the app set in DM Sans instead of Bricolage. */}
@@ -205,7 +207,7 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
             {(categories.length > 0 || tags.length > 0) && (
               <div className="club-card-categories">
                 {categories.map(category => <Badge key={`cat-${category}`} className="club-category-tag">{category}</Badge>)}
-                {tags.map(tag => <Badge key={`tag-${tag}`} className="club-category-tag">{tag}</Badge>)}
+                {tags.map(tag => <Badge key={`tag-${tag}`} className="club-category-tag club-category-tag--tag">{tag}</Badge>)}
               </div>
             )}
 
@@ -236,21 +238,31 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
             somebody else first, and a listing that names them — with a way
             through to the original — is both the honest thing and the one that
             lets a reader check a detail this copy may have got wrong. */}
-        {record.source?.publisher && (
-          <p className="details-source">
-            From{' '}
-            {record.source.url
-              ? <a href={record.source.url} target="_blank" rel="noopener noreferrer">{record.source.publisher}</a>
-              : record.source.publisher}
-          </p>
+        {(record.source?.publisher || !mine) && (
+          <div className="details-foot">
+            {record.source?.publisher && (
+              <p className="details-source">
+                <span>From</span>
+                {record.source.url
+                  ? (
+                    <a href={record.source.url} target="_blank" rel="noopener noreferrer">
+                      {record.source.publisher}
+                      <BoxArrowUpRight size={12} aria-hidden="true" />
+                    </a>
+                  )
+                  : <span className="details-source-name">{record.source.publisher}</span>}
+              </p>
+            )}
+            {!mine && <ReportListing kind={kind} listingId={record._id} />}
+          </div>
         )}
-        {!mine && <ReportListing kind={kind} listingId={record._id} />}
       </Modal.Body>
 
       <Modal.Footer>
         {/* The link somebody texts a friend. The phone's share sheet where
             there is one; the clipboard where there is not. */}
-        <button type="button" className="mb-section-link me-auto" onClick={share}>
+        <button type="button" className="btn btn-soft-primary details-share me-auto" onClick={share} aria-live="polite">
+          {shared ? <Check2 size={16} aria-hidden="true" /> : <Share size={15} aria-hidden="true" />}
           {shared ? 'Link copied' : 'Share'}
         </button>
         {/* For the person who runs it, and quiet: the sheet is for reading, and
