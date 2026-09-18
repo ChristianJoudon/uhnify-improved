@@ -26,6 +26,8 @@ import '/imports/startup/server/Mongo';
 import '/imports/startup/both/Methods';
 import '/imports/api/moderation/ModerationMethods';
 import '/imports/api/accounts/AccountMethods';
+import '/imports/api/help/HelpMethods';
+import '/imports/startup/server/help';
 import '/imports/startup/server/bans';
 // Last, and that order is load-bearing: this wraps the handler table Methods.js
 // has just filled in. Imported earlier it would wrap nothing.

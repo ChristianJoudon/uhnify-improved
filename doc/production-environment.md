@@ -208,3 +208,14 @@ with dateless items. Google's
 `calendar.google.com/robots.txt` disallows crawlers, and the KKCR entry is a
 public ICS feed the station embeds for subscription: consuming it four times
 a day is what it is for, not crawling.
+
+## The help page and the emergency banner
+
+`/help` is public and light — no sign-in, no map tiles — and lists where to
+find water, food, shelter, ice, charging, fuel, medical help and supplies,
+with who says so and when somebody last checked. Administrators post and
+check places from `/admin/help`; the same page turns the site-wide banner on
+with a headline. The page also reads the County of Kauaʻi's latest press
+releases straight from kauai.gov, cached for fifteen minutes; if the county's
+page cannot be reached the section says so rather than guessing. Nothing on
+the help page depends on the ingestion worker.

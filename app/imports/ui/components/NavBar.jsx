@@ -57,6 +57,7 @@ const NavBar = () => {
             )}
 
             {isAdmin && <Nav.Link as={NavLink} to="/admin" eventKey="/admin">Organize</Nav.Link>}
+            {isAdmin && <Nav.Link as={NavLink} to="/admin/help" eventKey="/admin/help">Help page</Nav.Link>}
 
             {!currentUser && (
               <>

@@ -109,7 +109,7 @@ const summaryFor = (name, args) => {
 /** Methods the app owns. Meteor's own account methods are excluded — they carry
     passwords and tokens, and logging them would be the leak this file exists to
     avoid. */
-const OURS = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.|moderation\.|accounts\.)/;
+const OURS = /^(createUserProfile|Profiles\.|Clubs\.|clubs\.|Events\.|profileClubs\.|eventSwipes\.|friends\.|recommendations\.|recommendationInteractions\.|recommendationPreferences\.|ingestion\.|moderation\.|accounts\.|help\.)/;
 
 export const installAuditTrail = () => {
   const handlers = Meteor.server.method_handlers;

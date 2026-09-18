@@ -22,6 +22,7 @@ import { RECOMMENDATION_COLLECTIONS } from '../../api/recommendations/Recommenda
 import '../both/Methods';
 import '../../api/moderation/ModerationMethods';
 import '../../api/accounts/AccountMethods';
+import '../../api/help/HelpMethods';
 
 /**
  * What every backend test needs before it can say anything.
