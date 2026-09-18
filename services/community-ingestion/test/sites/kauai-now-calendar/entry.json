@@ -1,0 +1,116 @@
+{
+ "id": "SRC-009",
+ "slug": "kauai-now-calendar",
+ "displayName": "Kauai Now Community Calendar",
+ "publisherName": "Kauai Now",
+ "publisherUrl": "https://kauainownews.com/community-calendar/",
+ "tier": "A",
+ "adapterKind": "STATIC_JSON",
+ "adapterConfig": {
+  "kind": "STATIC_JSON",
+  "eventSelector": "hubhawaii event cache",
+  "records": {
+   "fields": {
+    "id": "eventHash",
+    "title": "title",
+    "date": "dates.0.date",
+    "time": "dates.0.startTime",
+    "endTime": "dates.0.endTime",
+    "location": [
+     "address",
+     "region"
+    ],
+    "description": "description",
+    "url": "website",
+    "categories": "category",
+    "recurrence": "dates.0.dateString"
+   },
+   "recurrenceWeeks": 8
+  }
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://media.hubhawaii.com/events/cache/kauai/{DAY|M-D-YYYY}.cache",
+   "expand": {
+    "variable": "DAY",
+    "days": 45
+   }
+  },
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://media.hubhawaii.com/events/cache/kauai/repeat_day_{N}.cache",
+   "expand": {
+    "variable": "N",
+    "values": [
+     "0",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6"
+    ]
+   }
+  }
+ ],
+ "trust": "AGGREGATOR",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 720,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 60,
+  "maxPages": 150,
+  "maxItems": 2000
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "media.hubhawaii.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "application/octet-stream",
+   "application/json"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 5000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 500
+ },
+ "parser": {
+  "parserId": "mapped-json",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "id",
+  "eventHash",
+  "title",
+  "address",
+  "region",
+  "category",
+  "description",
+  "website",
+  "dates",
+  "latitude",
+  "longitude"
+ ],
+ "authorityByField": {
+  "title": "AGGREGATOR",
+  "start": "AGGREGATOR",
+  "location": "AGGREGATOR",
+  "status": "AGGREGATOR"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T20:00:00Z",
+ "steward": "operator"
+}

@@ -39,6 +39,99 @@ export const SourceEndpointSchema = z.object({
   urlTemplate: z.string().url(),
   headers: z.record(z.string()).optional(),
   bodyTemplate: z.unknown().optional(),
+  /**
+   * One endpoint asked several times: once per day, per month, or per listed
+   * value. The variable is written {NAME} in the URL or body, or {NAME|M-D-YYYY}
+   * to say how a date is spelled there.
+   */
+  expand: z.object({
+    variable: z.string().regex(/^[A-Z][A-Z0-9_]*$/),
+    days: z.number().int().min(1).max(366).optional(),
+    months: z.number().int().min(1).max(24).optional(),
+    values: z.array(z.string().min(1)).min(1).max(100).optional(),
+  }).strict().optional(),
+}).strict();
+
+/** A dotted path into a record ("venue.name", "dates.0.date"); a list is tried in order. */
+const FieldPathSchema = z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]);
+
+const RecordFilterSchema = z.object({
+  field: z.string().min(1),
+  pattern: z.string().min(1),
+}).strict();
+
+/**
+ * How to read event records out of a JSON document whose field names are the
+ * publisher's own. With this a new JSON API is a register entry, not code.
+ */
+const JsonRecordsSchema = z.object({
+  /** Where the records are: "events", "data.paginatedEvents.collection", "*" for an object's values, "*.*" for an object of arrays. */
+  path: z.string().min(1).optional(),
+  /** The JSON is inside an HTML page: a <script> by selector, or the text after a marker such as "window.__BOOTSTRAP_STATE__ =". */
+  htmlJson: z.object({
+    selector: z.string().min(1).optional(),
+    marker: z.string().min(1).optional(),
+    attribute: z.string().min(1).optional(),
+  }).strict().optional(),
+  fields: z.object({
+    id: FieldPathSchema.optional(),
+    title: FieldPathSchema,
+    /** A whole date-time in any written form, or epoch seconds/milliseconds. */
+    start: FieldPathSchema.optional(),
+    end: FieldPathSchema.optional(),
+    /** A date alone, with `time` beside it. */
+    date: FieldPathSchema.optional(),
+    endDate: FieldPathSchema.optional(),
+    time: FieldPathSchema.optional(),
+    endTime: FieldPathSchema.optional(),
+    /** Text to search for the date when no field carries one (a blog post's body). */
+    prose: FieldPathSchema.optional(),
+    /** When the record was published: a prose date earlier than this is not the event's. */
+    published: FieldPathSchema.optional(),
+    /** Every listed path that has a value, joined with commas. */
+    location: z.array(z.string().min(1)).min(1).optional(),
+    description: FieldPathSchema.optional(),
+    url: FieldPathSchema.optional(),
+    categories: FieldPathSchema.optional(),
+    status: FieldPathSchema.optional(),
+    /** Text that says how the record repeats ("Every 1st Friday of the Month"). */
+    recurrence: FieldPathSchema.optional(),
+  }).strict(),
+  /** A record whose `recurrence` reads as a rule is written out for this many weeks from its start. */
+  recurrenceWeeks: z.number().int().min(1).max(26).optional(),
+  urlPrefix: z.string().url().optional(),
+  include: RecordFilterSchema.optional(),
+  exclude: RecordFilterSchema.optional(),
+}).strict();
+
+/**
+ * How to read events out of a server-rendered page: which element is one
+ * event, and where in it (or before it) the title, date and place are. With
+ * no `title`, the item's text is the title with the date taken out — which
+ * is how a church bulletin line reads.
+ */
+const HtmlSelectorsSchema = z.object({
+  item: z.string().min(1),
+  title: z.string().min(1).optional(),
+  date: z.string().min(1).optional(),
+  dateAttr: z.string().min(1).optional(),
+  time: z.string().min(1).optional(),
+  location: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  link: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+  /** The nearest element BEFORE the item that carries its date, month or weekday — a heading over a group of lines. */
+  dateFrom: z.string().min(1).optional(),
+  /** A page-level element whose text names the year ("2026 Racing Schedule"). */
+  yearFrom: z.string().min(1).optional(),
+  /** Undated items under a weekday heading ("Tuesday"), or carrying "every Friday", repeat weekly for this many weeks. */
+  weeklyWeeks: z.number().int().min(1).max(26).optional(),
+  include: z.string().min(1).optional(),
+  exclude: z.string().min(1).optional(),
+  /** Stop at the first item or heading that matches ("Previous Concerts"). */
+  stopAt: z.string().min(1).optional(),
+  defaultTitle: z.string().min(1).optional(),
+  defaultLocation: z.string().min(1).optional(),
 }).strict();
 
 const TribeConfigSchema = z.object({
@@ -61,6 +154,7 @@ const StaticJsonConfigSchema = z.object({
   /** Some publishers write Kauaʻi wall-clock times with a "Z" on the end
       (AlohaCalendar, CitySpark); read those as Pacific/Honolulu, not UTC. */
   timestampsAreLocal: z.boolean().optional(),
+  records: JsonRecordsSchema.optional(),
 }).strict();
 
 const IcsConfigSchema = z.object({
@@ -71,6 +165,8 @@ const IcsConfigSchema = z.object({
 const RssConfigSchema = z.object({
   kind: z.literal('RSS_ATOM'),
   identityField: z.enum(['guid', 'link']),
+  /** Only items whose title or categories match (a blog that also announces events). */
+  include: z.string().min(1).optional(),
 }).strict();
 
 const JsonLdConfigSchema = z.object({
@@ -87,6 +183,9 @@ const HtmlConfigSchema = z.object({
   kind: z.literal('SOURCE_HTML'),
   detailLinkSelector: z.string().min(1),
   sitemap: z.boolean().default(false),
+  selectors: HtmlSelectorsSchema.optional(),
+  /** false: the list page says everything; do not fetch the pages it links to. */
+  followDetails: z.boolean().optional(),
 }).strict();
 
 const PdfConfigSchema = z.object({

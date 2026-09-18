@@ -1,4 +1,5 @@
 import { load } from 'cheerio';
+import { formatDate } from './text-dates.js';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { ManualSupportAdapter } from './adapters/manual-support.js';
@@ -22,25 +23,53 @@ const kauaiDate = (offsetDays: number): string => {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
 };
 
+/** The first of the month, `offset` months from this one, on Kauaʻi's calendar. */
+const kauaiMonth = (offset: number): string => {
+  const [year, month] = kauaiDate(0).split('-').map(Number) as [number, number];
+  const date = new Date(Date.UTC(year, month - 1 + offset, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-01`;
+};
+
+const spell = (date: string, format: string | undefined): string => (format ? formatDate(date, format) : date);
+
 /**
  * The dates a template may ask for: {START_DATE} and {END_DATE} are the
- * polling window's edges, {DATE+N} is N days from today. A Tribe endpoint
- * without an end_date answers with two years of a weekly hula class;
- * AlohaCalendar caps a call at fifty rows, so its endpoints are windows.
+ * polling window's edges, {DATE+N} is N days from today, {MONTH+N} the first
+ * of the month N months on; any of them may say how it is spelled —
+ * {DATE+0|M-D-YYYY}, {MONTH+1|YYYY/MM}. A Tribe endpoint without an end_date
+ * answers with two years of a weekly hula class; AlohaCalendar caps a call
+ * at fifty rows, so its endpoints are windows; a chamber of commerce wants
+ * year=2026&month=10 in a form post.
  */
-const withDates = (template: string, source: SourceDefinition): string => template
-  .replaceAll('{START_DATE}', kauaiDate(-(source.polling.lookBackDays ?? 0)))
-  .replaceAll('{END_DATE}', kauaiDate(source.polling.lookAheadDays))
-  .replace(/[{]DATE\+(\d+)[}]/g, (_match, days: string) => kauaiDate(Number(days)));
+const withDates = (template: string, source: SourceDefinition, variables: Record<string, string> = {}): string => template
+  .replace(/[{]START_DATE(?:\|([^}]+))?[}]/g, (_match, format?: string) => spell(kauaiDate(-(source.polling.lookBackDays ?? 0)), format))
+  .replace(/[{]END_DATE(?:\|([^}]+))?[}]/g, (_match, format?: string) => spell(kauaiDate(source.polling.lookAheadDays), format))
+  .replace(/[{]DATE\+(\d+)(?:\|([^}]+))?[}]/g, (_match, days: string, format?: string) => spell(kauaiDate(Number(days)), format))
+  .replace(/[{]MONTH\+(\d+)(?:\|([^}]+))?[}]/g, (_match, months: string, format?: string) => spell(kauaiMonth(Number(months)), format))
+  .replace(/[{]([A-Z][A-Z0-9_]*)(?:\|([^}]+))?[}]/g, (whole, name: string, format?: string) => {
+    const value = variables[name];
+    if (value === undefined) return whole;
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) ? spell(value, format) : value;
+  });
+
+/** One endpoint, or the several it expands to: a day at a time, a month at a time, or a listed value at a time. */
+const expansions = (endpoint: SourceDefinition['endpoints'][number]): Array<Record<string, string>> => {
+  const { expand } = endpoint;
+  if (!expand) return [{}];
+  const values = expand.values
+    ?? (expand.days ? Array.from({ length: expand.days }, (_unused, index) => kauaiDate(index))
+      : expand.months ? Array.from({ length: expand.months }, (_unused, index) => kauaiMonth(index)) : []);
+  return values.map(value => ({ [expand.variable]: value }));
+};
 
 const requestsFor = (source: SourceDefinition, purpose: string): PlannedRequest[] => source.endpoints
   .filter(candidate => candidate.purpose === purpose)
-  .map(endpoint => ({
+  .flatMap(endpoint => expansions(endpoint).map(variables => ({
     method: endpoint.method,
-    url: withDates(endpoint.urlTemplate, source),
+    url: withDates(endpoint.urlTemplate, source, variables),
     ...(endpoint.headers ? { headers: endpoint.headers } : {}),
-    ...(typeof endpoint.bodyTemplate === 'string' ? { body: withDates(endpoint.bodyTemplate, source) } : {}),
-  }));
+    ...(typeof endpoint.bodyTemplate === 'string' ? { body: withDates(endpoint.bodyTemplate, source, variables) } : {}),
+  })));
 
 const requestFor = (source: SourceDefinition, purpose: string): PlannedRequest | undefined => requestsFor(source, purpose)[0];
 
@@ -183,15 +212,18 @@ const fetchPages = async (
         : requestsFor(source, 'DISCOVERY').slice(0, 1);
   if (!requests.length) throw new Error(`${source.id} has no fetchable endpoint`);
   const pages: Page[] = [];
+  let firstError: unknown;
   for (const [index, request] of requests.entries()) {
-    if (/[{][A-Z0-9_+]+[}]/.test(request.url)) throw new Error(`${source.id} endpoint requires an unimplemented discovery substitution`);
+    if (/[{][A-Z0-9_+|-]+[}]/.test(request.url)) throw new Error(`${source.id} endpoint requires an unimplemented discovery substitution`);
     let page: Page;
     try {
       page = fetchedPage(await client.fetch(request, source.httpPolicy));
     } catch (error) {
-      // The first window failing is the source failing; a later one is a
-      // partial read, and the pages already in hand are still worth reviewing.
-      if (index === 0) throw error;
+      // One window or one day's file missing is a partial read, and the pages
+      // in hand are still worth reviewing; every request failing is the
+      // source failing, and says so with the first reason.
+      firstError ??= error;
+      if (index === requests.length - 1 && pages.length === 0) throw firstError;
       continue;
     }
     pages.push(page);
@@ -205,7 +237,7 @@ const fetchPages = async (
           // pages that were independently available.
         }
       }
-    } else if (/html/.test(page.mediaType)) {
+    } else if (/html/.test(page.mediaType) && (source.adapterConfig as { followDetails?: boolean }).followDetails !== false) {
       for (const url of detailLinks(page, source)) {
         try {
           const detail = await client.fetch({ method: 'GET', url }, source.httpPolicy);

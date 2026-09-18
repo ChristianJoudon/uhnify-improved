@@ -9,250 +9,39 @@ import type {
 } from '../contracts.js';
 import { sha256 } from '../hash.js';
 
-type JsonRecord = Record<string, unknown>;
+import { mappedHtmlEvents, mappedJsonEvents, rssEvents } from './mapped.js';
+import {
+  isRecoveryMeeting,
+  ACCESS_SECRET,
+  DAY_MS,
+  EMAIL,
+  GENERIC_LOCATION_HINT,
+  HAWAII_OFFSET,
+  LOCATION_SUFFIX,
+  NAMED_LOCATION,
+  PHONE,
+  RELATIONAL_LOCATION,
+  WEB_URL,
+  WEEKDAY,
+  asString,
+  cleanLocationHint,
+  contextText,
+  eventItem,
+  hawaiiDateTime,
+  inWindow,
+  isRecord,
+  itemKey,
+  labelsFrom,
+  locationHintFrom,
+  locationText,
+  safeVisibleText,
+  textOnly,
+  uniqueLabels,
+  usableEnd,
+} from './shared.js';
+import type { JsonRecord } from './shared.js';
 
-const HAWAII_OFFSET = '-10:00';
-const DAY_MS = 86_400_000;
-export const SAFE_REVIEW_CONTEXT_VERSION = 'safe-review.v1' as const;
-const WEEKDAY = new Map([
-  ['SU', 0], ['MO', 1], ['TU', 2], ['WE', 3], ['TH', 4], ['FR', 5], ['SA', 6],
-]);
-
-const isRecord = (value: unknown): value is JsonRecord => (
-  value !== null && typeof value === 'object' && !Array.isArray(value)
-);
-
-const asString = (value: unknown): string | undefined => {
-  if (typeof value === 'string' || typeof value === 'number') {
-    const text = `${value}`.trim();
-    return text || undefined;
-  }
-  if (isRecord(value)) return asString(value.rendered ?? value.name ?? value.value);
-  return undefined;
-};
-
-const textOnly = (value: unknown, limit = 2_000): string | undefined => {
-  const source = asString(value);
-  if (!source) return undefined;
-  const text = load(`<div>${source}</div>`)('div').text().replace(/\s+/g, ' ').trim();
-  return text ? text.slice(0, limit) : undefined;
-};
-
-const EMAIL = /[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi;
-const PHONE = /(?:\+?1[\s().-]*)?(?:\(?[2-9]\d{2}\)?[\s().-]*)?[2-9]\d{2}[\s.-]*\d{4}/g;
-const WEB_URL = /(?:\b[a-z][a-z0-9+.-]*:\/\/|\bwww\.)\S+/gi;
-const ACCESS_SECRET = /\b(?:meeting\s*(?:id|code)|passcode|password)\s*[:#-]?\s*[\w-]+/gi;
-
-/**
- * Description and context are useful review evidence, but contact details and
- * private-access material are not classification inputs. Keep the public prose
- * around those fragments and replace only the unsafe fragment.
- */
-const safeVisibleText = (value: unknown, limit = 2_000): string | undefined => {
-  const visible = textOnly(value, limit * 2);
-  if (!visible) return undefined;
-  const redacted = visible
-    .replace(EMAIL, '[contact removed]')
-    .replace(PHONE, '[contact removed]')
-    .replace(WEB_URL, '[link removed]')
-    .replace(ACCESS_SECRET, '[access detail removed]')
-    .replace(/(?:\[contact removed\]\s*){2,}/g, '[contact removed] ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return redacted ? redacted.slice(0, limit) : undefined;
-};
-
-const labelsFrom = (value: unknown): string[] => {
-  if (Array.isArray(value)) return value.flatMap(labelsFrom);
-  if (isRecord(value)) {
-    const label = value.name ?? value.venue ?? value.label ?? value.title
-      ?? value.rendered ?? value.value ?? value.slug;
-    return labelsFrom(label).map(item => item.replace(/[-_]+/g, ' '));
-  }
-  const label = safeVisibleText(value, 240);
-  return label ? [label] : [];
-};
-
-const uniqueLabels = (...values: unknown[]): string[] => {
-  const labels: string[] = [];
-  const seen = new Set<string>();
-  for (const label of values.flatMap(labelsFrom)) {
-    const key = label.toLocaleLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      labels.push(label);
-    }
-  }
-  return labels;
-};
-
-const contextText = (
-  values: unknown[],
-  excluded: Array<string | undefined> = [],
-): string | undefined => {
-  const blocked = new Set(excluded.filter(Boolean).map(value => value!.toLocaleLowerCase()));
-  const labels = uniqueLabels(...values).filter(label => !blocked.has(label.toLocaleLowerCase()));
-  return safeVisibleText(labels.join(' · '), 1_500);
-};
-
-const LOCATION_SUFFIX = '(?:Beach(?:\\s+Park)?|Community(?:\\s+(?:Ag|Agricultural))?\\s+Center|Neighborhood\\s+Center|Civic\\s+Center|Church|Temple|Chapel|Library|Museum|Park|Hall|Theatre|Theater|Garden|Gardens|Farm|Market|School|College|University|Marina|Harbor|Pavilion|Playground|Trailhead|Studio|Cafe|Café|Restaurant|Resort|Hotel|Plaza|Ranch|Club|Arena|Field|Gym)';
-const NAMED_LOCATION = new RegExp(
-  `\\b((?:[\\p{Lu}\\d][\\p{L}\\p{N}’ʻ'&.-]*(?:\\s+|$)){1,6}${LOCATION_SUFFIX})\\b`,
-  'gu',
-);
-const RELATIONAL_LOCATION = new RegExp(
-  `\\b(?:at|near|inside|outside|venue|location)\\s*[:@-]?\\s*((?:[\\p{L}\\p{N}][\\p{L}\\p{N}’ʻ'&.-]*(?:\\s+|$)){1,6}${LOCATION_SUFFIX})\\b`,
-  'giu',
-);
-const GENERIC_LOCATION_HINT = /^(?:farmers?|local|night|craft|makers?|goods|community)\s+market$/i;
-
-const cleanLocationHint = (value: string): string | undefined => {
-  const hint = value
-    .replace(/^(?:the|our|this|join|visit|meet|gather(?:ing)?)\s+/i, '')
-    .replace(/[.,;:!?]+$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!hint || hint.length < 5 || hint.length > 160 || GENERIC_LOCATION_HINT.test(hint)) return undefined;
-  return hint;
-};
-
-/**
- * A title-cased public place name is retained only as a clue. It never becomes
- * a canonical address, and it always leaves location research outstanding.
- */
-const locationHintFrom = (description?: string, context?: string, title?: string): string | undefined => {
-  for (const text of [description, context]) {
-    if (!text) continue;
-    NAMED_LOCATION.lastIndex = 0;
-    for (const match of text.matchAll(NAMED_LOCATION)) {
-      const hint = cleanLocationHint(match[1] ?? '');
-      if (hint) return hint;
-    }
-    RELATIONAL_LOCATION.lastIndex = 0;
-    for (const match of text.matchAll(RELATIONAL_LOCATION)) {
-      const hint = cleanLocationHint(match[1] ?? '');
-      if (hint) return hint;
-    }
-  }
-  if (title) {
-    RELATIONAL_LOCATION.lastIndex = 0;
-    for (const match of title.matchAll(RELATIONAL_LOCATION)) {
-      const hint = cleanLocationHint(match[1] ?? '');
-      if (hint) return hint;
-    }
-  }
-  return undefined;
-};
-
-const locationText = (value: unknown): string | undefined => {
-  if (typeof value === 'string') return safeVisibleText(value, 500);
-  if (!isRecord(value)) return undefined;
-  const address = isRecord(value.address) ? value.address : value;
-  return safeVisibleText([
-    asString(value.name ?? value.venue),
-    asString(address.streetAddress ?? address.address),
-    asString(address.addressLocality ?? address.city),
-    asString(address.addressRegion ?? address.state),
-    asString(address.postalCode ?? address.zip),
-  ].filter(Boolean).join(', '), 500);
-};
-
-const hawaiiDateTime = (value: unknown): string | undefined => {
-  const raw = asString(value);
-  if (!raw) return undefined;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return `${raw}T00:00:00${HAWAII_OFFSET}`;
-  if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?$/.test(raw)) {
-    const [date = '', clock = '00:00:00'] = raw.replace(' ', 'T').split('T');
-    return `${date}T${clock.length === 5 ? `${clock}:00` : clock}${HAWAII_OFFSET}`;
-  }
-  const parsed = new Date(raw);
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-};
-
-const inWindow = (value: string | undefined, source: SourceDefinition): boolean => {
-  if (!value) return false;
-  const time = Date.parse(value);
-  if (Number.isNaN(time)) return false;
-  const now = Date.now();
-  return time >= now - source.polling.lookBackDays * DAY_MS
-    && time <= now + source.polling.lookAheadDays * DAY_MS;
-};
-
-const itemKey = (...parts: Array<string | number | undefined>): string => (
-  sha256(parts.filter(part => part !== undefined).join('|'))
-);
-
-const usableEnd = (start: string | undefined, end: string | undefined): string | undefined => {
-  if (!end) return undefined;
-  const startTime = Date.parse(start ?? '');
-  const endTime = Date.parse(end);
-  if (Number.isNaN(endTime)) return undefined;
-  if (Number.isNaN(startTime)) return end;
-  const duration = endTime - startTime;
-  return duration > 0 && duration <= 31 * DAY_MS ? end : undefined;
-};
-
-const eventItem = (input: {
-  id?: string | number | undefined;
-  title: string;
-  start?: string | undefined;
-  end?: string | undefined;
-  location?: string | undefined;
-  description?: string | undefined;
-  sourceUrl: string;
-  timeZone?: string | undefined;
-  status?: string | undefined;
-  attendanceMode?: string | undefined;
-  categories?: string[] | undefined;
-  context?: string | undefined;
-  raw: JsonRecord;
-  locator: string;
-}): ExtractedItem => {
-  const title = safeVisibleText(input.title, 300) ?? input.title;
-  const description = safeVisibleText(input.description, 2_000);
-  const location = safeVisibleText(input.location, 500);
-  const categories = uniqueLabels(input.categories);
-  const context = safeVisibleText(input.context, 1_500);
-  const locationHint = location ? undefined : locationHintFrom(description, context, title);
-  const end = usableEnd(input.start, input.end);
-  const researchNeeded = [
-    ...(!location ? ['location' as const] : []),
-    ...(!input.start || (input.end && !end) ? ['schedule' as const] : []),
-  ];
-  const reality = /cancel/i.test(input.status ?? '') ? 'CANCELLED'
-    : /postpon/i.test(input.status ?? '') ? 'POSTPONED' : 'SCHEDULED';
-  return {
-    // Stable identity continues to depend only on the publisher identity and
-    // schedule—not on enrichment fields that may improve on a later parser run.
-    sourceItemKey: itemKey(input.id, input.sourceUrl, title, input.start),
-    canonicalSourceUrl: input.sourceUrl,
-    entityHint: 'event',
-    rawFields: input.raw,
-    normalizedFields: {
-      title,
-      ...(input.start ? { localStart: input.start } : {}),
-      ...(end ? { localEnd: end } : {}),
-      ...(location ? { location } : {}),
-      ...(locationHint ? { locationHint } : {}),
-      ...(description ? { description } : {}),
-      ...(description ? { reviewDescription: description } : {}),
-      ...(categories.length ? { categories } : {}),
-      ...(context ? { context } : {}),
-      ...(researchNeeded.length ? { researchNeeded } : {}),
-      reviewContextVersion: SAFE_REVIEW_CONTEXT_VERSION,
-      timeZone: input.timeZone || 'Pacific/Honolulu',
-      sourceUrl: input.sourceUrl,
-      ...(input.attendanceMode ? { attendanceMode: input.attendanceMode } : {}),
-      realityStatus: reality,
-    },
-    evidence: [{
-      locatorKind: 'json_path',
-      locator: input.locator,
-      excerpt: [title, description, context, locationHint].filter(Boolean).join(' · ').slice(0, 500),
-    }],
-    explicitRealityHint: reality,
-  };
-};
+export { SAFE_REVIEW_CONTEXT_VERSION } from './shared.js';
 
 const tribeEvents = (document: unknown, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
   const events = isRecord(document) && Array.isArray(document.events)
@@ -897,11 +686,17 @@ export class LiveSourceAdapter implements SourceAdapter {
         if (['TRIBE_REST', 'WP_FILTERED_TRIBE'].includes(this.kind)) {
           items.push(...tribeEvents(JSON.parse(page.text), source, page.url));
         } else if (this.kind === 'STATIC_JSON') {
-          items.push(...staticJsonEvents(JSON.parse(page.text), source, page.url));
+          items.push(...((source.adapterConfig as { records?: unknown }).records
+            ? mappedJsonEvents(page.text, source, page.url)
+            : staticJsonEvents(JSON.parse(page.text), source, page.url)));
+        } else if (this.kind === 'RSS_ATOM') {
+          items.push(...rssEvents(page.text, source, page.url));
         } else if (this.kind === 'ICS') {
           items.push(...icsEvents(page.text, source, page.url));
         } else if (this.kind === 'COUNTY_OPENCITIES') {
           items.push(...openCitiesEvents(JSON.parse(page.text), source, page.url));
+        } else if (this.kind === 'SOURCE_HTML' && (source.adapterConfig as { selectors?: unknown }).selectors) {
+          items.push(...mappedHtmlEvents(page.text, source, page.url));
         } else if (['JSON_LD_HTML', 'SOURCE_HTML'].includes(this.kind)) {
           const structured = jsonLdEvents(page.text, source, page.url);
           items.push(...(structured.length ? structured : visibleHtmlEvents(page.text, source, page.url)));
@@ -913,11 +708,16 @@ export class LiveSourceAdapter implements SourceAdapter {
         warnings.push({ code: 'PAGE_PARSE_FAILED', message: (error as Error).message.slice(0, 300) });
       }
     }
+    const withheld = items.filter(isRecoveryMeeting).length;
+    if (withheld) {
+      items = items.filter(item => !isRecoveryMeeting(item));
+      warnings.push({ code: 'SENSITIVE_WITHHELD', message: `${withheld} recovery-meeting listing(s) were not collected from a general calendar` });
+    }
     const deduplicated = [...new Map(items.map(item => [item.sourceItemKey, item])).values()]
       .slice(0, source.polling.maxItems);
     return {
       items: deduplicated,
-      completeness: warnings.length ? 'PARTIAL' : 'COMPLETE',
+      completeness: warnings.some(warning => warning.code !== 'SENSITIVE_WITHHELD') ? 'PARTIAL' : 'COMPLETE',
       warnings,
       metrics: {
         discovered: items.length,
