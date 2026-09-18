@@ -144,11 +144,21 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
       // snap off the fit is exact and Kauaʻi runs to the padding.
       zoomSnap: 0,
       zoomDelta: 0.5,
+      // With no tile layer to say where the detail ends, Leaflet zooms for
+      // ever. The coastline and the roads are good to about a town's width;
+      // past that the frame is one colour and a line.
+      maxZoom: 14,
       scrollWheelZoom: false,
-      // The same courtesy for touch: without this the map swallowed a vertical
-      // page scroll that happened to start on it, which on a phone is most of
-      // the first screen. Pinch zoom stays.
-      dragging: !L.Browser.mobile,
+      // Grab it and move it. How far it goes, and when a finger gets to do the
+      // same, is decided with the frame below (`keepTheIsland`, `holdOrRelease`).
+      dragging: true,
+      // A solid edge rather than a rubber one: the map stops, and nothing
+      // animates back against the hand that moved it.
+      maxBoundsViscosity: 1,
+      // Leaflet draws vectors for the view plus a margin and redraws them when
+      // a move ENDS. A tenth of the view, its default, is one short drag: the
+      // "you are here" ring should still be there at the far end of a long one.
+      renderer: L.svg({ padding: 0.5 }),
       attributionControl: true,
     });
     // The island is our own geometry (kauaiCoast.js) on a flat sea: no tiles,
@@ -163,6 +173,10 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
       fillColor: LAND,
       fillOpacity: 1,
       interactive: false,
+      // Never cut to the drawn margin (and the stylesheet lets the drawing
+      // overflow it): mid-drag, a clipped island is a straight edge where the
+      // north shore should be, held until the hand lets go.
+      noClip: true,
     }).addTo(map.current);
     // Town names, in the island's own spelling, as type rather than as tiles.
     // The smaller places wait for a closer look so the whole-island view is
@@ -202,6 +216,7 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
         lineJoin: 'round',
         lineCap: 'round',
         interactive: false,
+        noClip: true,
       }).addTo(roads);
     });
 
@@ -270,7 +285,7 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
   }, [pins, onSelect, chosen, zoomTick]);
 
   /**
-   * The frame holds the whole island, and holds it still.
+   * The frame opens on the whole island, and lets go of it only so far.
    *
    * Fitting is deliberately kept out of the drawing effect above and off the
    * record set entirely. Fitting the PINS did two bad things at once: it fed
@@ -282,24 +297,132 @@ const NearbyMap = ({ records, origin, onSelect, chosen, height }) => {
    *
    * It re-runs on resize because the frame's height follows its width, and a
    * fit is only true for the size it was measured at.
+   *
+   * The map can be dragged, and a map of one island in an empty sea needs
+   * three promises for that to be safe. There were none: one flick with its
+   * inertia sent Kauaʻi thousands of pixels out of frame, with nothing on
+   * screen to steer back by and no way home but a reload.
+   *
+   *  - The island never leaves. However far in the zoom, the view may run
+   *    past the island's box by a third of itself and no further, so there is
+   *    always coast in frame to come back along.
+   *  - The whole island is as far out as it goes. Beyond that the map is only
+   *    more sea, and the speck in the middle of it is nobody's destination.
+   *  - Zooming all the way back out is the way home: the island returns to
+   *    the centre, wherever it had been left.
    */
   useEffect(() => {
     if (!map.current || !holder.current) {
       return undefined;
     }
     const { south, west, north, east } = KAUAI_BOUNDS;
+    const island = L.latLngBounds([south, west], [north, east]);
+    // The frame's aspect is set to the island's, so a small even padding is
+    // all the buffer the coastline needs on any side — and the neighbouring
+    // island 17 miles west stays outside the frame by geometry rather than by
+    // being panned away from.
+    const PADDING = 18;
+    /** How much of the view may be open sea beyond the island's box, each way. */
+    const ROAM = 1 / 3;
+    /** Fractional zoom never lands exactly; this close to the whole-island zoom is the whole island. */
+    const SLACK = 0.01;
+    const finger = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+    let home = null;
+
+    const roaming = () => home !== null && map.current.getZoom() > map.current.getMinZoom() + SLACK;
+
+    const keepTheIsland = () => {
+      const view = map.current.getBounds();
+      const lat = (view.getNorth() - view.getSouth()) * ROAM;
+      const lng = (view.getEast() - view.getWest()) * ROAM;
+      map.current.setMaxBounds([[south - lat, west - lng], [north + lat, east + lng]]);
+    };
+
+    /**
+     * A mouse may always drag. A finger may once the map has been zoomed into:
+     * at the whole-island view a drag that starts on the map is, nearly every
+     * time, someone scrolling the page — the map is most of a phone's first
+     * screen, and it used to swallow that scroll. Zooming in is what says the
+     * map itself is wanted, and zooming back out hands the page its scroll.
+     */
+    const holdOrRelease = () => {
+      if (!map.current) {
+        return;
+      }
+      if (roaming() || !(finger && finger.matches)) {
+        map.current.dragging.enable();
+      } else {
+        map.current.dragging.disable();
+      }
+    };
+
+    /**
+     * The way home is a glide, and a glide can be cut short: a second press of
+     * "−" while it runs stops it where it is, and that is where the island
+     * would stay — for good, under a finger, which cannot drag at this zoom.
+     * So going home is a state rather than a call: every time the map comes to
+     * rest while it is set, the glide is taken up again from wherever it
+     * stopped. Taking hold of the map is what ends it.
+     */
+    let homing = false;
+    const goHome = () => {
+      homing = true;
+      map.current.panTo(home, { animate: true, duration: 0.35 });
+    };
+    const rest = () => {
+      if (!homing) {
+        return;
+      }
+      const off = map.current.latLngToContainerPoint(home).distanceTo(map.current.getSize().divideBy(2));
+      if (roaming() || off < 2) {
+        homing = false;
+      } else {
+        goHome();
+      }
+    };
+    const letGo = () => {
+      homing = false;
+    };
+
+    const settle = () => {
+      keepTheIsland();
+      holdOrRelease();
+      if (home && !roaming()) {
+        goHome();
+      }
+    };
+
     const fit = () => {
+      const kept = roaming();
       map.current.invalidateSize({ animate: false });
-      // The frame's aspect is set to the island's, so a small even padding is
-      // all the buffer the coastline needs on any side — and the neighbouring
-      // island 17 miles west stays outside the frame by geometry rather than by
-      // being panned away from.
-      map.current.fitBounds(L.latLngBounds([south, west], [north, east]), { padding: [18, 18], animate: false });
+      // The old floor was measured for the old frame, and a fit cannot go below a floor.
+      map.current.setMinZoom(0);
+      if (kept) {
+        // Someone looking at Hanalei keeps Hanalei when the window changes; only the floor moves.
+        map.current.setMinZoom(map.current.getBoundsZoom(island, false, L.point(PADDING * 2, PADDING * 2)));
+      } else {
+        map.current.fitBounds(island, { padding: [PADDING, PADDING], animate: false });
+        home = map.current.getCenter();
+        map.current.setMinZoom(map.current.getZoom());
+      }
+      keepTheIsland();
+      holdOrRelease();
     };
     fit();
+    map.current.on('zoomend', settle);
+    map.current.on('moveend', rest);
+    map.current.on('dragstart', letGo);
     const observer = new ResizeObserver(fit);
     observer.observe(holder.current);
-    return () => observer.disconnect();
+    if (finger && finger.addEventListener) {
+      finger.addEventListener('change', holdOrRelease);
+    }
+    return () => {
+      observer.disconnect();
+      if (finger && finger.removeEventListener) {
+        finger.removeEventListener('change', holdOrRelease);
+      }
+    };
   }, []);
 
   // "You are here", drawn differently from a listing because it is not one.
