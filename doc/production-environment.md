@@ -147,3 +147,43 @@ and, on an https `ROOT_URL` only, `Strict-Transport-Security: max-age=31536000; 
 The CSP is `frame-ancestors` alone on purpose: Meteor injects its runtime
 configuration as an inline script, and a `script-src` breaks the client. A
 full policy is later work.
+
+## Keeping the listings current
+
+Two things put listings on the walls, and both run outside the Meteor process.
+
+**The register** (`data/register/`) is the hand-built directory of Kauaʻi
+groups and events. It is refreshed by syncing it into the database:
+
+```bash
+cd tools && npm install            # once
+node sync-register.mjs ../data/register/<file>.json --dry-run
+node sync-register.mjs ../data/register/<file>.json            # apply
+node sync-register.mjs ../data/register/<file>.json --prune    # also remove what the register dropped
+```
+
+`MONGO_URL` chooses the database; it defaults to the local development one.
+Times in the register are Kauaʻi wall-clock and are stored as such whatever
+zone the machine running the sync is in. The sync never overwrites a record an
+administrator has edited in the app (`curatedAt`), never recreates one an
+administrator removed (`ImportTombstones`), numbers new groups from the app's
+own counter, and prunes with the app's own cascades.
+
+**The ingestion worker** (`services/community-ingestion`) collects from the
+sources in `app/private/community-sources.v1.json` once an administrator has
+enabled them on the Event intake page. It is a separate Node 20 process:
+
+```bash
+cd services/community-ingestion && npm ci
+MONGO_URL=mongodb://.../meteor npm start
+```
+
+| Variable | Purpose |
+|---|---|
+| `MONGO_URL` | The same database the app uses. Required. |
+| `MATCHBOOK_ARTIFACT_ROOT` | Where fetched pages are kept for review. Defaults beside the service. |
+| `MATCHBOOK_INGESTION_USER_AGENT` | How the worker introduces itself to the sites it reads. |
+
+Run it under a supervisor that restarts it (a systemd unit, or a container
+with a restart policy). Every source ships disabled; enabling one is a
+decision recorded on the intake page, source by source.

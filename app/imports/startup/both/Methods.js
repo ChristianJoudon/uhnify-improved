@@ -36,6 +36,7 @@ import {
 } from '../../api/privacy/friendActivitySync';
 import { anonymousMemberRows, anonymousNameFor, memberHandle, nameNewProfile } from '../../api/privacy/anonymousNames';
 import { ClubBlocks, isBlockedFrom } from '../../api/moderation/Moderation';
+import { buryImported } from '../../api/listing/ImportTombstones';
 import { EMAIL_SHAPE, LIST_MAX_ENTRIES, TEXT_LIMITS } from '../../api/listing/limits';
 import { checkImage, insertWithPhoto, photoFieldFor, removePhoto } from '../../api/photos/photoStore';
 import { OWNERSHIP_FIELDS, accountNameOf, canManageListing, isListingOwner } from '../../api/listing/ownership';
@@ -1061,6 +1062,9 @@ Meteor.methods({
         meetingTime,
         contactInfo: checkText(clubData.contactInfo, 'contactInfo', 'Contact'),
         categories,
+        // An edit to an imported record is a correction the register does not
+        // have yet. The sync leaves a curated record alone (tools/sync-register).
+        ...(standingOwner?.importedFrom ? { curatedAt: now() } : {}),
         ...(clubData.tags ? { tags: clubData.tags.map(normalizeTag).filter(tag => tag.length >= 2).slice(0, LIST_MAX_ENTRIES) } : {}),
         updatedAt: now(),
         // Last in the list because it writes: see editedImage. An edit sent
@@ -1195,6 +1199,7 @@ Meteor.methods({
     requireAdmin(this.userId);
     // Before anything is taken away, because it reads the group and its links.
     keepHostedEventsPrivate(clubId);
+    buryImported('club', Clubs.collection.findOne(clubId, { fields: { importedFrom: 1, sourceId: 1 } }), this.userId);
     Clubs.collection.remove(clubId);
     ProfileClubs.collection.remove({ clubId });
     EventClubs.collection.remove({ clubId });
@@ -1426,6 +1431,7 @@ Meteor.methods({
         image: editedImage('event', existingEvent, eventData.image) || '/images/codingWorkshop.png',
         updatedAt: now(),
         ...(contactEmail ? { email: contactEmail } : {}),
+        ...(existingEvent?.importedFrom ? { curatedAt: now() } : {}),
         ...locallyAuthoredFields,
         // An event that follows its host follows it to a new one. Without
         // this, moving a meeting under an anonymous group left it saying
@@ -1565,6 +1571,7 @@ Meteor.methods({
   'Events.remove'(eventId) {
     check(eventId, String);
     requireAdmin(this.userId);
+    buryImported('event', Events.collection.findOne(eventId, { fields: { importedFrom: 1, sourceId: 1 } }), this.userId);
     Events.collection.remove(eventId);
     EventClubs.collection.remove({ eventId });
     // Everyone who ever said they were going to this event, or passed on it,

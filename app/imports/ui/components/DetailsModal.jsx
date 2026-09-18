@@ -219,6 +219,18 @@ const DetailsModal = ({ show, onHide, record: snapshot, kind, isIn, requested, o
             )}
           </div>
         </div>
+        {/* Where it came from. Most of what is on the walls was published by
+            somebody else first, and a listing that names them — with a way
+            through to the original — is both the honest thing and the one that
+            lets a reader check a detail this copy may have got wrong. */}
+        {record.source?.publisher && (
+          <p className="details-source">
+            From{' '}
+            {record.source.url
+              ? <a href={record.source.url} target="_blank" rel="noopener noreferrer">{record.source.publisher}</a>
+              : record.source.publisher}
+          </p>
+        )}
         {!mine && <ReportListing kind={kind} listingId={record._id} />}
       </Modal.Body>
 

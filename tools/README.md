@@ -10,7 +10,7 @@ cd tools && npm install     # once
 
 ## Refreshing the directory
 
-`sync-register.mjs` is the one to use once a database exists.
+`sync-register.mjs` is the one to use once a database exists. The register itself lives in `data/register/` — keep the newest file there, so the one the database was built from is never only on somebody's laptop.
 
 ```bash
 node tools/sync-register.mjs <register.json> --dry-run   # show what would change
@@ -28,7 +28,8 @@ occurrence of a recurring listing). That means:
   membership, swipe and saved reference that points at it survives;
 - a field the register **stops** publishing is removed rather than left stale,
   so a card stops drawing that row instead of showing an old price;
-- `--prune` only ever removes records carrying this dataset's `importedFrom`.
+- a record an administrator has **edited in the app** (`curatedAt`) is left alone, and one they **removed** (`ImportTombstones`) is not recreated — the app's decision wins over the register's copy;
+- `--prune` only ever removes records carrying this dataset's `importedFrom`, and removes memberships, links, swipes and photos with them, as the app does;
   Anything a person created in the app has neither that nor a `sourceId` and is
   never a candidate;
 - a database seeded before stable ids existed is **adopted** on the first run by

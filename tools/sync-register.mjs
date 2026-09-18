@@ -63,6 +63,16 @@ await client.connect();
 const db = client.db();
 const Clubs = db.collection('ClubsCollection');
 const Events = db.collection('EventsCollection');
+// The app's own tables, so a prune here leaves nothing behind that the app's
+// own 'Clubs.remove' / 'Events.remove' would have taken with it.
+const ProfileClubs = db.collection('ProfileClubs');
+const EventClubs = db.collection('EventClubs');
+const EventSwipes = db.collection('EventSwipes');
+const ClubJoinRequests = db.collection('ClubJoinRequests');
+const ListingPhotos = db.collection('ListingPhotos');
+const Counters = db.collection('CountersCollection');
+/** What an administrator removed on purpose: see app/imports/api/listing/ImportTombstones.js. */
+const Tombstones = db.collection('ImportTombstones');
 
 /* ------------------------------------------------------------------ adopt */
 
@@ -115,17 +125,29 @@ if (!DRY) {
  */
 const existing = await Clubs.find({}, { projection: { sourceId: 1, clubID: 1 } }).toArray();
 const idBySource = new Map(existing.filter(c => c.sourceId).map(c => [c.sourceId, c.clubID]));
-let nextClubId = existing.reduce((max, c) => Math.max(max, c.clubID || 0), 0);
+/**
+ * New numbers come from the same counter the app uses ('Clubs.insert' →
+ * Counters.nextId), not from max+1 over what is here. Two writers taking
+ * max+1 at the same time hand out the same number, and a group number is
+ * what every event points at. The counter is seeded from the table the first
+ * time, the way the app seeds it.
+ */
+const nextClubNumber = async () => {
+  const seedFrom = existing.reduce((max, c) => Math.max(max, c.clubID || 0), 0);
+  await Counters.updateOne({ _id: 'ClubsCollection.clubID' }, { $setOnInsert: { seq: seedFrom } }, { upsert: true });
+  const result = await Counters.findOneAndUpdate({ _id: 'ClubsCollection.clubID' }, { $inc: { seq: 1 } }, { returnDocument: 'after' });
+  return (result.value || result).seq;
+};
 
-const clubDocs = clubs.map(club => {
+const clubDocs = [];
+for (const club of clubs) {
   const known = idBySource.get(club.sourceId);
-  if (known) {
-    return { ...club, clubID: known };
-  }
-  nextClubId += 1;
-  idBySource.set(club.sourceId, nextClubId);
-  return { ...club, clubID: nextClubId };
-});
+  // A dry run must not spend numbers; a number handed out and never used is a
+  // gap, and a gap reads as a deleted group.
+  const clubID = known || (DRY ? -1 : await nextClubNumber());
+  idBySource.set(club.sourceId, clubID);
+  clubDocs.push({ ...club, clubID });
+}
 
 // Events reference their host by that number, so resolve after the ids settle.
 const clubIdByName = new Map(clubDocs.map(c => [c.name.toLowerCase(), c.clubID]));
@@ -153,8 +175,32 @@ const syncInto = async (col, docs, label) => {
     return { inserted: fresh, updated: docs.length - fresh, removed: 0 };
   }
 
-  const ops = docs.map(doc => {
+  /**
+   * Two kinds of record the register does not get to overwrite.
+   *
+   * One an administrator EDITED in the app — stamped `curatedAt` by
+   * 'Clubs.update' / 'Events.update' when the record came from an import. The
+   * register's copy is older than the correction by definition, so it is left
+   * alone entirely except for the sync timestamp; the correction is what the
+   * next register should carry. One an administrator REMOVED — a tombstone
+   * under its sourceId (see app/imports/api/listing/ImportTombstones.js), so
+   * the next sync does not put back what was taken down on purpose.
+   */
+  const curated = new Set((await col.find({ importedFrom: DATASET, curatedAt: { $exists: true } }, { projection: { sourceId: 1 } })
+    .toArray()).map(d => d.sourceId));
+  const buried = new Set((await Tombstones.find({ importedFrom: DATASET }, { projection: { sourceId: 1 } })
+    .toArray()).map(d => d.sourceId));
+  const skippedCurated = docs.filter(d => curated.has(d.sourceId)).length;
+  const skippedBuried = docs.filter(d => buried.has(d.sourceId)).length;
+  if (skippedCurated || skippedBuried) {
+    console.log(`${label.padEnd(7)} leaving ${skippedCurated} edited in the app and ${skippedBuried} removed in the app`);
+  }
+
+  const ops = docs.filter(doc => !buried.has(doc.sourceId)).map(doc => {
     const { sourceId, ...rest } = doc;
+    if (curated.has(sourceId)) {
+      return { updateOne: { filter: { sourceId }, update: { $set: { lastSyncedAt: new Date() } } } };
+    }
     // Anything the schema allows but this record does not carry is cleared, so
     // a refresh can retract a field as well as change one.
     const clearable = ['description', 'endDate', 'cost', 'audience', 'registrationNote',
@@ -184,8 +230,27 @@ const syncInto = async (col, docs, label) => {
     const keep = docs.map(d => d.sourceId);
     // Scoped to this dataset: a club someone created in the app has no
     // importedFrom and is never a candidate.
-    const gone = await col.deleteMany({ importedFrom: DATASET, sourceId: { $nin: keep } });
-    removed = gone.deletedCount;
+    const doomed = await col.find({ importedFrom: DATASET, sourceId: { $nin: keep } }, { projection: { _id: 1 } }).toArray();
+    const ids = doomed.map(d => d._id);
+    if (ids.length) {
+      // The same cascade 'Clubs.remove' and 'Events.remove' run in the app.
+      // Without it a pruned group left memberships, join requests, swipes and
+      // a photo pointing at nothing — and a Going list that still counted an
+      // event no page could ever draw again.
+      if (col === Clubs) {
+        await ProfileClubs.deleteMany({ clubId: { $in: ids } });
+        await EventClubs.deleteMany({ clubId: { $in: ids } });
+        await ClubJoinRequests.deleteMany({ clubId: { $in: ids } });
+        await EventSwipes.deleteMany({ eventId: { $in: ids }, kind: 'club' });
+        await ListingPhotos.deleteMany({ kind: 'club', ownerId: { $in: ids } });
+      } else {
+        await EventClubs.deleteMany({ eventId: { $in: ids } });
+        await EventSwipes.deleteMany({ eventId: { $in: ids }, kind: { $ne: 'club' } });
+        await ListingPhotos.deleteMany({ kind: 'event', ownerId: { $in: ids } });
+      }
+      const gone = await col.deleteMany({ _id: { $in: ids } });
+      removed = gone.deletedCount;
+    }
   }
 
   console.log(`${label.padEnd(7)} ${String(inserted).padStart(4)} new  ${String(updated).padStart(4)} updated  ${String(removed).padStart(4)} pruned`);
