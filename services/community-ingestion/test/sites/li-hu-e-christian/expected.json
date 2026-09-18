@@ -1,0 +1,25 @@
+{
+ "now": "2026-09-18T11:04:31.164Z",
+ "items": [
+  {
+   "start": "2026-09-20T09:30:00-10:00",
+   "title": "Annual Church Picnic @ Lydgate Beach Park - NO worship at church",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-27T08:30:00-10:00",
+   "title": "Breakfast Cafe, Worship",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-27T08:30:00-10:00",
+   "title": "Kids Klub with Katie Kershner",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-09-27T10:45:00-10:00",
+   "title": "Faith Formation",
+   "status": "SCHEDULED"
+  }
+ ]
+}

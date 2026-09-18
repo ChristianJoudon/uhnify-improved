@@ -1,0 +1,83 @@
+{
+ "id": "SRC-900",
+ "slug": "hawai-i-pacific-health",
+ "displayName": "Hawaiʻi Pacific Health / Wilcox Medical Center classes and events on Kauaʻi",
+ "publisherName": "Hawaiʻi Pacific Health",
+ "publisherUrl": "https://www.hawaiipacifichealth.org/patient-resources/calendar/",
+ "tier": "B",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "h2.event-card__heading a",
+  "sitemap": false,
+  "selectors": {
+   "item": "li.event-card:has(li.area:contains(\"Kaua\"))",
+   "title": "h2.event-card__heading a",
+   "date": "div.event-card__date time",
+   "dateAttr": "datetime",
+   "time": "li.time",
+   "description": "div.event-card__desc",
+   "link": "h2.event-card__heading a",
+   "category": "li.type",
+   "defaultLocation": "Wilcox Medical Center, 3-3420 Kūhiō Highway, Līhuʻe, HI 96766"
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.hawaiipacifichealth.org/patient-resources/calendar/"
+  }
+ ],
+ "trust": "OFFICIAL_ORGANIZER",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event",
+  "venue",
+  "organization"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 150,
+  "maxPages": 1,
+  "maxItems": 200
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.hawaiipacifichealth.org"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 2000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "OFFICIAL_ORGANIZER",
+  "start": "OFFICIAL_ORGANIZER",
+  "location": "OFFICIAL_ORGANIZER",
+  "status": "OFFICIAL_ORGANIZER"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:10:00Z",
+ "steward": "operator"
+}

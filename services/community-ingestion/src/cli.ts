@@ -8,7 +8,7 @@ import { IngestionRuntime } from './runtime.js';
 import { loadSourceRegistry } from './source-registry.js';
 import { executeSource } from './source-execution.js';
 import { runWorker } from './worker.js';
-import { adoptProposal, discoverHosts, dryRun, listProposals, probeAndPropose, resolveSource, saveSiteFixture } from './source-tools.js';
+import { adoptProposal, discoverHosts, dryRun, listProposals, nextSourceId, probeAndPropose, putEntry, resolveSource, saveSiteFixture } from './source-tools.js';
 
 const command = process.argv[2];
 
@@ -148,6 +148,18 @@ if (command === 'validate-registry') {
   } finally {
     await client.close();
   }
+} else if (command === 'put-entry') {
+  // Insert or replace register entries from JSON files, in the register's own layout.
+  const files = process.argv.slice(3).filter(argument => /\.json$/i.test(argument));
+  if (!files.length) throw new Error('put-entry requires one or more entry .json files');
+  const results = [];
+  for (const file of files) {
+    const entry = await resolveSource(file);
+    const id = /^SRC-9\d\d$|^SRC-000$/.test(entry.id) ? await nextSourceId() : entry.id;
+    results.push({ file, id, outcome: await putEntry({ ...entry, id }) });
+  }
+  await loadSourceRegistry();
+  process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
 } else if (command === 'proposals') {
   process.stdout.write(`${JSON.stringify(await listProposals(), null, 2)}\n`);
 } else if (command === 'adopt') {

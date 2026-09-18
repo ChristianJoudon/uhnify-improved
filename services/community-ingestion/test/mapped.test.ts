@@ -192,3 +192,24 @@ test('the repeated element that carries a page’s dates is found without being 
     mock.timers.reset();
   }
 });
+
+test('calendar rules are reckoned on Kauaʻi’s clock: an evening series stays on its evening, a first Sunday is a Sunday', async () => {
+  const definition = source({ adapterKind: 'ICS', adapterConfig: { kind: 'ICS', materializationDays: 120, exclude: '^No Service' },
+    polling: { ...syntheticSource().polling, lookBackDays: 1, lookAheadDays: 50, maxItems: 500 } });
+  const { rows } = await read(definition, ['BEGIN:VCALENDAR',
+    // Fridays at 7 PM: already Saturday in UTC, which used to put it on Thursday.
+    'BEGIN:VEVENT', 'UID:kani', 'DTSTART;TZID=Pacific/Honolulu:20260904T190000', 'RRULE:FREQ=WEEKLY;BYDAY=FR', 'EXDATE;TZID=Pacific/Honolulu:20260925T190000', 'SUMMARY:Friday Kanikapila', 'END:VEVENT',
+    // First Sunday of the month, from a DTSTART on the 5th.
+    'BEGIN:VEVENT', 'UID:memorial', 'DTSTART;TZID=Pacific/Honolulu:20230305T090000', 'RRULE:FREQ=MONTHLY;BYDAY=1SU', 'SUMMARY:Monthly Memorial Service', 'END:VEVENT',
+    // The October occurrence was edited into something else.
+    'BEGIN:VEVENT', 'UID:memorial', 'RECURRENCE-ID;TZID=Pacific/Honolulu:20261004T090000', 'DTSTART;TZID=Pacific/Honolulu:20261004T090000', 'SUMMARY:No Service Today', 'END:VEVENT',
+    'BEGIN:VEVENT', 'UID:lastfri', 'DTSTART;TZID=Pacific/Honolulu:20260130T170000', 'RRULE:FREQ=MONTHLY;BYDAY=-1FR', 'SUMMARY:Last Friday Art Walk', 'END:VEVENT',
+    'END:VCALENDAR'].join('\r\n'), 'text/calendar');
+  const at = (title: string) => rows.filter(row => row.title === title).map(row => `${row.localStart}`);
+  const hst = (iso: string) => new Date(Date.parse(iso) - 10 * 3_600_000).toISOString().slice(0, 16);
+  assert.deepEqual(at('Friday Kanikapila').map(hst), ['2026-09-18T19:00', '2026-10-02T19:00', '2026-10-09T19:00', '2026-10-16T19:00', '2026-10-23T19:00', '2026-10-30T19:00'],
+    'Fridays at seven, and not the one the calendar took out');
+  assert.deepEqual(at('Monthly Memorial Service').map(hst), ['2026-11-01T09:00'], 'the first Sunday; October’s was replaced, and the replacement is not an event');
+  assert.deepEqual(at('Last Friday Art Walk').map(hst), ['2026-09-25T17:00', '2026-10-30T17:00']);
+  assert.equal(at('No Service Today').length, 0);
+});

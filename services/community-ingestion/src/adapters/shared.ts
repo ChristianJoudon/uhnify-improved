@@ -222,7 +222,8 @@ export const eventItem = (input: {
   // A publisher with no status field says it in the title: "CANCELLED –
   // Harvest Festival", "Trashion Show (postponed, new date TBD)". Dropping
   // such a row would leave the old date standing on the app.
-  const stated = `${input.status ?? ''} ${/\b(?:cancel+ed|postponed|rescheduled)\b/i.exec(title)?.[0] ?? ''}`;
+  // No trailing \\b: a chamber of commerce writes "POSTPONEDLava Lava Beach Club".
+  const stated = `${input.status ?? ''} ${/\b(?:cancel+ed|postponed|rescheduled)/i.exec(title)?.[0] ?? ''}`;
   const reality = /cancel/i.test(stated) ? 'CANCELLED'
     : /postpon|reschedul/i.test(stated) ? 'POSTPONED' : 'SCHEDULED';
   return {

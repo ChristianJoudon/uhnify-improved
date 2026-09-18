@@ -77,7 +77,7 @@ const PATTERNS: Pattern[] = [
       return [{ date: valid(year, month, Number(match[2])), endDate: valid(year, month, Number(match[3])) }];
     } },
   // September 13th & 20th · Sept 13, 20 and 27 (each its own date)
-  { expression: new RegExp(`\\b${MONTH}\\s+${DAY}((?:\\s*(?:,|&|and)\\s*${DAY}(?!\\s*(?::\\d|[ap]\\.?m|\\d|[-–—]\\s*\\d)))+)(?:,?\\s+${YEAR})?`, 'gi'),
+  { expression: new RegExp(`\\b${MONTH}\\s+${DAY}((?:\\s*(?:,|&|and)\\s*${DAY}(?!\\s*(?::\\d|[ap]\\.?m|\\d|(?:[-–—]|to)\\s*\\d)))+)(?:,?\\s+${YEAR})?`, 'gi'),
     read: (match, options) => {
       const month = monthIndex(match[1]!);
       const days = [Number(match[2]), ...[...match[3]!.matchAll(/\d{1,2}/g)].map(found => Number(found[0]))];
@@ -98,6 +98,12 @@ const PATTERNS: Pattern[] = [
       const day = Number(match[1]);
       return [{ date: valid(fullYear(match[3]) ?? inferYear(month, day, options), month, day) }];
     } },
+  // 01/07/2026 - 3:30pm to 12/31/2026 - 6:00pm: a run, the way a Drupal date field prints one
+  { expression: /(?<![\d/.-])(\d{1,2})\/(\d{1,2})\/((?:19|20)\d{2})(?:\s*[-–—,]?\s*\d{1,2}(?::\d{2})?\s*[ap]\.?m\.?)?\s*(?:to|through|thru|until|[-–—])\s*(\d{1,2})\/(\d{1,2})\/((?:19|20)\d{2})/gi,
+    read: match => [{
+      date: valid(Number(match[3]), Number(match[1]) - 1, Number(match[2])),
+      endDate: valid(Number(match[6]), Number(match[4]) - 1, Number(match[5])),
+    }] },
   // 9/20/2026 · 9-18-2026 · 9/20 (only with a month and day that can be one)
   { expression: /(?<![\d/.-])(\d{1,2})([/-])(\d{1,2})(?:\2((?:19|20)?\d{2}))?(?![\d/]|\s*(?:am|pm|a\.m|p\.m))/gi,
     read: (match, options) => {
@@ -198,8 +204,12 @@ export const findWeeklyRule = (text: string): WeeklyRule | undefined => {
   if (!tokens.length) return undefined;
   const weekdays = [...new Set(tokens.map(token => WEEKDAY_NAMES.findIndex(name => name.startsWith(token[1]!.toLowerCase().slice(0, 3)))))]
     .filter(day => day >= 0).sort((a, b) => a - b);
-  const ordinals = ORDINALS.filter(([expression]) => expression.test(text)).map(([, ordinal]) => ordinal);
+  // "Saturday 19th" is the nineteenth, not the nineteenth Saturday; only an
+  // ordinal that comes BEFORE its weekday ("3rd Saturday") counts.
+  const beforeWeekday = text.replace(new RegExp(`(${WEEKDAY_TOKEN.source})\\s*,?\\s+\\d{1,2}(?:st|nd|rd|th)\\b`, 'gi'), '$1');
+  const ordinals = ORDINALS.filter(([expression]) => expression.test(beforeWeekday)).map(([, ordinal]) => ordinal);
   const monthly = ordinals.length > 0 && /\b(?:month|monthly)\b|\bof\s+(?:the|each|every)\b/i.test(text);
+  if (beforeWeekday !== text && !ordinals.length && tokens.length === 1 && !/\b(?:every|each|weekly)\b/i.test(text)) return undefined;
   const plural = tokens.some(token => Boolean(token[2]));
   const listed = tokens.length > 1 && /[/&]|\band\b|,/.test(text);
   const says = /\b(?:every|each|weekly|recurring|ongoing)\b/i.test(text);

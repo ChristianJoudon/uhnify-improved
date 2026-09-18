@@ -1,0 +1,78 @@
+{
+ "id": "SRC-903",
+ "slug": "suite-paradise-kaua-i",
+ "displayName": "Suite Paradise Kauaʻi events directory",
+ "publisherName": "Suite Paradise",
+ "publisherUrl": "https://www.suite-paradise.com/kauai-events",
+ "tier": "C",
+ "adapterKind": "SOURCE_HTML",
+ "adapterConfig": {
+  "kind": "SOURCE_HTML",
+  "detailLinkSelector": "h3.title a",
+  "sitemap": false,
+  "selectors": {
+   "item": "div.view-events div.views-row:has(span.date-display-single), div.view-events div.views-row:not(:has(span.date-display-single)) h3.title",
+   "title": "h3.title a",
+   "date": "span.date-display-single",
+   "description": "div.field-name-body p",
+   "link": "h3.title a",
+   "weeklyWeeks": 8
+  },
+  "followDetails": false
+ },
+ "endpoints": [
+  {
+   "purpose": "COLLECTION",
+   "method": "GET",
+   "urlTemplate": "https://www.suite-paradise.com/kauai-events"
+  }
+ ],
+ "trust": "DIRECTORY",
+ "permission": "AUTOMATED_ALLOWED",
+ "contentKinds": [
+  "event"
+ ],
+ "polling": {
+  "intervalMinutes": 1440,
+  "jitterPercent": 15,
+  "lookBackDays": 1,
+  "lookAheadDays": 120,
+  "maxPages": 1,
+  "maxItems": 200
+ },
+ "httpPolicy": {
+  "allowedHosts": [
+   "www.suite-paradise.com"
+  ],
+  "allowedRedirectHosts": [],
+  "allowedMediaTypes": [
+   "text/html"
+  ],
+  "timeoutMs": 20000,
+  "maxResponseBytes": 2000000,
+  "maxRedirects": 1,
+  "minimumDelayMs": 10000
+ },
+ "parser": {
+  "parserId": "mapped-html",
+  "parserVersion": "1.0.0",
+  "fixtureVersion": "2026-09-18"
+ },
+ "fieldAllowlist": [
+  "url",
+  "title",
+  "text",
+  "heading",
+  "date"
+ ],
+ "authorityByField": {
+  "title": "DIRECTORY",
+  "start": "DIRECTORY",
+  "location": "DIRECTORY",
+  "status": "DIRECTORY"
+ },
+ "enabled": true,
+ "nextRunAt": "2026-09-18T00:00:00.000Z",
+ "lastVerifiedAt": "2026-09-18T11:10:00Z",
+ "steward": "operator"
+}

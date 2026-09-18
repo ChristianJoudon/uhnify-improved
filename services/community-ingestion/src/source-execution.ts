@@ -237,13 +237,24 @@ const fetchPages = async (
           // pages that were independently available.
         }
       }
-    } else if (/html/.test(page.mediaType) && (source.adapterConfig as { followDetails?: boolean }).followDetails !== false) {
-      for (const url of detailLinks(page, source)) {
+    } else if (/html/.test(page.mediaType)) {
+      const follow = (source.adapterConfig as { followDetails?: boolean }).followDetails !== false;
+      const opened: Page[] = [page];
+      for (const url of follow ? detailLinks(page, source) : []) {
         try {
-          const detail = await client.fetch({ method: 'GET', url }, source.httpPolicy);
-          pages.push(fetchedPage(detail));
+          const detail = fetchedPage(await client.fetch({ method: 'GET', url }, source.httpPolicy));
+          pages.push(detail);
+          opened.push(detail);
         } catch {
           // Same as a sitemap: what could be read is read.
+        }
+      }
+      // A page that holds its list in an <iframe> of the same site: read that too.
+      for (const url of [...new Set(opened.flatMap(each => embeddedPages(each, source)))].slice(0, Math.min(source.polling.maxPages, 10))) {
+        try {
+          pages.push(fetchedPage(await client.fetch({ method: 'GET', url }, source.httpPolicy)));
+        } catch {
+          // An embed that has gone is a partial read.
         }
       }
     }
@@ -259,6 +270,20 @@ const fetchPages = async (
  * repeats, and at most the polling page budget, so a directory of a
  * thousand links is not a thousand fetches.
  */
+/** The same-site documents a page embeds (`embedSelector`, by their `src`). */
+const embeddedPages = (page: Page, source: SourceDefinition): string[] => {
+  const selector = (source.adapterConfig as { embedSelector?: string }).embedSelector;
+  if (!selector || !/html/.test(page.mediaType)) return [];
+  const $ = load(page.text);
+  const host = new URL(page.url).host;
+  return $(selector).toArray().flatMap(element => {
+    // A hand-pasted src can run on into markup: cut it at the first character a URL cannot hold.
+    const src = ($(element).attr('src') ?? '').split(/[<"'\s]/)[0];
+    const url = src ? safeUrl(new URL(src, page.url).toString()) : null;
+    return url && new URL(url).host === host ? [url] : [];
+  });
+};
+
 const detailLinks = (page: Page, source: SourceDefinition): string[] => {
   const selector = (source.adapterConfig as { detailLinkSelector?: string }).detailLinkSelector;
   if (!selector || !['JSON_LD_HTML', 'SOURCE_HTML'].includes(source.adapterKind)) return [];

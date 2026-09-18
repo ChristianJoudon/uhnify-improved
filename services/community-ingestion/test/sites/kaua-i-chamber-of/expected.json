@@ -1,0 +1,35 @@
+{
+ "now": "2026-09-18T11:05:17.586Z",
+ "items": [
+  {
+   "start": "2026-10-07T11:30:00-10:00",
+   "title": "28th Annual Governor's Luncheon",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-09T17:30:00-10:00",
+   "title": "Navy Ball",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-22T17:00:00-10:00",
+   "title": "Anaina Hou Community Park Business Pau Hana",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-27T11:30:00-10:00",
+   "title": "Bizboost Bootcamp",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-10-28T08:00:00-10:00",
+   "title": "Employment Law Seminar",
+   "status": "SCHEDULED"
+  },
+  {
+   "start": "2026-11-05T17:00:00-10:00",
+   "title": "Hawaii Children's Theatre Business Pau Hana",
+   "status": "SCHEDULED"
+  }
+ ]
+}

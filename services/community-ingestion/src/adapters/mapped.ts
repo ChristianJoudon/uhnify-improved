@@ -38,6 +38,10 @@ type JsonRecordsConfig = {
     description?: FieldPath; url?: FieldPath; categories?: FieldPath; status?: FieldPath; recurrence?: FieldPath;
   };
   recurrenceWeeks?: number;
+  groupPath?: string;
+  dateFrom?: string;
+  labels?: { title?: string; date?: string; time?: string; location?: string; description?: string };
+  titleStrip?: string;
   urlPrefix?: string;
   include?: { field: string; pattern: string };
   exclude?: { field: string; pattern: string };
@@ -111,9 +115,13 @@ const startOf = (value: unknown, local: boolean, options: DateOptions): { start?
 
 const htmlJsonOf = (text: string, config: NonNullable<JsonRecordsConfig['htmlJson']>): unknown => {
   if (config.selector) {
-    const node = load(text)(config.selector).first();
-    const raw = config.attribute ? node.attr(config.attribute) : node.text();
-    return raw ? JSON.parse(raw) : undefined;
+    // One blob, or one per element (a schedule that hangs each lesson's JSON on its own button).
+    const $ = load(text);
+    const blobs = $(config.selector).toArray().flatMap(element => {
+      const raw = config.attribute ? $(element).attr(config.attribute) : $(element).text();
+      try { return raw ? [JSON.parse(raw) as unknown] : []; } catch { return []; }
+    });
+    return blobs.length > 1 ? blobs : blobs[0];
   }
   if (config.marker) {
     const at = text.indexOf(config.marker);
@@ -151,19 +159,49 @@ export const mappedJsonEvents = (text: string, source: SourceDefinition, sourceU
   const mapping = config.records;
   if (!mapping) return [];
   const document: unknown = mapping.htmlJson ? htmlJsonOf(text, mapping.htmlJson) : JSON.parse(text);
-  const records = mapping.path ? valuesAt(document, mapping.path) : Array.isArray(document) ? document : [document];
   const local = config.timestampsAreLocal === true;
-  const options: DateOptions = { today: kauaiToday() };
   const { fields } = mapping;
-  return records.flatMap((record, index) => {
+  const recordsOf = (root: unknown): unknown[] => (mapping.path ? valuesAt(root, mapping.path) : Array.isArray(root) ? root : [root]);
+  // A calendar page built as sections — "September 2026" over its cards — keeps
+  // the month and year on the section and only "Saturday 19th" on the card.
+  const groups = mapping.groupPath ? valuesAt(document, mapping.groupPath) : [document];
+  return groups.flatMap(group => {
+    const heading = mapping.dateFrom ? valuesAt(group, mapping.dateFrom).map(value => asString(value) ?? '').join(' ').replace(/\s+/g, ' ').trim() : '';
+    return recordsOf(group).map(record => ({ record, heading }));
+  }).flatMap(({ record, heading }, index) => {
     if (!isRecord(record)) return [];
+    const headingYear = Number(/\b(20\d{2})\b/.exec(heading)?.[1]) || undefined;
+    const options: DateOptions = { today: kauaiToday(), ...(headingYear ? { yearHint: headingYear } : {}) };
+    const headingMonth = heading.replace(/\s+20\d{2}.*$/, '');
+    /** "Saturday 19th" under "September 2026" is September 19, 2026. */
+    const lend = (text: string): string => {
+      if (!heading || findDates(text, options).length) return text;
+      const day = /\b(\d{1,2})(?:st|nd|rd|th)?\b/.exec(text)?.[1];
+      return day && findDates(`${headingMonth} 1`, options).length ? `${headingMonth} ${day}` : text;
+    };
     if (matches(record, mapping.include) === false || matches(record, mapping.exclude) === true) return [];
-    const title = textOnly(textAt(record, fields.title), 300);
+    // Labelled lines in the prose — "Where: Lydgate Pavilion<br>When: …" — read before the tags go.
+    const proseHtml = textAt(record, fields.prose) ?? '';
+    const { found: labelled } = mapping.labels ? readLabels(linesOf(load(`<div>${proseHtml}</div>`)('div')), mapping.labels) : { found: {} as NonNullable<JsonRecordsConfig['labels']> };
+    let title = textOnly(labelled.title ?? textAt(record, fields.title), 300);
     if (!title) return [];
+    let strippedStatus: string | undefined;
+    if (mapping.titleStrip) {
+      const stripped = new RegExp(mapping.titleStrip, 'i').exec(title);
+      if (stripped) { strippedStatus = stripped[0].replace(/[\s:–-]+$/, '').trim(); title = title.replace(stripped[0], ' ').replace(/\s+/g, ' ').trim(); }
+    }
 
     let { start, end } = startOf(firstAt(record, fields.start), local, options);
+    if (!start && labelled.date) {
+      const [hit] = findDates(lend(labelled.date), options);
+      const clock = findClock(`${labelled.time ?? ''} ${labelled.date.replace(/\d{4}/, '')}`);
+      if (hit) {
+        start = hawaiiDateTime(clock.start ? `${hit.date} ${clock.start}` : hit.date);
+        end = clock.end ? hawaiiDateTime(`${hit.endDate ?? hit.date} ${clock.end}`) : hit.endDate ? hawaiiDateTime(hit.endDate) : undefined;
+      }
+    }
     if (!start && fields.date) {
-      const [hit] = findDates(textAt(record, fields.date) ?? '', options);
+      const [hit] = findDates(lend(textAt(record, fields.date) ?? ''), options);
       const clock = clockOf(firstAt(record, fields.time));
       const endClock = clockOf(firstAt(record, fields.endTime)) ?? findClock(textAt(record, fields.time) ?? '').end;
       if (hit) {
@@ -179,7 +217,9 @@ export const mappedJsonEvents = (text: string, source: SourceDefinition, sourceU
       // before the post itself. A date older than the post is history.
       const prose = textOnly(textAt(record, fields.prose), 20_000) ?? '';
       const published = startOf(firstAt(record, fields.published), local, options).start?.slice(0, 10);
-      const hit = findDates(`${title}. ${prose}`, options).find(found => !published || found.date >= published);
+      // "Sunday, November 16" in a post from October 2025 is November 2025.
+      // Read against today it became a phantom event a year later, every year.
+      const hit = findDates(`${title}. ${prose}`, { ...options, today: published ?? options.today! }).find(found => !published || found.date >= published);
       if (hit) {
         const around = `${title}. ${prose}`.slice(Math.max(0, hit.index - 40), hit.index + hit.length + 80);
         const clock = findClock(around.replace(`${title}. ${prose}`.slice(hit.index, hit.index + hit.length), ' '));
@@ -189,13 +229,14 @@ export const mappedJsonEvents = (text: string, source: SourceDefinition, sourceU
     }
     if (!start || !inWindow(start, source)) return [];
 
-    const location = safeVisibleText((fields.location ?? []).map(path => textOnly(textAt(record, path), 200)).filter(Boolean).join(', '), 500);
-    const description = safeVisibleText(textAt(record, fields.description), 2_000);
+    const location = safeVisibleText(labelled.location
+      ?? (fields.location ?? []).map(path => textOnly(textAt(record, path), 200)).filter(Boolean).join(', '), 500);
+    const description = safeVisibleText(labelled.description ?? textAt(record, fields.description), 2_000);
     const categoryValue = firstAt(record, fields.categories);
     const categories = uniqueLabels(typeof categoryValue === 'string' ? categoryValue.split(/\s*,\s*/) : categoryValue);
     const rawUrl = textAt(record, fields.url);
     const url = rawUrl ? new URL(rawUrl, mapping.urlPrefix ?? sourceUrl).toString() : sourceUrl;
-    const status = textAt(record, fields.status);
+    const status = textAt(record, fields.status) ?? strippedStatus;
     const identity = textAt(record, fields.id) ?? url;
     const recurrence = textAt(record, fields.recurrence);
     const rule = recurrence && mapping.recurrenceWeeks ? findWeeklyRule(recurrence) : undefined;
@@ -224,28 +265,46 @@ export const mappedJsonEvents = (text: string, source: SourceDefinition, sourceU
   });
 };
 
+type Labels = { title?: string; date?: string; time?: string; location?: string; description?: string };
+
 type HtmlSelectors = {
   item: string; title?: string; date?: string; dateAttr?: string; time?: string; location?: string; description?: string;
   link?: string; category?: string; dateFrom?: string; yearFrom?: string; weeklyWeeks?: number; include?: string;
-  exclude?: string; stopAt?: string; defaultTitle?: string; defaultLocation?: string;
+  exclude?: string; stopAt?: string; defaultTitle?: string; defaultLocation?: string; dateRequired?: boolean;
+  dateFromWins?: boolean; titleFrom?: string; timeFrom?: string; locationFrom?: string; descriptionFrom?: string;
+  titlePrefix?: string; titleLine?: boolean; titleAfter?: string; titleStrip?: string; locationPattern?: string;
+  labels?: Labels; cellHeaders?: boolean;
 };
 
-const clean = (value: string | undefined): string => (value ?? '').replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, ' ').trim();
+const clean = (value: string | undefined): string => (value ?? '').replace(/[​-‍﻿]/g, '').replace(/\s+/g, ' ').trim();
+
+const INLINE = /^(?:strong|b|em|i|u|sup|sub|small|mark|font)$/;
+const BLOCK = /^(?:p|div|li|tr|h[1-6]|ul|ol|table|section|article|blockquote|dd|dt)$/;
 
 /**
- * An element's text with a space wherever the markup breaks: cheerio's own
- * .text() reads <span>Sat</span><br><span>03</span><span>Oct</span> as
- * "Sat03Oct", which no date reader can do anything with.
+ * An element's text as lines, with a space wherever the markup separates
+ * words. cheerio's own .text() reads <span>Sat</span><br><span>03</span> as
+ * "Sat03"; putting a space at every tag reads 3<sup>rd</sup> as "3 rd" and
+ * loses the ordinal. So: typographic tags join, <br> and blocks break the
+ * line, everything else is a space.
  */
-const spaced = ($: CheerioAPI, node: ReturnType<CheerioAPI>): string => {
-  const parts: string[] = [];
+const linesOf = (node: ReturnType<CheerioAPI>): string[] => {
+  const lines: string[] = [''];
   const walk = (elements: AnyNode[]) => elements.forEach(element => {
-    if (element.type === 'text') parts.push(element.data);
-    else if (element.type === 'tag' && !/^(?:script|style|svg|noscript)$/.test(element.name)) walk(element.children);
+    if (element.type === 'text') lines[lines.length - 1] += element.data;
+    else if (element.type === 'tag' && !/^(?:script|style|svg|noscript)$/.test(element.name)) {
+      if (element.name === 'br' || BLOCK.test(element.name)) lines.push('');
+      else if (!INLINE.test(element.name)) lines[lines.length - 1] += ' ';
+      walk(element.children);
+      if (BLOCK.test(element.name)) lines.push('');
+      else if (!INLINE.test(element.name)) lines[lines.length - 1] += ' ';
+    }
   });
   walk(node.toArray());
-  return clean(parts.join(' ')).replace(/\s+([,.;:!?])/g, '$1');
+  return lines.map(line => clean(line).replace(/\s+([,.;:!?])/g, '$1')).filter(Boolean);
 };
+
+const spaced = (_$: CheerioAPI, node: ReturnType<CheerioAPI>): string => linesOf(node).join(' ');
 
 /** Document order, so "the heading before this line" is a lookup and not a walk. */
 const orderOf = ($: CheerioAPI): Map<AnyNode, number> => {
@@ -255,9 +314,52 @@ const orderOf = ($: CheerioAPI): Map<AnyNode, number> => {
 };
 
 const tidyTitle = (text: string): string => clean(text
-  .replace(/^[\s:|@,–—-]+|[\s:|@,–—-]+$/g, '')
+  .replace(/\(\s*\)/g, ' ')
+  .replace(/^(?:[\s:|@,&–—-]|and\b)+|[\s:|@,&–—-]+$/gi, '')
   .replace(/\s+([:,])/g, '$1')
   .replace(/^\W*(?:on|at)\s+/i, ''));
+
+const WEEKDAY_WORDS = /\b(?:sun|mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?)(?:day)?s?\b\.?,?/gi;
+const CLOCK_WORDS = /(?:\bfrom\s+|\bat\s+|@\s*)?\b\d{1,2}(?::\d{2})?\s*(?:[ap]\.?\s*m\.?)?\s*(?:-|–|—|to)\s*\d{1,2}(?::\d{2})?\s*[ap]\.?\s*m\.?|(?:\bfrom\s+|\bat\s+|@\s*)?\b\d{1,2}(?::\d{2})?\s*[ap]\.?\s*m\.?/gi;
+
+/** "Where: Lydgate Pavilion" → { location: "Lydgate Pavilion" }, and the lines that were not labels. */
+export const readLabels = (lines: string[], labels: Labels | undefined): { found: Labels; rest: string[] } => {
+  const found: Labels = {};
+  if (!labels) return { found, rest: lines };
+  const rest: string[] = [];
+  for (const line of lines) {
+    const field = (Object.keys(labels) as Array<keyof Labels>).find(key => (
+      new RegExp(`^\\W*(?:${labels[key]})\\s*[:\\-–—]\\s*\\S`, 'i').test(line)));
+    if (field && !found[field]) found[field] = clean(line.replace(new RegExp(`^\\W*(?:${labels[field]})\\s*[:\\-–—]\\s*`, 'i'), ''));
+    else rest.push(line);
+  }
+  return { found, rest };
+};
+
+/** For a table cell: the text of its column's header and of its row's header. */
+const cellHeadersOf = ($: CheerioAPI, cell: ReturnType<CheerioAPI>): { column: string; row: string } => {
+  const row = cell.parent();
+  const position = (cells: ReturnType<CheerioAPI>, until: AnyNode | undefined): number => {
+    let at = 0;
+    for (const each of cells.toArray()) {
+      if (each === until) return at;
+      at += Number($(each).attr('colspan')) || 1;
+    }
+    return until ? -1 : at;
+  };
+  const index = position(row.children('td,th'), cell.get(0));
+  const table = cell.closest('table');
+  const headRow = table.find('thead tr').first().length ? table.find('thead tr').first() : table.find('tr').first();
+  let column = '';
+  let at = 0;
+  for (const each of headRow.children('td,th').toArray()) {
+    const span = Number($(each).attr('colspan')) || 1;
+    if (index >= at && index < at + span) { column = spaced($, $(each)); break; }
+    at += span;
+  }
+  const rowHead = row.children('th').first().length ? row.children('th').first() : row.children('td').first();
+  return { column, row: rowHead.get(0) === cell.get(0) ? '' : spaced($, rowHead) };
+};
 
 /**
  * SOURCE_HTML with `selectors`: one element per event, the date wherever the
@@ -275,9 +377,16 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
   const yearText = selectors.yearFrom ? spaced($, $(selectors.yearFrom).first()) : '';
   const yearHint = Number(/\b(20\d{2})\b/.exec(yearText)?.[1]) || undefined;
   const options: DateOptions = { today, ...(yearHint ? { yearHint } : {}) };
-  const contexts = selectors.dateFrom
-    ? $(selectors.dateFrom).toArray().map(element => ({ at: order.get(element) ?? 0, text: spaced($, $(element)) }))
-    : [];
+  const before = (selector: string | undefined) => (selector
+    ? $(selector).toArray().map(element => ({ at: order.get(element) ?? 0, text: spaced($, $(element)) })).filter(each => each.text)
+    : []);
+  const contexts = before(selectors.dateFrom);
+  const titles = before(selectors.titleFrom);
+  const pageClock = selectors.timeFrom ? findClock(spaced($, $(selectors.timeFrom).first())) : {};
+  const pageLocation = selectors.locationFrom
+    ? $(selectors.locationFrom).toArray().map(element => spaced($, $(element)).replace(/^\W*(?:venue|address|location|where|place)\s*:\s*/i, '')).filter(Boolean).join(', ')
+    : '';
+  const pageDescription = selectors.descriptionFrom ? spaced($, $(selectors.descriptionFrom).first()) : '';
   const stop = selectors.stopAt ? new RegExp(selectors.stopAt, 'i') : undefined;
   const stopIndex = stop
     ? Math.min(...$('h1,h2,h3,h4,h5,h6,strong,b,p,li,td,div').toArray()
@@ -287,6 +396,7 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
   const include = selectors.include ? new RegExp(selectors.include, 'i') : undefined;
   const exclude = selectors.exclude ? new RegExp(selectors.exclude, 'i') : undefined;
   const horizon = (selectors.weeklyWeeks ?? 0) * 7;
+  const lookAhead = new Date(Date.now() - 10 * 3_600_000 + source.polling.lookAheadDays * 86_400_000).toISOString().slice(0, 10);
   const items: ExtractedItem[] = [];
 
   $(selectors.item).each((index, element) => {
@@ -294,22 +404,41 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
     const at = order.get(element) ?? 0;
     if (at >= stopIndex) return;
     const root = $(element);
-    const whole = spaced($, root);
-    if (!whole || (include && !include.test(whole)) || (exclude && exclude.test(whole))) return;
+    const { found: labelled, rest: lines } = readLabels(linesOf(root), selectors.labels);
+    let whole = lines.join(' ');
+    const headers = selectors.cellHeaders && root.is('td,th') ? cellHeadersOf($, root) : undefined;
+    const context = headers ? headers.column : contexts.filter(candidate => candidate.at < at).pop()?.text ?? '';
+    const borrowedTitle = titles.filter(candidate => candidate.at < at).pop()?.text ?? '';
+    const tested = `${whole} ${borrowedTitle} ${context} ${Object.values(labelled).join(' ')}`;
+    if (!clean(tested) || (include && !include.test(tested)) || (exclude && exclude.test(tested))) return;
+    if (!whole && !labelled.title && !borrowedTitle && !selectors.defaultTitle) return;
 
-    const context = contexts.filter(candidate => candidate.at < at).pop()?.text ?? '';
-    const dateNode = selectors.date ? root.find(selectors.date).first() : undefined;
-    const dateText = dateNode ? (selectors.dateAttr ? clean(dateNode.attr(selectors.dateAttr)) : spaced($, dateNode)) : '';
-    const timeText = selectors.time ? spaced($, root.find(selectors.time).first()) : '';
+    // `titleAfter` cuts the line in two: the "when" and the "what".
+    let whenPart = '';
+    if (selectors.titleAfter) {
+      const cut = new RegExp(selectors.titleAfter, 'i').exec(whole);
+      if (cut) { whenPart = whole.slice(0, cut.index); whole = whole.slice(cut.index + cut[0].length); }
+    }
+
+    const dateNode = selectors.date ? root.find(selectors.date).first() : selectors.dateAttr ? root : undefined;
+    const dateText = labelled.date
+      ?? (dateNode ? (selectors.dateAttr ? clean(dateNode.attr(selectors.dateAttr)) : spaced($, dateNode)) : '');
+    const timeText = labelled.time ?? (selectors.time ? spaced($, root.find(selectors.time).first()) : '');
     const titleNode = selectors.title ? root.find(selectors.title).first() : undefined;
 
-    // Where the date is looked for, nearest first: its own element, the item's
-    // text, then the heading over the group. A heading that holds only a month
-    // and year ("September 2026") lends its year to a day written in the item.
+    // Where the date is looked for, nearest first: its own element, the "when"
+    // part, the item's text, then the heading over the group. A heading that is
+    // only a month and year lends them to a bare day number in the item.
     const contextYear = Number(/\b(20\d{2})\b/.exec(context)?.[1]) || undefined;
     const local: DateOptions = { ...options, ...(contextYear ? { yearHint: contextYear } : {}) };
-    const monthOnly = /^[A-Za-z]+\.?\s+20\d{2}$/.test(context) ? context.replace(/\s+20\d{2}$/, '') : '';
-    const candidates = [dateText, whole, monthOnly && /^\D*\d{1,2}\D*$/.test(dateText || whole) ? `${monthOnly} ${(dateText || whole)}` : '', context];
+    const monthOnly = /^[A-Za-z]+\.?(?:\s+20\d{2})?(?:\s+\w+)?$/.test(context) && findDates(`${context.replace(/\s+20\d{2}.*$/, '')} 1`, local).length
+      ? context.replace(/\s+20\d{2}.*$/, '') : '';
+    const bareDay = /\b(\d{1,2})(?:st|nd|rd|th)?\b/.exec(dateText || whenPart || whole)?.[1];
+    const lent = monthOnly && bareDay && !findDates(dateText || whenPart || whole, local).length ? `${monthOnly} ${bareDay}` : '';
+    const contextHits = context ? findDates(context, local) : [];
+    const candidates = selectors.dateFromWins && contextHits.length ? [context]
+      : selectors.dateRequired && (selectors.date || selectors.dateAttr || selectors.labels?.date) ? [dateText, lent]
+        : [dateText, whenPart, whole, lent, context];
     let hits = [] as ReturnType<typeof findDates>;
     let from = '';
     for (const candidate of candidates) {
@@ -317,68 +446,106 @@ export const mappedHtmlEvents = (html: string, source: SourceDefinition, sourceU
       hits = findDates(candidate, local);
       if (hits.length) { from = candidate; break; }
     }
+    if (selectors.dateRequired && !hits.length && !horizon) return;
 
-    const clockSource = timeText || (dateText && findClock(dateText).start ? dateText : whole);
-    const clock = findClock(hits[0] && clockSource === from
-      ? clockSource.slice(0, hits[0].index) + ' '.repeat(hits[0].length) + clockSource.slice(hits[0].index + hits[0].length)
-      : clockSource);
+    const blank = (text: string) => (hits.length && text === from
+      ? hits.reduceRight((rest, hit) => rest.slice(0, hit.index) + ' '.repeat(hit.length) + rest.slice(hit.index + hit.length), text)
+      : text);
+    // Where the entry says which element holds the time, the prose is not
+    // searched for one: a festival's "September 20th to 26th" must not pick up
+    // the 10 am of a church service mentioned in its description.
+    const structured = Boolean(selectors.time || selectors.labels?.time);
+    const ownClock = [timeText, dateText, whenPart, ...(structured ? [] : [whole])].map(text => findClock(blank(text))).find(found => found.start);
+    const clock = ownClock ?? (headers ? findClock(headers.row) : undefined) ?? (pageClock.start ? pageClock : {});
 
-    let title = titleNode ? spaced($, titleNode) : '';
+    // The place: a labelled line, its own element, a pattern in the line, the page, the default.
+    let location = labelled.location ?? (selectors.location ? spaced($, root.find(selectors.location).first()) : '');
+    if (!location && selectors.locationPattern) {
+      const placed = new RegExp(selectors.locationPattern, 'i').exec(whole);
+      if (placed) { location = clean(placed[1] ?? placed[0]); whole = whole.replace(placed[0], ' '); }
+    }
+    location = location || pageLocation || selectors.defaultLocation || '';
+
+    let title = labelled.title ?? (titleNode ? spaced($, titleNode) : '');
     // A heading that is only the date ("September 27th") is not the title;
     // the title is then whatever else the item says.
     if (title && findDates(title, local).length) {
       const bare = findDates(title, local).reduceRight((rest, hit) => rest.slice(0, hit.index) + rest.slice(hit.index + hit.length), title);
-      if (!tidyTitle(bare.replace(/\b(?:sun|mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?)(?:day)?\b\.?,?/gi, ' ').replace(/[&,]|\band\b/gi, ' '))) title = '';
+      if (!tidyTitle(bare.replace(WEEKDAY_WORDS, ' ').replace(/[&,]|\band\b/gi, ' '))) title = '';
     }
     if (!title) {
       // A line that is its own title: what is left when the date, the time and
-      // the weekday are taken out.
-      let rest = whole;
-      if (from === whole) hits.slice().reverse().forEach(hit => { rest = rest.slice(0, hit.index) + rest.slice(hit.index + hit.length); });
-      else if (dateText && rest.includes(dateText)) rest = rest.replace(dateText, ' ');
+      // the weekday are taken out. With `titleAfter` the date was in the other
+      // half, so only the clock goes.
+      let rest = selectors.titleLine ? (lines[0] ?? '') : whole;
+      if (!selectors.titleAfter) {
+        findDates(rest, local).reverse().forEach(hit => { rest = rest.slice(0, hit.index) + rest.slice(hit.index + hit.length); });
+        if (dateText && rest.includes(dateText)) rest = rest.replace(dateText, ' ');
+        rest = rest.replace(/\((?:every|each|weekly|monthly|daily)[^)]*\)/gi, ' ').replace(WEEKDAY_WORDS, ' ');
+      }
       if (timeText && rest.includes(timeText)) rest = rest.replace(timeText, ' ');
-      rest = rest
-        .replace(/\b(?:sun|mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?)(?:day)?\b\.?,?/gi, ' ')
-        .replace(/(?:\bfrom\s+|\bat\s+|@\s*)?\d{1,2}(?::\d{2})?\s*(?:[ap]\.?\s*m\.?)?\s*(?:-|–|—|to)\s*\d{1,2}(?::\d{2})?\s*[ap]\.?\s*m\.?/gi, ' ')
-        .replace(/(?:\bfrom\s+|\bat\s+|@\s*)?\b\d{1,2}(?::\d{2})?\s*[ap]\.?\s*m\.?/gi, ' ');
-      title = tidyTitle(rest) || selectors.defaultTitle || '';
+      title = tidyTitle(rest.replace(CLOCK_WORDS, ' ')) || borrowedTitle || selectors.defaultTitle || '';
     }
-    title = textOnly(title, 300) ?? '';
+    let status: string | undefined;
+    if (selectors.titleStrip) {
+      const stripped = new RegExp(selectors.titleStrip, 'i').exec(title);
+      if (stripped) { status = clean(stripped[0]).replace(/[\s:–-]+$/, ''); title = tidyTitle(title.replace(stripped[0], ' ')); }
+    }
+    title = textOnly(`${selectors.titlePrefix ?? ''}${title}`, 300) ?? '';
     if (!title) return;
 
     const href = (selectors.link ? root.find(selectors.link).first() : titleNode?.is('a') ? titleNode : root.find('a[href]').first())?.attr('href')
       ?? (root.is('a') ? root.attr('href') : undefined);
     const url = href && !/^(?:mailto|tel|javascript):/i.test(href) ? new URL(href, sourceUrl).toString() : sourceUrl;
-    const location = safeVisibleText(selectors.location ? spaced($, root.find(selectors.location).first()) : selectors.defaultLocation, 500);
-    const description = selectors.description ? safeVisibleText(spaced($, root.find(selectors.description).first()), 2_000) : undefined;
+    const description = safeVisibleText(labelled.description
+      ?? (selectors.description ? spaced($, root.find(selectors.description).first()) : '') ?? '', 2_000)
+      ?? safeVisibleText(pageDescription, 2_000);
     const categories = selectors.category ? uniqueLabels(root.find(selectors.category).map((_i, node) => $(node).text()).get()) : [];
+    const place = safeVisibleText(location, 500);
 
     const push = (day: string, endDay: string | undefined, series: boolean) => {
       const start = hawaiiDateTime(clock.start ? `${day} ${clock.start}` : day);
-      if (!start || !inWindow(start, source)) return;
+      if (!start) return;
+      // A run that has opened and not closed is still on: "Jan 8 – 31" is an
+      // event on the 20th, though its start is long past the look-back.
+      const running = endDay !== undefined && day < today && endDay >= today && day <= lookAhead;
+      if (!inWindow(start, source) && !running) return;
       const end = clock.end ? hawaiiDateTime(`${endDay ?? day} ${clock.end}`) : endDay ? hawaiiDateTime(endDay) : undefined;
-      const note = series ? contextText([context, whole !== title ? whole : undefined], [title, description, location]) : undefined;
+      const note = series ? contextText([context, whole !== title ? whole : undefined], [title, description, place]) : undefined;
       items.push(eventItem({
         id: `${url}#${title}#${day}`,
         title,
         start,
         ...(end ? { end } : {}),
-        ...(location ? { location } : {}),
+        ...(place ? { location: place } : {}),
         ...(description ? { description } : {}),
         ...(categories.length ? { categories } : {}),
         ...(note ? { context: note } : {}),
+        ...(status ? { status } : {}),
         sourceUrl: url,
         raw: { url, title, text: whole.slice(0, 1_000), ...(context ? { heading: context } : {}), date: day },
         locator: `${selectors.item}[${index}]`,
       }));
     };
 
+    const ruleText = `${dateText} ${whenPart} ${lines[0] ?? ''} ${whole}`;
+    // A weekly market stored as one long run ("01/07/2026 to 12/31/2026") with
+    // its weekday in the title is a series, not an eleven-month event.
+    const [first] = hits;
+    if (first?.endDate && horizon && Date.parse(first.endDate) - Date.parse(first.date) > 7 * 86_400_000) {
+      const rule = findWeeklyRule(ruleText);
+      if (rule) {
+        const from_ = first.date > today ? first.date : today;
+        occurrences(rule, from_, horizon).filter(day => day <= first.endDate!).forEach(day => push(day, undefined, true));
+        return;
+      }
+    }
     if (hits.length) {
       hits.forEach(hit => push(hit.date, hit.endDate, false));
       return;
     }
     if (!horizon) return;
-    const rule: WeeklyRule | undefined = findWeeklyRule(dateText || whole) ?? findWeeklyRule(`every ${context}`);
+    const rule: WeeklyRule | undefined = findWeeklyRule(ruleText) ?? (context ? findWeeklyRule(`every ${context}`) : undefined);
     if (rule) occurrences(rule, today, horizon).forEach(day => push(day, undefined, true));
   });
   return items;
@@ -402,7 +569,11 @@ export const rssEvents = (xml: string, source: SourceDefinition, sourceUrl: stri
     const link = clean(node.children('link').first().text()) || node.children('link[href]').first().attr('href') || sourceUrl;
     const categories = uniqueLabels(node.children('category').map((_i, category) => $(category).text() || $(category).attr('term')).get());
     if (include && !include.test(`${title} ${categories.join(' ')}`)) return;
-    const body = textOnly(node.children('content\\:encoded, content, description, summary').first().text(), 20_000) ?? '';
+    // WordPress writes the excerpt (<description>) before the post
+    // (<content:encoded>); the post is where "Date & Time:" is.
+    const body = ['content\\:encoded', 'content', 'description', 'summary']
+      .map(name => textOnly(node.children(name).first().text(), 20_000) ?? '')
+      .sort((a, b) => b.length - a.length)[0] ?? '';
     const publishedRaw = clean(node.children('pubDate, published, updated, dc\\:date').first().text());
     const publishedAt = Date.parse(publishedRaw);
     const published = Number.isNaN(publishedAt) ? undefined : kauaiToday(publishedAt);

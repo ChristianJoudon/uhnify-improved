@@ -97,6 +97,16 @@ const JsonRecordsSchema = z.object({
     /** Text that says how the record repeats ("Every 1st Friday of the Month"). */
     recurrence: FieldPathSchema.optional(),
   }).strict(),
+  /** Records sit in groups whose heading carries the month and year: the path to each group, with `path` then relative to it. */
+  groupPath: z.string().min(1).optional(),
+  /** A path on the group (or, without groupPath, on the document) whose text lends its date, month or year to the records. */
+  dateFrom: z.string().min(1).optional(),
+  /** Labelled lines in the `prose` field — "Where: …", "When: …" — by the label's pattern. */
+  labels: z.object({
+    title: z.string().min(1).optional(), date: z.string().min(1).optional(), time: z.string().min(1).optional(),
+    location: z.string().min(1).optional(), description: z.string().min(1).optional(),
+  }).strict().optional(),
+  titleStrip: z.string().min(1).optional(),
   /** A record whose `recurrence` reads as a rule is written out for this many weeks from its start. */
   recurrenceWeeks: z.number().int().min(1).max(26).optional(),
   urlPrefix: z.string().url().optional(),
@@ -132,6 +142,32 @@ const HtmlSelectorsSchema = z.object({
   stopAt: z.string().min(1).optional(),
   defaultTitle: z.string().min(1).optional(),
   defaultLocation: z.string().min(1).optional(),
+  /** With a `date` selector: an item whose date element holds no date is not an event (no falling back to a deadline in its prose). */
+  dateRequired: z.boolean().optional(),
+  /** The heading's date is the item's date even when the item mentions others (a festival day's heading over its cards). */
+  dateFromWins: z.boolean().optional(),
+  /** The nearest element BEFORE the item whose text is its title — a show's name over a list of performance dates. */
+  titleFrom: z.string().min(1).optional(),
+  /** Page-level, like yearFrom: stated once for every item that has none of its own. */
+  timeFrom: z.string().min(1).optional(),
+  locationFrom: z.string().min(1).optional(),
+  descriptionFrom: z.string().min(1).optional(),
+  titlePrefix: z.string().min(1).optional(),
+  /** The title is the item's first line (before the first <br> or block break), less its date, weekday and time. */
+  titleLine: z.boolean().optional(),
+  /** Cut the item's text here: before is the "when", after is the title. */
+  titleAfter: z.string().min(1).optional(),
+  /** Removed from the title before the item is keyed, and kept as its status: "SOLD OUT", "POSTPONED". */
+  titleStrip: z.string().min(1).optional(),
+  /** A place written into the line: group 1 is the location and the match leaves the title. */
+  locationPattern: z.string().min(1).optional(),
+  /** Labelled lines inside the item — "Where: Lydgate Pavilion" — by the label's pattern. */
+  labels: z.object({
+    title: z.string().min(1).optional(), date: z.string().min(1).optional(), time: z.string().min(1).optional(),
+    location: z.string().min(1).optional(), description: z.string().min(1).optional(),
+  }).strict().optional(),
+  /** The item is a table cell: its column's and row's headers carry the weekday or date and the time. */
+  cellHeaders: z.boolean().optional(),
 }).strict();
 
 const TribeConfigSchema = z.object({
@@ -160,6 +196,8 @@ const StaticJsonConfigSchema = z.object({
 const IcsConfigSchema = z.object({
   kind: z.literal('ICS'),
   materializationDays: z.number().int().min(1).max(366),
+  /** Entries that are not events: "No Service Today", "Gallery Maintenance", a room held for a private booking. */
+  exclude: z.string().min(1).optional(),
 }).strict();
 
 const RssConfigSchema = z.object({
@@ -172,6 +210,8 @@ const RssConfigSchema = z.object({
 const JsonLdConfigSchema = z.object({
   kind: z.literal('JSON_LD_HTML'),
   detailLinkSelector: z.string().min(1),
+  /** Elements whose `src` is a further page of the same site to read: an <iframe> holding the real list. */
+  embedSelector: z.string().min(1).optional(),
 }).strict();
 
 const CountyConfigSchema = z.object({
@@ -186,6 +226,8 @@ const HtmlConfigSchema = z.object({
   selectors: HtmlSelectorsSchema.optional(),
   /** false: the list page says everything; do not fetch the pages it links to. */
   followDetails: z.boolean().optional(),
+  /** Elements whose `src` is a further page of the same site to read: an <iframe> holding the real list. */
+  embedSelector: z.string().min(1).optional(),
 }).strict();
 
 const PdfConfigSchema = z.object({

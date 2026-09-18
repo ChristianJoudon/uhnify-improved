@@ -69,6 +69,9 @@ export const robotsAllows = (groups: RobotsGroup[], pathAndQuery: string): { all
   };
 };
 
+/** A place on Kauaʻi, by name or by ZIP code. */
+const KAUAI = /kaua[ʻ'’‘`]?i|l[iī]hu[ʻ'’‘`]?e|kapa[ʻ'’‘`]?a\b|hanalei|princeville|k[iī]lauea|k[oō]loa|po[ʻ'’‘`]?ip[uū]|waimea|hanap[eē]p[eē]|kekaha|anahola|wailua|kal[aā]heo|l[aā]wa[ʻ'’‘`]?i|[ʻ'’‘`]?ele[ʻ'’‘`]?ele|hanam[aā][ʻ'’‘`]?ulu|n[aā]wiliwili|kalapaki|k[oō]ke[ʻ'’‘`]?e|h[aā][ʻ'’‘`]?ena|\b967(?:03|05|14|15|16|22|41|46|47|51|52|54|56|65|66|69|96)\b/i;
+
 const FORBIDS = /(?:may\s+not|shall\s+not|must\s+not|not\s+permitted|prohibit\w*|agree\s+not\s+to|without\s+(?:our\s+)?(?:prior\s+)?(?:express\s+)?(?:written\s+)?(?:consent|permission))[^.]{0,220}?(?:scrap\w+|crawl\w*|spider\w*|\brobots?\b|\bbots?\b|automated\s+(?:means|access|system\w*|quer\w+)|data\s+min\w+|harvest\w*)|(?:scrap\w+|crawl\w*|spider\w*|automated\s+(?:means|access|system\w*)|data\s+min\w+)[^.]{0,160}?(?:is|are)\s+(?:strictly\s+)?prohibited/i;
 
 export type ProbeFinding = {
@@ -94,7 +97,8 @@ export type ProbeReport = {
   platform?: string;
   findings: ProbeFinding[];
   best?: ProbeFinding;
-  verdict: 'ready' | 'nothing-upcoming' | 'no-readable-feed' | 'not-permitted' | 'refused';
+  onKauai?: boolean;
+  verdict: 'ready' | 'nothing-upcoming' | 'no-readable-feed' | 'not-permitted' | 'refused' | 'off-island';
 };
 
 const slugOf = (host: string): string => host.replace(/^www\./, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
@@ -247,7 +251,8 @@ export const probeSite = async (rawUrl: string, options: { client?: SafeHttpClie
     }
   }
 
-  const base = baseEntry(page, title, delayMs);
+  const landing = page;
+  const siteBase = baseEntry(page, title, delayMs);
   const attempt = async (entry: SourceDefinition, feedUrl: string, note: string) => {
     const parsed = SourceDefinitionSchema.safeParse(entry);
     if (!parsed.success) return;
@@ -256,12 +261,19 @@ export const probeSite = async (rawUrl: string, options: { client?: SafeHttpClie
       const result = await new LiveSourceAdapter(parsed.data.adapterKind).extract(artifact, parsed.data);
       const today = kauaiToday();
       const upcoming = result.items.filter(item => `${item.normalizedFields.localStart ?? ''}`.slice(0, 10) >= today);
+      const titles = [...new Set(upcoming.map(item => `${item.normalizedFields.title}`))];
+      // "Addison: Election Dinner", "Thomas: 2nd Fridays" — a room's booking
+      // sheet, with the names of the people who booked it. Public by
+      // accident is not public by intent; a person decides.
+      const bookings = titles.filter(title => /^[A-Z][a-z]+(?:\s[A-Z]\.?)?:\s/.test(title)).length;
+      const caution = titles.length >= 5 && bookings / titles.length > 0.3
+        ? ' — CAUTION: many titles read like a person\u2019s name and a booking; this may be a room calendar, not an events calendar' : '';
       report.findings.push({
         kind: parsed.data.adapterKind,
         feedUrl,
         upcoming: upcoming.length,
-        samples: [...new Set(upcoming.map(item => `${item.normalizedFields.title}`))].slice(0, 5),
-        note,
+        samples: titles.slice(0, 5),
+        note: `${note}${caution}`,
         entry: parsed.data,
       });
     } catch {
@@ -269,61 +281,82 @@ export const probeSite = async (rawUrl: string, options: { client?: SafeHttpClie
     }
   };
 
-  // 1. The Events Calendar's REST API.
-  const tribe = `${page.origin}/wp-json/tribe/events/v1/events?per_page=50&start_date={START_DATE}&end_date={END_DATE}`;
-  if (/wp-content|wp-json/i.test(html.body) && allows(tribe.replace(/[{}]/g, '')).allowed) {
-    await attempt({ ...base, adapterKind: 'TRIBE_REST', adapterConfig: { kind: 'TRIBE_REST', perPage: 50 },
-      endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: tribe }],
-      httpPolicy: { ...base.httpPolicy, allowedMediaTypes: ['application/json'] },
-      parser: { parserId: 'tribe-events', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: TRIBE_FIELDS }, tribe, 'The Events Calendar REST API');
-  }
+  // What one page offers. The landing page first; then, if that was not where
+  // the events are, the pages it points to as its calendar — which is how a
+  // person looks a site over.
+  const inspect = async (page: URL, $: ReturnType<typeof load>, body: string): Promise<void> => {
+    const base = { ...siteBase, publisherUrl: page.toString() };
+    // 1. The Events Calendar's REST API.
+    const tribe = `${page.origin}/wp-json/tribe/events/v1/events?per_page=50&start_date={START_DATE}&end_date={END_DATE}`;
+    if (/wp-content|wp-json/i.test(body) && allows(tribe.replace(/[{}]/g, '')).allowed) {
+      await attempt({ ...base, adapterKind: 'TRIBE_REST', adapterConfig: { kind: 'TRIBE_REST', perPage: 50 },
+        endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: tribe }],
+        httpPolicy: { ...base.httpPolicy, allowedMediaTypes: ['application/json'] },
+        parser: { parserId: 'tribe-events', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: TRIBE_FIELDS }, tribe, 'The Events Calendar REST API');
+    }
 
-  // 2. Calendar feeds: linked .ics, an iCal export, embedded Google or CalendarWiz calendars.
-  const ics = new Set<string>();
-  $('a[href], link[href]').each((_i, node) => {
-    const href = $(node).attr('href') ?? '';
-    if (/\.ics(?:$|\?)|[?&]ical=1|format=ical|^webcal:/i.test(href)) ics.add(new URL(href.replace(/^webcal:/i, 'https:'), page).toString());
-  });
-  googleCalendarIds(html.body).forEach(id => ics.add(`https://calendar.google.com/calendar/ical/${encodeURIComponent(id)}/public/basic.ics`));
-  for (const match of html.body.matchAll(/calendarwiz\.com\/calendars\/calendar\.php\?crd=([\w-]+)/gi)) ics.add(`https://www.calendarwiz.com/CalendarWiz_iCal.php?crd=${match[1]}`);
-  const feeds = [...ics].filter(url => new URL(url).hostname !== page.hostname || allows(url).allowed).slice(0, 6);
-  if (feeds.length) {
-    const hosts = [...new Set(feeds.map(url => new URL(url).hostname))];
-    await attempt({ ...base, adapterKind: 'ICS', adapterConfig: { kind: 'ICS', materializationDays: 120 },
-      endpoints: feeds.map(url => ({ purpose: 'COLLECTION' as const, method: 'GET' as const, urlTemplate: url })),
-      httpPolicy: { ...policyFor(hosts, delayMs), allowedMediaTypes: ['text/calendar'], maxResponseBytes: 10_000_000, maxRedirects: 2 },
-      polling: { ...base.polling, maxPages: 1, maxItems: 3000 },
-      parser: { parserId: 'icalendar', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: ICS_FIELDS }, feeds.join(' '),
-    hosts.includes('calendar.google.com') ? 'public Google Calendar subscription feed (its owner embeds it on this page)' : 'iCalendar feed');
-  }
+    // 2. Calendar feeds: linked .ics, an iCal export, embedded Google or CalendarWiz calendars.
+    const ics = new Set<string>();
+    $('a[href], link[href]').each((_i, node) => {
+      const href = $(node).attr('href') ?? '';
+      if (/\.ics(?:$|\?)|[?&]ical=1|format=ical|^webcal:/i.test(href)) ics.add(new URL(href.replace(/^webcal:/i, 'https:'), page).toString());
+    });
+    googleCalendarIds(body).forEach(id => ics.add(`https://calendar.google.com/calendar/ical/${encodeURIComponent(id)}/public/basic.ics`));
+    for (const match of body.matchAll(/calendarwiz\.com\/calendars\/calendar\.php\?crd=([\w-]+)/gi)) ics.add(`https://www.calendarwiz.com/CalendarWiz_iCal.php?crd=${match[1]}`);
+    const feeds = [...ics].filter(url => new URL(url).hostname !== page.hostname || allows(url).allowed).slice(0, 6);
+    if (feeds.length) {
+      const hosts = [...new Set(feeds.map(url => new URL(url).hostname))];
+      await attempt({ ...base, adapterKind: 'ICS', adapterConfig: { kind: 'ICS', materializationDays: 120 },
+        endpoints: feeds.map(url => ({ purpose: 'COLLECTION' as const, method: 'GET' as const, urlTemplate: url })),
+        httpPolicy: { ...policyFor(hosts, delayMs), allowedMediaTypes: ['text/calendar'], maxResponseBytes: 10_000_000, maxRedirects: 2 },
+        polling: { ...base.polling, maxPages: 1, maxItems: 3000 },
+        parser: { parserId: 'icalendar', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: ICS_FIELDS }, feeds.join(' '),
+      hosts.includes('calendar.google.com') ? 'public Google Calendar subscription feed (its owner embeds it on this page)' : 'iCalendar feed');
+    }
 
-  // 3. RSS or Atom.
-  const rss = $('link[rel="alternate"][type*="rss"], link[rel="alternate"][type*="atom"]').map((_i, node) => $(node).attr('href')).get()
-    .map(href => new URL(href, page).toString()).filter(url => new URL(url).hostname === page.hostname && allows(url).allowed && !/comments/i.test(url))[0];
-  if (rss) {
-    await attempt({ ...base, adapterKind: 'RSS_ATOM', adapterConfig: { kind: 'RSS_ATOM', identityField: 'link' },
-      endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: rss }],
-      httpPolicy: { ...base.httpPolicy, allowedMediaTypes: ['application/rss+xml', 'application/atom+xml', 'application/xml', 'text/xml'] },
-      parser: { parserId: 'rss-prose-dates', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: ['title', 'link', 'published', 'date'] }, rss, 'posts that announce events; dates read from the text');
-  }
+    // 3. RSS or Atom.
+    const rss = $('link[rel="alternate"][type*="rss"], link[rel="alternate"][type*="atom"]').map((_i, node) => $(node).attr('href')).get()
+      .map(href => new URL(href, page).toString()).filter(url => new URL(url).hostname === page.hostname && allows(url).allowed && !/comments/i.test(url))[0];
+    if (rss) {
+      await attempt({ ...base, adapterKind: 'RSS_ATOM', adapterConfig: { kind: 'RSS_ATOM', identityField: 'link' },
+        endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: rss }],
+        httpPolicy: { ...base.httpPolicy, allowedMediaTypes: ['application/rss+xml', 'application/atom+xml', 'application/xml', 'text/xml'] },
+        parser: { parserId: 'rss-prose-dates', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: ['title', 'link', 'published', 'date'] }, rss, 'posts that announce events; dates read from the text');
+    }
 
-  // 4. schema.org Event, on the page or on the pages it links to.
-  const detail = $('a[href]').map((_i, a) => $(a).attr('href')).get()
-    .find(href => /\/(?:events?|event-details|calendar|community-calendar)\/[^/?#]+/i.test(href ?? ''));
-  const detailSelector = detail ? `a[href*='${/\/((?:events?|event-details|calendar|community-calendar))\//i.exec(detail)![0]}']` : 'a[href*="/event"]';
-  await attempt({ ...base, adapterKind: 'JSON_LD_HTML', adapterConfig: { kind: 'JSON_LD_HTML', detailLinkSelector: detailSelector },
-    endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: page.toString() }],
-    polling: { ...base.polling, maxPages: 6 },
-    parser: { parserId: 'jsonld-event-detail', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: HTML_FIELDS }, page.toString(), 'schema.org Event in the page or its event pages');
-
-  // 5. The page itself, by the repeated element that carries its dates.
-  const selectors = inferSelectors(html.body);
-  if (selectors) {
-    await attempt({ ...base, adapterKind: 'SOURCE_HTML',
-      adapterConfig: { kind: 'SOURCE_HTML', detailLinkSelector: 'a', sitemap: false, followDetails: false, selectors },
+    // 4. schema.org Event, on the page or on the pages it links to.
+    const detail = $('a[href]').map((_i, a) => $(a).attr('href')).get()
+      .find(href => /\/(?:events?|event-details|calendar|community-calendar)\/[^/?#]+/i.test(href ?? ''));
+    const detailSelector = detail ? `a[href*='${/\/((?:events?|event-details|calendar|community-calendar))\//i.exec(detail)![0]}']` : 'a[href*="/event"]';
+    await attempt({ ...base, adapterKind: 'JSON_LD_HTML', adapterConfig: { kind: 'JSON_LD_HTML', detailLinkSelector: detailSelector },
       endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: page.toString() }],
-      parser: { parserId: 'mapped-html', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: HTML_FIELDS }, page.toString(),
-    `server-rendered list; selectors inferred (${selectors.item}${selectors.title ? ` / ${selectors.title}` : ''}) — check them`);
+      polling: { ...base.polling, maxPages: 6 },
+      parser: { parserId: 'jsonld-event-detail', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: HTML_FIELDS }, page.toString(), 'schema.org Event in the page or its event pages');
+
+    // 5. The page itself, by the repeated element that carries its dates.
+    const selectors = inferSelectors(body);
+    if (selectors) {
+      await attempt({ ...base, adapterKind: 'SOURCE_HTML',
+        adapterConfig: { kind: 'SOURCE_HTML', detailLinkSelector: 'a', sitemap: false, followDetails: false, selectors },
+        endpoints: [{ purpose: 'COLLECTION', method: 'GET', urlTemplate: page.toString() }],
+        parser: { parserId: 'mapped-html', parserVersion: '1.0.0', fixtureVersion: kauaiToday() }, fieldAllowlist: HTML_FIELDS }, page.toString(),
+      `server-rendered list; selectors inferred (${selectors.item}${selectors.title ? ` / ${selectors.title}` : ''}) — check them`);
+    }
+
+  };
+
+  await inspect(landing, $, html.body);
+  if (!report.findings.some(finding => finding.upcoming > 0)) {
+    const elsewhere = [...new Set($('a[href]').toArray()
+      .filter(a => /event|calendar|what.?s\s?(?:on|happening)|happenings|schedule|classes|workshops|shows|concerts|performances/i.test(`${$(a).text()} ${$(a).attr('href')}`))
+      .map(a => { try { return new URL($(a).attr('href') ?? '', landing).toString().split('#')[0]!; } catch { return ''; } })
+      .filter(url => url && new URL(url).hostname === landing.hostname && url !== landing.toString() && allows(url).allowed
+        && !/\.(?:pdf|jpe?g|png|ics)(?:$|\?)|\/(?:tag|category|author)\//i.test(url)))].slice(0, 3);
+    for (const url of elsewhere) {
+      const linked = await text(url, policy);
+      if (linked && /html/.test(linked.type)) await inspect(new URL(url), load(linked.body), linked.body);
+      if (report.findings.some(finding => finding.upcoming > 0)) break;
+    }
   }
 
   // A structured feed is better evidence than a page read by inference, so it
@@ -332,6 +365,9 @@ export const probeSite = async (rawUrl: string, options: { client?: SafeHttpClie
   const [best] = report.findings.filter(finding => finding.upcoming > 0)
     .sort((a, b) => (b.upcoming >= a.upcoming * 3 ? 1 : a.upcoming >= b.upcoming * 3 ? -1 : (rank[b.kind] ?? 0) - (rank[a.kind] ?? 0)));
   if (best) report.best = best;
+  // An organiser's site that never names a place on the island is somebody else's island.
+  report.onKauai = KAUAI.test(load(html.body)('body').text()) || report.findings.some(finding => finding.samples.some(sample => KAUAI.test(sample)));
+  if (best && !report.onKauai) { delete report.best; report.verdict = 'off-island'; return report; }
   report.verdict = report.terms === 'forbids-automation' ? 'not-permitted'
     : best ? 'ready'
       : report.findings.length ? 'nothing-upcoming' : 'no-readable-feed';

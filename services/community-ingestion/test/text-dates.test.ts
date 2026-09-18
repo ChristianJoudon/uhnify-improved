@@ -38,6 +38,8 @@ test('what is not a date is not read as one', () => {
   assert.deepEqual(dates('October 3, 9 AM at the pavilion'), ['2026-10-03'], 'the 9 is an hour, not a second day');
   assert.deepEqual(dates('February 30, 2027'), [], 'a day the month does not have');
   assert.deepEqual(dates('Date & Time: Sunday, November 29, 3-6 PM'), ['2026-11-29'], 'the 3 begins a time range, not a second day');
+  assert.deepEqual(dates('Saturday, June 20, 3 to 9 PM', { today: '2026-05-01' }), ['2026-06-20']);
+  assert.deepEqual(dates('01/07/2026 - 3:30pm to 12/31/2026 - 6:00pm'), ['2026-01-07..2026-12-31'], 'one run, not two dates');
 });
 
 test('times of day', () => {
@@ -62,6 +64,8 @@ test('weekly and monthly rules, only where the text says it repeats', () => {
   assert.deepEqual(findWeeklyRule('fourth Saturday of each month 9am-noon'), { weekdays: [6], ordinals: [4] });
   assert.deepEqual(findWeeklyRule('Live music nightly'), { weekdays: [0, 1, 2, 3, 4, 5, 6] });
   assert.equal(findWeeklyRule('Saturday, October 3, 2026'), undefined);
+  assert.equal(findWeeklyRule('Friday 4th'), undefined, 'the fourth of the month, not the fourth Friday');
+  assert.deepEqual(findWeeklyRule('3rd Saturday of every month'), { weekdays: [6], ordinals: [3] });
   assert.equal(findWeeklyRule('Sunset yoga with friends'), undefined);
 });
 

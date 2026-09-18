@@ -250,44 +250,82 @@ const parseIcsDate = (raw: string): string | undefined => {
   return `${year}-${month}-${day}T${hour}:${minute}:${second}${zulu ? 'Z' : HAWAII_OFFSET}`;
 };
 
+const HST_MS = 10 * 3_600_000;
+
+/** "1SU", "-1FR", "MO" → { ordinal, weekday }. */
+const byDayRule = (value: string): { ordinal: number | undefined; weekday: number } | undefined => {
+  const match = /^([+-]?\d{1,2})?(SU|MO|TU|WE|TH|FR|SA)$/.exec(value.trim());
+  if (!match) return undefined;
+  return { ordinal: match[1] ? Number(match[1]) : undefined, weekday: WEEKDAY.get(match[2]!)! };
+};
+
+/**
+ * The occurrences of a recurring VEVENT inside the polling window.
+ *
+ * All of the calendar arithmetic — which weekday, which day of the month,
+ * the nth Sunday — is done on Kauaʻi's wall clock, not on UTC. A 7 PM
+ * kanikapila is already tomorrow in UTC, and a rule tested against the UTC
+ * weekday put every evening series a day early. MONTHLY rules honour an
+ * ordinal BYDAY ("1SU", "-1FR") and BYMONTHDAY; before, they repeated on
+ * DTSTART's day of the month whatever the rule said, so a first-Sunday
+ * service landed on a Monday. `skip` holds the instants a calendar has
+ * taken out (EXDATE) or replaced (a RECURRENCE-ID override).
+ */
 const expandIcs = (
   start: string,
   rule: string | undefined,
   source: SourceDefinition,
+  skip: Set<number> = new Set(),
 ): string[] => {
-  if (!rule) return inWindow(start, source) ? [start] : [];
+  if (!rule) return inWindow(start, source) && !skip.has(Date.parse(start)) ? [start] : [];
   const parts = Object.fromEntries(rule.split(';').map(part => {
     const [name = '', value = ''] = part.split('=', 2);
     return [name, value];
   }));
   const frequency = parts.FREQ;
-  if (!['DAILY', 'WEEKLY', 'MONTHLY'].includes(frequency ?? '')) return inWindow(start, source) ? [start] : [];
+  if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(frequency ?? '')) return inWindow(start, source) ? [start] : [];
   const interval = Math.max(1, Number(parts.INTERVAL) || 1);
   const count = Math.min(source.polling.maxItems, Number(parts.COUNT) || Number.POSITIVE_INFINITY);
   const until = parts.UNTIL ? Date.parse(parseIcsDate(parts.UNTIL) ?? '') : Number.POSITIVE_INFINITY;
-  const byDays = new Set((parts.BYDAY || '').split(',').map(value => WEEKDAY.get(value.slice(-2))).filter(value => value !== undefined));
-  const origin = new Date(start);
-  const floor = new Date(Math.max(origin.getTime(), Date.now() - source.polling.lookBackDays * DAY_MS));
-  floor.setUTCHours(origin.getUTCHours(), origin.getUTCMinutes(), origin.getUTCSeconds(), 0);
+  const byDay = (parts.BYDAY || '').split(',').map(byDayRule).filter((value): value is NonNullable<ReturnType<typeof byDayRule>> => Boolean(value));
+  const byMonthDay = (parts.BYMONTHDAY || '').split(',').map(Number).filter(value => Number.isInteger(value) && value !== 0);
+  const originInstant = Date.parse(start);
+  // The wall clock, held in a Date's UTC fields so that getUTCDay() is Kauaʻi's weekday.
+  const origin = new Date(originInstant - HST_MS);
+  const floor = Date.now() - source.polling.lookBackDays * DAY_MS;
   const ceiling = Math.min(Date.now() + source.polling.lookAheadDays * DAY_MS, until);
+  const originWeek = Math.floor((origin.getTime() - origin.getUTCDay() * DAY_MS) / (7 * DAY_MS));
   const occurrences: string[] = [];
   let generated = 0;
-  for (const probe = new Date(origin); probe.getTime() <= ceiling && generated < count; probe.setUTCDate(probe.getUTCDate() + 1)) {
-    const days = Math.floor((probe.getTime() - origin.getTime()) / DAY_MS);
+  for (const probe = new Date(origin); probe.getTime() + HST_MS <= ceiling && generated < count; probe.setUTCDate(probe.getUTCDate() + 1)) {
+    const days = Math.round((probe.getTime() - origin.getTime()) / DAY_MS);
+    const months = (probe.getUTCFullYear() - origin.getUTCFullYear()) * 12 + probe.getUTCMonth() - origin.getUTCMonth();
+    const dayOfMonth = probe.getUTCDate();
+    const daysInMonth = new Date(Date.UTC(probe.getUTCFullYear(), probe.getUTCMonth() + 1, 0)).getUTCDate();
+    const nth = Math.ceil(dayOfMonth / 7);
+    const nthFromEnd = -Math.ceil((daysInMonth - dayOfMonth + 1) / 7);
+    const weekdayMatches = byDay.some(each => each.weekday === probe.getUTCDay()
+      && (each.ordinal === undefined || each.ordinal === nth || each.ordinal === nthFromEnd));
     let match = false;
     if (frequency === 'DAILY') match = days % interval === 0;
     if (frequency === 'WEEKLY') {
-      match = Math.floor(days / 7) % interval === 0
-        && (byDays.size ? byDays.has(probe.getUTCDay()) : probe.getUTCDay() === origin.getUTCDay());
+      const week = Math.floor((probe.getTime() - probe.getUTCDay() * DAY_MS) / (7 * DAY_MS));
+      match = (week - originWeek) % interval === 0
+        && (byDay.length ? byDay.some(each => each.weekday === probe.getUTCDay()) : probe.getUTCDay() === origin.getUTCDay());
     }
     if (frequency === 'MONTHLY') {
-      const months = (probe.getUTCFullYear() - origin.getUTCFullYear()) * 12
-        + probe.getUTCMonth() - origin.getUTCMonth();
-      match = months >= 0 && months % interval === 0 && probe.getUTCDate() === origin.getUTCDate();
+      match = months >= 0 && months % interval === 0 && (
+        byDay.length ? weekdayMatches
+          : byMonthDay.length ? byMonthDay.some(day => day === dayOfMonth || day === dayOfMonth - daysInMonth - 1)
+            : dayOfMonth === origin.getUTCDate());
+    }
+    if (frequency === 'YEARLY') {
+      match = months >= 0 && months % (12 * interval) === 0 && dayOfMonth === origin.getUTCDate();
     }
     if (!match) continue;
     generated += 1;
-    if (probe >= floor) occurrences.push(probe.toISOString());
+    const instant = probe.getTime() + HST_MS;
+    if (instant >= floor && !skip.has(instant)) occurrences.push(new Date(instant).toISOString());
     if (occurrences.length >= source.polling.maxItems) break;
   }
   return occurrences;
@@ -296,6 +334,22 @@ const expandIcs = (
 const icsEvents = (text: string, source: SourceDefinition, sourceUrl: string): ExtractedItem[] => {
   const blocks = unfoldIcs(text).join('\n').split('BEGIN:VEVENT').slice(1)
     .map(block => block.split('END:VEVENT')[0] ?? '');
+  const valuesOf = (block: string, name: string): string[] => block.split('\n')
+    .filter(line => new RegExp(`^${name}(?:;|:)`, 'i').test(line))
+    .flatMap(line => line.slice(line.indexOf(':') + 1).split(','))
+    .map(value => value.trim()).filter(Boolean);
+  const uidOf = (block: string): string => valuesOf(block, 'UID')[0] ?? '';
+  // An edited occurrence is a second VEVENT with the same UID and a
+  // RECURRENCE-ID: it replaces the series' occurrence at that instant.
+  const replaced = new Map<string, Set<number>>();
+  for (const block of blocks) {
+    for (const value of valuesOf(block, 'RECURRENCE-ID')) {
+      const instant = Date.parse(parseIcsDate(value) ?? '');
+      if (Number.isNaN(instant)) continue;
+      const uid = uidOf(block);
+      replaced.set(uid, (replaced.get(uid) ?? new Set()).add(instant));
+    }
+  }
   return blocks.flatMap((block, blockIndex) => {
     const fields = new Map<string, string>();
     for (const line of block.split('\n')) {
@@ -304,10 +358,15 @@ const icsEvents = (text: string, source: SourceDefinition, sourceUrl: string): E
       const key = line.slice(0, colon).split(';')[0]?.toUpperCase();
       if (key && !fields.has(key)) fields.set(key, icsValue(line.slice(colon + 1)));
     }
+    const skip = new Set<number>(fields.has('RECURRENCE-ID') ? [] : replaced.get(fields.get('UID') ?? '') ?? []);
+    valuesOf(block, 'EXDATE').forEach(value => {
+      const instant = Date.parse(parseIcsDate(value) ?? '');
+      if (!Number.isNaN(instant)) skip.add(instant);
+    });
     const title = textOnly(fields.get('SUMMARY'), 300);
     const baseStart = parseIcsDate(fields.get('DTSTART') ?? '');
     if (!title || !baseStart) return [];
-    const starts = expandIcs(baseStart, fields.get('RRULE'), source);
+    const starts = expandIcs(baseStart, fields.get('RRULE'), source, skip);
     const baseEnd = parseIcsDate(fields.get('DTEND') ?? '');
     const duration = baseEnd ? Date.parse(baseEnd) - Date.parse(baseStart) : undefined;
     const location = safeVisibleText(fields.get('LOCATION'), 500);
@@ -692,7 +751,10 @@ export class LiveSourceAdapter implements SourceAdapter {
         } else if (this.kind === 'RSS_ATOM') {
           items.push(...rssEvents(page.text, source, page.url));
         } else if (this.kind === 'ICS') {
-          items.push(...icsEvents(page.text, source, page.url));
+          const exclude = (source.adapterConfig as { exclude?: string }).exclude;
+          const pattern = exclude ? new RegExp(exclude, 'i') : undefined;
+          items.push(...icsEvents(page.text, source, page.url)
+            .filter(item => !pattern || !pattern.test(`${item.normalizedFields.title ?? ''}`)));
         } else if (this.kind === 'COUNTY_OPENCITIES') {
           items.push(...openCitiesEvents(JSON.parse(page.text), source, page.url));
         } else if (this.kind === 'SOURCE_HTML' && (source.adapterConfig as { selectors?: unknown }).selectors) {

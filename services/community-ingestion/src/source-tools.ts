@@ -58,7 +58,7 @@ const hostOf = (value: unknown): string | undefined => {
 };
 
 /** Places that host many people's pages, or that are not an organiser's own site. */
-const NOT_A_PUBLISHER = /(?:^|\.)(?:facebook|instagram|fb|twitter|x|youtube|youtu|tiktok|linkedin|google|goo|bit|linktr|eventbrite|meetup|zoom|ticketmaster|brownpapertickets|eventbrite|paypal|venmo|square|squareup|forms|docs|drive|maps|apple|yelp|tripadvisor|wikipedia|amazon|constantcontact|mailchi|signupgenius|givebutter|zeffy|ticketleap|bandsintown|allevents)\./;
+const NOT_A_PUBLISHER = /(?:^|\.)(?:facebook|instagram|fb|twitter|x|youtube|youtu|tiktok|linkedin|google|goo|bit|linktr|eventbrite|meetup|zoom|ticketmaster|brownpapertickets|eventbrite|paypal|venmo|square|squareup|forms|docs|drive|maps|apple|yelp|tripadvisor|wikipedia|amazon|constantcontact|mailchi|signupgenius|givebutter|zeffy|ticketleap|bandsintown|allevents|schema|opentable|evvnt|venuepilot|brightspotcdn|cloudfront|wp|gravatar|w3|cancer|hyatt|marriott|sonesta|outrigger|hilton)\./;
 
 /**
  * Sites worth probing, found in what has already been collected: the
@@ -73,7 +73,9 @@ export const discoverHosts = async (client: MongoClient, limit = 40): Promise<Ar
   const seen = new Map<string, { url: string; seen: number }>();
   const note = (value: unknown) => {
     const host = hostOf(value);
-    if (!host || known.has(host) || NOT_A_PUBLISHER.test(`${host}.`.replace(/\.$/, '')) || NOT_A_PUBLISHER.test(`.${host}`)) return;
+    // A host the register already reads, or a sub-site or parent of one, is not news.
+    const related = [...known].some(other => other && (host === other || host?.endsWith(`.${other}`) || other.endsWith(`.${host}`)));
+    if (!host || related || NOT_A_PUBLISHER.test(`.${host}`)) return;
     const entry = seen.get(host) ?? { url: `https://${new URL(value as string).hostname}/`, seen: 0 };
     entry.seen += 1;
     seen.set(host, entry);
@@ -179,6 +181,31 @@ export const registerEntry = (source: SourceDefinition): string => {
   return `    {\n${lines.join('\n')}\n    }`;
 };
 
+/**
+ * Put an entry in the register: replace the one with the same id, or add it
+ * at the end. The file keeps its own layout, so the diff is the entry.
+ */
+export const putEntry = async (entry: SourceDefinition): Promise<'replaced' | 'added'> => {
+  const parsed = SourceDefinitionSchema.parse(entry);
+  const text = await readFile(DEFAULT_REGISTRY_PATH, 'utf8');
+  const block = new RegExp(`    \\{\\n      "id": "${parsed.id}",\\n[\\s\\S]*?\\n    \\}`);
+  if (block.test(text)) {
+    await writeFile(DEFAULT_REGISTRY_PATH, text.replace(block, () => registerEntry(parsed)));
+    return 'replaced';
+  }
+  const tail = '\n  ]\n}\n';
+  if (!text.endsWith(tail)) throw new Error('The register does not end the way this tool expects; add the entry by hand.');
+  await writeFile(DEFAULT_REGISTRY_PATH, `${text.slice(0, -tail.length)},\n${registerEntry(parsed)}${tail}`);
+  return 'added';
+};
+
+/** The next free SRC-### id. */
+export const nextSourceId = async (): Promise<string> => {
+  const registry = JSON.parse(await readFile(DEFAULT_REGISTRY_PATH, 'utf8')) as { sources: Array<{ id: string }> };
+  const next = Math.max(0, ...registry.sources.map(source => Number(/^SRC-(\d{3})$/.exec(source.id)?.[1] ?? 0))) + 1;
+  return `SRC-${String(next).padStart(3, '0')}`;
+};
+
 export const listProposals = async (): Promise<string[]> => {
   try { return (await readdir(PROPOSALS_DIR)).filter(name => name.endsWith('.json')); } catch { return []; }
 };
@@ -211,7 +238,7 @@ export const saveSiteFixture = async (source: SourceDefinition, directory: strin
 };
 
 const REDACT_EMAIL = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
-const REDACT_PHONE = /(?:\+?1[\s().-]*)?\(?[2-9]\d{2}\)?[\s.-]+[2-9]\d{2}[\s.-]+\d{4}/g;
+const REDACT_PHONE = /(?:\+?1[\s().-]*)?\(?[2-9]\d{2}\)?[\s.-]+[2-9]\d{2}[\s.-]+\d{4}|\+1[2-9]\d{9}\b|(?<=tel:)\+?\d{10,11}/g;
 const redact = (text: string): string => text.replace(REDACT_EMAIL, 'someone@example.org').replace(REDACT_PHONE, '808-555-0100');
 
 const trimJson = (value: unknown, keep: number, depth = 0): unknown => {
